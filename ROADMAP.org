@@ -12,15 +12,18 @@ Focus on the various Org Mode objects that are describe there and their relation
 
 You can use other sources to obtain knowledge about the format and syntax. For instance, official distribution sources: https://cgit.git.savannah.nongnu.org/cgit/org-mode.git
 
-** TODO Target syntax specification
+** DONE Target syntax specification
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-02-26 Thu 23:15]
+:END:
 Org Mode format is pretty complex, so I'd like to target a functional subset of the syntax. Please create a file docs/research/target-syntax.md that will outline the target syntax, that:
 
 - omits inline tasks
-- omits arbitrary keywords (or only supports =#+CAPTION=)
-- omits latex envirnments
+- omits arbitrary keywords (only supports =#+CAPTION=)
+- omits latex environments
 - omits latex fragments
 - omits babel
-- omit inline babel calls
+- omits inline babel calls
 - omits entities (=\cent= etc)
 - omits macros
 - omits statistics cookies
