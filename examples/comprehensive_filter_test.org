@@ -1,0 +1,110 @@
+* DONE Task with everything :tag1:tag2:
+CLOSED: [2025-01-15 Wed 10:00]
+:PROPERTIES:
+:gamify_exp: 15
+:custom_prop: value1
+:another_prop: test=with=equals
+:END:
+
+Task body text here.
+
+* TODO Incomplete task :tag3:
+SCHEDULED: <2025-01-20 Mon>
+:PROPERTIES:
+:gamify_exp: 5
+:custom_prop: value2
+:END:
+
+This task is not done yet.
+
+* DONE Simple task no properties :tag1:
+CLOSED: [2025-02-01 Sat 14:00]
+
+Just a simple completed task.
+
+* DONE Task with many repeats :tag2:repeattag:
+:PROPERTIES:
+:gamify_exp: 25
+:custom_prop: value1
+:END:
+:LOGBOOK:
+- State "DONE" from "TODO" [2025-01-10 Fri 09:00]
+- State "DONE" from "TODO" [2025-01-12 Sun 11:00]
+- State "DONE" from "TODO" [2025-01-14 Tue 15:00]
+- State "DONE" from "TODO" [2025-01-16 Thu 13:00]
+- State "DONE" from "TODO" [2025-01-18 Sat 10:00]
+:END:
+
+Repeated task with 5 done states.
+
+* DONE Hard task :tag4:
+:PROPERTIES:
+:gamify_exp: 30
+:custom_prop: value1
+:status: important
+:END:
+CLOSED: [2024-12-20 Fri 16:00]
+
+This is a hard task from last year.
+
+* DONE Task outside date range :tag5:
+CLOSED: [2026-06-01 Mon 12:00]
+:PROPERTIES:
+:gamify_exp: 12
+:custom_prop: value3
+:END:
+
+Task from the future.
+
+* DONE Task with low exp :lowexp:
+CLOSED: [2025-01-25 Sat 08:00]
+:PROPERTIES:
+:gamify_exp: 3
+:END:
+
+Simple low exp task.
+
+* DONE Missing gamify_exp :defaulttag:
+CLOSED: [2025-02-10 Mon 11:00]
+:PROPERTIES:
+:other_prop: somevalue
+:END:
+
+This task has no gamify_exp, should default to 10.
+
+* TODO Another incomplete :tag3:tag6:
+:PROPERTIES:
+:gamify_exp: 18
+:custom_prop: value2
+:END:
+
+Another TODO task.
+
+* DONE Case sensitive tag test :CaseSensitive:
+CLOSED: [2025-01-28 Tue 14:30]
+:PROPERTIES:
+:gamify_exp: 11
+:CaseProp: CaseValue
+:END:
+
+Testing case sensitivity.
+
+* DONE Property with equals :tag7:
+CLOSED: [2025-02-05 Wed 09:15]
+:PROPERTIES:
+:gamify_exp: 14
+:equation: E=mc^2
+:END:
+
+Property value contains equals sign.
+
+* DONE Task two repeats :tag8:
+:PROPERTIES:
+:gamify_exp: 20
+:END:
+:LOGBOOK:
+- State "DONE" from "TODO" [2025-01-05 Sun 10:00]
+- State "DONE" from "TODO" [2025-01-22 Wed 15:00]
+:END:
+
+Task with exactly 2 repeats.

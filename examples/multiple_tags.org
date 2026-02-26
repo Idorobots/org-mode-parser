@@ -1,0 +1,24 @@
+* DONE Implement feature A :Test:WebDev:Unix:
+SCHEDULED: <2024-01-10 Wed>
+:PROPERTIES:
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-01-10 Wed 14:00]
+:END:
+
+Feature implementation details.
+
+* DONE Fix bug in parser :Debugging:SysAdmin:
+SCHEDULED: <2024-01-11 Thu>
+:PROPERTIES:
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-01-11 Thu 16:00]
+:END:
+
+* TODO Refactor codebase :Maintenance:
+SCHEDULED: <2024-01-12 Fri>
+:PROPERTIES:
+:END:
+
+Not done yet.

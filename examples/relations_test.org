@@ -1,0 +1,55 @@
+* DONE Task with python and testing :python:testing:
+CLOSED: [2024-01-10 Wed 14:00]
+:PROPERTIES:
+:END:
+
+Testing Python code.
+
+* DONE Task with python and debugging :python:debugging:
+CLOSED: [2024-01-11 Thu 14:00]
+:PROPERTIES:
+:END:
+
+Debugging Python code.
+
+* DONE Task with python and algorithms :python:algorithms:
+CLOSED: [2024-01-12 Fri 14:00]
+:PROPERTIES:
+:END:
+
+Python algorithms.
+
+* DONE Task with python and datastructures :python:datastructures:
+CLOSED: [2024-01-13 Sat 14:00]
+:PROPERTIES:
+:END:
+
+Python data structures.
+
+* DONE Task with testing and debugging :testing:debugging:
+CLOSED: [2024-01-14 Sun 14:00]
+:PROPERTIES:
+:END:
+
+Testing and debugging.
+
+* DONE Task with algorithms and datastructures :algorithms:datastructures:
+CLOSED: [2024-01-15 Mon 14:00]
+:PROPERTIES:
+:END:
+
+Algorithms and data structures.
+
+* DONE Task with java and testing :java:testing:
+CLOSED: [2024-01-16 Tue 14:00]
+:PROPERTIES:
+:END:
+
+Java testing.
+
+* DONE Isolated task :isolated:
+CLOSED: [2024-01-17 Wed 14:00]
+:PROPERTIES:
+:END:
+
+This tag has no relations.

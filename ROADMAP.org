@@ -1,0 +1,76 @@
+#+TITLE: A parser for Org Mode nodes
+
+* Formal-ish specification
+** TODO Official docs analysis
+We will be building an Org Mode file parser that aims to support all Org Mode features (eventually). The goal is to do some research that will help decide the right technologies used to iplement the parser.
+
+Please analyze the official Org Mode syntax reference documentation and write it down in docs/research/syntax.md in a more usable fashion. You can find the official documentation here: https://orgmode.org/worg/org-syntax.html
+Focus on the various Org Mode objects that are describe there and their relations. Keep it semi-formal, as a reference for later.
+
+You can use other sources to obtain knowledge about the format and syntax. For instance, official distribution sources: https://cgit.git.savannah.nongnu.org/cgit/org-mode.git
+
+** TODO Target syntax specification
+Org Mode format is pretty complex, so I'd like to target a functional subset of the syntax. Please create a file docs/research/target-syntax.md that will outline the target syntax, that:
+
+- omits inline tasks
+- omits arbitrary keywords (or only supports =#+CAPTION=)
+- omits latex envirnments
+- omits latex fragments
+- omits babel
+- omit inline babel calls
+- omits entities (=\cent= etc)
+- omits macros
+- omits statistics cookies
+- omits subscript & superscript
+- omits sexp timestamps
+
+All other Org Mode-supported objects should also be supported in the target syntax.
+
+Keep the target syntax description semi-formal and lean, but detailed. Outline the different objects supported and their relations.
+
+** TODO Extra test files
+Generate additional test files that will utilize the less commonly used features of Org Mode and place them in examples/ directory. I'd like to see multiple files that each use a distinct, lesser used features from the target syntax, as well as combinations of features.
+
+Example files can range from very small (even empty) to multiple nodes.
+
+Create at least one file that contains more than a 100 nodes of various nestings and complexities.
+
+Use your creativity for the node contents, such as headings, tags, properties and bodies.
+
+* Grammar
+** TODO Formal grammar
+Translate the @docs/research/target-syntax.md into a formal description of the target org syntax and place it in @docs/plans/syntax.md .
+My preference is PEG - parsing expression grammars, but you can use any formalism that you deem fit to describe the target syntax (for instance BNF).
+
+This description will be used to build a parser for the grammar.
+
+** TODO Tree-sitter parser
+Build a parser based on =tree-sitter= (https://tree-sitter.github.io/tree-sitter/index.html) and the formal grammar description in @docs/plans/syntax.md.
+
+The parser should preserve the source locations of all the parsed nodes, this property will be used for original content reconstruction.
+
+The parser will be embedded in Python at a later stage.
+
+You can test the parser on sample org files found in the examples/ directory in addition to using unittests.
+
+** TODO Python wrapper on tree-sitter
+Create a scaffold of a Python project using Poetry as the build tool. Include =mypy= for typings, =ruff= for linting and formatting and =pytest= for tests. The project will be a library that wraps the tree-sitter based parser, so include =py-tree-sitter= in the dependencies as well. For development, add =pyright= lang server.
+
+Make sure that the setting for all of these tools are fairly strict, we want this project to be very well validated.
+
+The source code of the library should expose the tree-sitter parser with thin Python bindings. Don't worry about ease-of-use of the parser just yet, we will be addressing the user experience next.
+
+Create an extensive test suite that will run the parser against the test files.
+
+* Parser implementation
+- somewhat compatible with orgparse node layout (root node & env separate, rich data abstractions)
+- mutable by default
+- supports any drawers, spacial treatment for logbook & properties
+- env supporting special comments, files etc (title, category, todo, etc, tags)
+- nodes tags & inherited tags field (file-order lists not sets)
+- nodes category & inherited category field
+- extra fields for convevience - parent, children, siblings, latest_timestamp, earliest_timestamp, is_completed, is_root, is_terminal
+- env nodes property - returns all nodes in the env, file order
+- load, loads and dump, dumps
+- preserves original whitespace until a mutation is made
+- all text returning functions return a rich text by default, option to strip markup and turn that into a plain string

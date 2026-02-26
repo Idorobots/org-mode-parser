@@ -1,0 +1,48 @@
+* DONE Task with python and comp :python:comp:
+CLOSED: [2024-01-10 Wed 14:00]
+:PROPERTIES:
+:END:
+
+Python and computer task.
+
+* DONE Task with python and home :python:home:
+CLOSED: [2024-01-11 Thu 14:00]
+:PROPERTIES:
+:END:
+
+Python and home task.
+
+* DONE Task with python and testing :python:testing:
+CLOSED: [2024-01-12 Fri 14:00]
+:PROPERTIES:
+:END:
+
+Python and testing task.
+
+* DONE Task with python and debugging :python:debugging:
+CLOSED: [2024-01-13 Sat 14:00]
+:PROPERTIES:
+:END:
+
+Python and debugging task.
+
+* DONE Task with testing and comp :testing:comp:
+CLOSED: [2024-01-14 Sun 14:00]
+:PROPERTIES:
+:END:
+
+Testing and computer task.
+
+* DONE Task with testing and home :testing:home:
+CLOSED: [2024-01-15 Mon 14:00]
+:PROPERTIES:
+:END:
+
+Testing and home task.
+
+* DONE Task with debugging and comp :debugging:comp:
+CLOSED: [2024-01-16 Tue 14:00]
+:PROPERTIES:
+:END:
+
+Debugging and computer task.

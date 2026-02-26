@@ -1,0 +1,4 @@
+#+TODO: STARTED | CANCELLED
+* DONE Simple task
+:PROPERTIES:
+:END:

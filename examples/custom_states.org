@@ -1,0 +1,7 @@
+* TODO Standard todo task :Tag1:
+* WAITING Custom todo state :Tag2:
+* IN-PROGRESS Another custom todo state :Tag3:
+* DONE Completed task :Tag4:
+* CANCELLED Custom done state :Tag5:
+* ARCHIVED Another done state :Tag6:
+* Task without any state :Tag7:

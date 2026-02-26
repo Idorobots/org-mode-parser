@@ -1,0 +1,24 @@
+* DONE Task with special chars!? :Tag.With:Punctuation,:Symbols;:
+SCHEDULED: <2024-01-05 Fri>
+:PROPERTIES:
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-01-05 Fri 12:00]
+:END:
+
+Body with "quotes" and 'apostrophes' and & ampersand.
+
+* DONE Task at 24:00 time
+SCHEDULED: <2024-01-06 Sat 24:00>
+:PROPERTIES:
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-01-06 Sat 24:00]
+:END:
+
+* DONE Empty body task :NoBody:
+:PROPERTIES:
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-01-07 Sun 10:00]
+:END:

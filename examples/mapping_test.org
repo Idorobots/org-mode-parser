@@ -1,0 +1,27 @@
+* DONE Task with foo tag :foo:
+CLOSED: [2024-01-10 Wed 14:00]
+:PROPERTIES:
+:END:
+
+This task has a foo tag.
+
+* DONE Task with testing tag :testing:
+CLOSED: [2024-01-11 Thu 14:00]
+:PROPERTIES:
+:END:
+
+This task has a testing tag.
+
+* DONE Task with python tag :python:
+CLOSED: [2024-01-12 Fri 14:00]
+:PROPERTIES:
+:END:
+
+This task has a python tag.
+
+* DONE Task with unmapped tag :unmapped:
+CLOSED: [2024-01-13 Sat 14:00]
+:PROPERTIES:
+:END:
+
+This task has an unmapped tag.

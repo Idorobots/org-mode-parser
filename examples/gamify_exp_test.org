@@ -1,0 +1,47 @@
+* DONE Simple task 1 :SimpleTag:
+:PROPERTIES:
+:gamify_exp: 5
+:END:
+
+* DONE Simple task 2 :SimpleTag:
+:PROPERTIES:
+:gamify_exp: 9
+:END:
+
+* DONE Regular task 1 :RegularTag:
+:PROPERTIES:
+:gamify_exp: 10
+:END:
+
+* DONE Regular task 2 :RegularTag:
+:PROPERTIES:
+:gamify_exp: 15
+:END:
+
+* DONE Regular task 3 :RegularTag:
+:PROPERTIES:
+:gamify_exp: 19
+:END:
+
+* DONE Hard task 1 :HardTag:
+:PROPERTIES:
+:gamify_exp: 20
+:END:
+
+* DONE Hard task 2 :HardTag:
+:PROPERTIES:
+:gamify_exp: 25
+:END:
+
+* DONE Hard task with tuple format :HardTag:
+:PROPERTIES:
+:gamify_exp: (30 40)
+:END:
+
+* DONE Missing gamify_exp :DefaultTag:
+This should default to regular
+
+* DONE Invalid gamify_exp :DefaultTag:
+:PROPERTIES:
+:gamify_exp: invalid_value
+:END:

@@ -1,0 +1,488 @@
+* CANCELLED Refine some more tasks with the team.                                     :ProjectManagement:
+SCHEDULED: <2023-10-19 czw>
+:PROPERTIES:
+:gamify_exp: 5
+:capture_time: [2023-10-19 czw 15:37]
+:context: [[file:~/org/refile.org::*Move the Riak to Redis migration notes to the epic document.][Move the Riak to Redis migration notes to the epic document.]]
+:ARCHIVE_TIME: 2023-10-30 pon 23:48
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "CANCELLED"       from "TODO"       [2023-10-19 czw 15:38]
+:END:
+
+* SUSPENDED Try to debug the ejabberd_tls:send timouts.                :Debugging:Erlang:XMPP:
+SCHEDULED: [2023-10-20 pią]
+:PROPERTIES:
+:gamify_exp: 7
+:capture_time: [2023-10-20 pią 14:42]
+:context: 
+:ARCHIVE_TIME: 2023-10-30 pon 23:48
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "SUSPENDED"       from "TODO"       [2023-10-20 pią 14:43]
+:END:
+
+* DONE Investigate the multiple session errors in ejabberd.            :Erlang:Debugging:
+SCHEDULED: <2023-10-23 pon>
+:PROPERTIES:
+:gamify_exp: 10
+:capture_time: [2023-10-23 pon 18:29]
+:context: [[file:~/org/refile.org]]
+:ARCHIVE_TIME: 2023-10-30 pon 23:49
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "DONE"       [2023-10-23 pon 23:54]
+- State "DONE"       from "TODO"       [2023-10-22 pon 18:29]
+:END:
+
+* DONE Make a stocks table for tracking the stonks.                              :OrgMode:EmacsLisp:
+SCHEDULED: <2023-10-25 śro>
+:PROPERTIES:
+:gamify_exp: 13
+:capture_time: [2023-10-25 śro 11:42]
+:context: 
+:ARCHIVE_TIME: 2023-10-30 pon 23:49
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-10-25 śro 17:26]
+:END:
+
+* DONE Prepare stories for the refinement.                                  :ProjectManagement:Jira:
+SCHEDULED: <2023-10-25 śro>
+:PROPERTIES:
+:gamify_exp: 7
+:capture_time: [2023-10-25 śro 20:00]
+:context: [[file:~/org/money.org::*Stuff to buy][Stuff to buy]]
+:ARCHIVE_TIME: 2023-10-30 pon 23:49
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-10-25 śro 20:01]
+:END:
+
+* DONE Prepare a document for game team onboarding to Ejabberd.             :ProjectManagement:
+SCHEDULED: <2023-10-25 śro>
+:PROPERTIES:
+:gamify_exp: 6
+:capture_time: [2023-10-25 śro 20:01]
+:context: [[file:~/org/refile.org::*Prepare stories for the refinement.][Prepare stories for the refinement.]]
+:ARCHIVE_TIME: 2023-10-30 pon 23:49
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-10-25 śro 20:01]
+:END:
+
+* DONE Plan a solution framing session for the ejabberd client onboarding.   :ProjectManagement:
+SCHEDULED: <2023-10-26 czw>
+:PROPERTIES:
+:gamify_exp: 10
+:capture_time: [2023-10-26 czw 20:24]
+:context: [[file:~/org/general.org::*Pull training][Pull training]]
+:ARCHIVE_TIME: 2023-10-30 pon 23:49
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-10-26 czw 20:26]
+:END:
+
+
+* DONE Prepare another batch of tickets for refinement.                       :ProjectManagement:Jira:
+SCHEDULED: <2023-10-26 czw>
+:PROPERTIES:
+:gamify_exp: 5
+:capture_time: [2023-10-26 czw 20:25]
+:context: [[file:~/org/general.org::*Pull training][Pull training]]
+:ARCHIVE_TIME: 2023-10-30 pon 23:49
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-10-26 czw 20:26]
+:END:
+
+
+* DONE Create a design document for the Ejabberd client onboarding.         :Documenting:ProductDesign:
+SCHEDULED: <2023-10-26 czw>
+:PROPERTIES:
+:gamify_exp: 10
+:capture_time: [2023-10-26 czw 20:25]
+:context: [[file:~/org/general.org::*Pull training][Pull training]]
+:ARCHIVE_TIME: 2023-10-30 pon 23:49
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-10-26 czw 20:26]
+:END:
+
+* DONE Add ElastiCache cluster definitions for Ejabberd in terraform config.         :Terraform:AWS:
+SCHEDULED: <2023-10-26 czw>
+:PROPERTIES:
+:gamify_exp: 10
+:capture_time: [2023-10-26 czw 20:27]
+:context: [[file:~/org/refile.org::*Create a design document for the Ejabberd/VTS onboarding.][Create a design document for the Ejabberd/VTS onboarding.]]
+:ARCHIVE_TIME: 2023-10-30 pon 23:49
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-10-26 czw 20:27]
+:END:
+
+* DONE Build a more permanent PiWM/Inside spartan sensor.                    :Soldering:Electronics:
+SCHEDULED: <2023-10-29 nie>
+:PROPERTIES:
+:gamify_exp: 7
+:capture_time: [2023-10-29 nie 01:04]
+:context: [[file:~/projects/software/spartan-sensor-mesh/ui/node_modules/mobx/CHANGELOG.md::UNPUBLISHED (keep this here and add unpublished changes)]]
+:ARCHIVE_TIME: 2023-10-30 pon 23:49
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-10-29 nie 01:06]
+:END:
+
+* DONE Make some pulled turkey.                                                            :Cooking:
+SCHEDULED: <2023-10-29 nie>
+:PROPERTIES:
+:gamify_exp: 14
+:capture_time: [2023-10-29 nie 22:01]
+:context: 
+:ARCHIVE_TIME: 2023-10-30 pon 23:49
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-10-29 nie 22:02]
+:END:
+
+* DONE Fix broken data endpoint in spartan sensor mesh on ESP8266 when there's too large JSON to stringify. :Debugging:Arduino:Cpp:
+SCHEDULED: <2023-10-29 nie>
+:PROPERTIES:
+:gamify_exp: 6
+:capture_time: [2023-10-29 nie 22:30]
+:context: [[file:~/projects/software/spartan-sensor-mesh/device/src/APIServer.cpp::String resp = this->device.toJSON();]]
+:ARCHIVE_TIME: 2023-11-26 nie 19:54
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-10-30 pon 00:29]
+:END:
+
+* DONE Replace the humidity/temperature sensors on the inside sensor with CO sensor. :Electronics:Soldering:
+SCHEDULED: <2023-10-30 pon>
+:PROPERTIES:
+:gamify_exp: 13
+:capture_time: [2023-10-30 pon 17:03]
+:context: [[file:~/projects/software/spartan-sensor-mesh/device/data/device_config.json::"samplingInterval": 60000,]]
+:ARCHIVE_TIME: 2023-11-26 nie 19:54
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-10-30 pon 19:39]
+:END:
+
+* DONE Update the invoice generator to support date of sale in time table generator. :Python:Entrepreneurship:
+SCHEDULED: <2023-11-02 czw>
+:PROPERTIES:
+:gamify_exp: 13
+:capture_time: [2023-11-02 czw 09:42]
+:context: 
+:ARCHIVE_TIME: 2023-11-26 nie 19:54
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-02 czw 09:43]
+:END:
+
+* DONE Inventorize all the medical supplies & perishable camping items.                :Documenting:
+SCHEDULED: <2023-11-05 nie>
+:PROPERTIES:
+:gamify_exp: 10
+:capture_time: [2023-11-05 nie 15:17]
+:context: [[file:~/org/stockpile.org::*Perishable survival stuff][Perishable survival stuff]]
+:ARCHIVE_TIME: 2023-11-26 nie 19:55
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-07 wto 09:15]
+:END:
+
+
+* DONE Make the mountainhiker pouch smaller to fit within the smaller cook set.     :Leatherworking:
+SCHEDULED: <2023-11-05 nie>
+:PROPERTIES:
+:gamify_exp: 7
+:capture_time: [2023-11-05 nie 20:20]
+:context: [[file:~/org/stockpile.org::*Trauma][Trauma]]
+:ARCHIVE_TIME: 2023-11-26 nie 19:55
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-07 wto 09:15]
+:END:
+
+* DONE Respond to the customer tickets.                              :CustomerSupport:
+SCHEDULED: <2023-11-08 śro>
+:PROPERTIES:
+:gamify_exp: 9
+:capture_time: [2023-11-08 śro 10:51]
+:context: [[file:~/org/general.org::*Backup Essentials.][Backup Essentials.]]
+:ARCHIVE_TIME: 2023-11-26 nie 19:55
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-08 śro 10:54]
+:END:
+
+
+* DONE Take a look an the logs provided by the QA.             :Debugging:CustomerSupport:
+SCHEDULED: <2023-11-08 śro>
+:PROPERTIES:
+:gamify_exp: 6
+:capture_time: [2023-11-08 śro 10:53]
+:context: [[file:~/org/general.org::*Backup Essentials.][Backup Essentials.]]
+:ARCHIVE_TIME: 2023-11-26 nie 19:55
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-08 śro 10:54]
+:END:
+
+* DONE Reorganize the Jira shortlist stories and remove the holding sprint.  :ProjectManagement:Jira:
+SCHEDULED: <2023-11-08 śro>
+:PROPERTIES:
+:gamify_exp: 11
+:capture_time: [2023-11-08 śro 10:54]
+:context: [[file:~/org/refile.org::*Take a look an the logs provided by the QA.][Take a look an the logs provided by the QA.]]
+:ARCHIVE_TIME: 2023-11-26 nie 19:55
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-08 śro 10:55]
+:END:
+
+* DONE Sync with Matt on the Kafka architecture issues that may arise.     :ProjectManagement:
+SCHEDULED: <2023-11-08 śro>
+:PROPERTIES:
+:gamify_exp: 7
+:capture_time: [2023-11-08 śro 10:55]
+:context: [[file:~/org/repeat.org::*\[\[Nobody can deny, that...\]\[Niemand kann leugnen, dass...\]\]][Niemand kann leugnen, dass...]]
+:ARCHIVE_TIME: 2023-11-26 nie 19:55
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-08 śro 10:55]
+:END:
+
+* DONE Create a shopping list that can be exported each time.                              :OrgMode:
+SCHEDULED: <2023-11-09 czw>
+:PROPERTIES:
+:gamify_exp: 8
+:capture_time: [2023-11-09 czw 11:26]
+:context: [[file:~/org/stockpile.org::*Long term storage food][Long term storage food]]
+:ARCHIVE_TIME: 2023-11-26 nie 19:55
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-10 pią 12:53]
+:END:
+
+
+* DONE Reorganize tickets on the CHAT project board.                        :ProjectManagement:Jira:
+SCHEDULED: <2023-11-09 czw>
+:PROPERTIES:
+:gamify_exp: 15
+:capture_time: [2023-11-09 czw 12:45]
+:context: [[file:~/org/general.org::*Tidy up the living room.][Tidy up the living room.]]
+:ARCHIVE_TIME: 2023-11-26 nie 19:55
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-09 czw 12:45]
+:END:
+
+
+* DONE Prepare some stories for refinement.                                 :ProjectManagement:Jira:
+SCHEDULED: <2023-11-09 czw>
+:PROPERTIES:
+:gamify_exp: 5
+:capture_time: [2023-11-09 czw 12:45]
+:context: [[file:~/org/general.org::*Tidy up the living room.][Tidy up the living room.]]
+:ARCHIVE_TIME: 2023-11-26 nie 19:55
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-09 czw 12:45]
+:END:
+
+* DONE Fix Alicia's vacuum robot.                                            :Electronics:Debugging:
+SCHEDULED: <2023-11-10 pią>
+:PROPERTIES:
+:gamify_exp: 12
+:capture_time: [2023-11-10 pią 11:55]
+:context: 
+:ARCHIVE_TIME: 2023-11-26 nie 19:55
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-10 pią 11:56]
+:END:
+
+* DONE Fix Alicia's computer mouse.                                           :Debugging:Electronics:
+SCHEDULED: <2023-11-11 sob>
+:PROPERTIES:
+:gamify_exp: 7
+:capture_time: [2023-11-11 sob 17:47]
+:context: 
+:ARCHIVE_TIME: 2023-11-26 nie 19:55
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-11 sob 17:47]
+:END:
+
+* DONE Design a bead for the clothesline.                                      :3DModeling:OpenSCAD:
+SCHEDULED: <2023-11-12 nie>
+:PROPERTIES:
+:gamify_exp: 13
+:capture_time: [2023-11-12 nie 21:04]
+:context: 
+:ARCHIVE_TIME: 2023-11-26 nie 19:56
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-14 wto 22:13]
+:END:
+
+
+* DONE Code review Matt's TF cleanup MR.                                     :Terraform:GitHub:
+SCHEDULED: <2023-11-13 pon>
+:PROPERTIES:
+:gamify_exp: 15
+:capture_time: [2023-11-13 pon 10:58]
+:context: 
+:ARCHIVE_TIME: 2023-11-26 nie 19:56
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-13 pon 10:59]
+:END:
+
+
+* DONE Review and expand Jeffrey's Jira hygiene document.                   :ProjectManagement:Jira:
+SCHEDULED: <2023-11-13 pon>
+:PROPERTIES:
+:gamify_exp: 10
+:capture_time: [2023-11-13 pon 10:58]
+:context: 
+:ARCHIVE_TIME: 2023-11-26 nie 19:56
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-13 pon 10:59]
+:END:
+
+* DONE Implement Redis support code in Ejabberd.                                      :Erlang:Redis:
+SCHEDULED: <2023-11-14 wto>
+:PROPERTIES:
+:gamify_exp: 11
+:capture_time: [2023-11-14 wto 19:26]
+:context: 
+:ARCHIVE_TIME: 2023-11-26 nie 19:56
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-14 wto 19:30]
+:END:
+
+
+* DONE Figure out what causes user input control lib to crash the Ejabberd process.                      :Debugging:Erlang:
+SCHEDULED: <2023-11-14 wto>
+:PROPERTIES:
+:gamify_exp: 14
+:capture_time: [2023-11-14 wto 19:27]
+:context: 
+:ARCHIVE_TIME: 2023-11-26 nie 19:56
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-11-14 wto 19:30]
+:END:
+
+
+* TODO Create a slide deck about our Kubernetes migration lessons.           :Documenting:Entrepreneurship:
+SCHEDULED: <2023-11-14 wto>
+:PROPERTIES:
+:gamify_exp: 10
+:capture_time: [2023-11-14 wto 19:27]
+:context: 
+:ARCHIVE_TIME: 2023-11-26 nie 19:56
+:ARCHIVE_FILE: ~/org/refile.org
+:ARCHIVE_CATEGORY: refile
+:ARCHIVE_TODO: DONE
+:END:
+

@@ -1,0 +1,30 @@
+* DONE Task with single tag :work:
+:PROPERTIES:
+:END:
+
+* DONE Task with multiple tags :bug:feature:enhancement:
+:PROPERTIES:
+:END:
+
+* DONE Task without tags
+:PROPERTIES:
+:END:
+
+* DONE Task with gamify and tag :urgent:
+:PROPERTIES:
+:gamify_exp: 5
+:END:
+
+* DONE Complex task :project:alpha:beta:
+:PROPERTIES:
+:gamify_exp: 25
+:other_prop: value
+:END:
+
+* TODO Incomplete task :pending:
+:PROPERTIES:
+:END:
+
+* DONE Task with special chars :my_tag:other_tag:
+:PROPERTIES:
+:END:

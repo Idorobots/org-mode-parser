@@ -1,0 +1,14 @@
+* DONE Recurring daily standup :Agile:GTD:
+SCHEDULED: <2024-01-01 Mon 09:00 +1d>
+:PROPERTIES:
+:LAST_REPEAT: [2024-01-05 Fri 09:15]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-01-05 Fri 09:15]
+- State "DONE"       from "TODO"       [2024-01-04 Thu 09:10]
+- State "DONE"       from "TODO"       [2024-01-03 Wed 09:05]
+- State "DONE"       from "TODO"       [2024-01-02 Tue 09:00]
+- State "DONE"       from "TODO"       [2024-01-01 Mon 09:00]
+:END:
+
+Daily team synchronization meeting.
