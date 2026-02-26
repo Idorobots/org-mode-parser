@@ -1,0 +1,197 @@
+#+TITLE: Research Notes — Custom Drawers Showcase
+#+AUTHOR: Threndel Quoxworth
+
+:PROPERTIES:
+:document_type: research_notes
+:department: Computational Linguistics
+:project_code: CL-2025-04
+:END:
+
+# The PROPERTIES drawer above is in the zeroth section.
+# It attaches to the document as a whole, not to any heading.
+
+The zeroth section of this file contains a property drawer, which is valid
+in this position. The drawer above establishes document-level metadata.
+
+* On Drawer Nesting and Custom Names
+
+** The PROPERTIES Drawer
+
+The =:PROPERTIES:= drawer is special — it holds node properties for the
+heading it belongs to. It must directly follow the heading (or its planning
+line) with no intervening blank lines.
+
+* TODO Analyse corpus of 19th-century English fiction :corpus:nlp:
+SCHEDULED: <2025-02-01 Sat>
+:PROPERTIES:
+:ID: f7e6d5c4-b3a2-1098-7654-3210fedcba98
+:CUSTOM_ID: corpus-analysis-2025
+:effort: 40:00
+:assignee: Threndel Quoxworth
+:priority_note: High impact on thesis chapter 3
+:END:
+
+** The Property Append Form
+
+Node properties can be *appended* rather than replaced using the =NAME+= form.
+This is useful for building up lists of values across multiple property entries.
+
+* TODO Build feature extraction pipeline :pipeline:ml:
+:PROPERTIES:
+:tags: python
+:tags+: sklearn
+:tags+: spacy
+:tags+: transformers
+:related_papers: Vaswani2017
+:related_papers+: Devlin2019
+:related_papers+: Brown2020
+:END:
+
+The =tags= property above has the effective value =python sklearn spacy transformers=.
+The =related_papers= property accumulates three values on separate =+= lines.
+
+** Custom Named Drawers
+
+Custom drawers (any name that is not =PROPERTIES=, =LOGBOOK=, or =END=) are
+valid drawer elements. They are treated as opaque containers.
+
+* DONE Literature review — transformer architectures :reading:nlp:
+CLOSED: [2025-01-05 Sun]
+:PROPERTIES:
+:effort: 8:00
+:END:
+:NOTE:
+Key finding: self-attention mechanisms outperform recurrent approaches for
+long-range dependency capture (sequence length > 512 tokens). The O(n²) memory
+cost of full attention remains a practical bottleneck for very long documents.
+
+Action: investigate Longformer, BigBird, and Mamba as long-sequence alternatives.
+:END:
+:SOURCE:
+Primary: [cite:@vaswani2017attention]
+Secondary: [cite:@devlin2019bert], [cite:@brown2020gpt3]
+Review paper: [cite:@tay2022efficient_transformers]
+:END:
+
+* TODO Design evaluation benchmark :evaluation:
+DEADLINE: <2025-03-15 Sat>
+:PROPERTIES:
+:effort: 12:00
+:END:
+:REVIEW:
+[2025-01-04 Sat] Initial design discussed with supervisor. Three evaluation
+dimensions agreed: accuracy, speed, and memory footprint.
+
+[2025-01-06 Mon] Revised after considering [cite:@papineni2002bleu] and
+[cite:@lin2004rouge] — both metrics have known shortcomings for our use case.
+A human-evaluation component is now mandatory.
+:END:
+:DECISION_LOG:
+2025-01-04 :: Use F1 over accuracy — class imbalance in validation set.
+2025-01-05 :: Include perplexity as secondary metric for language model tasks.
+2025-01-06 :: Exclude BLEU — inappropriate for structured prediction tasks.
+:END:
+
+-----
+
+* Drawers Inside Greater Elements
+
+** Drawers inside greater blocks
+
+#+begin_quote
+:ATTRIBUTION:
+Speaker: Prof. Glorble Vextwicky
+Occasion: Inaugural lecture, Grumblewick University, 2024-11-15
+Source: Transcript (unedited)
+:END:
+
+The relationship between language and thought is not one of simple encoding.
+Language does not merely /express/ thought — it shapes the boundaries of what
+can be thought, what can be communicated, and ultimately what can be done.
+#+end_quote
+
+** Drawers inside list items
+
+Project work packages:
+
+- WP1: Corpus construction
+  :SCOPE:
+  Collect 50,000 Org Mode documents from public repositories on GitHub,
+  GitLab, and Sourcehut. Filter for English-language content using
+  langdetect. Deduplicate using SimHash.
+  :END:
+  :PROGRESS:
+  [2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
+  :END:
+
+- WP2: Annotation
+  :SCOPE:
+  Annotate 5,000 documents for: heading structure, inline markup,
+  link types, and temporal expression types. Use inter-annotator
+  agreement (Cohen's kappa) to validate annotation scheme.
+  :END:
+
+- WP3: Model training
+  :SCOPE:
+  Fine-tune a pre-trained transformer (BERT-base or RoBERTa) on the
+  annotated corpus. Train with AdamW, linear warmup, cosine decay.
+  :END:
+  :HYPERPARAMS:
+  learning_rate: 2e-5
+  batch_size: 32
+  epochs: 5
+  warmup_steps: 500
+  weight_decay: 0.01
+  :END:
+
+-----
+
+* Deeply Nested Drawers
+
+A heading with multiple custom drawers and a property drawer, showing
+that all three can coexist:
+
+* TODO Integrate Mamba state-space model :research:ml:experimental:
+SCHEDULED: <2025-04-01 Tue> DEADLINE: <2025-05-31 Sat>
+:PROPERTIES:
+:effort: 20:00
+:assignee: Threndel Quoxworth
+:ID: c1d2e3f4-a5b6-7890-cdef-012345678901
+:END:
+:BACKGROUND:
+Mamba (Gu & Dao, 2023) introduces selective state-space models that achieve
+linear scaling in sequence length while matching transformer performance on
+language modelling benchmarks. The key innovation is *input-dependent*
+SSM parameters — analogous to attention, but O(n) rather than O(n²).
+:END:
+:RISKS:
+- Mamba is a very new architecture (2023); tooling support is immature.
+- Hardware requirements: A100 or H100 GPUs; not available on our cluster.
+- Integration with existing pipeline requires significant refactoring.
+:END:
+:MITIGATION:
+For hardware: apply for EPSRC compute allocation by 2025-02-28.
+For tooling: contribute patches upstream if necessary.
+For integration: build an adapter layer — do not modify core pipeline.
+:END:
+
+-----
+
+* The LOGBOOK Drawer (Conventional Name)
+
+While =:LOGBOOK:= is just a custom drawer by name, Org Mode and many tools
+treat it conventionally to hold state-change history and clock entries.
+
+* DONE Implement tokeniser for Org Mode headings :implementation:
+CLOSED: [2025-01-03 Fri 17:45]
+:PROPERTIES:
+:effort: 6:00
+:actual_time: 5:30
+:END:
+:LOGBOOK:
+- State "DONE"         from "DOING"        [2025-01-03 Fri 17:45]
+- State "DOING"        from "TODO"         [2025-01-02 Thu 09:15]
+- State "TODO"         from ""             [2024-12-20 Fri 11:00]
+CLOCK: [2025-01-02 Thu 09:15]--[2025-01-02 Thu 17:30] =>  8:15
+CLOCK: [2025-01-03 Fri 09:00]--[2025-01-03 Fri 12:30] =>  3:30
+:END:

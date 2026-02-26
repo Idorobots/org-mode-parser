@@ -1,0 +1,104 @@
+#+TITLE: Quentix Vaultworks — Production Slate 2025
+#+AUTHOR: Zolinda Pruxwick
+#+EMAIL: zpruxwick@quentixvaultworks.example.com
+#+DATE: <2025-01-06 Mon>
+#+DESCRIPTION: Internal production tracking document for all active and upcoming Quentix Vaultworks projects.
+#+KEYWORDS: film, production, schedule, budget
+#+LANGUAGE: en
+#+CATEGORY: production
+#+FILETAGS: :quentix:internal:
+#+STARTUP: overview
+#+ARCHIVE: ::* Archived Projects
+#+PROPERTY: budget_currency USD
+#+PROPERTY: status_default active
+#+TODO: DEVELOPMENT PREPRODUCTION PRODUCTION POSTPRODUCTION | RELEASED CANCELLED
+#+PRIORITIES: A C B
+
+# This document is confidential and intended for internal use only.
+# Last reviewed by the production office on 2025-01-06.
+
+:PROPERTIES:
+:document_version: 3.1
+:last_reviewed: [2025-01-06 Mon]
+:owner: Production Office
+:END:
+
+The zeroth section above contains the full set of document-level special keywords,
+a comment block, and a property drawer — all before the first heading.
+
+* PRODUCTION [#A] The Cartographer's Dilemma :drama:period:
+SCHEDULED: <2025-03-10 Mon> DEADLINE: <2025-11-28 Fri>
+:PROPERTIES:
+:director: Dorfwick Blumvane
+:budget: 12500000
+:lead_cast: Trundle Ploxby, Worthem Grulbe
+:location: Prague, Vienna
+:END:
+
+Principal photography begins March 2025. Locations scouted and locked.
+Costume department requires sign-off by end of February.
+
+** Script & Development
+DEADLINE: <2025-02-14 Fri>
+:PROPERTIES:
+:writer: Quelda Brimswick
+:draft_number: 4
+:END:
+
+Fourth draft delivered. Notes from the director addressed in revision.
+
+** Casting
+:PROPERTIES:
+:casting_director: Flombert Grush
+:END:
+
+All lead roles confirmed. Supporting cast finalised week of 2025-01-20.
+
+** Locations
+:PROPERTIES:
+:location_manager: Brindle Woxwick
+:permit_status: approved
+:END:
+
+- Prague Old Town: permits approved [2024-12-18 Wed]
+- Vienna Belvedere exterior: permits approved [2025-01-03 Fri]
+- Studio Stage 4 (Fluxbridge Studios): booked 2025-03-10 through 2025-06-20
+
+* PREPRODUCTION [#B] Salt and Longitude :thriller:contemporary:
+SCHEDULED: <2025-06-02 Mon>
+:PROPERTIES:
+:director: Quorby Flumwell
+:budget: 8200000
+:lead_cast: Gruble Dwinwick
+:END:
+
+Preproduction underway. Script locked after arbitration.
+
+* DEVELOPMENT Ghost Latitude :scifi:
+:PROPERTIES:
+:director: TBD
+:budget: 22000000
+:writer: Twiggle Hunsworth
+:END:
+
+High-concept science fiction. Currently in second-draft development.
+Greenlit pending director attachment.
+
+* RELEASED Harbour Light :documentary:
+CLOSED: [2024-09-15 Sun]
+:PROPERTIES:
+:director: Glorble Vextwick
+:runtime_minutes: 94
+:distributor: Velorum Distribution
+:END:
+
+Released at the Wendermoor Film Festival 2024. Theatrical distribution through Velorum Distribution begins 2025-02-07.
+
+* CANCELLED The Ember Protocol :action:
+CLOSED: [2024-11-01 Fri]
+:PROPERTIES:
+:cancellation_reason: financing_collapsed
+:END:
+
+Project cancelled following collapse of co-production financing.
+Rights reverted to original IP holder.

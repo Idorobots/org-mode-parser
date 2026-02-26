@@ -1,0 +1,153 @@
+#+TITLE: Data Reference Tables
+#+AUTHOR: Trindle Gworbeck
+
+* Org-Type Tables
+
+** Simple table with rule row
+
+#+CAPTION: ISO 4217 currency codes (selection)
+| Code | Currency             | Symbol | Decimal places |
+|------+----------------------+--------+----------------|
+| USD  | US Dollar            | $      |              2 |
+| EUR  | Euro                 | €      |              2 |
+| GBP  | Pound Sterling       | £      |              2 |
+| JPY  | Japanese Yen         | ¥      |              0 |
+| CHF  | Swiss Franc          | Fr     |              2 |
+| SEK  | Swedish Krona        | kr     |              2 |
+| DKK  | Danish Krone         | kr     |              2 |
+| NOK  | Norwegian Krone      | kr     |              2 |
+| CAD  | Canadian Dollar      | $      |              2 |
+| AUD  | Australian Dollar    | $      |              2 |
+| NZD  | New Zealand Dollar   | $      |              2 |
+| SGD  | Singapore Dollar     | $      |              2 |
+| HKD  | Hong Kong Dollar     | $      |              2 |
+| KWD  | Kuwaiti Dinar        | KD     |              3 |
+| BHD  | Bahraini Dinar       | BD     |              3 |
+| JOD  | Jordanian Dinar      | JD     |              3 |
+| TND  | Tunisian Dinar       | DT     |              3 |
+
+** Table with TBLFM formula
+
+#+CAPTION: Compound interest projections (5% annual rate)
+| Year | Principal (£) | Interest (£) | Balance (£) |
+|------+---------------+--------------+-------------|
+|    1 |       10000.0 |        500.0 |     10500.0 |
+|    2 |       10000.0 |        525.0 |     11025.0 |
+|    3 |       10000.0 |        551.3 |     11576.3 |
+|    4 |       10000.0 |        578.8 |     12155.1 |
+|    5 |       10000.0 |        607.8 |     12762.8 |
+|   10 |       10000.0 |        975.6 |     16288.9 |
+|   20 |       10000.0 |       2532.6 |     26532.6 |
+|   30 |       10000.0 |       6573.4 |     43219.4 |
+#+TBLFM: $3=$2*0.05::$4=$2+$3
+
+** Table with multiple rule rows and complex alignment
+
+#+CAPTION: Unicode block ranges (partial)
+| Block name                   |      Start |        End | Scripts / Characters     |
+|------------------------------+------------+------------+--------------------------|
+| *Basic Latin*                | U+0000     | U+007F     | ASCII                    |
+| Latin-1 Supplement           | U+0080     | U+00FF     | Extended Latin           |
+| Latin Extended-A             | U+0100     | U+017F     | Diacritics               |
+|------------------------------+------------+------------+--------------------------|
+| *Greek and Coptic*           | U+0370     | U+03FF     | Greek, Coptic            |
+| Cyrillic                     | U+0400     | U+04FF     | Slavic scripts           |
+| Armenian                     | U+0530     | U+058F     | Armenian                 |
+|------------------------------+------------+------------+--------------------------|
+| *CJK Unified Ideographs*     | U+4E00     | U+9FFF     | 20,000+ CJK characters   |
+| Hangul Syllables             | U+AC00     | U+D7AF     | Korean                   |
+|------------------------------+------------+------------+--------------------------|
+| *Emoji and Pictographs*      | U+1F300    | U+1F5FF    | Misc. Symbols            |
+| Supplemental Arrows-C        | U+1F800    | U+1FBFF    | Arrows                   |
+
+** Table with markup and links in cells
+
+| Library       | Language   | License        | Homepage                              |
+|---------------+------------+----------------+---------------------------------------|
+| *tree-sitter* | C          | =MIT=          | [[https://tree-sitter.github.io]]     |
+| /lxml/        | Python     | =BSD-3-Clause= | [[https://lxml.de]]                   |
+| ~pest~        | Rust       | =MIT / Apache= | [[https://pest.rs]]                   |
+| +ANTLR 3+     | Java       | =BSD=          | _deprecated_ — use ANTLR 4            |
+| *ANTLR 4*     | Java/many  | =BSD-3-Clause= | [[https://www.antlr.org]]             |
+| /Menhir/      | OCaml      | =LGPL-2=       | [[https://gallium.inria.fr/~fpottier/menhir/]] |
+
+** Minimal table — single column, no rule row
+
+| Single-column Org table |
+| Row one                 |
+| Row two                 |
+| Row three               |
+
+** Table immediately followed by TBLFM (multiple formulas)
+
+#+CAPTION: Temperature conversion reference
+| °C   |   °F |    K |
+|------+------+------|
+|  -40 |  -40 | 233. |
+|    0 |   32 | 273. |
+|   20 |   68 | 293. |
+|   37 |  99. | 310. |
+|  100 |  212 | 373. |
+#+TBLFM: $2=$1*9/5+32::$3=$1+273.15
+
+-----
+
+* Table.el-Type Tables
+
+Table.el tables use a different syntax and are parsed as raw content.
+
+** A table.el table — grid format
+
++-------------------+-----------+-------------------+
+| Name              | Extension | Description       |
++-------------------+-----------+-------------------+
+| Plain text        | .txt      | Unformatted ASCII |
+| HyperText Markup  | .html     | Web standard      |
+| Portable Document | .pdf      | Print-ready       |
+| Org Mode          | .org      | This format       |
++-------------------+-----------+-------------------+
+| Markdown          | .md       | Lightweight markup|
+| reStructuredText  | .rst      | Python docs       |
++-------------------+-----------+-------------------+
+
+** A table.el table — no content rows
+
++----------+----------+
+| Column A | Column B |
++----------+----------+
+
+-----
+
+* Caption Without an Affiliated Element
+
+This paragraph demonstrates that #+CAPTION: followed by a blank line
+becomes a regular keyword, not an affiliated keyword.
+
+#+CAPTION: This is NOT affiliated — a blank line follows.
+
+The paragraph above is the element following the blank line, so the
+#+CAPTION: above is parsed as an ordinary (unrecognised) keyword in the
+target syntax, not as an affiliated keyword of this paragraph.
+
+Compare with a properly affiliated caption:
+
+#+CAPTION: This IS affiliated — no blank line before the table.
+| Properly affiliated table | Column 2 |
+|---------------------------+----------|
+| Row                       | Data     |
+
+-----
+
+* Tables with Affiliated Captions Containing Markup
+
+#+CAPTION: Comparison of *sorting algorithms* — average and worst-case /complexity/
+| Algorithm      | Avg Time   | Worst Time | Space      | Stable? |
+|----------------+------------+------------+------------+---------|
+| Bubble sort    | O(n²)      | O(n²)      | O(1)       | Yes     |
+| Selection sort | O(n²)      | O(n²)      | O(1)       | No      |
+| Insertion sort | O(n²)      | O(n²)      | O(1)       | Yes     |
+| Merge sort     | O(n log n) | O(n log n) | O(n)       | Yes     |
+| Quicksort      | O(n log n) | O(n²)      | O(log n)   | No      |
+| Heapsort       | O(n log n) | O(n log n) | O(1)       | No      |
+| Timsort        | O(n log n) | O(n log n) | O(n)       | Yes     |
+| Radix sort     | O(nk)      | O(nk)      | O(n + k)   | Yes     |

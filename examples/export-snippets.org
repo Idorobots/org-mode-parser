@@ -1,0 +1,147 @@
+#+TITLE: Multi-Backend Document — Export Snippets
+#+AUTHOR: Wunsley Brimwick
+
+* Introduction
+
+Export snippets allow raw backend-specific markup to be embedded directly in
+an Org document. The syntax is =@@BACKEND:VALUE@@= where =BACKEND= identifies
+the target format and =VALUE= is passed through unchanged during export.
+
+They are invisible in backends other than the one specified.
+
+-----
+
+* HTML Export Snippets
+
+** In paragraphs
+
+This paragraph will render a hard line break in HTML output.@@html:<br>@@
+The text continues on the next rendered line, but this is a single paragraph.
+
+You can embed an HTML span with a class:
+@@html:<span class="highlight">@@This text gets a CSS class.@@html:</span>@@
+
+Insert a non-breaking space: between "Dr."@@html:&nbsp;@@Smith and the next word.
+
+An HTML comment invisible in the rendered page:
+@@html:<!-- This comment appears only in the HTML source. -->@@
+
+Embed a raw image tag (bypassing Org's own link rendering):
+@@html:<img src="diagram.png" alt="Architecture diagram" width="600">@@
+
+** In heading titles
+
+*** @@html:<span class="new-badge">@@New@@html:</span>@@ Feature: Streaming Parser
+
+*** Section with @@html:<abbr title="Application Programming Interface">@@API@@html:</abbr>@@ Reference
+
+** In table cells
+
+| Feature       | HTML output                               | Notes                    |
+|---------------+-------------------------------------------+--------------------------|
+| Line break    | @@html:<br>@@                             | Hard break in HTML       |
+| Non-breaking  | @@html:&nbsp;@@                           | ~\nbsp~ alternative      |
+| Bold span     | @@html:<strong>@@text@@html:</strong>@@   | Semantic HTML strong     |
+| Ruby (CJK)    | @@html:<ruby>@@漢@@html:<rt>@@han@@html:</rt></ruby>@@ | Pronunciation guide |
+
+** Empty-value snippet
+
+An export snippet with an empty value produces no output in the target backend
+but can still be useful as a marker: @@html:@@
+
+The snippet above is a zero-width HTML element — valid syntax with no content.
+
+-----
+
+* LaTeX Export Snippets
+
+** In paragraphs
+
+This sentence ends with a specific amount of horizontal space:@@latex:\hspace{1em}@@Next sentence.
+
+Insert a LaTeX line break:@@latex:\\@@New line in LaTeX output only.
+
+A manual page break visible only in PDF output:@@latex:\newpage@@
+
+Embed a raw LaTeX command for a special symbol not in Org entities:
+@@latex:\textregistered@@ is the registered trademark sign in LaTeX.
+
+** In heading titles
+
+*** The @@latex:\texttt{org-element}@@ API
+
+*** Results: @@latex:$p < 0.001$@@
+
+** LaTeX snippet for typographic adjustment
+
+This paragraph has a @@latex:\noindent@@ marker at the start — in LaTeX output,
+the paragraph will not be indented regardless of document settings.
+
+-----
+
+* ODT Export Snippets
+
+** In paragraphs
+
+@@odt:<text:p text:style-name="Heading_20_3">@@Formatted as ODT heading@@odt:</text:p>@@
+
+An ODT-specific line break:@@odt:<text:line-break/>@@continues here.
+
+** In table cells
+
+| Format | Raw snippet                                           |
+|--------+-------------------------------------------------------|
+| ODT    | @@odt:<text:span text:style-name="Bold">@@hi@@odt:</text:span>@@ |
+
+-----
+
+* Export Snippets in Link Descriptions
+
+Regular links can have descriptions containing export snippets, allowing
+backend-specific link text.
+
+[[https://orgmode.org][@@html:<img src="org-mode-logo.png" alt="Org Mode">@@@@latex:Org Mode@@]]
+
+The link above renders as an image in HTML and as plain text in LaTeX.
+
+[[https://example.com/report.pdf][@@html:<span class="pdf-link">@@Download PDF@@html:</span>@@]]
+
+[[#configuration-options][@@html:<span aria-label="Jump to configuration">@@Config@@html:</span>@@@@latex:Configuration@@]]
+
+-----
+
+* Multiple Backends in One Passage
+
+A single paragraph may interleave snippets for multiple backends.
+Only the snippet matching the export target will be rendered.
+
+The project licence is@@html: <a href="mit-license.txt">@@@@latex: (see appendix A)@@ MIT@@html:</a>@@@@latex:{}@@.
+
+In HTML, the word "MIT" will be a hyperlink. In LaTeX, it will be followed by
+a reference to appendix A. In all other backends, only "MIT" appears.
+
+-----
+
+* Edge Cases
+
+** Snippet at the very start of a paragraph
+
+@@html:<p class="lead">@@This paragraph has an HTML class applied to it via a
+raw snippet at the start. The snippet is an object, not a PRE character.
+
+** Snippet immediately adjacent to markup
+
+*@@html:<em>@@Bold and HTML italic simultaneously.@@html:</em>@@*
+
+** Snippet with special characters in VALUE
+
+@@html:<!-- <tricky> & "quoted" -->@@
+
+The value above contains angle brackets and quotes — these are passed through
+raw to the HTML backend unchanged.
+
+** Adjacent snippets with no separator
+
+@@html:<strong>@@@@html:</strong>@@ — two adjacent snippets for the same backend.
+
+@@html:<br>@@@@latex:\\@@ — two snippets for different backends, side by side.

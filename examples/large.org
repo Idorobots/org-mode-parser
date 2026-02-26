@@ -1,0 +1,1134 @@
+#+TITLE: Vantage — Distributed In-Memory Cache
+#+AUTHOR: The Vantage Maintainers
+#+EMAIL: maintainers@vantage.example.dev
+#+DATE: <2025-01-06 Mon>
+#+DESCRIPTION: Engineering wiki and project reference for the Vantage distributed in-memory cache system.
+#+LANGUAGE: en
+#+CATEGORY: vantage
+#+FILETAGS: :vantage:engineering:
+#+TODO: TODO IN-PROGRESS BLOCKED REVIEW | DONE CANCELLED WONTFIX
+#+STARTUP: overview
+#+PROPERTY: effort_default 1:00
+#+OPTIONS: toc:2
+
+# This file is the canonical engineering reference for the Vantage project.
+# All architecture decisions, API contracts, and operational procedures are
+# tracked here. For user documentation see docs/user-guide/.
+
+:PROPERTIES:
+:project_url: https://github.com/example/vantage
+:license: Apache-2.0
+:language: Rust
+:min_rust: 1.75.0
+:END:
+
+Vantage is a *distributed in-memory cache* designed for sub-millisecond read
+latency at high concurrency. It implements a superset of the <<<Redis>>> wire
+protocol and exposes both a binary framing protocol and a human-readable
+text interface.
+
+Key properties of Vantage:
+
+- *Consistent hashing* with virtual nodes for cluster topology.
+- *Multi-master replication* with last-write-wins conflict resolution.
+- *Pluggable eviction policies*: LRU, LFU, TTL-only, CLOCK.
+- *Persistence* via append-only log with configurable fsync intervals.
+- *TLS mutual authentication* on all inter-node and client connections.
+
+-----
+
+* Project Overview
+:PROPERTIES:
+:CUSTOM_ID: project-overview
+:END:
+
+** Vision and Goals
+:PROPERTIES:
+:CUSTOM_ID: vision
+:END:
+
+Vantage exists to fill the gap between Redis (single-master, complex cluster
+sharding) and Memcached (no replication, limited data types). Our goals:
+
+1. Drop-in Redis protocol compatibility for the most common commands.
+2. Horizontal write scalability without a primary/replica split.
+3. First-class Rust client with async/await support.
+4. Observable by default: OpenTelemetry traces and Prometheus metrics out of the box.
+
+** Non-Goals
+
+We explicitly do *not* aim to:
+
+- Replace Redis as a pub/sub broker or stream processor.
+- Provide ACID transactional guarantees.
+- Support arbitrary Lua scripting (=EVAL= is a non-goal for v1).
+- Offer a managed cloud service (that is a downstream concern).
+
+** Licence and Governance
+:PROPERTIES:
+:CUSTOM_ID: governance
+:END:
+
+Vantage is released under the *Apache License 2.0*. Governance follows the
+/Benevolent Dictator For Life/ (BDFL) model until the project reaches 1.0,
+at which point a steering committee of five maintainers will be constituted.
+
+See [[file:GOVERNANCE.md]] for the full governance document.
+
+-----
+
+* Architecture
+:PROPERTIES:
+:CUSTOM_ID: architecture
+:END:
+
+** System Components
+:PROPERTIES:
+:CUSTOM_ID: components
+:END:
+
+The Vantage system comprises five major components:
+
+| Component         | Language | Role                                         |
+|-------------------+----------+----------------------------------------------|
+| ~vantage-server~  | Rust     | Core cache daemon, protocol handler          |
+| ~vantage-cluster~ | Rust     | Cluster membership, gossip, topology         |
+| ~vantage-client~  | Rust     | Async client library (Tokio)                 |
+| ~vantage-cli~     | Rust     | Interactive REPL and scripting tool          |
+| ~vantage-exporter~| Go       | Prometheus metrics bridge (sidecar)          |
+
+*** vantage-server
+:PROPERTIES:
+:CUSTOM_ID: vantage-server
+:END:
+
+The server process owns the in-memory keyspace and handles all client
+connections. It is structured as a tower of async middleware layers:
+
+#+begin_example
+TLS termination
+    ↓
+Protocol framing (Redis RESP3 / Vantage binary)
+    ↓
+Command dispatch
+    ↓
+ACL enforcement
+    ↓
+Keyspace mutation / read
+    ↓
+Replication fanout
+    ↓
+Response serialisation
+#+end_example
+
+*** vantage-cluster
+:PROPERTIES:
+:CUSTOM_ID: vantage-cluster
+:END:
+
+Cluster membership uses a variant of the SWIM[fn:swim] gossip protocol with
+the following modifications:
+
+- Piggyback propagation of keyspace metadata (not just membership events).
+- Suspicion sub-protocol suppressed in favour of direct failure detection.
+- Ring topology exposed as a =RwLock<Arc<Ring>>= for zero-copy reads.
+
+[fn:swim] Das, A., Gupta, I., & Motivala, A. (2002). SWIM: Scalable weakly-consistent
+infection-style process group membership protocol. /DSN 2002/.
+
+*** vantage-client
+:PROPERTIES:
+:CUSTOM_ID: vantage-client
+:END:
+
+The async client uses connection pooling with configurable:
+
+- Minimum idle connections per node.
+- Maximum connections per node.
+- Connection acquisition timeout.
+- Health check interval.
+
+#+begin_src rust
+use vantage_client::{Client, Config};
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let config = Config::builder()
+        .nodes(["cache-1:6380", "cache-2:6380", "cache-3:6380"])
+        .tls_ca_cert("ca.crt")
+        .pool_size(32)
+        .build()?;
+
+    let client = Client::connect(config).await?;
+    client.set("hello", "world", None).await?;
+    let val: Option<String> = client.get("hello").await?;
+    println!("{val:?}");  // Some("world")
+    Ok(())
+}
+#+end_src
+
+** Data Flow
+:PROPERTIES:
+:CUSTOM_ID: data-flow
+:END:
+
+*** Write path
+
+A write request follows this path through the system:
+
+1. Client sends =SET key value [EX seconds]= in RESP3 format.
+2. Server decodes the command and performs ACL check.
+3. Consistent hash ring determines which /primary shard/ owns the key.
+4. If the server is *not* the primary shard, the request is *proxied*.
+5. Primary shard acquires a shard lock (=tokio::sync::RwLock=, write mode).
+6. Value is written to the in-memory slab allocator.
+7. Write is appended to the AOF (append-only file) if persistence is enabled.
+8. Replication events are fanned out to replicas asynchronously.
+9. =+OK= response is returned to the client.
+
+*** Read path
+
+1. Client sends =GET key=.
+2. ACL check.
+3. Consistent hash: locate primary shard.
+4. Proxy if not local (or read from any replica if =read_replicas= is enabled).
+5. Acquire shard lock (read mode).
+6. Lookup in the slab, check TTL expiry.
+7. Return value or =$-1= (nil bulk string).
+
+** Consistent Hashing
+:PROPERTIES:
+:CUSTOM_ID: consistent-hashing
+:END:
+
+Vantage uses jump consistent hashing [cite:@lamping2014jump] with =V= virtual
+nodes per physical node (default: =V = 150=).
+
+The ring is rebalanced whenever a node joins or leaves. During rebalance:
+
+- New key assignments are computed atomically.
+- In-flight requests to old shard owners complete normally.
+- Key migration runs in the background at a configurable rate.
+
+** Replication Model
+:PROPERTIES:
+:CUSTOM_ID: replication
+:END:
+
+Each shard is replicated to =R= peers (default: =R = 2=) using asynchronous
+multi-master replication. Conflict resolution is /last-write-wins/ based on
+a Hybrid Logical Clock (HLC)[fn:hlc].
+
+[fn:hlc] Kulkarni, S., Demirbas, M., et al. (2014). Logical physical clocks and
+consistent snapshots in globally distributed databases. /OPODIS 2014/.
+
+*** Replication lag monitoring
+
+:NOTE:
+Replication lag is exposed as a Prometheus gauge =vantage_replication_lag_seconds=.
+Alert threshold: 500 ms sustained for > 60 s → PagerDuty P2.
+:END:
+
+** Eviction Policies
+:PROPERTIES:
+:CUSTOM_ID: eviction
+:END:
+
+| Policy       | Algorithm                    | Use case                         |
+|--------------+------------------------------+----------------------------------|
+| ~lru~        | Approximated LRU (samples=5) | General-purpose                  |
+| ~lfu~        | Count-min sketch, decay=0.5  | Skewed access distributions      |
+| ~ttl~        | Expires-bucket sorted set    | Time-bounded session caches      |
+| ~clock~      | Two-handed CLOCK algorithm   | Low-overhead, uniform workloads  |
+| ~noeviction~ | Return error when full       | Strict capacity guarantees       |
+| ~allkeys-lru~| LRU across all keys          | When all keys may be evicted     |
+
+** Persistence
+:PROPERTIES:
+:CUSTOM_ID: persistence
+:END:
+
+*** Append-Only File (AOF)
+
+The AOF records every write command in RESP3 format, one command per line.
+On restart, the server replays the AOF to reconstruct state.
+
+AOF configuration options:
+
+- ~aof_enabled~: =true= / =false= (default =false=).
+- ~aof_path~: filesystem path (default =/var/lib/vantage/vantage.aof=).
+- ~aof_fsync~: =always= / =everysec= / =no= (default =everysec=).
+- ~aof_rewrite_min_size~: minimum AOF size before compaction (default =64MiB=).
+
+*** Snapshots (RDB-style)
+
+Point-in-time snapshots are written by forking the process and serialising
+the keyspace to a compact binary format. Snapshot schedule is configured via
+=snapshot_schedule= as a cron-like expression.
+
+** Security Model
+:PROPERTIES:
+:CUSTOM_ID: security
+:END:
+
+*** TLS Configuration
+
+All connections (client-to-server and inter-node) use TLS 1.3 with mandatory
+mutual authentication. Certificates must be signed by the cluster CA.
+
+: [tls]
+: ca_cert = "/etc/vantage/ca.crt"
+: server_cert = "/etc/vantage/server.crt"
+: server_key = "/etc/vantage/server.key"
+: require_client_cert = true
+: min_version = "TLSv1.3"
+
+*** Access Control Lists
+
+ACL rules are evaluated in order; first match wins. Rule syntax:
+
+: user alice on >password ~cache:* &* +@read +@write -DEBUG
+: user readonly on >secret ~*  &* +@read
+: user default off
+
+-----
+
+* Requirements
+:PROPERTIES:
+:CUSTOM_ID: requirements
+:END:
+
+** Functional Requirements
+:PROPERTIES:
+:CUSTOM_ID: functional-requirements
+:END:
+
+*** FR-01: Core Data Types
+
+- [X] String (binary-safe, up to 512 MiB)
+- [X] List (doubly linked list or compressed quicklist)
+- [X] Hash (hash table with listpack encoding for small hashes)
+- [X] Set (hash table with intset encoding for small integer sets)
+- [X] Sorted Set (skip list + hash table, listpack for small zsets)
+- [-] Stream (in progress — targeting v1.2)
+- [ ] JSON (planned for v2.0 — requires RFC 8259 compliance)
+- [ ] Bloom Filter (planned, via probabilistic module)
+
+*** FR-02: Key Expiry
+
+- [X] =EX seconds= — expire after N seconds.
+- [X] =PX milliseconds= — expire after N milliseconds.
+- [X] =EXAT unix-timestamp= — expire at Unix timestamp (seconds).
+- [X] =PXAT unix-timestamp-ms= — expire at Unix timestamp (milliseconds).
+- [X] =PERSIST= — remove expiry from a key.
+- [X] =TTL key= — return remaining seconds.
+- [X] =PTTL key= — return remaining milliseconds.
+
+*** FR-03: Cluster Operations
+
+- [X] Automatic cluster discovery via gossip.
+- [X] Online node addition without downtime.
+- [X] Online node removal with key migration.
+- [-] Rolling cluster upgrade (partial — requires coordinator node).
+- [ ] Cross-datacenter replication topology.
+
+*** FR-04: Observability
+
+- [X] =INFO= command (Redis-compatible output).
+- [X] Prometheus metrics endpoint (=vantage-exporter= sidecar).
+- [X] OpenTelemetry traces for all commands (opt-in, sampling configurable).
+- [ ] Structured logging in JSON format (currently plain text).
+- [ ] Integration with Grafana Cloud (dashboard JSON to be published).
+
+*** FR-05: Client Protocol Compatibility
+
+- [X] RESP2 (Redis Serialisation Protocol v2) — full compatibility.
+- [X] RESP3 — full compatibility.
+- [-] Inline commands — partial (single-line =GET/SET= only).
+- [ ] Vantage binary protocol v1 (in design).
+
+** Non-Functional Requirements
+:PROPERTIES:
+:CUSTOM_ID: nfr
+:END:
+
+*** NFR-01: Latency
+:PROPERTIES:
+:CUSTOM_ID: nfr-latency
+:END:
+
+| Percentile | Target   | Measured (v0.9.4) |
+|------------+----------+-------------------|
+| p50        | < 0.1 ms | 0.08 ms           |
+| p95        | < 0.5 ms | 0.31 ms           |
+| p99        | < 1.0 ms | 0.74 ms           |
+| p99.9      | < 5.0 ms | 3.21 ms           |
+
+Conditions: 3-node cluster, 100 concurrent clients, 1 KiB values, 80/20 read/write.
+
+*** NFR-02: Throughput
+
+Target: ≥ 500,000 operations/second per node on standard hardware
+(AWS c6i.2xlarge or equivalent: 8 vCPU, 16 GiB RAM).
+
+Current measured: 620,000 ops/sec (v0.9.4, read-heavy workload).
+
+*** NFR-03: Memory Overhead
+
+Memory overhead per key (excluding value size) must not exceed 128 bytes.
+Current overhead: 84 bytes (slab metadata + hash table entry).
+
+*** NFR-04: Availability
+
+Target: 99.99% uptime (< 52.6 minutes downtime/year).
+Achieved via: replica failover ≤ 5 seconds, health-check interval 1 second.
+
+-----
+
+* API Reference
+:PROPERTIES:
+:CUSTOM_ID: api-reference
+:END:
+
+** String Commands
+:PROPERTIES:
+:CUSTOM_ID: string-commands
+:END:
+
+*** GET
+:PROPERTIES:
+:CUSTOM_ID: cmd-get
+:END:
+
+#+begin_example
+GET key
+#+end_example
+
+Return the value associated with =key=, or nil if the key does not exist.
+Time complexity: O(1). Returns an error if the value is not a string.
+
+*** SET
+:PROPERTIES:
+:CUSTOM_ID: cmd-set
+:END:
+
+#+begin_example
+SET key value [NX | XX] [GET] [EX seconds | PX ms | EXAT ts | PXAT ts | KEEPTTL]
+#+end_example
+
+Set =key= to =value=. Options:
+
+- ~NX~ — only set if key does *not* exist.
+- ~XX~ — only set if key *already* exists.
+- ~GET~ — return the old value before overwriting.
+- ~KEEPTTL~ — preserve existing TTL when overwriting.
+
+Time complexity: O(1).
+
+*** MGET / MSET
+:PROPERTIES:
+:CUSTOM_ID: cmd-mget-mset
+:END:
+
+#+begin_example
+MGET key [key ...]
+MSET key value [key value ...]
+#+end_example
+
+Atomic multi-key read and write. ~MSET~ is always successful. ~MSETNX~
+(set multiple only if none exist) is also supported.
+Time complexity: O(N) where N is the number of keys.
+
+*** INCR / INCRBY / DECR / DECRBY
+:PROPERTIES:
+:CUSTOM_ID: cmd-incr
+:END:
+
+Increment or decrement integer-valued strings atomically.
+
+#+begin_src
+INCR counter         → integer reply
+INCRBY counter 5     → integer reply
+INCRBYFLOAT rate 0.1 → bulk string reply (float as string)
+#+end_src
+
+** List Commands
+:PROPERTIES:
+:CUSTOM_ID: list-commands
+:END:
+
+*** LPUSH / RPUSH
+:PROPERTIES:
+:CUSTOM_ID: cmd-lpush
+:END:
+
+#+begin_example
+LPUSH key element [element ...]
+RPUSH key element [element ...]
+#+end_example
+
+Push elements to the head (=L=) or tail (=R=) of a list.
+Multiple elements are pushed in order: ~LPUSH mylist a b c~ results in =c b a= (c at head).
+
+*** LRANGE
+:PROPERTIES:
+:CUSTOM_ID: cmd-lrange
+:END:
+
+#+begin_example
+LRANGE key start stop
+#+end_example
+
+Return a range of elements. Indices are 0-based; negative indices count from the tail
+(=-1= is the last element). O(S+N) where S is the offset from head/tail and N is range size.
+
+*** LMOVE
+:PROPERTIES:
+:CUSTOM_ID: cmd-lmove
+:END:
+
+#+begin_example
+LMOVE source destination LEFT|RIGHT LEFT|RIGHT
+#+end_example
+
+Atomically move an element from one list to another. Replaces the deprecated ~RPOPLPUSH~.
+
+** Hash Commands
+:PROPERTIES:
+:CUSTOM_ID: hash-commands
+:END:
+
+*** HSET / HGET / HMGET
+:PROPERTIES:
+:CUSTOM_ID: cmd-hset
+:END:
+
+#+begin_example
+HSET key field value [field value ...]
+HGET key field
+HMGET key field [field ...]
+HGETALL key
+#+end_example
+
+Hash field operations. ~HSET~ now accepts multiple field-value pairs (since Redis 4.0).
+
+*** HINCRBY / HINCRBYFLOAT
+
+Increment hash field values atomically — identical semantics to ~INCR~/~INCRBYFLOAT~.
+
+** Sorted Set Commands
+:PROPERTIES:
+:CUSTOM_ID: zset-commands
+:END:
+
+*** ZADD
+:PROPERTIES:
+:CUSTOM_ID: cmd-zadd
+:END:
+
+#+begin_example
+ZADD key [NX|XX] [GT|LT] [CH] [INCR] score member [score member ...]
+#+end_example
+
+Add members with scores to a sorted set.
+
+- ~GT~ — only update if new score is *greater* than current.
+- ~LT~ — only update if new score is *less* than current.
+- ~CH~ — return count of /changes/ (adds + updates) instead of only adds.
+
+*** ZRANGEBYSCORE / ZRANGEBYLEX / ZRANGE
+:PROPERTIES:
+:CUSTOM_ID: cmd-zrange
+:END:
+
+~ZRANGE~ (added in Redis 6.2) unifies all range queries:
+
+#+begin_example
+ZRANGE key min max [BYSCORE|BYLEX] [REV] [LIMIT offset count] [WITHSCORES]
+#+end_example
+
+The older ~ZRANGEBYSCORE~ and ~ZRANGEBYLEX~ are deprecated aliases.
+
+** Administrative Commands
+:PROPERTIES:
+:CUSTOM_ID: admin-commands
+:END:
+
+*** INFO
+
+Returns server statistics in Redis-compatible format. Sections:
+
+- =server= — version, uptime, OS, Rust version.
+- =clients= — connected clients, blocked clients.
+- =memory= — used memory, peak memory, allocator stats.
+- =cluster= — cluster enabled, node count, ring version.
+- =keyspace= — per-database key count and expiry statistics.
+
+*** CLUSTER INFO / CLUSTER NODES
+
+Returns cluster topology. =CLUSTER NODES= output is compatible with Redis
+cluster tooling.
+
+*** DEBUG SLEEP / DEBUG JMAP
+
+:NOTE:
+=DEBUG= commands are available only when the server is built with the
+=debug-commands= feature flag. They must never be enabled in production.
+:END:
+
+-----
+
+* Testing
+:PROPERTIES:
+:CUSTOM_ID: testing
+:END:
+
+** Test Infrastructure
+:PROPERTIES:
+:CUSTOM_ID: test-infra
+:END:
+
+Tests are organised into three layers:
+
+- Unit tests — co-located with source, run with ~cargo test~.
+- Integration tests — in =tests/= directory, require a running cluster.
+- Compatibility tests — the Redis test suite (=redis-tests=) run against Vantage.
+
+** Unit Test Coverage
+:PROPERTIES:
+:CUSTOM_ID: unit-coverage
+:END:
+:PROPERTIES:
+:coverage_target: 85%
+:coverage_current: 87.3%
+:END:
+
+Current coverage: *87.3%* (target: 85%). Report: [[file:target/coverage/html/index.html]].
+
+Uncovered paths are primarily in:
+- Error handling branches in the AOF replay path.
+- =CLUSTER RESET= edge cases.
+- Platform-specific memory allocator paths.
+
+** Integration Test Suites
+:PROPERTIES:
+:CUSTOM_ID: integration-tests
+:END:
+
+*** Cluster formation tests
+
+Tests in =tests/cluster/=:
+
+- [X] Three-node cluster formation from scratch.
+- [X] Node join to existing two-node cluster.
+- [X] Node graceful leave with key migration.
+- [X] Node crash-recovery (simulated via =SIGKILL=).
+- [X] Split-brain detection and resolution.
+- [-] Five-node cluster with asymmetric partition (flaky — see issue #247).
+- [ ] Ten-node cluster stress test (requires dedicated CI machine).
+
+*** Replication tests
+
+- [X] Synchronous write confirmed on all replicas.
+- [X] Replica lag detection triggers alert.
+- [X] Stale replica read returns error with =read_replicas=strict= config.
+- [X] LWW conflict resolution with concurrent writes from two nodes.
+- [ ] HLC skew > 500 ms triggers failsafe (blocked on #301).
+
+*** Persistence tests
+
+- [X] AOF replay produces identical keyspace.
+- [X] AOF compaction reduces file size by ≥ 50% on typical workloads.
+- [X] Snapshot restore from cold start.
+- [-] Cross-version AOF compatibility (v0.8 → v0.9, partially tested).
+
+** Benchmarks
+:PROPERTIES:
+:CUSTOM_ID: benchmarks
+:END:
+
+Run benchmarks with:
+
+#+begin_src bash
+cargo bench --bench throughput -- --save-baseline main
+#+end_src
+
+#+CAPTION: Benchmark results — v0.9.4 vs v0.9.3
+| Benchmark             | v0.9.3       | v0.9.4       | Δ      |
+|-----------------------+--------------+--------------+--------|
+| GET (p50)             | 0.11 ms      | 0.08 ms      | -27%   |
+| SET (p50)             | 0.14 ms      | 0.09 ms      | -36%   |
+| MGET 10 keys (p50)    | 0.38 ms      | 0.22 ms      | -42%   |
+| ZADD (p50)            | 0.19 ms      | 0.13 ms      | -32%   |
+| Throughput (ops/sec)  | 491,000      | 620,000      | +26%   |
+
+-----
+
+* Deployment
+:PROPERTIES:
+:CUSTOM_ID: deployment
+:END:
+
+** Minimum Hardware Requirements
+:PROPERTIES:
+:CUSTOM_ID: hardware-requirements
+:END:
+
+For a production three-node cluster:
+
+| Resource | Minimum  | Recommended |
+|----------+----------+-------------|
+| CPU      | 4 vCPU   | 8+ vCPU     |
+| RAM      | 8 GiB    | 32+ GiB     |
+| Storage  | 20 GiB   | 100+ GiB NVMe |
+| Network  | 1 Gbps   | 10 Gbps     |
+
+** Docker Deployment
+:PROPERTIES:
+:CUSTOM_ID: docker
+:END:
+
+#+begin_src yaml
+version: "3.9"
+services:
+  vantage-1:
+    image: ghcr.io/example/vantage:0.9.4
+    ports:
+      - "6380:6380"
+    volumes:
+      - ./config/node-1.toml:/etc/vantage/config.toml
+      - ./certs:/etc/vantage/certs
+      - vantage-1-data:/var/lib/vantage
+    environment:
+      VANTAGE_NODE_ID: "node-1"
+      RUST_LOG: "vantage=info"
+
+  vantage-2:
+    image: ghcr.io/example/vantage:0.9.4
+    ports:
+      - "6381:6380"
+    volumes:
+      - ./config/node-2.toml:/etc/vantage/config.toml
+      - ./certs:/etc/vantage/certs
+      - vantage-2-data:/var/lib/vantage
+    environment:
+      VANTAGE_NODE_ID: "node-2"
+
+volumes:
+  vantage-1-data:
+  vantage-2-data:
+#+end_src
+
+** Kubernetes Deployment
+:PROPERTIES:
+:CUSTOM_ID: kubernetes
+:END:
+
+A Helm chart is available at [[https://github.com/example/vantage-helm]].
+
+Recommended StatefulSet configuration:
+
+- =replicas=: 3 (minimum for quorum).
+- =podAntiAffinity=: =requiredDuringSchedulingIgnoredDuringExecution= — one pod per node.
+- =topologySpreadConstraints=: spread across availability zones.
+- =resources.requests.memory=: set to 80% of intended keyspace size.
+
+*** Health probes
+
+#+begin_src yaml
+livenessProbe:
+  tcpSocket:
+    port: 6380
+  initialDelaySeconds: 10
+  periodSeconds: 5
+readinessProbe:
+  exec:
+    command: ["vantage-cli", "ping"]
+  initialDelaySeconds: 5
+  periodSeconds: 3
+#+end_src
+
+** Configuration Reference
+:PROPERTIES:
+:CUSTOM_ID: configuration-reference
+:END:
+
+#+CAPTION: Configuration file — top-level sections
+| Section       | Key                  | Type    | Default        | Description                          |
+|---------------+----------------------+---------+----------------+--------------------------------------|
+| =[server]=    | ~bind~               | string  | =0.0.0.0:6380= | Listen address                       |
+| =[server]=    | ~worker_threads~     | uint    | = CPU count=   | Tokio worker threads                 |
+| =[server]=    | ~max_connections~    | uint    | =10000=        | Max simultaneous client connections  |
+| =[cluster]=   | ~nodes~              | array   | =[]= (standalone) | Bootstrap peer addresses          |
+| =[cluster]=   | ~virtual_nodes~      | uint    | =150=          | Virtual nodes per physical node      |
+| =[cluster]=   | ~replication_factor~ | uint    | =2=            | Number of replicas per shard         |
+| =[memory]=    | ~max_memory~         | size    | =0= (unlimited)| Maximum keyspace memory usage        |
+| =[memory]=    | ~eviction_policy~    | enum    | =lru=          | Eviction algorithm when at max       |
+| =[persistence]=| ~aof_enabled~       | bool    | =false=        | Enable append-only file              |
+| =[persistence]=| ~aof_fsync~         | enum    | =everysec=     | AOF fsync frequency                  |
+| =[tls]=       | ~enabled~            | bool    | =false=        | Enable TLS                           |
+
+** Monitoring and Alerting
+:PROPERTIES:
+:CUSTOM_ID: monitoring
+:END:
+
+*** Key metrics
+
+Prometheus metrics exposed by =vantage-exporter= on =:9121/metrics=:
+
+- =vantage_commands_total= (counter, labelled by command and status).
+- =vantage_command_duration_seconds= (histogram).
+- =vantage_connected_clients= (gauge).
+- =vantage_used_memory_bytes= (gauge).
+- =vantage_evicted_keys_total= (counter).
+- =vantage_replication_lag_seconds= (gauge, per replica).
+- =vantage_cluster_nodes= (gauge).
+- =vantage_aof_pending_writes= (gauge).
+
+*** Recommended alert rules
+
+| Alert                      | Condition                                   | Severity |
+|----------------------------+---------------------------------------------+----------|
+| =VantageHighLatency=       | p99 > 5 ms for 2 minutes                   | warning  |
+| =VantageReplicationLag=    | lag > 500 ms for 1 minute                  | warning  |
+| =VantageNodeDown=          | node unreachable for 10 seconds             | critical |
+| =VantageMemoryPressure=    | used memory > 90% of max_memory            | warning  |
+| =VantageEvictionRate=      | evictions > 1000/sec for 5 minutes         | warning  |
+
+-----
+
+* Contributing
+:PROPERTIES:
+:CUSTOM_ID: contributing
+:END:
+
+** Development Setup
+:PROPERTIES:
+:CUSTOM_ID: dev-setup
+:END:
+
+Prerequisites:
+
+- Rust 1.75.0 or later (=rustup update stable=).
+- =protoc= 3.21+ (for the binary protocol code generation).
+- Docker (for integration tests).
+- =cargo-nextest= for faster test execution.
+
+#+begin_src bash
+git clone https://github.com/example/vantage.git
+cd vantage
+cargo build
+cargo nextest run          # unit tests
+./scripts/start-test-cluster.sh  # integration tests
+cargo bench                # benchmarks
+#+end_src
+
+** Code Style
+:PROPERTIES:
+:CUSTOM_ID: code-style
+:END:
+
+- Run =cargo fmt= before every commit.
+- Run =cargo clippy -- -D warnings= before every commit.
+- All public API items must have Rustdoc comments.
+- Error types must implement =std::error::Error= and produce human-readable messages.
+- No =unwrap()= or =expect()= outside of tests and =main()= startup.
+
+** Pull Request Process
+:PROPERTIES:
+:CUSTOM_ID: pr-process
+:END:
+
+1. Fork the repository and create a feature branch from =main=.
+2. Ensure all tests pass: =cargo nextest run --all-features=.
+3. Add or update tests for any changed behaviour.
+4. Update =CHANGELOG.md= under the =Unreleased= heading.
+5. Open a PR against =main=. A maintainer will review within 5 business days.
+6. Two approvals are required before merge.
+7. PRs are merged with squash-and-merge; the commit message becomes the changelog entry.
+
+** Architectural Decision Records
+:PROPERTIES:
+:CUSTOM_ID: adrs
+:END:
+
+ADRs document significant architectural decisions. They are stored in =docs/adr/=.
+
+*** ADR-001: Adopt jump consistent hashing
+:PROPERTIES:
+:CUSTOM_ID: adr-001
+:END:
+CLOSED: [2024-03-15 Fri]
+
+*Status:* Accepted.
+*Decision:* Use jump consistent hashing over rendezvous hashing.
+*Rationale:* Lower variance in key distribution; faster computation; well-studied
+guarantees. Trade-off: less flexibility in heterogeneous node weights.
+
+*** ADR-002: RESP3 as default client protocol
+:PROPERTIES:
+:CUSTOM_ID: adr-002
+:END:
+CLOSED: [2024-04-02 Tue]
+
+*Status:* Accepted.
+*Decision:* Default new clients to RESP3; maintain RESP2 compatibility.
+*Rationale:* RESP3 supports typed responses (maps, sets) natively, reducing
+client-side parsing overhead. Existing Redis clients continue to work unchanged.
+
+*** ADR-003: Tokio over async-std as the async runtime
+:PROPERTIES:
+:CUSTOM_ID: adr-003
+:END:
+CLOSED: [2024-04-10 Wed]
+
+*Status:* Accepted.
+*Decision:* Use Tokio as the sole async runtime.
+*Rationale:* Tokio has the largest ecosystem (tower, hyper, axum, tonic).
+The work-stealing scheduler fits our use case better than async-std's
+single-threaded per-thread-per-core model.
+
+*** ADR-004: LWW conflict resolution using Hybrid Logical Clocks
+:PROPERTIES:
+:CUSTOM_ID: adr-004
+:END:
+CLOSED: [2024-05-20 Mon]
+
+*Status:* Accepted.
+*Decision:* Use HLC timestamps for LWW conflict resolution instead of wall-clock time.
+*Rationale:* Wall-clock LWW suffers from clock skew across nodes. HLC guarantees
+that =HLC(a) < HLC(b)= whenever event =a= causally precedes event =b=, even with
+modest clock drift (< 500 ms). See [cite:@kulkarni2014hlc].
+
+*** ADR-005: Pluggable eviction via trait objects
+:PROPERTIES:
+:CUSTOM_ID: adr-005
+:END:
+CLOSED: [2024-07-01 Mon]
+
+*Status:* Accepted.
+*Decision:* Model eviction policies as ~dyn EvictionPolicy~ trait objects rather
+than an enum.
+*Rationale:* Allows third-party eviction policies without modifying core code.
+Performance cost (one virtual dispatch per eviction candidate evaluation) is
+acceptable at < 1 ns overhead per call.
+
+-----
+
+* Changelog
+:PROPERTIES:
+:CUSTOM_ID: changelog
+:END:
+
+** Unreleased
+:PROPERTIES:
+:CUSTOM_ID: unreleased
+:END:
+
+- IN-PROGRESS Add ~OBJECT FREQ~ command for LFU policy introspection. :feature:
+- TODO Implement ~LMPOP~ and ~ZMPOP~ for multi-key blocking pops. :feature:
+- TODO Structured JSON logging via =tracing-subscriber= JSON formatter. :observability:
+
+** v0.9.4 — 2025-01-03
+:PROPERTIES:
+:CUSTOM_ID: v094
+:END:
+CLOSED: [2025-01-03 Fri]
+
+- DONE Optimised slab allocator: 27% reduction in allocation latency. :performance:
+- DONE Fixed race condition in HLC synchronisation under very high write concurrency. :bugfix:
+- DONE Upgraded to Tokio 1.42 and Rustls 0.23. :maintenance:
+- DONE Added =OBJECT ENCODING= command for introspecting internal data structure choice. :feature:
+
+** v0.9.3 — 2024-12-01
+:PROPERTIES:
+:CUSTOM_ID: v093
+:END:
+CLOSED: [2024-12-01 Sun]
+
+- DONE Introduced CLOCK eviction policy. :feature:
+- DONE Fixed =EXPIRE= with =XX= flag incorrectly setting expiry on non-expiring keys. :bugfix:
+- DONE Improved cluster rebalance speed by 40% via parallel key migration. :performance:
+- DONE Added =vantage_aof_pending_writes= Prometheus metric. :observability:
+
+** v0.9.2 — 2024-11-01
+:PROPERTIES:
+:CUSTOM_ID: v092
+:END:
+CLOSED: [2024-11-01 Fri]
+
+- DONE Fixed critical bug: =LMOVE= with =source == destination= corrupted the list. :bugfix:
+- DONE Added =OBJECT IDLETIME= command. :feature:
+- DONE Documented all configuration keys in =docs/configuration.md=. :docs:
+
+** v0.9.1 — 2024-10-07
+:PROPERTIES:
+:CUSTOM_ID: v091
+:END:
+CLOSED: [2024-10-07 Mon]
+
+- DONE TLS: added support for PKCS#12 certificate bundles in addition to PEM. :feature:
+- DONE Fixed memory leak when a client disconnects mid-command. :bugfix:
+- DONE Reduced default =max_connections= from 50,000 to 10,000 (more sensible default). :config:
+
+** v0.9.0 — 2024-09-15
+:PROPERTIES:
+:CUSTOM_ID: v090
+:END:
+CLOSED: [2024-09-15 Sun]
+
+*Breaking changes:*
+
+- Configuration file format changed from YAML to TOML.
+- =CLUSTER INFO= output now includes =vantage_version= field.
+- Minimum supported Rust version raised from 1.70 to 1.75.
+
+Changes:
+
+- DONE Rewrote cluster gossip using SWIM variant; significantly reduced bandwidth. :architecture:
+- DONE Added =OBJECT HELP= command. :feature:
+- DONE Full RESP3 support. :feature:
+- DONE =vantage-exporter= sidecar released as a separate binary. :observability:
+- DONE Removed legacy =--compat-redis-2.8= flag. :breaking:
+
+** v0.8.5 — 2024-08-01
+:PROPERTIES:
+:CUSTOM_ID: v085
+:END:
+CLOSED: [2024-08-01 Thu]
+
+- DONE Fixed =SCAN= cursor wraparound on very large keyspaces (> 100M keys). :bugfix:
+- DONE =ZADD GT/LT= options now correctly handle negative infinity scores. :bugfix:
+
+** v0.8.0 — 2024-06-15
+:PROPERTIES:
+:CUSTOM_ID: v080
+:END:
+CLOSED: [2024-06-15 Sat]
+
+*First public beta.*
+
+- DONE Core string, list, hash, set, sorted set operations. :feature:
+- DONE Three-node cluster with consistent hashing. :feature:
+- DONE LRU and TTL eviction policies. :feature:
+- DONE AOF persistence. :feature:
+- DONE Basic TLS (server-side only in this release). :feature:
+- DONE =vantage-cli= interactive REPL. :feature:
+
+-----
+
+* Known Issues and Roadmap
+:PROPERTIES:
+:CUSTOM_ID: roadmap
+:END:
+
+** Open Issues
+:PROPERTIES:
+:CUSTOM_ID: open-issues
+:END:
+
+*** Performance Profiling Tooling
+:PROPERTIES:
+:CUSTOM_ID: perf-tools
+:END:
+
+Tooling used for performance investigation:
+
+- ~cargo flamegraph~ — CPU flame graphs via =perf= or =dtrace=.
+- ~heaptrack~ — heap allocation profiling (Linux only).
+- ~valgrind --tool=massif~ — heap usage over time.
+- ~tokio-console~ — async task visualisation for Tokio runtimes.
+
+*** Fuzzing Infrastructure
+:PROPERTIES:
+:CUSTOM_ID: fuzzing
+:END:
+
+Fuzz targets are maintained in =fuzz/= using =cargo-fuzz= (libFuzzer).
+
+Current fuzz targets:
+
+| Target                 | Corpus size | Findings (lifetime) |
+|------------------------+-------------+---------------------|
+| ~fuzz_resp_parser~     | 12,400      | 3 fixed, 0 open     |
+| ~fuzz_command_dispatch~| 8,200       | 1 fixed, 0 open     |
+| ~fuzz_aof_replay~      | 3,100       | 2 fixed, 1 open     |
+| ~fuzz_cluster_gossip~  | 5,800       | 0 fixed, 0 open     |
+
+
+
+*** BLOCKED Issue #247: Asymmetric partition test is flaky :testing:cluster:
+SCHEDULED: <2025-02-01 Sat>
+:PROPERTIES:
+:issue_url: https://github.com/example/vantage/issues/247
+:blocker: Requires deterministic network simulation
+:END:
+
+The five-node asymmetric partition test occasionally fails in CI due to
+timing sensitivity in the suspicion sub-protocol. Blocked on introducing
+a deterministic network simulation layer.
+
+*** BLOCKED Issue #301: HLC failsafe for skew > 500ms :safety:
+SCHEDULED: <2025-01-20 Mon>
+:PROPERTIES:
+:issue_url: https://github.com/example/vantage/issues/301
+:END:
+
+When HLC skew exceeds 500 ms, the server should refuse writes and alert
+operators. Implementation is ready but blocked on consensus about the
+correct recovery procedure.
+
+*** TODO Issue #318: =WAIT= command not accounting for replica timeouts :correctness:
+SCHEDULED: <2025-01-15 Wed>
+:PROPERTIES:
+:issue_url: https://github.com/example/vantage/issues/318
+:effort: 2:00
+:END:
+
+The =WAIT numreplicas timeout= command returns immediately when =timeout=0=
+even when replicas have not acknowledged the write. This violates the
+Redis-compatible specification.
+
+*** TODO Issue #312: Structured JSON logging :observability:
+SCHEDULED: <2025-02-15 Sat>
+:PROPERTIES:
+:issue_url: https://github.com/example/vantage/issues/312
+:effort: 3:00
+:END:
+
+Currently all logs are plain-text. Need to add a JSON formatter using
+=tracing-subscriber= for log aggregation systems (Loki, CloudWatch).
+
+** Planned Features — v1.0
+:PROPERTIES:
+:CUSTOM_ID: v1-roadmap
+:END:
+
+- Stream data type (~XADD~, ~XREAD~, consumer groups).
+- Vantage binary protocol v1 specification and implementation.
+- ~EVAL~ / Lua scripting (subset — no global state, no network access).
+- Cross-datacenter active-active replication (initial topology support).
+- Official Grafana dashboard JSON.
+
+** Planned Features — v2.0
+:PROPERTIES:
+:CUSTOM_ID: v2-roadmap
+:END:
+
+- JSON data type (RFC 8259, with =JSONGET=/=JSONSET= path syntax).
+- Bloom filter and Cuckoo filter modules.
+- Vector similarity search (ANN index, targeting HNSW algorithm).
+- WASM plugin host for custom commands.
+
+-----
+
+* Footnotes
+
+[fn:swim] Das, A., Gupta, I., & Motivala, A. (2002). SWIM: Scalable
+weakly-consistent infection-style process group membership protocol. *DSN 2002*,
+303–312. https://doi.org/10.1109/DSN.2002.1028914
+
+[fn:hlc] Kulkarni, S., Demirbas, M., Madeppa, D., Avva, B., & Leone, M. (2014).
+Logical physical clocks and consistent snapshots in globally distributed
+databases. *OPODIS 2014*, LNCS 8878, 17–32.

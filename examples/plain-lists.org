@@ -1,0 +1,261 @@
+#+TITLE: The Wanderer's Cookbook — List Showcase
+#+AUTHOR: Oswick Quelby
+
+* Unordered Lists
+
+** Using the hyphen bullet
+
+Essential pantry staples:
+
+- Olive oil (extra virgin, cold-pressed)
+- Sea salt (flaked, not iodised)
+- Black pepper (whole peppercorns for grinding)
+- Garlic (fresh heads, not pre-minced)
+- Good-quality tinned tomatoes
+- Dried pasta in at least three shapes
+- Arborio rice for risotto and rice pudding
+
+** Using the plus bullet
+
+Recommended kitchen tools:
+
++ Chef's knife (200 mm blade, full tang)
++ Wooden cutting board (at least 45 × 30 cm)
++ Heavy-bottomed saucepan (3-litre capacity)
++ Cast-iron skillet (25 cm)
++ Instant-read thermometer
++ Microplane grater
++ Fine-mesh sieve
+
+** Using the asterisk bullet (indented — not a heading)
+
+ * Balloon whisk
+ * Silicone spatula
+ * Bench scraper
+ * Spider strainer
+ * Kitchen twine
+
+-----
+
+* Ordered Lists
+
+** Digit counter — period terminator
+
+Method for a classic beurre blanc:
+
+1. Combine 120 ml dry white wine and 60 ml white wine vinegar in a small saucepan.
+2. Add two finely minced shallots and a pinch of white pepper.
+3. Reduce over medium heat until only 2 tablespoons of liquid remain.
+4. Remove from heat and let cool to approximately 60°C.
+5. Add 250 g cold unsalted butter, one cube at a time, whisking constantly.
+6. Return briefly to very low heat if the emulsion cools too much.
+7. Strain through a fine sieve and season with salt and lemon juice.
+8. Keep warm in a bain-marie at 55°C until service.
+
+** Digit counter — parenthesis terminator
+
+Steps to sharpen a knife on a whetstone:
+
+1) Soak the 1000-grit stone in water for ten minutes.
+2) Hold the blade at a consistent 15–20° angle to the stone.
+3) Push the edge forward in smooth arcs, heel to tip, ten strokes per side.
+4) Move to the 3000-grit stone and repeat with lighter pressure.
+5) Finish on the 6000-grit stone with minimal pressure, eight strokes per side.
+6) Strop on leather five times per side.
+7) Test sharpness by slicing a sheet of paper cleanly.
+
+** Letter counter — period terminator
+
+Wine pairing principles (from lightest to most complex):
+
+a. Sparkling wines before still; dry before off-dry.
+b. White wines before red; light reds before heavy reds.
+c. Match weight: delicate dishes with delicate wines.
+d. Bridge flavours: acidic wines with acidic dishes.
+e. Contrast when bridge fails: salty cheese with sweet Sauternes.
+
+** Letter counter — parenthesis terminator
+
+Order of classical sauce families:
+
+a) Béchamel (butter, flour, milk)
+b) Velouté (butter, flour, white stock)
+c) Espagnole (brown stock, mirepoix, tomato)
+d) Sauce tomat (tomato, stock, aromatics)
+e) Hollandaise (egg yolk, butter, acid)
+
+** Counter-set — resetting mid-list
+
+The full mise-en-place checklist, numbered from 5 for legacy compatibility:
+
+5. [@5] Review the day's bookings and note dietary restrictions.
+6. Check that all proteins have been portioned and tempered.
+7. Confirm vegetable prep is complete and stored correctly.
+8. [@8] Taste and adjust all sauces and soups.
+9. Plate a test portion of each dish.
+10. Brief the front-of-house team at 17:30.
+
+A second sequence reset for desserts:
+
+1. [@1] Confirm gelato is at scooping temperature (-11°C).
+2. Pre-plate all cold dessert components.
+3. [@5] Torch crème brûlée sugar to order only.
+
+-----
+
+* Descriptive Lists
+
+Regional flour varieties and their uses:
+
+- "00" flour :: Ultra-fine Italian wheat flour; ideal for fresh pasta and Neapolitan pizza dough. Protein content 9–12%.
+- Bread flour :: High-gluten wheat flour (12–14% protein); gives chew and structure to yeast-leavened breads.
+- Cake flour :: Very low protein (7–9%); produces tender crumb in layer cakes and delicate pastries.
+- Semolina :: Coarse-ground durum wheat; used for dried pasta, gnocchi alla romana, and polenta-style porridge.
+- Buckwheat :: Gluten-free pseudo-grain flour; earthy and slightly bitter; used in blinis, soba noodles, and galettes.
+- Chestnut :: Naturally sweet, gluten-free; pairs well with honey and aged cheeses; used in Corsican polenta and castagnaccio.
+- Teff :: Tiny Ethiopian grain, iron-rich and slightly molasses-flavoured; the base of injera flatbread.
+
+Equipment terms:
+
+- Bain-marie :: A water bath used to apply gentle, indirect heat — essential for custards, melting chocolate, and holding sauces.
+- Chinois :: A very fine conical strainer for clarifying stocks and sauces to a mirror finish.
+- Mandoline :: An adjustable slicing tool for producing uniform, paper-thin cuts of vegetables and fruit.
+- Tamis :: A drum sieve used to aerate flour or pass cooked vegetables into a smooth purée.
+
+-----
+
+* Checkboxes
+
+** Shopping list — mixed states
+
+- [X] Saffron (0.5 g, Spanish)
+- [X] Smoked paprika (sweet and hot varieties)
+- [X] Dried morel mushrooms (30 g)
+- [-] Aged Manchego (waiting for the specialist cheesemonger to restock)
+- [ ] Medjool dates (two dozen)
+- [ ] Pine nuts (100 g, not Chinese variety)
+- [X] Tahini (raw sesame, not roasted)
+- [ ] Preserved lemons (or make fresh batch)
+- [-] Pomegranate molasses (checking three shops)
+- [ ] Barberries (dried, sourberry alternative acceptable)
+
+** Prep checklist for Friday service
+
+- [X] Butcher whole lamb shoulder into collar, rack, and saddle portions.
+- [X] Prepare lamb stock from bones (6-hour reduction).
+- [X] Render duck fat and confit duck legs (72-hour confit at 65°C).
+- [-] Cure salmon gravlax (48 hours, currently curing since Wednesday).
+- [ ] Make sourdough levain for Saturday bake.
+- [ ] Prep beetroot in three textures: roasted, gel, raw-pickled.
+- [ ] Turn 60 potato barrels for garnish.
+- [ ] Make verjuice reduction for the scallop course.
+
+-----
+
+* Nested Lists
+
+** A menu with nested structure
+
+Tasting menu — Spring edition:
+
+- Amuse-bouche
+  - Oyster, cucumber water, dill oil
+  - Radish, whipped butter, roe
+- First course
+  - Option A: Asparagus, mousseline, black truffle
+  - Option B: Burrata, pea, preserved lemon
+    - Vegetarian
+    - Can be made vegan (omit cheese, substitute cashew cream)
+- Second course
+  - Fish: Turbot, beurre blanc, samphire
+    - Wine pairing: Chablis Premier Cru
+  - Meat: Squab, cherry, foie gras
+    - Wine pairing: Gevrey-Chambertin
+- Pre-dessert
+  - Yoghurt sorbet, honey, buckwheat tuile
+- Main dessert
+  - Dark chocolate tart, hazelnut, salted caramel
+  - Alternative: Seasonal fruit pavlova
+
+** Nested ordered lists
+
+Full recipe structure for Bouillabaisse:
+
+1. Prepare the stock
+   1. Sweat onion, fennel, and leek in olive oil until soft (8 minutes).
+   2. Add garlic, tomato paste, and saffron; cook 2 minutes.
+   3. Add fish bones and heads; cover with cold water.
+   4. Simmer 25 minutes — do not boil or the stock will turn cloudy.
+   5. Strain, discard solids, reserve stock.
+2. Prepare the rouille
+   a. Pound garlic and salt to a paste in a mortar.
+   b. Add saffron, soaked in a teaspoon of warm water.
+   c. Work in egg yolk, then drizzle in olive oil to emulsify.
+   d. Season with lemon juice, cayenne, and pepper.
+3. Cook the seafood
+   1. Bring stock to a rolling boil.
+   2. Add firm fish (monkfish, John Dory) and cook 4 minutes.
+   3. Add delicate fish (red mullet, sea bream) and cook 2 minutes.
+   4. Add mussels and clams; cook until they open (2–3 minutes).
+4. Serve
+   a. Place toasted baguette slices in each bowl.
+   b. Spread rouille generously on toast.
+   c. Ladle hot broth and fish over the toast.
+   d. Serve remaining rouille on the side.
+
+-----
+
+* List Items Containing Other Elements
+
+** Items with sub-blocks
+
+- Stock types and their properties:
+  #+begin_quote
+  A good stock is the foundation of French cooking — it cannot be rushed.
+  — Auguste Escoffier
+  #+end_quote
+
+- Braising liquid ratios (fixed-width reference):
+  : Red wine braise:      60% stock, 30% wine, 10% aromatics
+  : White wine braise:    70% stock, 20% wine, 10% aromatics
+  : Milk braise:          100% milk (or buttermilk), aromatics only
+
+- Temperatures for sous-vide cooking:
+  | Ingredient    | Temperature | Time      |
+  |---------------+-------------+-----------|
+  | Chicken breast | 63°C       | 1.5 hours |
+  | Duck confit   | 65°C        | 36 hours  |
+  | Beef short rib | 72°C       | 48 hours  |
+  | Egg (soft)    | 63°C        | 45 min    |
+  | Salmon        | 47°C        | 30 min    |
+
+** Items with drawers
+
+- Sourdough starter notes:
+  :FEEDING_LOG:
+  [2025-01-04 Sat] Fed 1:1:1 (starter:flour:water). Rose 3× in 4 hours.
+  [2025-01-05 Sun] Fed 1:2:2. Peak at 6 hours — slightly slower.
+  [2025-01-06 Mon] Fed 1:5:5. Testing for long cold ferment.
+  :END:
+
+- Fermentation crock (sauerkraut batch 7):
+  :NOTES:
+  Started 2024-12-15. Cabbage from local farm, 2% salt by weight.
+  Pressed under brine with weight. Fermenting at 18°C cellar temperature.
+  Ready to taste after 4 weeks (2025-01-12).
+  :END:
+
+** Items terminating on two blank lines
+
+- This is a list item that contains multiple paragraphs.
+
+  The second paragraph is indented by two spaces to remain part of the item.
+  It contains a continuation of the thought.
+
+  A third paragraph, still part of the same item.
+
+
+- This item begins after the two blank lines that ended the previous item.
+  Two consecutive blank lines terminate the list item above.
+
+- Final item in the list.
