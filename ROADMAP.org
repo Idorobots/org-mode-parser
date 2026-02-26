@@ -1,7 +1,10 @@
 #+TITLE: A parser for Org Mode nodes
 
 * Formal-ish specification
-** TODO Official docs analysis
+** DONE Official docs analysis
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-02-26 Thu 23:02]
+:END:
 We will be building an Org Mode file parser that aims to support all Org Mode features (eventually). The goal is to do some research that will help decide the right technologies used to iplement the parser.
 
 Please analyze the official Org Mode syntax reference documentation and write it down in docs/research/syntax.md in a more usable fashion. You can find the official documentation here: https://orgmode.org/worg/org-syntax.html
