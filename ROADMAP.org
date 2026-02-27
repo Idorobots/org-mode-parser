@@ -63,13 +63,22 @@ This took so much time and effort on the AI part it's kinda surprising. It backt
 
 The prompt above probably needs to be rewritten to try to get the AI to approximate the target syntax, or write it iteratively, starting with main features and then extending the syntax with less commonly used stuff.
 
-** TODO Tree-sitter parser
+** DONE Tree-sitter parser plan
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-02-27 Fri 13:36]
+:END:
 Build a parser based on =tree-sitter= (https://tree-sitter.github.io/tree-sitter/index.html) and the formal grammar description in @docs/plans/syntax.md.
 
 The parser should preserve the source locations of all the parsed nodes, this property will be used for original content reconstruction. Please take special care to implement error recovery in the parser, we want descriptive parse error messages.
+Don't worry about the usability of the parsers output objects, we will address the usability (mapping parsed objects to semantic nodes) in Python at a later point.
 
 The parser will be embedded in Python at a later stage.
 You can test the parser on sample org files found in the examples/ directory in addition to using unittests.
+
+Write the implementation plan down to docs/plans/tree-sitter-parser-impl.md
+
+** TODO Implement the tree-sitten parser
+Implement the plan from @docs/plans/tree-sitter-parser-impl.md file.
 
 ** TODO Python wrapper on tree-sitter
 Create a scaffold of a Python project using Poetry as the build tool. Include =mypy= for typings, =ruff= for linting and formatting and =pytest= for tests. The project will be a library that wraps the tree-sitter based parser, so include =py-tree-sitter= in the dependencies as well. For development, add =pyright= lang server.
@@ -80,7 +89,12 @@ The source code of the library should expose the tree-sitter parser with thin Py
 
 Create an extensive test suite that will run the parser against the test files.
 
-* Parser implementation
+Write the implementation plan down to docs/plans/python-wrapper-impl.md
+
+** TODO Implement the Python wrapper
+Implement the plan from @docs/plans/python-wrapper-impl.md file.
+
+* Semantic nodes implementation
 - somewhat compatible with orgparse node layout (root node & env separate, rich data abstractions)
 - mutable by default
 - supports any drawers, spacial treatment for logbook & properties
