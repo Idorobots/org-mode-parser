@@ -47,13 +47,21 @@ Create at least one file that contains more than a 100 nodes of various nestings
 Use your creativity for the node contents, such as headings, tags, properties and bodies.
 
 * Grammar
-** TODO Formal grammar
+** DONE Formal grammar
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-02-27 Fri 13:09]
+:END:
 Translate the @docs/research/target-syntax.md into a formal description of the target org syntax and place it in @docs/plans/syntax.md .
 My preference is PEG - parsing expression grammars, but you can use any formalism that you deem fit to describe the target syntax (for instance BNF), keep in mind that the parser will be translated into code, specifically using tree-sitter.
 
 This description will be used to build a parser for the grammar.
 
 You can include the excluded features as explicit text rules. We might expand the parser with those features in the future.
+
+*** COMMENT
+This took so much time and effort on the AI part it's kinda surprising. It backtracked back and forth between PEG and tree-sitter specific grammar, realising that it's not really possible to define a grammar for org files. The AI was sure it was able to write the grammar file multiple times, but then realised that something was missing. Eventually, it realised "Actually, I'm overcomplicating this." and then proceeded on a rant on for a bit, and then decided it was done without actually creating the grammar file (likely running out of context during thinking and confabulating stuff). After reprompting and asking it to create the file, it did spit out something, but honestly, it wasn't any better than what the free Zen Pickle model spat out in 1 minute.
+
+The prompt above probably needs to be rewritten to try to get the AI to approximate the target syntax, or write it iteratively, starting with main features and then extending the syntax with less commonly used stuff.
 
 ** TODO Tree-sitter parser
 Build a parser based on =tree-sitter= (https://tree-sitter.github.io/tree-sitter/index.html) and the formal grammar description in @docs/plans/syntax.md.
