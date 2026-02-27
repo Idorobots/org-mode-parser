@@ -1,0 +1,16 @@
+* Custom Drawers
+
+:MYDRAWER:
+Some content inside a custom drawer.
+Second line of drawer content.
+:END:
+
+* Multiple Drawers on One Heading
+
+:NOTE:
+A note drawer.
+:END:
+
+:REVIEW:
+A review drawer.
+:END:

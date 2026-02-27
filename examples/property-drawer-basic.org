@@ -1,0 +1,19 @@
+* Heading with a property drawer
+:PROPERTIES:
+:my_prop: hello
+:number: 42
+:empty_prop:
+:END:
+
+* Heading with property append form
+:PROPERTIES:
+:tags: alpha
+:tags+: beta
+:tags+: gamma
+:END:
+
+* Heading with planning then property drawer
+SCHEDULED: <2025-06-01 Sun>
+:PROPERTIES:
+:effort: 2:00
+:END:

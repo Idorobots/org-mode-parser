@@ -1,0 +1,11 @@
+* Footnotes
+
+A sentence with a standard reference.[fn:1]
+
+An inline footnote.[fn:note:This definition is inline with its reference.]
+
+An anonymous footnote.[fn::No label on this one.]
+
+A second standard reference.[fn:1]
+
+[fn:1] The definition for footnote one.

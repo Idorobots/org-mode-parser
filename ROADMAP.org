@@ -34,7 +34,10 @@ All other Org Mode-supported objects should also be supported in the target synt
 
 Keep the target syntax description semi-formal and lean, but detailed. Outline the different objects supported and their relations.
 
-** TODO Extra test files
+** DONE Extra test files
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-02-27 Fri 10:23]
+:END:
 Generate additional test files that will utilize the less commonly used features of Org Mode and place them in examples/ directory. I'd like to see multiple files that each use a distinct, lesser used features from the target syntax, as well as combinations of features.
 
 Example files can range from very small (even empty) to multiple nodes.

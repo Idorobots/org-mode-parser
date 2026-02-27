@@ -1,0 +1,14 @@
+* TODO Scheduled only
+SCHEDULED: <2025-03-01 Sat>
+
+* TODO Deadline only
+DEADLINE: <2025-04-30 Wed>
+
+* DONE Closed only
+CLOSED: [2025-01-05 Sun 17:00]
+
+* DONE All three planning keywords
+SCHEDULED: <2025-01-01 Wed> DEADLINE: <2025-01-10 Fri> CLOSED: [2025-01-08 Wed 14:23]
+
+* TODO Scheduled with time
+SCHEDULED: <2025-02-14 Fri 09:00>

@@ -1,0 +1,17 @@
+* Inline Markup
+
+*bold text*
+
+/italic text/
+
+_underlined text_
+
+=verbatim text=
+
+~code text~
+
++strike-through text+
+
+Markup mid-sentence: a *bold* word, an /italic/ word, a _underlined_ word.
+
+Verbatim and code are not parsed: =*not bold*= and ~_not underlined_~.

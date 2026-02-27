@@ -1,0 +1,15 @@
+#+TITLE: Document Title
+#+AUTHOR: Qrux Bimble
+#+DATE: <2025-01-06 Mon>
+#+LANGUAGE: en
+#+CATEGORY: test
+#+FILETAGS: :foo:bar:
+#+TODO: TODO | DONE
+
+* First heading
+
+Body text.
+
+* Second heading
+
+Body text.

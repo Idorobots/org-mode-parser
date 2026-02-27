@@ -1,0 +1,13 @@
+* TODO [#A] Highest priority task
+
+* TODO [#B] Medium priority task
+
+* TODO [#C] Low priority task
+
+* [#A] Priority with no TODO keyword
+
+* TODO [#0] Numeric priority zero
+
+* TODO [#27] Numeric priority twenty-seven
+
+* DONE [#B] Completed task with priority

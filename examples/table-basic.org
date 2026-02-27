@@ -1,0 +1,23 @@
+* Basic Org Table
+
+| Name  | Age | City     |
+|-------+-----+----------|
+| Alice |  30 | London   |
+| Bob   |  25 | Paris    |
+| Carol |  35 | Berlin   |
+
+* Table with caption
+
+#+CAPTION: A small reference table
+| Key | Value |
+|-----+-------|
+| a   |     1 |
+| b   |     2 |
+
+* Single-column table
+
+| Item    |
+|---------|
+| apple   |
+| banana  |
+| cherry  |

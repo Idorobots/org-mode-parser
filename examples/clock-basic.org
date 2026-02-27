@@ -1,0 +1,16 @@
+* Clocks
+
+Closed clock with duration:
+
+CLOCK: [2025-01-06 Mon 09:00]--[2025-01-06 Mon 11:30] =>  2:30
+
+Open clock (no end time):
+
+CLOCK: [2025-01-07 Tue 14:00]
+
+* Clock inside a LOGBOOK drawer
+
+:LOGBOOK:
+CLOCK: [2025-01-05 Sun 20:00]--[2025-01-05 Sun 21:00] =>  1:00
+CLOCK: [2025-01-04 Sat 10:00]--[2025-01-04 Sat 12:00] =>  2:00
+:END:
