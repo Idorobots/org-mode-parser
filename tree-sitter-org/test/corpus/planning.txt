@@ -39,3 +39,50 @@ SCHEDULED: <2024-01-15 Mon>
         (ts_month)
         (ts_day)
         (ts_dayname)))))
+
+================
+Heading with DEADLINE and time
+================
+* TODO Task
+DEADLINE: <2024-01-15 Mon 13:00>
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (planning
+      (planning_keyword)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (ts_time)))))
+
+================
+Heading with SCHEDULED time range and repeater
+================
+* TODO Task
+SCHEDULED: <2026-02-28 Sat 10:00-12:00 +1d>
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (planning
+      (planning_keyword)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (ts_time)
+        (ts_time)
+        (repeater_mark)
+        (time_unit)))))

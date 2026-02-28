@@ -821,20 +821,24 @@ module.exports = grammar({
     _active_ts: $ => seq('<', $._ts_inner, '>'),
     _active_range: $ => seq('<', $._ts_inner, '>', '--', '<', $._ts_inner, '>'),
     _active_range_sameday: $ => seq(
-      '<', $._ts_date, $._S, $._ts_time, '-', $._ts_time,
+      '<', $._ts_date, $._S,
+      field('time_start', alias($._ts_time, $.ts_time)), '-',
+      field('time_end', alias($._ts_time, $.ts_time)),
       optional(seq($._S, $._ts_modifiers)), '>',
     ),
 
     _inactive_ts: $ => seq('[', $._ts_inner, ']'),
     _inactive_range: $ => seq('[', $._ts_inner, ']', '--', '[', $._ts_inner, ']'),
     _inactive_range_sameday: $ => seq(
-      '[', $._ts_date, $._S, $._ts_time, '-', $._ts_time,
+      '[', $._ts_date, $._S,
+      field('time_start', alias($._ts_time, $.ts_time)), '-',
+      field('time_end', alias($._ts_time, $.ts_time)),
       optional(seq($._S, $._ts_modifiers)), ']',
     ),
 
     _ts_inner: $ => seq(
       field('date', $._ts_date),
-      optional(field('time', seq($._S, $._ts_time))),
+      optional(field('time', seq($._S, alias($._ts_time, $.ts_time)))),
       optional(field('modifiers', seq($._S, $._ts_modifiers))),
     ),
 
