@@ -78,7 +78,88 @@ You can test the parser on sample org files found in the examples/ directory in 
 Write the implementation plan down to docs/plans/tree-sitter-parser-impl.md
 
 ** TODO Implement the tree-sitten parser
+Create a stub project with tree-sitter-cli. The dependency is already installed.
+
 Implement the plan from @docs/plans/tree-sitter-parser-impl.md file.
+
+Make sure it properly implements the grammar defined in @docs/plans/syntax.md
+*** COMMENT
+This took a very long while, but eventually created a tree-sitter parser that parses something. According to the AI:
+
+#+begin_quote
+### Results
+- **68/68 unit tests passing (100%)** — up from 55/64 at session start
+- **30/58 example .org files parse error-free (52%)** — up from 22/58
+#+end_quote
+
+WIth just 28 files parsing with errors. Looking at the parse tree produced, it wasn't great - separate org table nodes for individual rows, etc.
+
+*** DONE Timestamp hours
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-02-28 Sat 14:05]
+:END:
+I see that timestamps that have a hour or a time range associated with them do not parse it:
+
+: * DONE Recurring daily standup :Agile:GTD:
+: SCHEDULED: <2026-02-28 Sat 10:00-12:00 +1d> DEADLINE: <2026-02-28 Sat 13:00> CLOSED: [2026-02-28 Sat 12:00]
+: 
+: Date [2025-10-10]
+: Date day <2025-10-10 Mon>
+: Date day time <2025-10-10 Mon 12:00>
+: Date day timerange <2025-10-10 Mon 12:00-13:00>
+
+All of these example timestamps parse fine, but the time/timerange component is not part of the parse tree.
+Please adjust the parser so that this parses correctly.
+
+*** DONE Planning with newlines
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-02-28 Sat 14:12]
+:END:
+Planning only parses when all fields are on the same line, but in Org Mode they can be on separate lines:
+
+: * DONE Recurring daily standup :Agile:GTD:
+: SCHEDULED: <2026-02-28>
+: DEADLINE: <2026-02-28>
+: CLOSED: [2026-02-28]
+
+This should still parse as one planning block with 3 keywords.
+Please adjust the parser so that this parses correctly.
+
+*** TODO Nested lists
+Nested lists don't work very well:
+
+: - Test
+:   - Nested
+:   - Nested
+: - Not nested
+
+This should result in a parse tree that looks something like this:
+
+#+begin_example
+    plain_list:
+      item:
+        first_line: plain_text
+        plain_list:
+          item:
+            first_line: plain_text
+          item:
+            first_line: plain_text
+      item:
+        first_line: plain_text
+#+end_example
+
+But instead it's parsed as two separate lists with a paragraph inbetween.
+Please adjust the parser so that this parses correctly.
+
+*** TODO Separate tables
+Each row of a table parses as a separate org table:
+
+: | Properly affiliated table | Column 2 |
+: |---------------------------+----------|
+: | Row                       | Data     |
+
+The above example should parse as a single table with 3 rows. First and last rows should have two cells each, and the middle row should be a table rule. It seems like the row parsing is correct, but multiple consecutive rows are not merged into a single table.
+Please adjust the parser so that this parses correctly.
 
 ** TODO Python wrapper on tree-sitter
 Create a scaffold of a Python project using Poetry as the build tool. Include =mypy= for typings, =ruff= for linting and formatting and =pytest= for tests. The project will be a library that wraps the tree-sitter based parser, so include =py-tree-sitter= in the dependencies as well. For development, add =pyright= lang server.
