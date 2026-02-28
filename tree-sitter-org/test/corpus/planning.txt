@@ -86,3 +86,103 @@ SCHEDULED: <2026-02-28 Sat 10:00-12:00 +1d>
         (ts_time)
         (repeater_mark)
         (time_unit)))))
+
+================
+Planning keywords on separate lines
+================
+* TODO Task
+SCHEDULED: <2024-01-15 Mon>
+DEADLINE: <2024-02-01 Fri>
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (planning
+      (planning_keyword)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname))
+      (planning_keyword)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)))))
+
+================
+All three planning keywords on separate lines
+================
+* DONE Task
+SCHEDULED: <2026-02-28>
+DEADLINE: <2026-02-28>
+CLOSED: [2026-02-28]
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (planning
+      (planning_keyword)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day))
+      (planning_keyword)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day))
+      (planning_keyword)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)))))
+
+================
+Mixed same-line and multi-line planning
+================
+* DONE Task
+SCHEDULED: <2026-02-28 Sat 10:00-12:00 +1d> DEADLINE: <2026-02-28 Sat 13:00>
+CLOSED: [2026-02-28 Sat 12:00]
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (planning
+      (planning_keyword)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (ts_time)
+        (ts_time)
+        (repeater_mark)
+        (time_unit))
+      (planning_keyword)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (ts_time))
+      (planning_keyword)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (ts_time)))))

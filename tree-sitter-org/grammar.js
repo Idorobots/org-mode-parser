@@ -568,12 +568,14 @@ module.exports = grammar({
     _diary_sexp_value: _ => seq('(', /[^)\n]*/, ')'),
 
     // --- 7.4 Planning ---
-    planning: $ => prec(2, seq(
+    planning: $ => prec(2, repeat1($._planning_line)),
+
+    _planning_line: $ => seq(
       $._planning_entry,
       repeat(seq($._S, $._planning_entry)),
       optional($._TRAILING),
       $._NL,
-    )),
+    ),
 
     _planning_entry: $ => seq(
       field('keyword', alias($._PLAN_KW, $.planning_keyword)),
