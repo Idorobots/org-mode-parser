@@ -44,3 +44,66 @@ Table with rule row
           (plain_text))
         (table_cell
           (plain_text))))))
+
+================
+Indented table with caption
+================
+#+CAPTION: A small reference table
+  | Key | Value |
+  |-----+-------|
+  | a   |     1 |
+  | b   |     2 |
+
+---
+
+(document
+  (zeroth_section
+    (caption_keyword
+      (plain_text))
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_rule))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))))
+
+================
+Indented single-column table with rule row
+================
+  | Item    |
+  |---------|
+  | apple   |
+  | banana  |
+  | cherry  |
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_rule))
+      (table_row
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))))))

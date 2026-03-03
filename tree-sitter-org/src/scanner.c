@@ -978,27 +978,31 @@ static bool scan_paragraph_continue(TSLexer *lexer) {
 // TOKEN_TABLE_START is only in valid_symbols when the grammar is at element
 // level (the beginning of an org_table), never while parsing rows inside one,
 // so this check fires in exactly the right contexts.
-static bool scan_table_start(Scanner *s, TSLexer *lexer) {
+static int scan_table_start(Scanner *s, TSLexer *lexer) {
   mark_end(lexer);  // zero-width token
+
+  while (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+    advance(lexer);
+  }
 
   int32_t ch = lookahead(lexer);
   if (ch != '|') {
     // Not the start of a table row.  Reset in_table so the next real table
     // (after a non-table element) can start normally.
     s->in_table = false;
-    return false;
+    return 0;
   }
 
   if (s->in_table) {
     // Already inside a table; do not start a new one.  This kills any GLR
     // path that tries to reduce the current org_table early and open a fresh
     // one for the next row.
-    return false;
+    return 0;
   }
 
   s->in_table = true;
   lexer->result_symbol = TOKEN_TABLE_START;
-  return true;
+  return 1;
 }
 
 // _FIXED_WIDTH_COLON: gate token for fixed-width line starts.
@@ -1155,7 +1159,8 @@ bool tree_sitter_org_external_scanner_scan(
 
   // --- TABLE management (zero-width) ---
   if (valid_symbols[TOKEN_TABLE_START]) {
-    if (scan_table_start(s, lexer)) return true;
+    int result = scan_table_start(s, lexer);
+    if (result == 1) return true;
   }
 
   // --- FNDEF_END ---

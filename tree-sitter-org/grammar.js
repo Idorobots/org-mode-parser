@@ -418,7 +418,7 @@ module.exports = grammar({
     )),
 
     table_row: $ => seq(
-      '|',
+      /[ \t]*\|/,
       choice(
         field('rule', alias($._table_rule_row, $.table_rule)),
         $._table_std_row,
