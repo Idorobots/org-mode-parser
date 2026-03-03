@@ -106,7 +106,7 @@ static bool is_special_char(int32_t ch) {
          ch == '=' || ch == '~' || ch == '[' || ch == '<' ||
          ch == '{' || ch == '\\' || ch == '@' ||
          ch == '#' || ch == ':' || ch == '|' || ch == '>' ||
-         ch == '-' || ch == ']';
+         ch == ']';
 }
 
 // ---------------------------------------------------------------------------
@@ -825,7 +825,7 @@ static int scan_listitem_indent(TSLexer *lexer) {
 static bool is_internal_token_start(int32_t ch) {
   return ch == '#' || ch == ':' || ch == '|' || ch == '[' ||
          ch == '<' || ch == '@' || ch == '{' || ch == '\\' ||
-         ch == '>' || ch == ']' || ch == '-';
+         ch == '>' || ch == ']';
 }
 
 static bool is_heading_tag_char(int32_t ch) {
@@ -846,8 +846,32 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer) {
   while (!eof(lexer) && lookahead(lexer) != '\n') {
     int32_t ch = lookahead(lexer);
 
+    // Do not start a plain_text token at '-'. This lets grammar-level
+    // constructs that begin with hyphen (table rule rows, timestamp ranges,
+    // and the plain '-' fallback token) handle those cases.
+    if (ch == '-' && !found_any) {
+      if (s->prev_char == '>') {
+        s->prev_char = ch;
+        advance(lexer);
+        mark_end(lexer);
+        found_any = true;
+        continue;
+      }
+      break;
+    }
+
+    // Keep inline hyphens attached to the current plain-text run.
+    if (ch == '-' && found_any) {
+      s->prev_char = ch;
+      advance(lexer);
+      mark_end(lexer);
+      continue;
+    }
+
     // Stop at any character that could start an object or element
-    if (is_special_char(ch)) break;
+    if (is_special_char(ch)) {
+      break;
+    }
 
     s->prev_char = ch;
     advance(lexer);
@@ -866,6 +890,17 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer) {
   // Only consume markup-related chars (*/_+=~) as single-char fallback,
   // since the markup open/close scanners already tried and failed.
   int32_t ch = lookahead(lexer);
+  if (ch == '-') {
+    if (s->prev_char == '>') {
+      s->prev_char = ch;
+      advance(lexer);
+      mark_end(lexer);
+      lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      return true;
+    }
+    return false;
+  }
+
   if (ch == ':') {
     // Mid-line colons are often plain text ("test ::", "value: text").
     // But if ':' is followed by a heading-tag character, prefer letting

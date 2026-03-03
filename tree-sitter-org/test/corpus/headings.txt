@@ -183,6 +183,4 @@ Heading with hyphenated title
 (document
   (heading
     (stars)
-    (plain_text)
-    (plain_text)
     (plain_text)))

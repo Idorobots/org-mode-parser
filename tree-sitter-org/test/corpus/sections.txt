@@ -47,3 +47,15 @@ Second paragraph.
         (plain_text))
       (paragraph
         (plain_text)))))
+
+================
+Hyphenated paragraph text stays coalesced
+================
+This is a Fixed-Width style phrase.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))

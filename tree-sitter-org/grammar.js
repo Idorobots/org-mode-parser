@@ -946,16 +946,9 @@ module.exports = grammar({
     _code_body: _ => /[^\n~]+/,
 
     // --- 8.11 Plain Text ---
-    // Plain text is primarily handled by the external scanner to ensure
-    // prev_char tracking stays accurate for markup PRE/POST constraints.
-    // A low-precedence internal fallback handles '-' which is a special
-    // char in some contexts (timestamps, tables) but plain text in others
-    // (heading titles, paragraph body). The internal tokenizer gives '-'
-    // lower precedence so it only matches when no higher-prec rule does.
-    plain_text: $ => choice(
-      $._PLAIN_TEXT,
-      token(prec(-2, '-')),
-    ),
+    // Plain text is handled by the external scanner to keep prev_char
+    // tracking coherent for markup PRE/POST constraints.
+    plain_text: $ => $._PLAIN_TEXT,
 
     // §9 Object Sets
     _object: $ => choice(
