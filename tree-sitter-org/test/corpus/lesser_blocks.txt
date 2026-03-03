@@ -22,7 +22,9 @@ Some example text.
 
 (document
   (zeroth_section
-    (example_block)))
+    (example_block
+      (paragraph
+        (plain_text)))))
 
 ================
 Src block with language
@@ -51,5 +53,6 @@ Violets are blue.
 (document
   (zeroth_section
     (verse_block
-      (plain_text)
-      (plain_text))))
+      (paragraph
+        (plain_text)
+        (plain_text)))))
