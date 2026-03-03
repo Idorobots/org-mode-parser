@@ -57,7 +57,8 @@ module.exports = grammar({
     $._LISTITEM_INDENT,
     $._PLAN_KW_EXT,       // Planning keyword (DEADLINE/SCHEDULED/CLOSED)
     $._ERROR_SENTINEL,
-    $._TABLE_START,       // Zero-width gate: emitted once at the start of each org_table
+    $._TABLE_START,   // Zero-width gate: emitted once at the start of each org_table
+    $._FIXED_WIDTH_COLON, // Consumes optional indent + ':' only at BOL context
   ],
 
   extras: _ => [],
@@ -615,9 +616,15 @@ module.exports = grammar({
     // --- 7.6 Fixed-Width Areas ---
     fixed_width: $ => prec(1, repeat1($._fixed_width_line)),
 
+    // _FIXED_WIDTH_COLON (external) enforces the BOL constraint from the spec:
+    //   _fixed_width_line <- _BOL _INDENT? ':' (' ' value:[^\n]* / &_NL) _NL
+    // The scanner only emits this token when ':' is the first non-whitespace
+    // character on the line (column 0, or column > 0 after list-scanner
+    // positioning with prev_char == 0). It consumes the optional leading
+    // indentation and the ':' itself.
     _fixed_width_line: $ => choice(
-      seq(token(prec(2, ': ')), optional(field('value', /[^\n]*/)), $._NL),
-      seq(token(prec(2, ':')), $._NL),
+      seq($._FIXED_WIDTH_COLON, ' ', optional(field('value', /[^\n]*/)), $._NL),
+      seq($._FIXED_WIDTH_COLON, $._NL),
     ),
 
     // --- 7.7 Horizontal Rules ---

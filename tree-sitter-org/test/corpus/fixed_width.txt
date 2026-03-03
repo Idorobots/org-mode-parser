@@ -1,0 +1,131 @@
+================
+Single fixed-width line
+================
+: single line
+
+---
+
+(document
+  (zeroth_section
+    (fixed_width)))
+
+================
+Empty fixed-width line (colon alone)
+================
+:
+
+---
+
+(document
+  (zeroth_section
+    (fixed_width)))
+
+================
+Multiple consecutive fixed-width lines form one node
+================
+: line one
+: line two
+: line three
+
+---
+
+(document
+  (zeroth_section
+    (fixed_width)))
+
+================
+Indented fixed-width line
+================
+   : indented
+
+---
+
+(document
+  (zeroth_section
+    (fixed_width)))
+
+================
+Indented empty fixed-width line
+================
+   :
+
+---
+
+(document
+  (zeroth_section
+    (fixed_width)))
+
+================
+Fixed-width followed by paragraph
+================
+: area line one
+: area line two
+
+This is a paragraph.
+
+---
+
+(document
+  (zeroth_section
+    (fixed_width)
+    (paragraph
+      (plain_text))))
+
+================
+Double colon in paragraph is not fixed-width
+================
+test :: Not a fixed width section
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text)
+      (plain_text)
+      (plain_text))))
+
+================
+Paragraph ending with colon is not fixed-width
+================
+Test paragraph:
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text))))
+
+================
+Colon in middle of paragraph is not fixed-width
+================
+Another test: yes, it passes
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text)
+      (plain_text))))
+
+================
+Indented fixed-width inside list item (TODO: currently parsed as paragraph)
+================
+- item
+  : fixed-width body
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        (plain_text)))
+    (paragraph
+      (plain_text)
+      (plain_text))))

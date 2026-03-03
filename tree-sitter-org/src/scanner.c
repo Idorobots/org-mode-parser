@@ -55,6 +55,7 @@ enum TokenType {
   TOKEN_PLAN_KW,
   TOKEN_ERROR_SENTINEL,
   TOKEN_TABLE_START,   // zero-width gate emitted once at the start of each org_table
+  TOKEN_FIXED_WIDTH_COLON, // consumes optional indent + ':' only at BOL context
 };
 
 // ---------------------------------------------------------------------------
@@ -854,6 +855,20 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer) {
     return true;
   }
 
+  // Special case for ':': if the external scanner has already consumed
+  // content on this line (prev_char != 0), then ':' cannot be at a
+  // beginning-of-line position and cannot start a fixed-width section,
+  // drawer, or any other BOL-anchored element.  Consuming it here as
+  // plain text prevents tree-sitter error recovery from mis-identifying
+  // mid-line colons (e.g. "test ::", "Paragraph:") as fixed-width starts.
+  if (ch == ':' && s->prev_char != 0) {
+    s->prev_char = ':';
+    advance(lexer);
+    mark_end(lexer);
+    lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    return true;
+  }
+
   return false;
 }
 
@@ -960,6 +975,51 @@ static bool scan_table_start(Scanner *s, TSLexer *lexer) {
 
   s->in_table = true;
   lexer->result_symbol = TOKEN_TABLE_START;
+  return true;
+}
+
+// _FIXED_WIDTH_COLON: gate token for fixed-width line starts.
+//
+// Emitted only when ':' is the first non-whitespace character on the line,
+// enforcing the spec constraint:
+//   _fixed_width_line <- _BOL _INDENT? ':' (' ' value:[^\n]* / &_NL) _NL
+//
+// Two cases are handled:
+//
+//   Column 0: skip any leading whitespace (indentation), then check for ':'
+//   followed by ' ' or '\n'/EOF.  Consuming the indent + ':' here means the
+//   grammar rule never needs an explicit _INDENT? prefix.
+//
+//   Column > 0 with prev_char == 0: the list scanner (scan_listitem_indent +
+//   scan_list_end) can advance past indentation and then emit a zero-width
+//   LIST_END, leaving the lexer positioned mid-line at ':'.  Because only
+//   zero-width / internal tokens ran, prev_char is still 0 even at column > 0.
+//   We treat this as a valid BOL context for indented fixed-width lines inside
+//   list items.
+//
+// In all other cases (column > 0 with prev_char != 0, meaning external scanner
+// has already consumed visible content on this line) we return false.  The
+// ':' will be consumed by scan_plain_text instead.
+static bool scan_fixed_width_colon(Scanner *s, TSLexer *lexer) {
+  if (get_column(lexer) == 0) {
+    // Skip optional leading whitespace (indentation)
+    while (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+      advance(lexer);
+    }
+  } else {
+    // Mid-line: only valid if prev_char == 0 (no external text on this line)
+    if (s->prev_char != 0) return false;
+  }
+
+  if (lookahead(lexer) != ':') return false;
+  advance(lexer);  // consume ':'
+
+  // ':' must be followed by a space, newline, or EOF to qualify
+  int32_t next = lookahead(lexer);
+  if (next != ' ' && next != '\n' && !eof(lexer)) return false;
+
+  mark_end(lexer);
+  lexer->result_symbol = TOKEN_FIXED_WIDTH_COLON;
   return true;
 }
 
@@ -1121,6 +1181,13 @@ bool tree_sitter_org_external_scanner_scan(
   // --- PLAN_KW (planning keywords) ---
   if (valid_symbols[TOKEN_PLAN_KW]) {
     if (scan_plan_kw(s, lexer, valid_symbols)) return true;
+  }
+
+  // --- FIXED_WIDTH_COLON (element-level BOL gate) ---
+  // Must run before PLAIN_TEXT so that "   : value" at column 0 emits
+  // TOKEN_FIXED_WIDTH_COLON rather than TOKEN_PLAIN_TEXT for the indent.
+  if (valid_symbols[TOKEN_FIXED_WIDTH_COLON]) {
+    if (scan_fixed_width_colon(s, lexer)) return true;
   }
 
   // --- PARAGRAPH_CONTINUE ---
