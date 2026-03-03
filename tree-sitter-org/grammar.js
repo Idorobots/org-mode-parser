@@ -555,6 +555,7 @@ module.exports = grammar({
 
     // --- 7.2 Clock ---
     clock: $ => seq(
+      optional($._INDENT),
       token(prec(2, ci('clock:'))),
       $._S,
       choice(

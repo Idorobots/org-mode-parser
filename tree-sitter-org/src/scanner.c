@@ -842,6 +842,8 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer) {
   if (eof(lexer) || lookahead(lexer) == '\n') return false;
 
   bool found_any = false;
+  bool maybe_clock_kw = (get_column(lexer) == 0 || s->prev_char == 0);
+  int consumed_len = 0;
 
   while (!eof(lexer) && lookahead(lexer) != '\n') {
     int32_t ch = lookahead(lexer);
@@ -873,10 +875,23 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer) {
       break;
     }
 
+    if (maybe_clock_kw) {
+      static const char *kw = "CLOCK";
+      if (consumed_len >= 5 || (ch | 32) != (kw[consumed_len] | 32)) {
+        maybe_clock_kw = false;
+      }
+    }
+    consumed_len++;
+
     s->prev_char = ch;
     advance(lexer);
     mark_end(lexer);
     found_any = true;
+  }
+
+  // Preserve a leading CLOCK: token for the clock element rule.
+  if (found_any && lookahead(lexer) == ':' && maybe_clock_kw && consumed_len == 5) {
+    return false;
   }
 
   // If we consumed some non-special chars, return them as plain text
@@ -940,9 +955,11 @@ static bool match_string(TSLexer *lexer, const char *str) {
 }
 
 // _PLAN_KW: match DEADLINE, SCHEDULED, or CLOSED.
-// If the keyword doesn't match after partially advancing, emit consumed
-// text as PLAIN_TEXT to avoid corrupting lexer state.
+// On mismatch, fail without consuming input so other grammar tokens
+// (e.g. CLOCK:) can be attempted at the same position.
 static bool scan_plan_kw(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
+  (void)s;
+  (void)valid_symbols;
   int32_t ch = lookahead(lexer);
   const char *kw = NULL;
 
@@ -951,26 +968,15 @@ static bool scan_plan_kw(Scanner *s, TSLexer *lexer, const bool *valid_symbols) 
   else if (ch == 'C') kw = "CLOSED";
   else return false;
 
-  mark_end(lexer);
-
-  if (match_string(lexer, kw)) {
-    lexer->result_symbol = TOKEN_PLAN_KW;
-    mark_end(lexer);
-    return true;
-  }
-
-  // Partial match failed. We've advanced the lexer. Recover by
-  // consuming the rest as plain text.
-  while (!eof(lexer) && lookahead(lexer) != '\n' && !is_special_char(lookahead(lexer))) {
-    s->prev_char = lookahead(lexer);
+  // Do a lookahead-only match so failure does not consume input.
+  for (int i = 0; kw[i] != '\0'; i++) {
+    if (lookahead(lexer) != kw[i]) return false;
     advance(lexer);
   }
-  if (valid_symbols[TOKEN_PLAIN_TEXT]) {
-    lexer->result_symbol = TOKEN_PLAIN_TEXT;
-    mark_end(lexer);
-    return true;
-  }
-  return false;
+
+  lexer->result_symbol = TOKEN_PLAN_KW;
+  mark_end(lexer);
+  return true;
 }
 
 // _PARAGRAPH_CONTINUE

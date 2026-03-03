@@ -1,0 +1,76 @@
+================
+Open clock
+================
+CLOCK: [2025-01-07 Tue 14:00]
+
+---
+
+(document
+  (zeroth_section
+    (clock
+      (ts_year)
+      (ts_month)
+      (ts_day)
+      (ts_dayname)
+      (ts_time))))
+
+================
+Closed clock with range and duration
+================
+CLOCK: [2025-01-06 Mon 09:00]--[2025-01-06 Mon 11:30] =>  2:30
+
+---
+
+(document
+  (zeroth_section
+    (clock
+      (ts_year)
+      (ts_month)
+      (ts_day)
+      (ts_dayname)
+      (ts_time)
+      (ts_year)
+      (ts_month)
+      (ts_day)
+      (ts_dayname)
+      (ts_time))))
+
+================
+Duration-only clock
+================
+CLOCK: =>  100:30
+
+---
+
+(document
+  (zeroth_section
+    (clock)))
+
+================
+Clock inside drawer with indentation
+================
+* Heading
+:LOGBOOK:
+  CLOCK: [2025-01-05 Sun 20:00]--[2025-01-05 Sun 21:00] =>  1:00
+:END:
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (section
+      (drawer
+        (drawer_name)
+        (clock
+          (ts_year)
+          (ts_month)
+          (ts_day)
+          (ts_dayname)
+          (ts_time)
+          (ts_year)
+          (ts_month)
+          (ts_day)
+          (ts_dayname)
+          (ts_time))))))
