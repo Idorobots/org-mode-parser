@@ -517,11 +517,10 @@ module.exports = grammar({
       optional(seq(
         $._S,
         field('language', alias($._SRC_LANGUAGE, $.language)),
-        optional(field('switches', $._src_switches)),
-        optional(field('arguments', seq($._S, $._REST_OF_LINE))),
+        optional(seq($._S, field('switches', alias($._REST_OF_LINE, $.src_switches)))),
       )),
       $._NL,
-      field('body', optional($._raw_block_body)),
+      field('body', optional($.src_block_body)),
       token(prec(2, ci('#+end_src'))),
       optional($._TRAILING),
       $._NL,
@@ -529,16 +528,9 @@ module.exports = grammar({
 
     _SRC_LANGUAGE: _ => /[^ \t\n]+/,
 
-    _src_switches: $ => repeat1(seq(
-      $._S,
-      $._src_switch,
-    )),
+    src_block_body: $ => repeat1($.src_line),
 
-    _src_switch: _ => prec.left(choice(
-      seq('-l', /[ \t]+/, '"', /[^"]*/, '"'),
-      seq(choice('+', '-'), 'n', optional(seq(/[ \t]+/, /[0-9]+/))),
-      '-r', '-i', '-k',
-    )),
+    src_line: _ => seq(/[^\n]*/, '\n'),
 
     verse_block: $ => seq(
       token(prec(2, ci('#+begin_verse'))),

@@ -38,7 +38,30 @@ print("hello")
 (document
   (zeroth_section
     (src_block
-      (language))))
+      (language)
+      (src_block_body
+        (src_line)))))
+
+================
+Src block with switches and body
+================
+#+begin_src python -n
+x = 1
+y = 2
+z = x + y
+#+end_src
+
+---
+
+(document
+  (zeroth_section
+    (src_block
+      (language)
+      (src_switches)
+      (src_block_body
+        (src_line)
+        (src_line)
+        (src_line)))))
 
 ================
 Verse block
