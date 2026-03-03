@@ -11,13 +11,11 @@ Unordered list with dashes
   (zeroth_section
     (plain_list
       (item
-        (plain_text)
-        (plain_list
-          (item
-            (plain_text)
-            (plain_list
-              (item
-                (plain_text)))))))))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
 
 ================
 Unordered list with plus
@@ -31,10 +29,9 @@ Unordered list with plus
   (zeroth_section
     (plain_list
       (item
-        (plain_text)
-        (plain_list
-          (item
-            (plain_text)))))))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
 
 ================
 Ordered list with numbers
@@ -49,16 +46,14 @@ Ordered list with numbers
   (zeroth_section
     (plain_list
       (item
-        (counter)
-        (plain_text)
-        (plain_list
-          (item
-            (counter)
-            (plain_text)
-            (plain_list
-              (item
-                (counter)
-                (plain_text)))))))))
+        counter: (counter)
+        first_line: (plain_text))
+      (item
+        counter: (counter)
+        first_line: (plain_text))
+      (item
+        counter: (counter)
+        first_line: (plain_text)))))
 
 ================
 List with checkboxes
@@ -73,13 +68,50 @@ List with checkboxes
   (zeroth_section
     (plain_list
       (item
-        (checkbox)
-        (plain_text)
-        (plain_list
-          (item
-            (checkbox)
-            (plain_text)
-            (plain_list
-              (item
-                (checkbox)
-                (plain_text)))))))))
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text)))))
+
+================
+Nested list — flat with indent preserved
+================
+- Test
+  - Nested one
+  - Nested two
+- Not nested
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
+
+================
+Blank-line-separated list items
+================
+- First
+
+- Second
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))

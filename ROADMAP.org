@@ -77,7 +77,7 @@ You can test the parser on sample org files found in the examples/ directory in 
 
 Write the implementation plan down to docs/plans/tree-sitter-parser-impl.md
 
-** TODO Implement the tree-sitten parser
+** TODO Implement the tree-sitter parser
 Create a stub project with tree-sitter-cli. The dependency is already installed.
 
 Implement the plan from @docs/plans/tree-sitter-parser-impl.md file.
@@ -150,6 +150,7 @@ This should result in a parse tree that looks something like this:
 
 But instead it's parsed as two separate lists with a paragraph inbetween.
 Please adjust the parser so that this parses correctly.
+**** COMMENT Proposed to parse them as one list and handle the indented fields later on.
 
 *** TODO Separate tables
 Each row of a table parses as a separate org table:

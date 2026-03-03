@@ -307,13 +307,31 @@ module.exports = grammar({
     )),
 
     // --- 6.5 Plain Lists and Items ---
+    //
+    // Design: lists are parsed FLAT — all items (regardless of indentation) are
+    // siblings in one plain_list node.  Indented items carry a field('indent',
+    // _LISTITEM_INDENT) that records their leading whitespace so that a
+    // post-processing step can reconstruct the proper nested structure.
+    //
+    // Why flat?  Getting tree-sitter to correctly delimit nested plain_list nodes
+    // requires the external scanner to peek ahead across newlines, which causes
+    // lexer-position corruption between scanner calls in the same scan()
+    // invocation (because advances aren't reset until the *whole* scan() returns
+    // false).  The flat approach avoids all of that complexity.
+    //
+    // Blank lines between items are allowed (and hidden from the tree because
+    // _blank_line is anonymous).
     plain_list: $ => seq(
       $._LIST_START,
-      repeat1($.item),
+      repeat1(choice($.item, $._blank_line)),
       $._LIST_END,
     ),
 
-    item: $ => prec.right(seq(
+    // Items are single-line: bullet (+ optional indent, counter_set, checkbox)
+    // followed by either a tag line or a content line.  No multi-line body is
+    // parsed at the grammar level; continuation lines are handled in post-
+    // processing by examining the indent field of subsequent items.
+    item: $ => seq(
       optional(field('indent', $._LISTITEM_INDENT)),
       field('bullet', $._bullet),
       optional(field('counter_set', $.counter_set)),
@@ -322,9 +340,7 @@ module.exports = grammar({
         seq(field('tag', $.item_tag), $._NL),
         seq(optional(field('first_line', $._item_first_line)), $._NL),
       ),
-      optional(field('body', $._item_body)),
-      optional($._ITEM_END),
-    )),
+    ),
 
     _item_first_line: $ => repeat1($._object),
 
@@ -364,11 +380,6 @@ module.exports = grammar({
       repeat1($._object),
       $._ITEM_TAG_END,
     ),
-
-    _item_body: $ => repeat1(choice(
-      $._section_element,
-      $._blank_line,
-    )),
 
     // --- 6.6 Property Drawers ---
     property_drawer: $ => seq(

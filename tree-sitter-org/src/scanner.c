@@ -577,19 +577,28 @@ static bool scan_markup_close(Scanner *s, TSLexer *lexer, int32_t marker, enum T
   return false;
 }
 
-// _LIST_START: only emit when lookahead is a valid list bullet followed by space.
-// This is a zero-width token — mark_end is set before peeking.
-// If peek fails (not a valid bullet), we DON'T return false since the lexer
-// has been advanced. Instead, we signal "no match" by returning -1 via
-// the return_code parameter, and the caller handles recovery.
-// Returns: 1=matched LIST_START, 0=no match (no advance), -1=no match (advanced)
+// _LIST_START: zero-width token emitted at the start of a plain_list.
+//
+// Lists are parsed FLAT: all items (including indented/nested ones) are
+// siblings inside a single plain_list node.  The _LISTITEM_INDENT field on
+// each item records its leading whitespace so that post-processing can
+// reconstruct the proper nested structure.
+//
+// Consequently, _LIST_START only fires when we are NOT already inside a list
+// (list_depth == 0).  Once a list is open, every subsequent bullet becomes a
+// sibling item without a new _LIST_START.
+//
+// Returns: 1=matched LIST_START, 0=no match
 static int scan_list_start(Scanner *s, TSLexer *lexer) {
   if (s->list_depth >= MAX_LIST_DEPTH) return 0;
 
+  // Flat lists only: never start a nested list.
+  if (s->list_depth > 0) return 0;
+
+  mark_end(lexer);  // zero-width token position
+
   uint32_t col = get_column(lexer);
   int32_t ch = lookahead(lexer);
-
-  mark_end(lexer);  // zero-width token boundary
 
   if (ch == '+' || ch == '-') {
     advance(lexer);
@@ -599,7 +608,7 @@ static int scan_list_start(Scanner *s, TSLexer *lexer) {
       lexer->result_symbol = TOKEN_LIST_START;
       return 1;
     }
-    return -1;  // advanced but not a bullet
+    return 0;
   }
 
   if (ch == '*' && col > 0) {
@@ -610,7 +619,7 @@ static int scan_list_start(Scanner *s, TSLexer *lexer) {
       lexer->result_symbol = TOKEN_LIST_START;
       return 1;
     }
-    return -1;
+    return 0;
   }
 
   if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z')) {
@@ -630,18 +639,58 @@ static int scan_list_start(Scanner *s, TSLexer *lexer) {
         return 1;
       }
     }
-    return -1;
+    return 0;
   }
 
   return 0;
 }
 
-// _LIST_END
+// _LIST_END: zero-width token emitted when the plain_list closes.
+//
+// Because lists are flat (see scan_list_start above), we end the list
+// whenever the next real character cannot start a list item or blank line.
+// This check is intentionally NON-ADVANCING: we only look at the current
+// lookahead character (and its column) without calling advance().  This
+// avoids corrupting the lexer position for subsequent scanners in the same
+// outer scan() call.
+//
+// Characters that mean the list CONTINUES (return false):
+//   '\n'           — blank line; the _blank_line rule in plain_list handles it
+//   ' ' / '\t'     — whitespace; scan_listitem_indent runs before us and
+//                    handles indented bullets.  If it returned -1 (indented
+//                    non-bullet), the outer function falls through here and
+//                    we see the non-bullet character instead of the space.
+//   '-' / '+'      — unordered bullet
+//   '0'..'9'       — ordered bullet (digit counter)
+//   'a'..'z'       — ordered bullet (letter counter)
+//   '*' at col > 0 — unordered star bullet (col 0 would be a heading)
+//
+// Everything else (heading '*' at col 0, '#', ':', etc.) ends the list.
 static bool scan_list_end(Scanner *s, TSLexer *lexer) {
   if (s->list_depth == 0) return false;
+
+  mark_end(lexer);  // zero-width; position set here (may be after whitespace
+                    // if scan_listitem_indent advanced in the -1 case)
+
+  if (eof(lexer)) {
+    s->list_depth--;
+    lexer->result_symbol = TOKEN_LIST_END;
+    return true;
+  }
+
+  int32_t ch = lookahead(lexer);
+  uint32_t col = get_column(lexer);
+
+  if (ch == '\n') return false;                 // blank line
+  if (ch == ' ' || ch == '\t') return false;    // whitespace (LISTITEM_INDENT)
+  if (ch == '-' || ch == '+') return false;     // unordered bullet
+  if (ch >= '0' && ch <= '9') return false;     // ordered bullet (digit)
+  if (ch >= 'a' && ch <= 'z') return false;     // ordered bullet (letter)
+  if (ch == '*' && col > 0) return false;       // star bullet (non-heading)
+
+  // Heading '*' at col 0, keywords ('#'), drawers (':'), etc. — end the list.
   s->list_depth--;
   lexer->result_symbol = TOKEN_LIST_END;
-  mark_end(lexer);
   return true;
 }
 
@@ -688,8 +737,23 @@ static bool scan_item_tag_end(TSLexer *lexer) {
   return false;
 }
 
-// _LISTITEM_INDENT: leading whitespace for list items (only if followed by bullet)
-// Returns: 1=matched, 0=no match (no advance), -1=no match (advanced)
+// _LISTITEM_INDENT: leading whitespace before an indented list item bullet.
+//
+// Used by optional(field('indent', _LISTITEM_INDENT)) in the item rule to
+// record the item's indentation column.  By preserving this in the tree,
+// post-processing can reconstruct proper nested list structure.
+//
+// Only fires when whitespace is followed by a valid bullet character, so it
+// never interferes with non-bullet indented content (paragraphs, blocks, …).
+//
+// Return values (three-state to let the outer scan() make the right decision):
+//   1  — whitespace + bullet: _LISTITEM_INDENT token emitted (advance committed)
+//   0  — no leading whitespace: no advance, fall through to other scanners
+//  -1  — whitespace + non-bullet non-newline: advance made, no token; the outer
+//         function should fall through to scan_list_end so the list can close
+//  -2  — whitespace + '\n' or EOF (whitespace-only line): advance made, no token;
+//         the outer function should return false so tree-sitter resets the lexer
+//         and the internal _blank_line rule can match "[ \t]*\n"
 static int scan_listitem_indent(TSLexer *lexer) {
   if (lookahead(lexer) != ' ' && lookahead(lexer) != '\t') return 0;
 
@@ -700,6 +764,8 @@ static int scan_listitem_indent(TSLexer *lexer) {
   }
 
   int32_t ch = lookahead(lexer);
+
+  // Bullet characters: unordered (-, +, *) or ordered (digit, lowercase letter)
   if (ch == '+' || ch == '-' || ch == '*' ||
       (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z')) {
     lexer->result_symbol = TOKEN_LISTITEM_INDENT;
@@ -707,6 +773,11 @@ static int scan_listitem_indent(TSLexer *lexer) {
     return 1;
   }
 
+  // Whitespace-only line or EOF after whitespace — let _blank_line handle it.
+  if (ch == '\n' || eof(lexer)) return -2;
+
+  // Non-bullet, non-blank content (e.g. "  some paragraph") — the list should
+  // end here; signal the outer function to fall through to scan_list_end.
   return -1;
 }
 
@@ -853,24 +924,44 @@ bool tree_sitter_org_external_scanner_scan(
     if (scan_stars_or_heading_end(s, lexer, valid_symbols)) return true;
   }
 
+  // --- LISTITEM_INDENT + LIST_END (tightly coupled) ---
+  //
+  // scan_listitem_indent must run before scan_list_end for two reasons:
+  //   1. For indented bullets ("  - item"), LISTITEM_INDENT must fire first
+  //      to emit the indent token; LIST_END must not prematurely close the list.
+  //   2. scan_list_end is now non-advancing (no peek_bullet_column), so it
+  //      cannot distinguish "  - bullet" from "  non-bullet".  scan_listitem_indent
+  //      advances past the whitespace and signals the result via its return code,
+  //      letting scan_list_end then see the actual first non-whitespace character.
+  //
+  // Return-code protocol for scan_listitem_indent:
+  //    1  → LISTITEM_INDENT emitted; done.
+  //    0  → no leading whitespace; fall through to LIST_START / LIST_END.
+  //   -1  → whitespace consumed, non-bullet follows; fall through to LIST_END
+  //          so it can fire at the non-bullet character (consuming the whitespace
+  //          as part of the hidden LIST_END token is acceptable).
+  //   -2  → whitespace consumed, blank line follows; return false so tree-sitter
+  //          resets the lexer and the internal _blank_line rule can match.
+  if (valid_symbols[TOKEN_LISTITEM_INDENT]) {
+    int result = scan_listitem_indent(lexer);
+    if (result == 1) return true;
+    if (result == -2) return false;   // whitespace-only line — reset for _blank_line
+    if (result == -1) {
+      // Indented non-bullet content. Lexer is now past the whitespace.
+      // Fall directly to scan_list_end; skip LIST_START (can't start inside list).
+      if (valid_symbols[TOKEN_LIST_END]) {
+        if (scan_list_end(s, lexer)) return true;
+      }
+      return false;
+    }
+    // result == 0: no leading whitespace; fall through normally.
+  }
+
   // --- LIST management (zero-width) ---
   if (valid_symbols[TOKEN_LIST_START]) {
     int result = scan_list_start(s, lexer);
     if (result == 1) return true;
-    if (result == -1) {
-      // scan_list_start advanced lexer but didn't match — recover as plain text
-      if (valid_symbols[TOKEN_PLAIN_TEXT]) {
-        // Continue consuming non-special chars
-        while (!eof(lexer) && lookahead(lexer) != '\n' && !is_special_char(lookahead(lexer))) {
-          s->prev_char = lookahead(lexer);
-          advance(lexer);
-        }
-        lexer->result_symbol = TOKEN_PLAIN_TEXT;
-        mark_end(lexer);
-        return true;
-      }
-      return false;
-    }
+    // result == 0: no match; no advance was made.
   }
 
   if (valid_symbols[TOKEN_LIST_END]) {
@@ -899,17 +990,6 @@ bool tree_sitter_org_external_scanner_scan(
   // --- BLOCK_END_MATCH ---
   if (valid_symbols[TOKEN_BLOCK_END_MATCH]) {
     if (scan_block_end_match(s, lexer)) return true;
-  }
-
-  // --- LISTITEM_INDENT ---
-  if (valid_symbols[TOKEN_LISTITEM_INDENT]) {
-    int result = scan_listitem_indent(lexer);
-    if (result == 1) return true;
-    if (result == -1) {
-      // Advanced whitespace but no bullet — not useful to emit as plain text
-      // since whitespace before elements is typically skipped. Just return false.
-      return false;
-    }
   }
 
   // --- ITEM_TAG_END ---

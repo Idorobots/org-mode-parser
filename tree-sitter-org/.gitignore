@@ -3,3 +3,4 @@ src/tree_sitter
 src/grammar.json
 src/node-types.json
 tree-sitter-org.wasm
+org.so
