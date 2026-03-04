@@ -149,3 +149,45 @@ Markup ending directly before table separator
           (plain_text)
           (verbatim
             (verbatim_content)))))))
+
+================
+Table cells with plus signs stay plain text
+================
+| CPU      | 4 vCPU   | 8+ vCPU     |
+| RAM      | 8 GiB    | 32+ GiB     |
+| Storage  | 20 GiB   | 100+ GiB NVMe |
+| Network  | 1 Gbps   | 10 Gbps     |
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))))

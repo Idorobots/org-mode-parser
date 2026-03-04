@@ -34,6 +34,67 @@ Unordered list with plus
         first_line: (plain_text)))))
 
 ================
+Second list item starts with verbatim markup
+================
+- This is fine
+- =NOT OK=
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (verbatim
+          body: (verbatim_content))))))
+
+================
+Checkbox item with verbatim containing inner equals
+================
+- [X] Stale replica read returns error with =read_replicas=strict= config.
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
+List item code markup followed by slash text
+================
+- Stream data type (~XADD~, ~XREAD~, consumer groups).
+- Test
+- ~EVAL~ / Lua scripting (subset — no global state, no network access).
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (code
+          body: (code_content))
+        first_line: (plain_text)
+        first_line: (code
+          body: (code_content))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (code
+          body: (code_content))
+        first_line: (plain_text)))))
+
+================
 List items with URLs ending in slash
 ================
 - The tree-sitter project is at https://tree-sitter.github.io/tree-sitter
@@ -66,6 +127,40 @@ List items with inline code and trailing whitespace
       (item
         first_line: (code
           body: (code_content))))))
+
+================
+Plus sign in list item text is not a new bullet
+================
+- =protoc= 3.21+ (for the binary protocol code generation).
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
+Drawer-like tail stays plain text in list items
+================
+- DONE Core string, list, hash, set, sorted set operations. :feature:
+- DONE Three-node cluster with consistent hashing. :feature:
+- DONE LRU and TTL eviction policies. :feature:
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
 
 ================
 Horizontal rule after list
@@ -154,6 +249,40 @@ Ordered list with numbers
         first_line: (plain_text))
       (item
         counter: (counter)
+        first_line: (plain_text)))))
+
+================
+Ordered list counter-set cookie
+================
+5. [@5] fifth
+6. sixth
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        counter: (counter)
+        counter_set: (counter_set)
+        first_line: (plain_text))
+      (item
+        counter: (counter)
+        first_line: (plain_text)))))
+
+================
+Ordered list cookie with apostrophe text
+================
+5. [@5] Review the day's bookings and note dietary restrictions.
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        counter: (counter)
+        counter_set: (counter_set)
         first_line: (plain_text)))))
 
 ================

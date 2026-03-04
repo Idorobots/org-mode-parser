@@ -719,6 +719,8 @@ static int scan_markup_close(Scanner *s, TSLexer *lexer, int32_t marker, enum To
   return -1;
 }
 
+static bool is_list_line_start_context(const Scanner *s, uint32_t col);
+
 // _LIST_START: zero-width token emitted at the start of a plain_list.
 //
 // Lists are parsed FLAT: all items (including indented/nested ones) are
@@ -747,11 +749,16 @@ static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols
   uint32_t col = get_column(lexer);
   int32_t ch = lookahead(lexer);
 
+  if (!is_list_line_start_context(s, col)) return 0;
+
   if (ch == '+' || ch == '-') {
     advance(lexer);
     if (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
       s->list_indents[s->list_depth] = (uint16_t)col;
       s->list_depth++;
+      // Item text begins after a bullet + required space; treat that boundary
+      // as PRE-whitespace for inline markup opening at item start.
+      s->prev_char = ' ';
       lexer->result_symbol = TOKEN_LIST_START;
       return 1;
     }
@@ -776,6 +783,9 @@ static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols
     if (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
       s->list_indents[s->list_depth] = (uint16_t)col;
       s->list_depth++;
+      // Item text begins after a bullet + required space; treat that boundary
+      // as PRE-whitespace for inline markup opening at item start.
+      s->prev_char = ' ';
       lexer->result_symbol = TOKEN_LIST_START;
       return 1;
     }
@@ -791,6 +801,9 @@ static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols
       if (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
         s->list_indents[s->list_depth] = (uint16_t)col;
         s->list_depth++;
+        // Item text begins after a bullet + required space; treat that
+        // boundary as PRE-whitespace for inline markup opening at item start.
+        s->prev_char = ' ';
         lexer->result_symbol = TOKEN_LIST_START;
         return 1;
       }
@@ -835,6 +848,13 @@ static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols
 // Everything else (heading '*' at col 0, '#', ':', etc.) ends the list.
 static bool is_space_or_tab(int32_t ch) {
   return ch == ' ' || ch == '\t';
+}
+
+static bool is_list_line_start_context(const Scanner *s, uint32_t col) {
+  if (col == 0) return true;
+  if (s->prev_char == 0) return true;
+  if (s->prev_char == ' ' && s->last_column == 0) return true;
+  return false;
 }
 
 // Probe whether the current line starts with a valid Org list bullet.
@@ -914,7 +934,14 @@ static int scan_list_end(Scanner *s, TSLexer *lexer) {
   // character so lines like "-----" correctly end the list.
   if (ch == '-' || ch == '+' || ch == '*' ||
       (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z')) {
-    if (probe_list_bullet_prefix(lexer, col)) return -1;
+    if (!is_list_line_start_context(s, col)) return 0;
+    if (probe_list_bullet_prefix(lexer, col)) {
+      // We are continuing with another list item. The next object's PRE
+      // context should be whitespace (bullet separator), not the previous
+      // line's trailing character.
+      s->prev_char = ' ';
+      return -1;
+    }
     s->list_depth--;
     lexer->result_symbol = TOKEN_LIST_END;
     return 1;
@@ -1237,12 +1264,23 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
       if (is_markup_marker(ch)) {
         bool can_close = false;
         bool can_open = false;
+        uint32_t marker_col = get_column(lexer);
+        int32_t prev_before_marker = s->prev_char;
 
         advance(lexer);
         if (s->prev_char != ' ' && s->prev_char != '\t' && s->prev_char != '\n' &&
             (eof(lexer) || is_markup_post_for_marker(ch, lookahead(lexer))) &&
             (ch != '/' || s->italic_open)) {
           can_close = true;
+        }
+
+        // Avoid treating numeric suffixes like "3.21+ " as potential
+        // strikethrough closes. This prevents false list/bullet recovery in
+        // table cells and list item text while preserving real +strike+ cases.
+        if (ch == '+' && (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') &&
+            prev_before_marker >= '0' && prev_before_marker <= '9' &&
+            !is_list_line_start_context(s, marker_col)) {
+          can_close = false;
         }
 
         if (is_markup_open_pre_for_marker(s->prev_char, ch) && lookahead(lexer) != ' ' && lookahead(lexer) != '\t' &&
@@ -1287,7 +1325,8 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
         }
 
         // Preserve a real trailing heading tags suffix for grammar-level tags.
-        if (s->prev_char == ' ' || s->prev_char == '\t') {
+        // Inside list items, colon-wrapped tails (e.g. ":feature:") are text.
+        if (s->list_depth == 0 && (s->prev_char == ' ' || s->prev_char == '\t')) {
           advance(lexer);
           if (is_heading_tag_char(lookahead(lexer)) && probe_heading_tags_suffix_after_colon(lexer)) {
             if (!found_any) return false;
@@ -1345,6 +1384,14 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
       }
 
       if (ch == '<' || ch == '[') {
+        // At the beginning of list item content, let grammar handle
+        // bracket-led forms first (counter_set / checkbox / links), so
+        // constructs like ordered-list cookies "[@5]" are not consumed as
+        // plain text.
+        if (ch == '[' && !found_any && s->list_depth > 0) {
+          return false;
+        }
+
         advance(lexer);
         bool starts_object = (ch == '<')
           ? probe_angle_construct_after_lt(lexer)
@@ -1407,9 +1454,9 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
 
   if (ch == ':') {
     // Mid-line colons are often plain text ("test ::", "value: text").
-    // Treat ':' as potential heading-tags start only in whitespace-delimited
-    // contexts and only if the remainder is a full tags suffix.
-    if (s->prev_char == ' ' || s->prev_char == '\t') {
+    // Treat ':' as potential heading-tags start only when not inside a list
+    // item and only if the remainder is a full tags suffix.
+    if (s->list_depth == 0 && (s->prev_char == ' ' || s->prev_char == '\t')) {
       advance(lexer);
       s->prev_char = ':';
       mark_end(lexer);
@@ -1686,8 +1733,10 @@ static int scan_fixed_width_colon(Scanner *s, TSLexer *lexer, const bool *valid_
       advanced = true;
     }
   } else {
-    // Mid-line: only valid if prev_char == 0 (no external text on this line)
-    if (s->prev_char != 0) return 0;
+    // Mid-line: only valid if no visible external text was consumed on this
+    // line. `prev_char` can be 0 (pure BOL path) or a synthesized space from
+    // line-transition normalization.
+    if (s->prev_char != 0 && s->prev_char != ' ') return 0;
   }
 
   if (lookahead(lexer) != ':') {
@@ -1755,12 +1804,18 @@ bool tree_sitter_org_external_scanner_scan(
     if (s->in_table && ch != '|' && ch != ' ' && ch != '\t') {
       s->in_table = false;
     }
-  } else if (col < s->last_column) {
+  } else if (col <= s->last_column) {
     // We moved to a new line without a scanner callback at column 0.
     // This commonly happens when grammar regexes consume `\n` and list
     // bullets (`- `, `+ `, `1. `, etc.) before the scanner is consulted.
     // In that case, treat context as PRE-whitespace so inline markup can
     // open at the beginning of the list item text.
+    s->prev_char = ' ';
+  } else if (col > 0 && s->last_column == 0 && s->prev_char == 0) {
+    // We left column 0 via grammar/internal tokens only (for example list
+    // bullets/spaces or heading stars/space). No external scanner token has
+    // consumed visible text on this line yet, so markup PRE context should be
+    // whitespace at this position.
     s->prev_char = ' ';
   }
 

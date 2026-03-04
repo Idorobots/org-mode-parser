@@ -1014,7 +1014,7 @@ module.exports = grammar({
       $._MARKUP_CLOSE_VERBATIM,
     ),
 
-    _verbatim_body: _ => /[^\n=]+( = [^\n=]+)*/,
+    _verbatim_body: _ => /[^\n=]+( = [^\n=]+|=[A-Za-z0-9_][^\n=]*)*/,
 
     code: $ => seq(
       $._MARKUP_OPEN_CODE,
@@ -1022,7 +1022,7 @@ module.exports = grammar({
       $._MARKUP_CLOSE_CODE,
     ),
 
-    _code_body: _ => /[^\n~]+( ~ [^\n~]+)*/,
+    _code_body: _ => /[^\n~]+( ~ [^\n~]+|~[A-Za-z0-9_][^\n~]*)*/,
 
     // --- 8.11 Plain Text ---
     // Plain text is handled by the external scanner to keep prev_char
