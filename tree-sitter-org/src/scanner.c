@@ -615,18 +615,6 @@ static int scan_markup_close(Scanner *s, TSLexer *lexer, int32_t marker, enum To
   mark_end(lexer);
 
   int32_t next = lookahead(lexer);
-  if ((marker == '=' || marker == '~') && (next == ' ' || next == '\t')) {
-    bool has_later_same_marker = false;
-    while (!eof(lexer) && lookahead(lexer) != '\n') {
-      if (lookahead(lexer) == marker) {
-        has_later_same_marker = true;
-        break;
-      }
-      advance(lexer);
-    }
-
-    if (has_later_same_marker) return -1;
-  }
 
   if (eof(lexer) || is_markup_post(next)) {
     lexer->result_symbol = token;

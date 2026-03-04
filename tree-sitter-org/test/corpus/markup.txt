@@ -116,6 +116,76 @@ This has ~code~ words.
       (plain_text))))
 
 ================
+Separated verbatim spans with plain text between
+================
+=REFERENCES= contains one or more citation reference objects separated by =;=.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (verbatim
+        (verbatim_content))
+      (plain_text)
+      (verbatim
+        (verbatim_content))
+      (plain_text))))
+
+================
+Separated verbatim spans around explanatory text
+================
+Note comma-quoting in example block above: lines that would start with =,*= (like =,* First Heading=) are comma-quoted.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (verbatim
+        (verbatim_content))
+      (plain_text)
+      (verbatim
+        (verbatim_content))
+      (plain_text))))
+
+================
+Separated code spans with plain text between
+================
+~REFERENCES~ contains one or more citation reference objects separated by ~;~.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (code
+        (code_content))
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text))))
+
+================
+Separated code spans around explanatory text
+================
+Note comma-quoting in example block above: lines that would start with ~,*~ (like ~,* First Heading~) are comma-quoted.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text))))
+
+================
 Verbatim with inner equals before final close
 ================
 =Foo = bar=

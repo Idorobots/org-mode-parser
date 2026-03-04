@@ -988,26 +988,12 @@ module.exports = grammar({
     ),
 
     verbatim: $ => seq(
-      choice(
-        seq(
-          '=',
-          field('body', alias($._verbatim_body_with_inner_equals, $.verbatim_content)),
-          '=',
-        ),
-        seq(
-          $._MARKUP_OPEN_VERBATIM,
-          field('body', alias($._verbatim_body, $.verbatim_content)),
-          $._MARKUP_CLOSE_VERBATIM,
-        ),
-      ),
+      $._MARKUP_OPEN_VERBATIM,
+      field('body', alias($._verbatim_body, $.verbatim_content)),
+      $._MARKUP_CLOSE_VERBATIM,
     ),
 
-    _verbatim_body: _ => repeat1(choice(
-      /[^\n=]+/,
-      '=',
-    )),
-
-    _verbatim_body_with_inner_equals: _ => /[^\n=]* = [^\n=]*/,
+    _verbatim_body: _ => /[^\n=]+( = [^\n=]+)*/,
 
     code: $ => seq(
       $._MARKUP_OPEN_CODE,
@@ -1015,10 +1001,7 @@ module.exports = grammar({
       $._MARKUP_CLOSE_CODE,
     ),
 
-    _code_body: _ => repeat1(choice(
-      /[^\n~]+/,
-      '~',
-    )),
+    _code_body: _ => /[^\n~]+( ~ [^\n~]+)*/,
 
     // --- 8.11 Plain Text ---
     // Plain text is handled by the external scanner to keep prev_char
