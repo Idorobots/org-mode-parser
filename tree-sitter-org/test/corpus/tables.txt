@@ -107,3 +107,45 @@ Indented single-column table with rule row
       (table_row
         (table_cell
           (plain_text))))))
+
+================
+Markup ending directly before table separator
+================
+| =[persistence]=| ~aof_enabled~| bool | =false=|
+| =[persistence]=| ~aof_fsync~| enum | =everysec=|
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text)
+          (verbatim
+            (verbatim_content)))
+        (table_cell
+          (plain_text)
+          (code
+            (code_content)))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)
+          (verbatim
+            (verbatim_content))))
+      (table_row
+        (table_cell
+          (plain_text)
+          (verbatim
+            (verbatim_content)))
+        (table_cell
+          (plain_text)
+          (code
+            (code_content)))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)
+          (verbatim
+            (verbatim_content)))))))

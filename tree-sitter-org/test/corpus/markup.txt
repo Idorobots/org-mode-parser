@@ -186,6 +186,93 @@ Note comma-quoting in example block above: lines that would start with ~,*~ (lik
       (plain_text))))
 
 ================
+Invalid spaced markup markers stay plain text
+================
+- = not verbatim = (space before closing)
+- * not bold * (space before closing)
+- / not italic / (space before closing)
+- _ not underline _ (space before closing)
+- + not strike + (space before closing)
+- ~ not code ~ (space before closing)
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text)))))
+
+================
+Nested markup openings in list items
+================
+- */Bold and italic simultaneously/*
+- /*Italic wrapping bold*/
+- *A _bold underlined_ phrase*
+- /An _italic underlined_ passage/
+- (*/nested bold-italic inside parens/*)
+- "/italic inside double quotes/"
+- '/italic inside single quotes/'
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (bold
+          body: (italic
+            body: (plain_text))))
+      (item
+        first_line: (italic
+          body: (bold
+            body: (plain_text))))
+      (item
+        first_line: (bold
+          body: (plain_text)
+          body: (underline
+            body: (plain_text))
+          body: (plain_text)))
+      (item
+        first_line: (italic
+          body: (plain_text)
+          body: (underline
+            body: (plain_text))
+          body: (plain_text)))
+      (item
+        first_line: (plain_text)
+        first_line: (bold
+          body: (italic
+            body: (plain_text)))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (italic
+          body: (plain_text))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (italic
+          body: (plain_text))
+        first_line: (plain_text)))))
+
+================
 Verbatim with inner equals before final close
 ================
 =Foo = bar=
@@ -343,4 +430,54 @@ Strikethrough in heading title after TODO keyword
     (stars)
     (todo_keyword)
     (strike_through
+      (plain_text))))
+
+================
+Adjacent markup with slash boundary
+================
+*Bold*/italic/ -- two markup objects sharing a boundary.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (bold
+        (plain_text))
+      (italic
+        (plain_text))
+      (plain_text))))
+
+================
+Adjacent literal markup with shared boundary
+================
+~code~=verbatim= -- code immediately followed by verbatim.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (code
+        (code_content))
+      (verbatim
+        (verbatim_content))
+      (plain_text))))
+
+================
+Adjacent code spans with slash separator
+================
+Increment hash field values atomically -- identical semantics to ~INCR~/~INCRBYFLOAT~.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text)
+      (code
+        (code_content))
       (plain_text))))

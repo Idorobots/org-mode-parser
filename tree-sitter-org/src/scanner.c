@@ -93,15 +93,26 @@ static bool is_markup_pre(int32_t ch) {
 // Markup POST characters (after closing marker)
 static bool is_markup_post(int32_t ch) {
   return ch == ' ' || ch == '\t' || ch == '\n' || ch == '-' ||
-         ch == '.' || ch == ',' || ch == ';' || ch == ':' ||
-         ch == '!' || ch == '?' || ch == '\'' || ch == ')' ||
-         ch == '}' || ch == '[' || ch == '"' || ch == '\\' ||
-         ch == 0;
+          ch == '.' || ch == ',' || ch == ';' || ch == ':' ||
+          ch == '!' || ch == '?' || ch == '\'' || ch == ')' ||
+          ch == '}' || ch == '[' || ch == '"' || ch == '\\' ||
+          ch == '|' ||
+          ch == 0;
 }
 
 static bool is_markup_marker(int32_t ch) {
   return ch == '*' || ch == '/' || ch == '_' || ch == '+' ||
          ch == '=' || ch == '~';
+}
+
+static bool is_markup_open_pre_for_marker(int32_t prev, int32_t marker) {
+  return is_markup_pre(prev) || (is_markup_marker(prev) && prev != marker);
+}
+
+static bool is_markup_post_for_marker(int32_t marker, int32_t ch) {
+  if (is_markup_post(ch)) return true;
+  if (is_markup_marker(ch) && ch != marker) return true;
+  return false;
 }
 
 // Character that could start an object or element (for plain_text scanning)
@@ -610,27 +621,58 @@ static bool scan_block_end_match(Scanner *s, TSLexer *lexer) {
   return false;
 }
 
-// Markup open: PRE check + advance marker + verify no whitespace after
-static bool scan_markup_open(Scanner *s, TSLexer *lexer, int32_t marker, enum TokenType token) {
-  if (!is_markup_pre(s->prev_char)) return false;
-  if (lookahead(lexer) != marker) return false;
+// Markup open scanner.
+// Returns: 1=token emitted, 0=no match without advance, -1=advanced but no token
+static int scan_markup_open(
+    Scanner *s,
+    TSLexer *lexer,
+    int32_t marker,
+    enum TokenType token,
+    const bool *valid_symbols
+) {
+  if (!is_markup_open_pre_for_marker(s->prev_char, marker)) return 0;
+  if (lookahead(lexer) != marker) return 0;
 
   advance(lexer);
   mark_end(lexer);
 
   int32_t next = lookahead(lexer);
-  if (next == ' ' || next == '\t' || next == '\n' || eof(lexer)) return false;
+
+  // Treat '/' between two adjacent markup markers as plain text separator.
+  // Example: ~INCR~/~INCRBYFLOAT~ should parse as code '/' code, not italic.
+  if (marker == '/' && is_markup_marker(s->prev_char) && is_markup_marker(next) &&
+      valid_symbols[TOKEN_PLAIN_TEXT]) {
+    lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    s->prev_char = '/';
+    return 1;
+  }
+
+  if (next == ' ' || next == '\t' || next == '\n' || eof(lexer)) {
+    if (valid_symbols[TOKEN_PLAIN_TEXT]) {
+      lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      s->prev_char = marker;
+      return 1;
+    }
+    return -1;
+  }
 
   mark_end(lexer);
 
-  if (!probe_markup_close_in_rest_of_line(lexer, marker, NULL)) return false;
+  if (!probe_markup_close_in_rest_of_line(lexer, marker, NULL)) {
+    if (valid_symbols[TOKEN_PLAIN_TEXT]) {
+      lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      s->prev_char = marker;
+      return 1;
+    }
+    return -1;
+  }
 
   lexer->result_symbol = token;
   s->prev_char = marker;
   if (marker == '/') {
     s->italic_open = true;
   }
-  return true;
+  return 1;
 }
 
 // Markup close scanner.
@@ -645,7 +687,7 @@ static int scan_markup_close(Scanner *s, TSLexer *lexer, int32_t marker, enum To
 
   int32_t next = lookahead(lexer);
 
-  if (eof(lexer) || is_markup_post(next)) {
+  if (eof(lexer) || is_markup_post_for_marker(marker, next)) {
     lexer->result_symbol = token;
     s->prev_char = marker;
     if (marker == '/') {
@@ -1106,7 +1148,7 @@ static bool probe_markup_close_in_rest_of_line(
     if (last_consumed_char) *last_consumed_char = ch;
 
     if (ch == marker && has_body && prev != ' ' && prev != '\t' && prev != '\n' &&
-        (eof(lexer) || is_markup_post(lookahead(lexer)))) {
+        (eof(lexer) || is_markup_post_for_marker(marker, lookahead(lexer)))) {
       return true;
     }
 
@@ -1178,12 +1220,12 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
 
         advance(lexer);
         if (s->prev_char != ' ' && s->prev_char != '\t' && s->prev_char != '\n' &&
-            (eof(lexer) || is_markup_post(lookahead(lexer))) &&
+            (eof(lexer) || is_markup_post_for_marker(ch, lookahead(lexer))) &&
             (ch != '/' || s->italic_open)) {
           can_close = true;
         }
 
-        if (is_markup_pre(s->prev_char) && lookahead(lexer) != ' ' && lookahead(lexer) != '\t' &&
+        if (is_markup_open_pre_for_marker(s->prev_char, ch) && lookahead(lexer) != ' ' && lookahead(lexer) != '\t' &&
             lookahead(lexer) != '\n' && !eof(lexer)) {
           can_open = true;
         }
@@ -1737,27 +1779,10 @@ bool tree_sitter_org_external_scanner_scan(
     if (scan_item_tag_end(lexer)) return true;
   }
 
-  // --- Markup open tokens ---
-  if (valid_symbols[TOKEN_MARKUP_OPEN_BOLD]) {
-    if (scan_markup_open(s, lexer, '*', TOKEN_MARKUP_OPEN_BOLD)) return true;
-  }
-  if (valid_symbols[TOKEN_MARKUP_OPEN_ITALIC]) {
-    if (scan_markup_open(s, lexer, '/', TOKEN_MARKUP_OPEN_ITALIC)) return true;
-  }
-  if (valid_symbols[TOKEN_MARKUP_OPEN_UNDERLINE]) {
-    if (scan_markup_open(s, lexer, '_', TOKEN_MARKUP_OPEN_UNDERLINE)) return true;
-  }
-  if (valid_symbols[TOKEN_MARKUP_OPEN_STRIKE]) {
-    if (scan_markup_open(s, lexer, '+', TOKEN_MARKUP_OPEN_STRIKE)) return true;
-  }
-  if (valid_symbols[TOKEN_MARKUP_OPEN_VERBATIM]) {
-    if (scan_markup_open(s, lexer, '=', TOKEN_MARKUP_OPEN_VERBATIM)) return true;
-  }
-  if (valid_symbols[TOKEN_MARKUP_OPEN_CODE]) {
-    if (scan_markup_open(s, lexer, '~', TOKEN_MARKUP_OPEN_CODE)) return true;
-  }
-
   // --- Markup close tokens ---
+  // Close checks must run before open checks so boundary-heavy nested forms
+  // like */bold-italic/* or /..._..._/ emit the closing marker instead of
+  // speculatively probing an opener and forcing recovery.
   if (valid_symbols[TOKEN_MARKUP_CLOSE_BOLD]) {
     int result = scan_markup_close(s, lexer, '*', TOKEN_MARKUP_CLOSE_BOLD);
     if (result == 1) return true;
@@ -1785,6 +1810,38 @@ bool tree_sitter_org_external_scanner_scan(
   }
   if (valid_symbols[TOKEN_MARKUP_CLOSE_CODE]) {
     int result = scan_markup_close(s, lexer, '~', TOKEN_MARKUP_CLOSE_CODE);
+    if (result == 1) return true;
+    if (result == -1) return false;
+  }
+
+  // --- Markup open tokens ---
+  if (valid_symbols[TOKEN_MARKUP_OPEN_BOLD]) {
+    int result = scan_markup_open(s, lexer, '*', TOKEN_MARKUP_OPEN_BOLD, valid_symbols);
+    if (result == 1) return true;
+    if (result == -1) return false;
+  }
+  if (valid_symbols[TOKEN_MARKUP_OPEN_ITALIC]) {
+    int result = scan_markup_open(s, lexer, '/', TOKEN_MARKUP_OPEN_ITALIC, valid_symbols);
+    if (result == 1) return true;
+    if (result == -1) return false;
+  }
+  if (valid_symbols[TOKEN_MARKUP_OPEN_UNDERLINE]) {
+    int result = scan_markup_open(s, lexer, '_', TOKEN_MARKUP_OPEN_UNDERLINE, valid_symbols);
+    if (result == 1) return true;
+    if (result == -1) return false;
+  }
+  if (valid_symbols[TOKEN_MARKUP_OPEN_STRIKE]) {
+    int result = scan_markup_open(s, lexer, '+', TOKEN_MARKUP_OPEN_STRIKE, valid_symbols);
+    if (result == 1) return true;
+    if (result == -1) return false;
+  }
+  if (valid_symbols[TOKEN_MARKUP_OPEN_VERBATIM]) {
+    int result = scan_markup_open(s, lexer, '=', TOKEN_MARKUP_OPEN_VERBATIM, valid_symbols);
+    if (result == 1) return true;
+    if (result == -1) return false;
+  }
+  if (valid_symbols[TOKEN_MARKUP_OPEN_CODE]) {
+    int result = scan_markup_open(s, lexer, '~', TOKEN_MARKUP_OPEN_CODE, valid_symbols);
     if (result == 1) return true;
     if (result == -1) return false;
   }
