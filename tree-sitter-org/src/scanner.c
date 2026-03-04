@@ -109,10 +109,10 @@ static bool is_markup_marker(int32_t ch) {
 // that might start an object, markup, element, or special syntax.
 static bool is_special_char(int32_t ch) {
   return ch == '*' || ch == '/' || ch == '_' || ch == '+' ||
-         ch == '=' || ch == '~' || ch == '[' || ch == '<' ||
-         ch == '{' || ch == '\\' || ch == '@' ||
-         ch == '#' || ch == ':' || ch == '|' || ch == '>' ||
-         ch == ']';
+          ch == '=' || ch == '~' || ch == '[' || ch == '<' ||
+          ch == '{' || ch == '\\' || ch == '@' ||
+          ch == '#' || ch == ':' || ch == '|' || ch == '>' ||
+          ch == ']';
 }
 
 // ---------------------------------------------------------------------------
@@ -146,6 +146,11 @@ typedef struct {
   // tokens (for example list bullets), where the scanner is not called at
   // column 0 and would otherwise keep stale prev_char state.
   uint16_t last_column;
+
+  // Whether an italic markup opener '/' has been emitted on the current line
+  // and not yet closed. Used to prevent stray '/' (e.g. URL path delimiters)
+  // from being emitted as italic close tokens.
+  bool italic_open;
 
   // Table tracking: true while the parser is inside an org_table.
   // Used by scan_table_start to prevent starting a new org_table mid-table,
@@ -220,6 +225,7 @@ void *tree_sitter_org_external_scanner_create(void) {
     scanner->num_todo_keywords = NUM_DEFAULT_TODO_KWS;
     scanner->prev_char = 0;
     scanner->last_column = 0;
+    scanner->italic_open = false;
   }
   return scanner;
 }
@@ -276,8 +282,8 @@ unsigned tree_sitter_org_external_scanner_serialize(
     pos += len;
   }
 
-  // prev_char, consecutive_blank_lines, in_table, last_column
-  if (pos + 8 > SERIALIZE_BUF_SIZE) return 0;
+  // prev_char, consecutive_blank_lines, in_table, last_column, italic_open
+  if (pos + 9 > SERIALIZE_BUF_SIZE) return 0;
   buffer[pos++] = (char)((s->prev_char >> 24) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 16) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 8) & 0xFF);
@@ -286,6 +292,7 @@ unsigned tree_sitter_org_external_scanner_serialize(
   buffer[pos++] = (char)(s->in_table ? 1 : 0);
   buffer[pos++] = (char)((s->last_column >> 8) & 0xFF);
   buffer[pos++] = (char)(s->last_column & 0xFF);
+  buffer[pos++] = (char)(s->italic_open ? 1 : 0);
 
   return pos;
 }
@@ -304,6 +311,7 @@ void tree_sitter_org_external_scanner_deserialize(
   s->prev_char = 0;
   s->consecutive_blank_lines = 0;
   s->last_column = 0;
+  s->italic_open = false;
 
   for (int i = 0; i < NUM_DEFAULT_TODO_KWS; i++) {
     strncpy(s->todo_keywords[i], DEFAULT_TODO_KWS[i], MAX_TODO_KW_LEN - 1);
@@ -350,7 +358,7 @@ void tree_sitter_org_external_scanner_deserialize(
     pos += len;
   }
 
-  // prev_char, consecutive_blank_lines, in_table, last_column
+  // prev_char, consecutive_blank_lines, in_table, last_column, italic_open
   if (pos + 5 <= length) {
     s->prev_char = ((int32_t)(uint8_t)buffer[pos] << 24) |
                    ((int32_t)(uint8_t)buffer[pos + 1] << 16) |
@@ -364,6 +372,10 @@ void tree_sitter_org_external_scanner_deserialize(
   }
   if (pos + 1 < length) {
     s->last_column = (uint16_t)((uint8_t)buffer[pos] << 8 | (uint8_t)buffer[pos + 1]);
+    pos += 2;
+  }
+  if (pos < length) {
+    s->italic_open = (bool)buffer[pos++];
   }
 }
 
@@ -615,6 +627,9 @@ static bool scan_markup_open(Scanner *s, TSLexer *lexer, int32_t marker, enum To
 
   lexer->result_symbol = token;
   s->prev_char = marker;
+  if (marker == '/') {
+    s->italic_open = true;
+  }
   return true;
 }
 
@@ -623,6 +638,7 @@ static bool scan_markup_open(Scanner *s, TSLexer *lexer, int32_t marker, enum To
 static int scan_markup_close(Scanner *s, TSLexer *lexer, int32_t marker, enum TokenType token) {
   if (s->prev_char == 0 || s->prev_char == ' ' || s->prev_char == '\t' || s->prev_char == '\n') return 0;
   if (lookahead(lexer) != marker) return 0;
+  if (marker == '/' && !s->italic_open) return 0;
 
   advance(lexer);
   mark_end(lexer);
@@ -632,6 +648,9 @@ static int scan_markup_close(Scanner *s, TSLexer *lexer, int32_t marker, enum To
   if (eof(lexer) || is_markup_post(next)) {
     lexer->result_symbol = token;
     s->prev_char = marker;
+    if (marker == '/') {
+      s->italic_open = false;
+    }
     return 1;
   }
 
@@ -1102,7 +1121,7 @@ static bool probe_markup_close_in_rest_of_line(
 // Consumes "safe" characters that cannot start an object or element.
 // If positioned at a markup character (*/_ +=~) that the markup scanner
 // already rejected, consumes it as plain text to keep prev_char accurate.
-static bool scan_plain_text(Scanner *s, TSLexer *lexer) {
+static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
   if (eof(lexer) || lookahead(lexer) == '\n') return false;
 
   bool found_any = false;
@@ -1138,13 +1157,29 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer) {
     // Stop at characters that can start objects/elements, except when they
     // clearly do not form a valid construct and should remain plain text.
     if (is_special_char(ch)) {
+      if (ch == '#') {
+        // Keep BOL '#' available for comment/special-keyword parsing.
+        // Elsewhere it is regular text (e.g. "PR #412").
+        if (get_column(lexer) == 0 || s->prev_char == 0) {
+          if (!found_any) return false;
+          break;
+        }
+
+        s->prev_char = '#';
+        advance(lexer);
+        mark_end(lexer);
+        found_any = true;
+        continue;
+      }
+
       if (is_markup_marker(ch)) {
         bool can_close = false;
         bool can_open = false;
 
         advance(lexer);
         if (s->prev_char != ' ' && s->prev_char != '\t' && s->prev_char != '\n' &&
-            (eof(lexer) || is_markup_post(lookahead(lexer)))) {
+            (eof(lexer) || is_markup_post(lookahead(lexer))) &&
+            (ch != '/' || s->italic_open)) {
           can_close = true;
         }
 
@@ -1582,6 +1617,7 @@ bool tree_sitter_org_external_scanner_scan(
   // context, even after a line that ended with a non-PRE character.
   if (col == 0) {
     s->prev_char = 0;
+    s->italic_open = false;
 
     // Keep table state in sync across element boundaries even when
     // TOKEN_TABLE_START is not probed on an intervening line (for example,
@@ -1779,7 +1815,7 @@ bool tree_sitter_org_external_scanner_scan(
 
   // --- PLAIN_TEXT (fallback) ---
   if (valid_symbols[TOKEN_PLAIN_TEXT]) {
-    if (scan_plain_text(s, lexer)) return true;
+    if (scan_plain_text(s, lexer, valid_symbols)) return true;
   }
 
   return false;

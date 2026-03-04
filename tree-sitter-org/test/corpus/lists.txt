@@ -34,6 +34,22 @@ Unordered list with plus
         first_line: (plain_text)))))
 
 ================
+List items with URLs ending in slash
+================
+- The tree-sitter project is at https://tree-sitter.github.io/tree-sitter
+- See also https://www.gnu.org/software/emacs/
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
+
+================
 List items with inline code and trailing whitespace
 ================
 - ~org-todo-keywords-1~ 

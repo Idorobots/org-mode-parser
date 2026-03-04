@@ -52,6 +52,22 @@ Heading title keeps underscore and colon as plain text
     (plain_text)))
 
 ================
+Heading title keeps hash in plain text before tags
+================
+* REVIEWING Code review: PR #412 :review:backend:
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (plain_text)
+    (tags
+      (tag)
+      (tag))))
+
+================
 Level 2 heading
 ================
 * Parent

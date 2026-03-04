@@ -26,6 +26,20 @@ Regular link with description
         (plain_text)))))
 
 ================
+Regular link description with slash characters
+================
+[[https://orgmode.org][See also https://orgmode.org/worg/ for community docs]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)))))
+
+================
 Angle link
 ================
 <https://example.com/path>
