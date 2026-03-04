@@ -34,6 +34,56 @@ Unordered list with plus
         first_line: (plain_text)))))
 
 ================
+List items with inline code and trailing whitespace
+================
+- ~org-todo-keywords-1~ 
+- ~org-link-parameters~
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (code
+          body: (code_content)))
+      (item
+        first_line: (code
+          body: (code_content))))))
+
+================
+Multiple list items starting with inline markup
+================
+- *Plurals* (controversial): some style guides permit =the 1990's= -- others forbid it.
+- *Omission in poetry*: =o'er=, ='twas=, =ne'er=.
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (bold
+          body: (plain_text))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text))
+      (item
+        first_line: (bold
+          body: (plain_text))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
 Drawer after list item parses separately
 ================
 - List item

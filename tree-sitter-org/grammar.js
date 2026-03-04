@@ -388,7 +388,7 @@ module.exports = grammar({
       optional(field('checkbox', $.checkbox)),
       choice(
         seq(field('tag', $.item_tag), $._NL),
-        seq(optional(field('first_line', $._item_first_line)), $._NL),
+        seq(optional(field('first_line', $._item_first_line)), optional($._TRAILING), $._NL),
       ),
     ),
 

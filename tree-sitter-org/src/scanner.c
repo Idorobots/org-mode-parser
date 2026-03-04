@@ -141,6 +141,12 @@ typedef struct {
   // Consecutive blank line counter
   uint8_t consecutive_blank_lines;
 
+  // Last column observed at scanner entry.
+  // Used to detect line transitions that happen entirely through grammar
+  // tokens (for example list bullets), where the scanner is not called at
+  // column 0 and would otherwise keep stale prev_char state.
+  uint16_t last_column;
+
   // Table tracking: true while the parser is inside an org_table.
   // Used by scan_table_start to prevent starting a new org_table mid-table,
   // which would cause each row to parse as a separate org_table node.
@@ -213,6 +219,7 @@ void *tree_sitter_org_external_scanner_create(void) {
     }
     scanner->num_todo_keywords = NUM_DEFAULT_TODO_KWS;
     scanner->prev_char = 0;
+    scanner->last_column = 0;
   }
   return scanner;
 }
@@ -269,14 +276,16 @@ unsigned tree_sitter_org_external_scanner_serialize(
     pos += len;
   }
 
-  // prev_char, consecutive_blank_lines, in_table
-  if (pos + 6 > SERIALIZE_BUF_SIZE) return 0;
+  // prev_char, consecutive_blank_lines, in_table, last_column
+  if (pos + 8 > SERIALIZE_BUF_SIZE) return 0;
   buffer[pos++] = (char)((s->prev_char >> 24) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 16) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 8) & 0xFF);
   buffer[pos++] = (char)(s->prev_char & 0xFF);
   buffer[pos++] = (char)s->consecutive_blank_lines;
   buffer[pos++] = (char)(s->in_table ? 1 : 0);
+  buffer[pos++] = (char)((s->last_column >> 8) & 0xFF);
+  buffer[pos++] = (char)(s->last_column & 0xFF);
 
   return pos;
 }
@@ -294,6 +303,7 @@ void tree_sitter_org_external_scanner_deserialize(
   s->block_depth = 0;
   s->prev_char = 0;
   s->consecutive_blank_lines = 0;
+  s->last_column = 0;
 
   for (int i = 0; i < NUM_DEFAULT_TODO_KWS; i++) {
     strncpy(s->todo_keywords[i], DEFAULT_TODO_KWS[i], MAX_TODO_KW_LEN - 1);
@@ -340,7 +350,7 @@ void tree_sitter_org_external_scanner_deserialize(
     pos += len;
   }
 
-  // prev_char, consecutive_blank_lines, in_table
+  // prev_char, consecutive_blank_lines, in_table, last_column
   if (pos + 5 <= length) {
     s->prev_char = ((int32_t)(uint8_t)buffer[pos] << 24) |
                    ((int32_t)(uint8_t)buffer[pos + 1] << 16) |
@@ -351,6 +361,9 @@ void tree_sitter_org_external_scanner_deserialize(
   }
   if (pos < length) {
     s->in_table = (bool)buffer[pos++];
+  }
+  if (pos + 1 < length) {
+    s->last_column = (uint16_t)((uint8_t)buffer[pos] << 8 | (uint8_t)buffer[pos + 1]);
   }
 }
 
@@ -1491,6 +1504,7 @@ bool tree_sitter_org_external_scanner_scan(
     const bool *valid_symbols
 ) {
   Scanner *s = (Scanner *)payload;
+  uint32_t col = get_column(lexer);
 
   // Error recovery sentinel — never match
   if (valid_symbols[TOKEN_ERROR_SENTINEL]) {
@@ -1501,7 +1515,7 @@ bool tree_sitter_org_external_scanner_scan(
   // (BOL) whenever we are positioned at the start of a new line so that
   // markup scanners correctly treat the beginning-of-line as a valid PRE
   // context, even after a line that ended with a non-PRE character.
-  if (get_column(lexer) == 0) {
+  if (col == 0) {
     s->prev_char = 0;
 
     // Keep table state in sync across element boundaries even when
@@ -1513,7 +1527,16 @@ bool tree_sitter_org_external_scanner_scan(
     if (s->in_table && ch != '|' && ch != ' ' && ch != '\t') {
       s->in_table = false;
     }
+  } else if (col < s->last_column) {
+    // We moved to a new line without a scanner callback at column 0.
+    // This commonly happens when grammar regexes consume `\n` and list
+    // bullets (`- `, `+ `, `1. `, etc.) before the scanner is consulted.
+    // In that case, treat context as PRE-whitespace so inline markup can
+    // open at the beginning of the list item text.
+    s->prev_char = ' ';
   }
+
+  s->last_column = (uint16_t)(col > 0xFFFF ? 0xFFFF : col);
 
   // --- HEADING_END at EOF ---
   if (valid_symbols[TOKEN_HEADING_END]) {
