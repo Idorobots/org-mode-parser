@@ -239,31 +239,37 @@ module.exports = grammar({
     ),
 
     center_block: $ => seq(
+      optional($._INDENT),
       token(prec(2, ci('#+begin_center'))),
       optional(field('parameters', $._block_params)),
       $._NL,
       field('body', optional($._gblock_body)),
+      optional($._INDENT),
       token(prec(2, ci('#+end_center'))),
       optional($._TRAILING),
       $._NL,
     ),
 
     quote_block: $ => seq(
+      optional($._INDENT),
       token(prec(2, ci('#+begin_quote'))),
       optional(field('parameters', $._block_params)),
       $._NL,
       field('body', optional($._gblock_body)),
+      optional($._INDENT),
       token(prec(2, ci('#+end_quote'))),
       optional($._TRAILING),
       $._NL,
     ),
 
     special_block: $ => seq(
+      optional($._INDENT),
       token(prec(1, ci('#+begin_'))),
       field('name', $._GBLOCK_NAME),
       optional(field('parameters', $._block_params)),
       $._NL,
       field('body', optional($._gblock_body)),
+      optional($._INDENT),
       token(prec(1, ci('#+end_'))),
       $._BLOCK_END_MATCH,
       optional($._TRAILING),
@@ -326,12 +332,14 @@ module.exports = grammar({
 
     // --- 6.3 Dynamic Blocks ---
     dynamic_block: $ => seq(
+      optional($._INDENT),
       token(prec(3, ci('#+begin:'))),
       $._S,
       field('name', alias($._DYNBLOCK_NAME, $.dynamic_block_name)),
       optional(field('parameters', seq($._S, $._REST_OF_LINE))),
       $._NL,
       field('body', optional($._dynblock_body)),
+      optional($._INDENT),
       token(prec(3, ci('#+end:'))),
       optional($._TRAILING),
       $._NL,
@@ -541,21 +549,23 @@ module.exports = grammar({
     ),
 
     comment_block: $ => seq(
+      optional($._INDENT),
       token(prec(2, ci('#+begin_comment'))),
       optional($._TRAILING),
       $._NL,
       field('body', optional($._raw_block_body)),
-      token(prec(2, ci('#+end_comment'))),
+      token(prec(3, /[ \t]*#\+end_comment/i)),
       optional($._TRAILING),
       $._NL,
     ),
 
     example_block: $ => seq(
+      optional($._INDENT),
       token(prec(2, ci('#+begin_example'))),
       optional(field('parameters', $._block_params)),
       $._NL,
       field('body', optional($.example_block_body)),
-      token(prec(2, ci('#+end_example'))),
+      token(prec(3, /[ \t]*#\+end_example/i)),
       optional($._TRAILING),
       $._NL,
     ),
@@ -565,13 +575,14 @@ module.exports = grammar({
     example_line: _ => seq(/[^\n]*/, '\n'),
 
     export_block: $ => seq(
+      optional($._INDENT),
       token(prec(2, ci('#+begin_export'))),
       $._S,
       field('backend', alias($._EXPORT_BACKEND, $.export_backend)),
       optional(field('parameters', seq($._S, $._REST_OF_LINE))),
       $._NL,
       field('body', optional($._raw_block_body)),
-      token(prec(2, ci('#+end_export'))),
+      token(prec(3, /[ \t]*#\+end_export/i)),
       optional($._TRAILING),
       $._NL,
     ),
@@ -579,6 +590,7 @@ module.exports = grammar({
     _EXPORT_BACKEND: _ => /[^ \t\n]+/,
 
     src_block: $ => seq(
+      optional($._INDENT),
       token(prec(2, ci('#+begin_src'))),
       optional(seq(
         $._S,
@@ -587,7 +599,7 @@ module.exports = grammar({
       )),
       $._NL,
       field('body', optional($.src_block_body)),
-      token(prec(2, ci('#+end_src'))),
+      token(prec(3, /[ \t]*#\+end_src/i)),
       optional($._TRAILING),
       $._NL,
     ),
@@ -599,10 +611,12 @@ module.exports = grammar({
     src_line: _ => seq(/[^\n]*/, '\n'),
 
     verse_block: $ => seq(
+      optional($._INDENT),
       token(prec(2, ci('#+begin_verse'))),
       optional($._TRAILING),
       $._NL,
       field('body', optional($._gblock_body)),
+      optional($._INDENT),
       token(prec(2, ci('#+end_verse'))),
       optional($._TRAILING),
       $._NL,
@@ -1014,7 +1028,7 @@ module.exports = grammar({
       $._MARKUP_CLOSE_VERBATIM,
     ),
 
-    _verbatim_body: _ => /[^\n=]+( = [^\n=]+|=[A-Za-z0-9_][^\n=]*)*/,
+    _verbatim_body: _ => /[^\n=]+( = [^\n=]+|==+[^\n=]*|=[A-Za-z0-9_][^\n=]*)*/,
 
     code: $ => seq(
       $._MARKUP_OPEN_CODE,
@@ -1022,7 +1036,7 @@ module.exports = grammar({
       $._MARKUP_CLOSE_CODE,
     ),
 
-    _code_body: _ => /[^\n~]+( ~ [^\n~]+|~[A-Za-z0-9_][^\n~]*)*/,
+    _code_body: _ => /[^\n~]+( ~ [^\n~]+|~~+[^\n~]*|~[A-Za-z0-9_][^\n~]*)*/,
 
     // --- 8.11 Plain Text ---
     // Plain text is handled by the external scanner to keep prev_char

@@ -228,6 +228,31 @@ static inline bool is_ascii_upper(int32_t ch) {
   return ch >= 'A' && ch <= 'Z';
 }
 
+static inline bool can_start_inline_hyphen_text(const Scanner *s, uint32_t col) {
+  if (col == 0) return false;
+  if (s->prev_char == 0) return false;
+
+  // Keep grammar-level handling for constructs that use '-' after these
+  // delimiters (table rule rows after '|', timestamp ranges after ']').
+  if (s->prev_char == '|' || s->prev_char == ']' || s->prev_char == '>') {
+    return false;
+  }
+
+  return true;
+}
+
+static bool scan_single_inline_hyphen(TSLexer *lexer) {
+  advance(lexer);
+
+  // Leave double-hyphen constructs to grammar-level rules (timestamp ranges,
+  // table rule rows, etc.). Returning false after advance is safe: the caller
+  // returns false to tree-sitter, which rewinds lexer position.
+  if (lookahead(lexer) == '-') return false;
+
+  mark_end(lexer);
+  return true;
+}
+
 static bool scanner_add_todo_keyword(Scanner *s, const char *kw) {
   if (kw == NULL || kw[0] == '\0') return false;
 
@@ -1299,14 +1324,21 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   while (!eof(lexer) && lookahead(lexer) != '\n') {
     int32_t ch = lookahead(lexer);
 
-    // Do not start a plain_text token at '-'. This lets grammar-level
-    // constructs that begin with hyphen (table rule rows, timestamp ranges,
-    // and the plain '-' fallback token) handle those cases.
+    // Avoid starting a plain_text token at '-' in BOL contexts so grammar-level
+    // constructs that begin with hyphen (table rule rows, list bullets, and
+    // the plain '-' fallback token) can still match. Mid-line '-' should be
+    // plain text, including after inline markup closers (e.g. "-_word_-").
     if (ch == '-' && !found_any) {
       if (s->prev_char == '>') {
+        if (!scan_single_inline_hyphen(lexer)) return false;
         s->prev_char = ch;
-        advance(lexer);
-        mark_end(lexer);
+        found_any = true;
+        continue;
+      }
+
+      if (can_start_inline_hyphen_text(s, get_column(lexer))) {
+        if (!scan_single_inline_hyphen(lexer)) return false;
+        s->prev_char = ch;
         found_any = true;
         continue;
       }
@@ -1326,15 +1358,19 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
     // clearly do not form a valid construct and should remain plain text.
     if (is_special_char(ch)) {
       if (ch == '#') {
-        // Keep BOL '#' available for comment/special-keyword parsing.
-        // Elsewhere it is regular text (e.g. "PR #412").
-        if (get_column(lexer) == 0 || s->prev_char == 0) {
-          if (!found_any) return false;
-          break;
+        // Keep line-start '#+' available for keyword/block parsing, including
+        // indented starts where scanner context indicates BOL-like position.
+        bool bol_like = is_list_line_start_context(s, get_column(lexer)) ||
+                        (!found_any && s->prev_char == ' ');
+
+        advance(lexer);
+        if (!found_any && bol_like &&
+            (lookahead(lexer) == '+' || lookahead(lexer) == ' ' ||
+             lookahead(lexer) == '\n' || eof(lexer))) {
+          return false;
         }
 
         s->prev_char = '#';
-        advance(lexer);
         mark_end(lexer);
         found_any = true;
         continue;
@@ -1443,7 +1479,25 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
         continue;
       }
 
-      if (ch == '>' || ch == ']') {
+      if (ch == '>') {
+        bool text_gt =
+          s->prev_char == 0 || s->prev_char == ' ' || s->prev_char == '\t' ||
+          s->prev_char == '(' || s->prev_char == '[' || s->prev_char == '{' ||
+          s->prev_char == '\'' || s->prev_char == '"';
+
+        if (text_gt) {
+          advance(lexer);
+          s->prev_char = ch;
+          mark_end(lexer);
+          found_any = true;
+          continue;
+        }
+
+        if (!found_any) return false;
+        break;
+      }
+
+      if (ch == ']') {
         advance(lexer);
         int32_t next = lookahead(lexer);
 
@@ -1522,12 +1576,19 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   int32_t ch = lookahead(lexer);
   if (ch == '-') {
     if (s->prev_char == '>') {
+      if (!scan_single_inline_hyphen(lexer)) return false;
       s->prev_char = ch;
-      advance(lexer);
-      mark_end(lexer);
       lexer->result_symbol = TOKEN_PLAIN_TEXT;
       return true;
     }
+
+    if (can_start_inline_hyphen_text(s, get_column(lexer))) {
+      if (!scan_single_inline_hyphen(lexer)) return false;
+      s->prev_char = ch;
+      lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      return true;
+    }
+
     return false;
   }
 
@@ -1560,7 +1621,21 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
     return false;
   }
 
-  if (ch == '>' || ch == ']') {
+  if (ch == '>') {
+    bool text_gt =
+      s->prev_char == 0 || s->prev_char == ' ' || s->prev_char == '\t' ||
+      s->prev_char == '(' || s->prev_char == '[' || s->prev_char == '{' ||
+      s->prev_char == '\'' || s->prev_char == '"';
+    if (!text_gt) return false;
+
+    advance(lexer);
+    s->prev_char = ch;
+    mark_end(lexer);
+    lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    return true;
+  }
+
+  if (ch == ']') {
     advance(lexer);
     int32_t next = lookahead(lexer);
 

@@ -138,3 +138,46 @@ Receiving objects: 100% (1842/1842), 3.21 MiB | 4.5 MiB/s, done.
     (example_block
       (example_block_body
         (example_line)))))
+
+================
+Indented lesser blocks
+================
+  #+begin_comment
+  hidden
+  #+end_comment
+
+  #+begin_example
+  sample
+  #+end_example
+
+  #+begin_export html
+  <p>hello</p>
+  #+end_export
+
+  #+begin_src python
+  print("hello")
+  #+end_src
+
+  #+begin_verse
+  Roses are red,
+  Violets are blue.
+  #+end_verse
+
+---
+
+(document
+  (zeroth_section
+    (comment_block)
+    (example_block
+      (example_block_body
+        (example_line)))
+    (export_block
+      (export_backend))
+    (src_block
+      (language)
+      (src_block_body
+        (src_line)))
+    (verse_block
+      (paragraph
+        (plain_text)
+        (plain_text)))))

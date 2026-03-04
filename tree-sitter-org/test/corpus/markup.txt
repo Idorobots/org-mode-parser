@@ -44,6 +44,28 @@ This has _underline_ words.
       (plain_text))))
 
 ================
+Underline with parentheses and hyphen boundaries
+================
+_Underlined_ text should be used sparingly to avoid confusion with hyperlinks.
+Consider: (_underline inside parentheses_) and -_underline after a hyphen_-.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (underline
+        (plain_text))
+      (plain_text)
+      (plain_text)
+      (underline
+        (plain_text))
+      (plain_text)
+      (underline
+        (plain_text))
+      (plain_text))))
+
+================
 Strikethrough text
 ================
 This has +deleted+ words.
@@ -284,6 +306,22 @@ Verbatim with inner equals before final close
     (paragraph
       (verbatim
         (verbatim_content)))))
+
+================
+Verbatim and code allow doubled inner markers
+================
+=source == destination= and ~source ~~ destination~
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (verbatim
+        (verbatim_content))
+      (plain_text)
+      (code
+        (code_content)))))
 
 ================
 Bold at beginning of line

@@ -163,6 +163,59 @@ Drawer-like tail stays plain text in list items
         first_line: (plain_text)))))
 
 ================
+Drawer-like tails with inline verbatim in list items
+================
+- DONE Fixed critical bug: =LMOVE= with =source == destination= corrupted the list. :bugfix:
+- DONE Added =OBJECT IDLETIME= command. :feature:
+- DONE Documented all configuration keys in =docs/configuration.md=. :docs:
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
+List items keep greater-than comparisons and drawer-like tails
+================
+- DONE Fixed =SCAN= cursor wraparound on very large keyspaces (> 100M keys). :bugfix:
+- DONE =ZADD GT/LT= options now correctly handle negative infinity scores. :bugfix:
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
 Horizontal rule after list
 ================
 - List item
@@ -228,6 +281,32 @@ Drawer after list item parses separately
     (drawer
       name: (drawer_name)
       body: (drawer_kv_line))))
+
+================
+Indented quote block after list item
+================
+** Items with sub-blocks
+
+- Stock types and their properties:
+  #+begin_quote
+  A good stock is the foundation of French cooking - it cannot be rushed.
+  Auguste Escoffier
+  #+end_quote
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (plain_list
+        (item
+          first_line: (plain_text)))
+      (quote_block
+        body: (paragraph
+          (plain_text)
+          (plain_text))))))
 
 ================
 Ordered list with numbers

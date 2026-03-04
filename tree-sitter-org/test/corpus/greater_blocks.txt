@@ -94,3 +94,44 @@ Adjacent dynamic blocks with table bodies
             (plain_text))
           (table_cell
             (plain_text)))))))
+
+================
+Indented greater and dynamic blocks
+================
+  #+begin_center
+  Centered text.
+  #+end_center
+
+  #+begin_quote
+  A wise quote.
+  #+end_quote
+
+  #+begin_warning
+  Danger ahead!
+  #+end_warning
+
+  #+begin: clocktable
+  | Bibliography check   | 0:30   |
+  #+end:
+
+---
+
+(document
+  (zeroth_section
+    (center_block
+      (paragraph
+        (plain_text)))
+    (quote_block
+      (paragraph
+        (plain_text)))
+    (special_block
+      (paragraph
+        (plain_text)))
+    (dynamic_block
+      (dynamic_block_name)
+      (org_table
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))))))
