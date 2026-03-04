@@ -160,9 +160,15 @@ typedef struct {
   uint16_t last_column;
 
   // Whether an italic markup opener '/' has been emitted on the current line
-  // and not yet closed. Used to prevent stray '/' (e.g. URL path delimiters)
-  // from being emitted as italic close tokens.
+  // and not yet closed. Parallel flags are tracked for the other markup
+  // delimiters so stray closers in plain text (e.g. "(.+)") are not emitted
+  // as close tokens.
+  bool bold_open;
   bool italic_open;
+  bool underline_open;
+  bool strike_open;
+  bool verbatim_open;
+  bool code_open;
 
   // Table tracking: true while the parser is inside an org_table.
   // Used by scan_table_start to prevent starting a new org_table mid-table,
@@ -237,6 +243,38 @@ static bool scanner_add_todo_keyword(Scanner *s, const char *kw) {
   return true;
 }
 
+static inline void reset_markup_open_state(Scanner *s) {
+  s->bold_open = false;
+  s->italic_open = false;
+  s->underline_open = false;
+  s->strike_open = false;
+  s->verbatim_open = false;
+  s->code_open = false;
+}
+
+static inline bool is_marker_open(const Scanner *s, int32_t marker) {
+  switch (marker) {
+    case '*': return s->bold_open;
+    case '/': return s->italic_open;
+    case '_': return s->underline_open;
+    case '+': return s->strike_open;
+    case '=': return s->verbatim_open;
+    case '~': return s->code_open;
+    default: return false;
+  }
+}
+
+static inline void set_marker_open(Scanner *s, int32_t marker, bool open) {
+  switch (marker) {
+    case '*': s->bold_open = open; break;
+    case '/': s->italic_open = open; break;
+    case '_': s->underline_open = open; break;
+    case '+': s->strike_open = open; break;
+    case '=': s->verbatim_open = open; break;
+    case '~': s->code_open = open; break;
+  }
+}
+
 static bool probe_markup_close_in_rest_of_line(
     TSLexer *lexer,
     int32_t marker,
@@ -256,7 +294,7 @@ void *tree_sitter_org_external_scanner_create(void) {
     scanner->num_todo_keywords = NUM_DEFAULT_TODO_KWS;
     scanner->prev_char = 0;
     scanner->last_column = 0;
-    scanner->italic_open = false;
+    reset_markup_open_state(scanner);
   }
   return scanner;
 }
@@ -313,8 +351,8 @@ unsigned tree_sitter_org_external_scanner_serialize(
     pos += len;
   }
 
-  // prev_char, consecutive_blank_lines, in_table, last_column, italic_open
-  if (pos + 9 > SERIALIZE_BUF_SIZE) return 0;
+  // prev_char, consecutive_blank_lines, in_table, last_column, markup-open flags
+  if (pos + 14 > SERIALIZE_BUF_SIZE) return 0;
   buffer[pos++] = (char)((s->prev_char >> 24) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 16) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 8) & 0xFF);
@@ -323,7 +361,12 @@ unsigned tree_sitter_org_external_scanner_serialize(
   buffer[pos++] = (char)(s->in_table ? 1 : 0);
   buffer[pos++] = (char)((s->last_column >> 8) & 0xFF);
   buffer[pos++] = (char)(s->last_column & 0xFF);
+  buffer[pos++] = (char)(s->bold_open ? 1 : 0);
   buffer[pos++] = (char)(s->italic_open ? 1 : 0);
+  buffer[pos++] = (char)(s->underline_open ? 1 : 0);
+  buffer[pos++] = (char)(s->strike_open ? 1 : 0);
+  buffer[pos++] = (char)(s->verbatim_open ? 1 : 0);
+  buffer[pos++] = (char)(s->code_open ? 1 : 0);
 
   return pos;
 }
@@ -342,7 +385,7 @@ void tree_sitter_org_external_scanner_deserialize(
   s->prev_char = 0;
   s->consecutive_blank_lines = 0;
   s->last_column = 0;
-  s->italic_open = false;
+  reset_markup_open_state(s);
 
   for (int i = 0; i < NUM_DEFAULT_TODO_KWS; i++) {
     strncpy(s->todo_keywords[i], DEFAULT_TODO_KWS[i], MAX_TODO_KW_LEN - 1);
@@ -389,7 +432,7 @@ void tree_sitter_org_external_scanner_deserialize(
     pos += len;
   }
 
-  // prev_char, consecutive_blank_lines, in_table, last_column, italic_open
+  // prev_char, consecutive_blank_lines, in_table, last_column, markup-open flags
   if (pos + 5 <= length) {
     s->prev_char = ((int32_t)(uint8_t)buffer[pos] << 24) |
                    ((int32_t)(uint8_t)buffer[pos + 1] << 16) |
@@ -406,7 +449,22 @@ void tree_sitter_org_external_scanner_deserialize(
     pos += 2;
   }
   if (pos < length) {
+    s->bold_open = (bool)buffer[pos++];
+  }
+  if (pos < length) {
     s->italic_open = (bool)buffer[pos++];
+  }
+  if (pos < length) {
+    s->underline_open = (bool)buffer[pos++];
+  }
+  if (pos < length) {
+    s->strike_open = (bool)buffer[pos++];
+  }
+  if (pos < length) {
+    s->verbatim_open = (bool)buffer[pos++];
+  }
+  if (pos < length) {
+    s->code_open = (bool)buffer[pos++];
   }
 }
 
@@ -503,6 +561,7 @@ static bool scan_stars_or_heading_end(Scanner *s, TSLexer *lexer,
       lexer->result_symbol = TOKEN_MARKUP_OPEN_BOLD;
       mark_end(lexer);
       s->prev_char = '*';
+      s->bold_open = true;
       return true;
     }
   }
@@ -570,9 +629,32 @@ static bool scan_todo_kw(Scanner *s, TSLexer *lexer, const bool *valid_symbols) 
 
   // Not a TODO keyword but we consumed uppercase letters.
   // Emit as plain text to avoid corrupting lexer state.
-  // Continue consuming the rest of the "word" as plain text.
+  // Continue consuming plain text up to the next object boundary.
+  // Special case: if a bracket sequence starts immediately after the unknown
+  // uppercase token (e.g. "PREPRODUCTION [#B]"), treat the whole bracketed
+  // segment as plain text too. This avoids mis-parsing it as heading priority
+  // in the fallback path for unrecognized TODO-like words.
   bool continuation_ran = false;
-  while (!eof(lexer) && lookahead(lexer) != '\n' && !is_special_char(lookahead(lexer))) {
+  while (!eof(lexer) && lookahead(lexer) != '\n') {
+    if (lookahead(lexer) == '[') {
+      s->prev_char = lookahead(lexer);
+      advance(lexer);
+      continuation_ran = true;
+
+      while (!eof(lexer) && lookahead(lexer) != '\n' && lookahead(lexer) != ']') {
+        s->prev_char = lookahead(lexer);
+        advance(lexer);
+      }
+
+      if (lookahead(lexer) == ']') {
+        s->prev_char = lookahead(lexer);
+        advance(lexer);
+      }
+      continue;
+    }
+
+    if (is_special_char(lookahead(lexer))) break;
+
     s->prev_char = lookahead(lexer);
     advance(lexer);
     continuation_ran = true;
@@ -689,9 +771,7 @@ static int scan_markup_open(
 
   lexer->result_symbol = token;
   s->prev_char = marker;
-  if (marker == '/') {
-    s->italic_open = true;
-  }
+  set_marker_open(s, marker, true);
   return 1;
 }
 
@@ -700,7 +780,7 @@ static int scan_markup_open(
 static int scan_markup_close(Scanner *s, TSLexer *lexer, int32_t marker, enum TokenType token) {
   if (s->prev_char == 0 || s->prev_char == ' ' || s->prev_char == '\t' || s->prev_char == '\n') return 0;
   if (lookahead(lexer) != marker) return 0;
-  if (marker == '/' && !s->italic_open) return 0;
+  if (!is_marker_open(s, marker)) return 0;
 
   advance(lexer);
   mark_end(lexer);
@@ -710,9 +790,7 @@ static int scan_markup_close(Scanner *s, TSLexer *lexer, int32_t marker, enum To
   if (eof(lexer) || is_markup_post_for_marker(marker, next)) {
     lexer->result_symbol = token;
     s->prev_char = marker;
-    if (marker == '/') {
-      s->italic_open = false;
-    }
+    set_marker_open(s, marker, false);
     return 1;
   }
 
@@ -772,6 +850,7 @@ static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols
       lexer->result_symbol = TOKEN_MARKUP_OPEN_STRIKE;
       mark_end(lexer);
       s->prev_char = '+';
+      s->strike_open = true;
       return 1;
     }
 
@@ -1270,7 +1349,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
         advance(lexer);
         if (s->prev_char != ' ' && s->prev_char != '\t' && s->prev_char != '\n' &&
             (eof(lexer) || is_markup_post_for_marker(ch, lookahead(lexer))) &&
-            (ch != '/' || s->italic_open)) {
+            is_marker_open(s, ch)) {
           can_close = true;
         }
 
@@ -1793,7 +1872,7 @@ bool tree_sitter_org_external_scanner_scan(
   // context, even after a line that ended with a non-PRE character.
   if (col == 0) {
     s->prev_char = 0;
-    s->italic_open = false;
+    reset_markup_open_state(s);
 
     // Keep table state in sync across element boundaries even when
     // TOKEN_TABLE_START is not probed on an intervening line (for example,

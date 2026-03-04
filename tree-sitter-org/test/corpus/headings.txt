@@ -214,6 +214,35 @@ Heading with TODO, priority, and tags
       (tag))))
 
 ================
+Unknown TODO-like word with priority marker stays plain text
+================
+* PREPRODUCTION [#B] Salt and Longitude :thriller:contemporary:
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (tags
+      (tag)
+      (tag))))
+
+================
+Unknown TODO-like word with arbitrary brackets stays plain text
+================
+* PREPRODUCTION [anything-goes] Salt and Longitude :thriller:
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (tags
+      (tag))))
+
+================
 Nested headings three levels
 ================
 * Level 1
@@ -293,6 +322,18 @@ Nested headings then back to parent level
 Heading with hyphenated title
 ================
 * Fixed-Width Areas
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)))
+
+================
+Heading title keeps regex-like (.+) plain text
+================
+** Restart repeater (.+) - reschedule N units from the completion date
 
 ---
 

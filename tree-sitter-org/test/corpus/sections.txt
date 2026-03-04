@@ -182,3 +182,15 @@ Fixed_Width: Areas in paragraph.
   (zeroth_section
     (paragraph
       (plain_text))))
+
+================
+Paragraph keeps regex-like closing markers as plain text
+================
+(a+) (a*) (a_) (a=) (a~)
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
