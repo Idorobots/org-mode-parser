@@ -171,4 +171,5 @@ Custom drawer with double-colon text line
   (zeroth_section
     (drawer
       name: (drawer_name)
-      body: (drawer_double_colon_line))))
+      body: (paragraph
+        (plain_text)))))

@@ -61,6 +61,83 @@ This is a Fixed-Width style phrase.
       (plain_text))))
 
 ================
+Paragraph keeps unicode text as plain text
+================
+body → unit
+Zażółć gęślą jaźń.
+O(n²)
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text)
+      (plain_text))))
+
+================
+Paragraph keeps at-sign in plain text
+================
+Report issues to mailto:bugs@example.org or via the issue tracker.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
+
+================
+Caption with markup characters parses as text
+================
+#+CAPTION: *_?=
+foo
+
+---
+
+(document
+  (zeroth_section
+    (caption_keyword
+      value: (plain_text))
+    (paragraph
+      (plain_text))))
+
+================
+Paragraph keeps standalone bracket and angle characters
+================
+Test > hurr
+Durr < derp
+Foo [ bar
+Bar ] baz
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text)
+      (plain_text)
+      (plain_text))))
+
+================
+Paragraph line starting with number hyphen is text
+================
+The earliest printed books, incunabula, often had no punctuation at all,
+leaving spaces for readers or scribes to add marks by hand. Gutenberg's
+42-line Bible c. 1455) is a notable early example.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text)
+      (plain_text))))
+
+================
 Paragraph keeps underscore and colon as plain text
 ================
 Fixed_Width: Areas in paragraph.

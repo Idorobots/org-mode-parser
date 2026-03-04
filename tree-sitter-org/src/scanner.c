@@ -605,7 +605,7 @@ static bool scan_markup_open(Scanner *s, TSLexer *lexer, int32_t marker, enum To
 
 // Markup close: no whitespace before + advance marker + POST check
 static bool scan_markup_close(Scanner *s, TSLexer *lexer, int32_t marker, enum TokenType token) {
-  if (s->prev_char == ' ' || s->prev_char == '\t' || s->prev_char == '\n') return false;
+  if (s->prev_char == 0 || s->prev_char == ' ' || s->prev_char == '\t' || s->prev_char == '\n') return false;
   if (lookahead(lexer) != marker) return false;
 
   advance(lexer);
@@ -632,7 +632,12 @@ static bool scan_markup_close(Scanner *s, TSLexer *lexer, int32_t marker, enum T
 // (list_depth == 0).  Once a list is open, every subsequent bullet becomes a
 // sibling item without a new _LIST_START.
 //
-// Returns: 1=matched LIST_START, 0=no match
+// Returns:
+//   1  = matched LIST_START
+//   2  = emitted TOKEN_PLAIN_TEXT fallback
+//   0  = no match, no advance performed
+//  -1  = no match, but probe advanced; caller must return false so tree-sitter
+//        rewinds lexer position before other scanners run.
 static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
   if (s->list_depth >= MAX_LIST_DEPTH) return 0;
 
@@ -665,7 +670,7 @@ static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols
       return 1;
     }
 
-    return 0;
+    return -1;
   }
 
   if (ch == '*' && col > 0) {
@@ -676,15 +681,11 @@ static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols
       lexer->result_symbol = TOKEN_LIST_START;
       return 1;
     }
-    return 0;
+    return -1;
   }
 
-  if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z')) {
-    if (ch >= '0' && ch <= '9') {
-      while (lookahead(lexer) >= '0' && lookahead(lexer) <= '9') {
-        advance(lexer);
-      }
-    } else {
+  if (ch >= '0' && ch <= '9') {
+    while (lookahead(lexer) >= '0' && lookahead(lexer) <= '9') {
       advance(lexer);
     }
     if (lookahead(lexer) == '.' || lookahead(lexer) == ')') {
@@ -696,7 +697,18 @@ static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols
         return 1;
       }
     }
-    return 0;
+
+    if (valid_symbols[TOKEN_PLAIN_TEXT]) {
+      while (!eof(lexer) && lookahead(lexer) != '\n') {
+        s->prev_char = lookahead(lexer);
+        advance(lexer);
+      }
+      mark_end(lexer);
+      lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      return 2;
+    }
+
+    return -1;
   }
 
   return 0;
@@ -882,6 +894,95 @@ static bool probe_heading_tags_suffix_after_colon(TSLexer *lexer) {
   }
 }
 
+static bool is_ascii_alpha(int32_t ch) {
+  return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+}
+
+static bool is_ascii_digit(int32_t ch) {
+  return ch >= '0' && ch <= '9';
+}
+
+static bool probe_date_like_then_closing(TSLexer *lexer, int32_t closing) {
+  for (int i = 0; i < 4; i++) {
+    if (!is_ascii_digit(lookahead(lexer))) return false;
+    advance(lexer);
+  }
+  if (lookahead(lexer) != '-') return false;
+  advance(lexer);
+  for (int i = 0; i < 2; i++) {
+    if (!is_ascii_digit(lookahead(lexer))) return false;
+    advance(lexer);
+  }
+  if (lookahead(lexer) != '-') return false;
+  advance(lexer);
+  for (int i = 0; i < 2; i++) {
+    if (!is_ascii_digit(lookahead(lexer))) return false;
+    advance(lexer);
+  }
+
+  while (!eof(lexer) && lookahead(lexer) != '\n') {
+    if (lookahead(lexer) == closing) return true;
+    advance(lexer);
+  }
+
+  return false;
+}
+
+static bool probe_angle_construct_after_lt(TSLexer *lexer) {
+  if (lookahead(lexer) == '<') return true;  // target/radio_target opener
+
+  if (is_ascii_digit(lookahead(lexer))) {
+    return probe_date_like_then_closing(lexer, '>');
+  }
+
+  if (!is_ascii_alpha(lookahead(lexer))) return false;
+  while (is_ascii_alpha(lookahead(lexer))) {
+    advance(lexer);
+  }
+
+  return lookahead(lexer) == ':';
+}
+
+static bool probe_bracket_construct_after_lbracket(TSLexer *lexer) {
+  if (lookahead(lexer) == '[') return true;  // regular_link opener
+
+  if (is_ascii_digit(lookahead(lexer))) {
+    return probe_date_like_then_closing(lexer, ']');
+  }
+
+  // Footnotes: [fn:...]
+  if (lookahead(lexer) == 'f' || lookahead(lexer) == 'F') {
+    advance(lexer);
+    if (lookahead(lexer) != 'n' && lookahead(lexer) != 'N') return false;
+    advance(lexer);
+    return lookahead(lexer) == ':';
+  }
+
+  // Citations: [cite...: ...]
+  if (lookahead(lexer) == 'c' || lookahead(lexer) == 'C') {
+    const char *kw = "cite";
+    for (int i = 0; kw[i] != '\0'; i++) {
+      int32_t ch = lookahead(lexer);
+      if (((ch >= 'A' && ch <= 'Z') ? ch + 32 : ch) != kw[i]) return false;
+      advance(lexer);
+    }
+    return lookahead(lexer) == ':' || lookahead(lexer) == '/';
+  }
+
+  // Heading priority marker: [#A]
+  if (lookahead(lexer) == '#') return true;
+
+  // Checkbox at item start: [ ] / [X] / [-]
+  if (lookahead(lexer) == ' ' || lookahead(lexer) == 'X' || lookahead(lexer) == '-') {
+    advance(lexer);
+    if (lookahead(lexer) != ']') return false;
+    advance(lexer);
+    return lookahead(lexer) == ' ' || lookahead(lexer) == '\t';
+  }
+
+  return false;
+}
+
 // Probe from immediately after a markup opener to determine whether
 // a valid closing marker exists before end-of-line.
 //
@@ -940,6 +1041,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer) {
         found_any = true;
         continue;
       }
+
       break;
     }
 
@@ -969,7 +1071,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer) {
           can_open = true;
         }
 
-        if (can_close) {
+        if (can_close && s->prev_char != 0) {
           if (!found_any) return false;
           break;
         }
@@ -1022,6 +1124,59 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer) {
 
         s->prev_char = ':';
         advance(lexer);
+        mark_end(lexer);
+        found_any = true;
+        continue;
+      }
+
+      if (ch == '@') {
+        advance(lexer);
+        if (lookahead(lexer) == '@') {
+          if (!found_any) return false;
+          break;
+        }
+
+        if (!found_any) {
+          return false;
+        }
+
+        s->prev_char = '@';
+        mark_end(lexer);
+        found_any = true;
+        continue;
+      }
+
+      if (ch == '>' || ch == ']') {
+        advance(lexer);
+        int32_t next = lookahead(lexer);
+
+        bool spaced_text = (s->prev_char == ' ' || s->prev_char == '\t') &&
+          (next == ' ' || next == '\t' || next == '\n' || eof(lexer));
+        bool lone_bol_text = get_column(lexer) == 1 && (next == '\n' || eof(lexer));
+
+        if (spaced_text || lone_bol_text) {
+          s->prev_char = ch;
+          mark_end(lexer);
+          found_any = true;
+          continue;
+        }
+
+        if (!found_any) return false;
+        break;
+      }
+
+      if (ch == '<' || ch == '[') {
+        advance(lexer);
+        bool starts_object = (ch == '<')
+          ? probe_angle_construct_after_lt(lexer)
+          : probe_bracket_construct_after_lbracket(lexer);
+
+        if (starts_object) {
+          if (!found_any) return false;
+          break;
+        }
+
+        s->prev_char = ch;
         mark_end(lexer);
         found_any = true;
         continue;
@@ -1089,6 +1244,41 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer) {
 
     s->prev_char = ':';
     advance(lexer);
+    mark_end(lexer);
+    lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    return true;
+  }
+
+  if (ch == '@') {
+    advance(lexer);
+    if (lookahead(lexer) == '@') return false;
+    return false;
+  }
+
+  if (ch == '>' || ch == ']') {
+    advance(lexer);
+    int32_t next = lookahead(lexer);
+
+    bool spaced_text = (s->prev_char == ' ' || s->prev_char == '\t') &&
+      (next == ' ' || next == '\t' || next == '\n' || eof(lexer));
+    bool lone_bol_text = get_column(lexer) == 1 && (next == '\n' || eof(lexer));
+
+    if (!spaced_text && !lone_bol_text) return false;
+
+    s->prev_char = ch;
+    mark_end(lexer);
+    lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    return true;
+  }
+
+  if (ch == '<' || ch == '[') {
+    advance(lexer);
+    bool starts_object = (ch == '<')
+      ? probe_angle_construct_after_lt(lexer)
+      : probe_bracket_construct_after_lbracket(lexer);
+    if (starts_object) return false;
+
+    s->prev_char = ch;
     mark_end(lexer);
     lexer->result_symbol = TOKEN_PLAIN_TEXT;
     return true;
@@ -1357,6 +1547,8 @@ bool tree_sitter_org_external_scanner_scan(
   if (valid_symbols[TOKEN_LIST_START]) {
     int result = scan_list_start(s, lexer, valid_symbols);
     if (result == 1) return true;
+    if (result == 2) return true;
+    if (result == -1) return false;
     // result == 0: no match; no advance was made.
   }
 

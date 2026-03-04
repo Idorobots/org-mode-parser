@@ -702,7 +702,10 @@ module.exports = grammar({
       token(prec(2, ci('#+caption'))),
       optional(field('optval', $._caption_optval)),
       ':',
-      optional(field('value', seq($._S, repeat1($._object_nofn)))),
+      optional(field('value', choice(
+        seq($._S, repeat1($._object_nofn)),
+        seq($._S, alias($._REST_OF_LINE, $.plain_text)),
+      ))),
       $._NL,
     ),
 
