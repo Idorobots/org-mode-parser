@@ -157,3 +157,18 @@ Custom drawer with key-like empty value line
     (drawer
       name: (drawer_name)
       body: (drawer_kv_line))))
+
+================
+Custom drawer with double-colon text line
+================
+:DRAWER:
+2025-01-12 :: foo bar
+:END:
+
+---
+
+(document
+  (zeroth_section
+    (drawer
+      name: (drawer_name)
+      body: (drawer_double_colon_line))))

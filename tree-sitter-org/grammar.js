@@ -294,6 +294,7 @@ module.exports = grammar({
 
     _drawer_body: $ => repeat1(choice(
       $.drawer_kv_line,
+      $.drawer_double_colon_line,
       $._drawer_element,
       $._blank_line,
     )),
@@ -304,6 +305,12 @@ module.exports = grammar({
       /[^:\n]+/,
       ':',
       /[^\n]*/,
+      $._NL,
+    ),
+
+    drawer_double_colon_line: $ => seq(
+      optional($._INDENT),
+      /[^\n]*::[^\n]*/,
       $._NL,
     ),
 
