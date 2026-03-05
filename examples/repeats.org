@@ -1,0 +1,47 @@
+* Easy case
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2024-01-05 Fri 09:15]
+- State "DONE"       from "TODO"       [2024-01-04 Thu 09:10]
+- State "DONE"       from "TODO"       [2024-01-03 Wed 09:05]
+- State "DONE"       from "TODO"       [2024-01-02 Tue 09:00]
+- State "DONE"       from "TODO"       [2024-01-01 Mon 09:00]
+:END:
+
+**** Indented
+    :LOGBOOK:
+    - State "CANCELLED"  from "TODO"       [2025-07-28 pon 18:41]
+    - State "DONE"       from "TODO"       [2025-07-28 pon 18:33]
+    - State "DONE"       from "TODO"       [2025-07-26 sob 22:18]
+    - State "DONE"       from "TODO"       [2025-06-29 nie 20:54]
+    - State "DONE"       from "TODO"       [2025-06-26 czw 22:39]
+    - State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54]
+    - State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54]
+    :END:
+
+**** Notes
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2025-07-28 pon 18:41] \\
+  No need to.
+- State "DONE"       from "TODO"       [2025-07-28 pon 18:33]
+- State "DONE"       from "TODO"       [2025-07-26 sob 22:18]
+- State "DONE"       from "TODO"       [2025-06-29 nie 20:54]
+- State "DONE"       from "TODO"       [2025-06-26 czw 22:39]
+- State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
+  Missed it.
+- State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
+  Note
+:END:
+
+**** Notes
+    :LOGBOOK:
+    - State "CANCELLED"  from "TODO"       [2025-07-28 pon 18:41] \\
+      No need to.
+    - State "DONE"       from "TODO"       [2025-07-28 pon 18:33]
+    - State "DONE"       from "TODO"       [2025-07-26 sob 22:18]
+    - State "DONE"       from "TODO"       [2025-06-29 nie 20:54]
+    - State "DONE"       from "TODO"       [2025-06-26 czw 22:39]
+    - State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
+      Missed it.
+    - State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
+      Note
+    :END:

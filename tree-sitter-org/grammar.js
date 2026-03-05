@@ -301,12 +301,18 @@ module.exports = grammar({
     _DRAWER_NAME: _ => /[A-Za-z0-9_\-]+/,
 
     _drawer_body: $ => repeat1(choice(
+      $._drawer_indented_list,
       $._drawer_indented_timestamp_line,
       $.drawer_kv_line,
       $.drawer_double_colon_line,
       $._drawer_element,
       $._blank_line,
     )),
+
+    _drawer_indented_list: $ => seq(
+      $._INDENT,
+      $.plain_list,
+    ),
 
     _drawer_indented_timestamp_line: $ => seq(
       $._INDENT,

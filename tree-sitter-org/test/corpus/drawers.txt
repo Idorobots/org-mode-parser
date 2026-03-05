@@ -195,6 +195,65 @@ Custom drawer with indented timestamp line
       body: (plain_text))))
 
 ================
+Indented LOGBOOK drawer in heading
+================
+* H
+    :LOGBOOK:
+    - State "DONE"       from "TODO"       [2025-07-28 Mon 18:33]
+    :END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (drawer
+        name: (drawer_name)
+        body: (plain_list
+          (item
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time))))))))
+
+================
+Indented LOGBOOK drawer with note line
+================
+* H
+    :LOGBOOK:
+    - State "CANCELLED"  from "TODO"       [2025-07-28 Mon 18:41] \\
+      No need to.
+    :END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (drawer
+        name: (drawer_name)
+        body: (plain_list
+          (item
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time))
+            first_line: (plain_text)
+            first_line: (line_break)))
+        body: (paragraph
+          (plain_text))))))
+
+================
 Fully indented custom drawer with timestamp line
 ================
   :PROGRESS:

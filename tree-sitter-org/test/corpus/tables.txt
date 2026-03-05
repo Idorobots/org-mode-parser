@@ -191,3 +191,55 @@ Table cells with plus signs stay plain text
           (plain_text))
         (table_cell
           (plain_text))))))
+
+================
+Table.el grid table
+================
++-------------------+-----------+-------------------+
+| Name              | Extension | Description       |
++-------------------+-----------+-------------------+
+| Plain text        | .txt      | Unformatted ASCII |
+| HyperText Markup  | .html     | Web standard      |
+| Portable Document | .pdf      | Print-ready       |
+| Org Mode          | .org      | This format       |
++-------------------+-----------+-------------------+
+| Markdown          | .md       | Lightweight markup|
+| reStructuredText  | .rst      | Python docs       |
++-------------------+-----------+-------------------+
+
+---
+
+(document
+  (zeroth_section
+    (tableel_table)
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))
+    (tableel_table)
+    (tableel_table)
+    (tableel_table)))
+
+================
+Table.el header only
+================
++----------+----------+
+| Column A | Column B |
++----------+----------+
+
+---
+
+(document
+  (zeroth_section
+    (tableel_table)
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))
+    (tableel_table)))

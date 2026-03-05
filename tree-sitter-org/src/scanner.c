@@ -871,7 +871,8 @@ static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols
     // consumed '+' and it is not a bullet, emit strike-open when valid.
     if (ch == '+' && valid_symbols[TOKEN_MARKUP_OPEN_STRIKE] &&
         is_markup_pre(s->prev_char) && lookahead(lexer) != ' ' &&
-        lookahead(lexer) != '\t' && lookahead(lexer) != '\n' && !eof(lexer)) {
+        lookahead(lexer) != '\t' && lookahead(lexer) != '\n' &&
+        lookahead(lexer) != '-' && !eof(lexer)) {
       lexer->result_symbol = TOKEN_MARKUP_OPEN_STRIKE;
       mark_end(lexer);
       s->prev_char = '+';
@@ -955,10 +956,9 @@ static bool is_space_or_tab(int32_t ch) {
 }
 
 static bool is_list_line_start_context(const Scanner *s, uint32_t col) {
-  if (col == 0) return true;
-  if (s->prev_char == 0) return true;
-  if (s->prev_char == ' ' && s->last_column == 0) return true;
-  return false;
+  (void)s;
+  (void)col;
+  return true;
 }
 
 // Probe whether the current line starts with a valid Org list bullet.
