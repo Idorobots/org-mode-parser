@@ -18,6 +18,59 @@ Unordered list with dashes
         first_line: (plain_text)))))
 
 ================
+List items allow arrows inside verbatim markup
+================
+- Line
+- =map= - takes a function =A => B=
+- =apply= (=ap=) - applies a function =F[A => B]=
+- =pure= - wraps the value into the type constructor: =A => F[A]=,
+- Essentially combines several =D => F[A*]= in a chain, so that you get a single =Kleisli[F, D, R]= result at the end which you can then =run= with the dependency =D=.
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content)))
+      (item
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content)))
+      (item
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
 Unordered list with plus
 ================
 + First
@@ -161,6 +214,31 @@ Inline plus in list item text
         first_line: (plain_text))
       (item
         first_line: (plain_text)))))
+
+================
+Inline plus in indented list under heading
+================
+* Title
+ - React + Redux
+ - Elm sucks
+ - Reframe on CLJS
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (plain_list
+        (item
+          first_line: (plain_text))
+        (item
+          indent: (item_indent)
+          first_line: (plain_text))
+        (item
+          indent: (item_indent)
+          first_line: (plain_text))))))
 
 ================
 Drawer-like tail stays plain text in list items

@@ -194,6 +194,7 @@ module.exports = grammar({
       $.drawer,
       $.dynamic_block,
       $.footnote_definition,
+      $._indented_plain_list,
       $.plain_list,
       $.org_table,
       $.tableel_table,
@@ -228,6 +229,11 @@ module.exports = grammar({
     _non_affiliatable: $ => choice(
       $.comment,
       $.clock,
+    ),
+
+    _indented_plain_list: $ => seq(
+      $._INDENT,
+      $.plain_list,
     ),
 
     // §6 Greater Elements
@@ -1132,7 +1138,7 @@ module.exports = grammar({
       $._MARKUP_CLOSE_VERBATIM,
     ),
 
-    _verbatim_body: _ => /[^\n=]+( = [^\n=]+|==+[^\n=]*|=[A-Za-z0-9_][^\n=]*)*/,
+    _verbatim_body: _ => /[^\n=]+( = [^\n=]+|==+[^\n=]*|=[^ \t\n=\-.,;:!?')}\["\\|*\/_+~][^\n=]*)*/,
 
     code: $ => seq(
       $._MARKUP_OPEN_CODE,
@@ -1140,7 +1146,7 @@ module.exports = grammar({
       $._MARKUP_CLOSE_CODE,
     ),
 
-    _code_body: _ => /[^\n~]+( ~ [^\n~]+|~~+[^\n~]*|~[A-Za-z0-9_][^\n~]*)*/,
+    _code_body: _ => /[^\n~]+( ~ [^\n~]+|~~+[^\n~]*|~[^ \t\n~\-.,;:!?')}\["\\|*\/_+=][^\n~]*)*/,
 
     // --- 8.11 Plain Text ---
     // Plain text is handled by the external scanner to keep prev_char

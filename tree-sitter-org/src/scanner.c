@@ -858,6 +858,10 @@ static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols
   uint32_t col = get_column(lexer);
   int32_t ch = lookahead(lexer);
 
+  // Never start a new list from a bullet marker that appears mid-line.
+  // This prevents cases like "React + Redux" from spawning a new list item.
+  if (ch == '+' && col > 1 && s->prev_char != 0) return 0;
+
   if (!is_list_line_start_context(s, col)) return 0;
 
   if (ch == '+' || ch == '-') {
