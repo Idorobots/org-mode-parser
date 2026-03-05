@@ -449,6 +449,16 @@ module.exports = grammar({
       $._S,
     ),
 
+    completion_counter: _ => token(seq(
+      '[',
+      /[0-9]*/,
+      choice(
+        seq('/', /[0-9]*/),
+        '%',
+      ),
+      ']',
+    )),
+
     item_tag: $ => seq(
       repeat1($._object),
       $._ITEM_TAG_END,
@@ -1060,6 +1070,7 @@ module.exports = grammar({
       $.inline_source_block, $.line_break,
       $.regular_link, $.angle_link, $.plain_link,
       $.target, $.radio_target, $.timestamp,
+      $.completion_counter,
       $.bold, $.italic, $.underline, $.strike_through,
       $.verbatim, $.code, $.plain_text,
     ),
@@ -1069,6 +1080,7 @@ module.exports = grammar({
       $.inline_source_block,
       $.regular_link, $.angle_link, $.plain_link,
       $.target, $.radio_target, $.timestamp,
+      $.completion_counter,
       $.bold, $.italic, $.underline, $.strike_through,
       $.verbatim, $.code, $.plain_text,
     ),
@@ -1078,6 +1090,7 @@ module.exports = grammar({
       $.inline_source_block, $.line_break,
       $.regular_link, $.angle_link, $.plain_link,
       $.target, $.radio_target, $.timestamp,
+      $.completion_counter,
       $.bold, $.italic, $.underline, $.strike_through,
       $.verbatim, $.code, $.plain_text,
     ),
@@ -1086,6 +1099,7 @@ module.exports = grammar({
       $.export_snippet, $.inline_source_block, $.line_break,
       $.regular_link, $.angle_link, $.plain_link,
       $.target, $.radio_target, $.timestamp,
+      $.completion_counter,
       $.bold, $.italic, $.underline, $.strike_through,
       $.verbatim, $.code, $.plain_text,
     ),
@@ -1095,6 +1109,7 @@ module.exports = grammar({
       $.inline_source_block,
       $.regular_link, $.angle_link, $.plain_link,
       $.target, $.radio_target, $.timestamp,
+      $.completion_counter,
       $.bold, $.italic, $.underline, $.strike_through,
       $.verbatim, $.code, $.plain_text,
     ),

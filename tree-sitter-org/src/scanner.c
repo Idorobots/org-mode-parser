@@ -1242,8 +1242,53 @@ static bool probe_angle_construct_after_lt(TSLexer *lexer) {
 static bool probe_bracket_construct_after_lbracket(TSLexer *lexer) {
   if (lookahead(lexer) == '[') return true;  // regular_link opener
 
+  // Statistics / completion cookies: [N/M], [/], [N%], [%]
+  if (lookahead(lexer) == '/' || lookahead(lexer) == '%') {
+    advance(lexer);
+    return lookahead(lexer) == ']';
+  }
+
   if (is_ascii_digit(lookahead(lexer))) {
-    return probe_date_like_then_closing(lexer, ']');
+    int digits = 0;
+    while (is_ascii_digit(lookahead(lexer))) {
+      advance(lexer);
+      digits++;
+    }
+
+    if (lookahead(lexer) == '/') {
+      advance(lexer);
+      while (is_ascii_digit(lookahead(lexer))) {
+        advance(lexer);
+      }
+      return lookahead(lexer) == ']';
+    }
+
+    if (lookahead(lexer) == '%') {
+      advance(lexer);
+      return lookahead(lexer) == ']';
+    }
+
+    // Timestamp-like bracket: [YYYY-MM-DD ...]
+    if (digits == 4 && lookahead(lexer) == '-') {
+      advance(lexer);
+      for (int i = 0; i < 2; i++) {
+        if (!is_ascii_digit(lookahead(lexer))) return false;
+        advance(lexer);
+      }
+      if (lookahead(lexer) != '-') return false;
+      advance(lexer);
+      for (int i = 0; i < 2; i++) {
+        if (!is_ascii_digit(lookahead(lexer))) return false;
+        advance(lexer);
+      }
+
+      while (!eof(lexer) && lookahead(lexer) != '\n') {
+        if (lookahead(lexer) == ']') return true;
+        advance(lexer);
+      }
+    }
+
+    return false;
   }
 
   // Footnotes: [fn:...]

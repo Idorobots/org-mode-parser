@@ -11,6 +11,49 @@ Level 1 heading
     (plain_text)))
 
 ================
+Heading counters with TODO and priority variants
+================
+* TODO [#A] [%] Priority and empty counter
+* TODO [#A] [20%] Priority and counter
+* TODO [#B] [2/10] Priority and counter
+* TODO [#C] Priority and counter [10/10]
+* TODO No priority [1/5] and counter in the middle
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority)
+    (completion_counter)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority)
+    (completion_counter)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority)
+    (completion_counter)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority)
+    (plain_text)
+    (completion_counter))
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (completion_counter)
+    (plain_text)))
+
+================
 TODO keywords accumulate from #+TODO lines
 ================
 #+TODO: TODO | DONE
@@ -179,6 +222,34 @@ Heading with priority
   (heading
     (stars)
     (priority)
+    (plain_text)))
+
+================
+Heading with slash completion counter
+================
+* List [0/3]
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (completion_counter)))
+
+================
+Heading with TODO, priority, and empty completion counter
+================
+* TODO [#B] [/] Priority and counter
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority)
+    (completion_counter)
     (plain_text)))
 
 ================

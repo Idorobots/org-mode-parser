@@ -387,6 +387,45 @@ List with checkboxes
         first_line: (plain_text)))))
 
 ================
+List items with slash and percent completion counters
+================
+- [-] Sublist [1/2]
+  + [ ] Unfinished
+  + [X] Finished
+- [-] Todo with an empty counter [/]
+- [ ] Another item, no counter
+- [ ] Progress [33%]
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        indent: (item_indent)
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        indent: (item_indent)
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text)
+        first_line: (completion_counter)))))
+
+================
 Nested list — flat with indent preserved
 ================
 - Test
@@ -449,3 +488,47 @@ Indented numeric continuation lines stay paragraphs
         first_line: (plain_text)))
     (paragraph
       (plain_text))))
+
+================
+List items with completion counter variants
+================
+- [%] Empty percentage
+- Empty percentage at the end [%]
+- Set percentage [21%]
+- Set [33%] percentage
+- [/] Empty count
+- Empty count at the end [/]
+- Set count [1/6]
+- Set [4/6] count
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (completion_counter)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter)
+        first_line: (plain_text))
+      (item
+        first_line: (completion_counter)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter)
+        first_line: (plain_text)))))
