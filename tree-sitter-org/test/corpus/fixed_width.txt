@@ -84,7 +84,6 @@ test :: Not a fixed width section
 (document
   (zeroth_section
     (paragraph
-      (plain_text)
       (plain_text))))
 
 ================

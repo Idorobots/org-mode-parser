@@ -61,6 +61,18 @@ This is a Fixed-Width style phrase.
       (plain_text))))
 
 ================
+Paragraph keeps colon-wrapped text plain
+================
+This doesn't work. :shrug:
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
+
+================
 Paragraph keeps unicode text as plain text
 ================
 body → unit

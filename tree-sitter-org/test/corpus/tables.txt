@@ -21,6 +21,42 @@ Simple org table
           (plain_text))))))
 
 ================
+Table with TBLFM formula line
+================
+|------------+---------+-------+-----------------+---------+------------------+--------------------+------------------|
+|    *Total* |         |       |                 |         |              152 |                115 |               37 |
+#+TBLFM: @2$5..@>>$5='(format-consultancy-hours "%h:%.2m" $1 $2 $3 $4)
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_rule))
+      (table_row
+        (table_cell
+          (plain_text)
+          (bold
+            (plain_text))
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (tblfm_line))))
+
+================
 Table with rule row
 ================
 | Name | Age |

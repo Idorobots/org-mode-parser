@@ -172,6 +172,10 @@ typedef struct {
   bool verbatim_open;
   bool code_open;
 
+  // True while scanning the first line of a heading (after TOKEN_STARS).
+  // Used to limit heading-tag suffix probing (":tag:") to heading lines.
+  bool in_heading_line;
+
   // Table tracking: true while the parser is inside an org_table.
   // Used by scan_table_start to prevent starting a new org_table mid-table,
   // which would cause each row to parse as a separate org_table node.
@@ -383,8 +387,9 @@ unsigned tree_sitter_org_external_scanner_serialize(
     pos += len;
   }
 
-  // prev_char, consecutive_blank_lines, in_table, last_column, markup-open flags
-  if (pos + 14 > SERIALIZE_BUF_SIZE) return 0;
+  // prev_char, consecutive_blank_lines, in_table, last_column,
+  // markup-open flags, in_heading_line
+  if (pos + 15 > SERIALIZE_BUF_SIZE) return 0;
   buffer[pos++] = (char)((s->prev_char >> 24) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 16) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 8) & 0xFF);
@@ -399,6 +404,7 @@ unsigned tree_sitter_org_external_scanner_serialize(
   buffer[pos++] = (char)(s->strike_open ? 1 : 0);
   buffer[pos++] = (char)(s->verbatim_open ? 1 : 0);
   buffer[pos++] = (char)(s->code_open ? 1 : 0);
+  buffer[pos++] = (char)(s->in_heading_line ? 1 : 0);
 
   return pos;
 }
@@ -417,6 +423,7 @@ void tree_sitter_org_external_scanner_deserialize(
   s->prev_char = 0;
   s->consecutive_blank_lines = 0;
   s->last_column = 0;
+  s->in_heading_line = false;
   reset_markup_open_state(s);
 
   for (int i = 0; i < NUM_DEFAULT_TODO_KWS; i++) {
@@ -464,7 +471,8 @@ void tree_sitter_org_external_scanner_deserialize(
     pos += len;
   }
 
-  // prev_char, consecutive_blank_lines, in_table, last_column, markup-open flags
+  // prev_char, consecutive_blank_lines, in_table, last_column,
+  // markup-open flags, in_heading_line
   if (pos + 5 <= length) {
     s->prev_char = ((int32_t)(uint8_t)buffer[pos] << 24) |
                    ((int32_t)(uint8_t)buffer[pos + 1] << 16) |
@@ -497,6 +505,9 @@ void tree_sitter_org_external_scanner_deserialize(
   }
   if (pos < length) {
     s->code_open = (bool)buffer[pos++];
+  }
+  if (pos < length) {
+    s->in_heading_line = (bool)buffer[pos++];
   }
 }
 
@@ -578,6 +589,7 @@ static bool scan_stars_or_heading_end(Scanner *s, TSLexer *lexer,
         s->heading_levels[s->heading_depth] = (uint8_t)count;
         s->heading_depth++;
       }
+      s->in_heading_line = true;
       return true;
     }
     return false;
@@ -1569,7 +1581,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
 
         // Preserve a real trailing heading tags suffix for grammar-level tags.
         // Inside list items, colon-wrapped tails (e.g. ":feature:") are text.
-        if (s->list_depth == 0 && (s->prev_char == ' ' || s->prev_char == '\t')) {
+        if (s->in_heading_line && s->list_depth == 0 && (s->prev_char == ' ' || s->prev_char == '\t')) {
           advance(lexer);
           if (is_heading_tag_char(lookahead(lexer)) && probe_heading_tags_suffix_after_colon(lexer)) {
             if (!found_any) return false;
@@ -1739,7 +1751,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
     // Mid-line colons are often plain text ("test ::", "value: text").
     // Treat ':' as potential heading-tags start only when not inside a list
     // item and only if the remainder is a full tags suffix.
-    if (s->list_depth == 0 && (s->prev_char == ' ' || s->prev_char == '\t')) {
+    if (s->in_heading_line && s->list_depth == 0 && (s->prev_char == ' ' || s->prev_char == '\t')) {
       advance(lexer);
       s->prev_char = ':';
       mark_end(lexer);
@@ -1942,7 +1954,32 @@ static bool scan_table_break_sync(Scanner *s, TSLexer *lexer) {
     advance(lexer);
   }
 
-  if (lookahead(lexer) == '|') return false;
+  int32_t ch = lookahead(lexer);
+
+  if (ch == '|') return false;
+
+  // Keep the table open at the beginning of a TBLFM line so `tblfm_line`
+  // is consumed and attached to org_table.
+  if (ch == '#') {
+    const char *kw = "#+tblfm:";
+    bool matches = true;
+
+    for (int i = 0; kw[i] != '\0'; i++) {
+      int32_t c = lookahead(lexer);
+      if (eof(lexer)) {
+        matches = false;
+        break;
+      }
+      if (c >= 'A' && c <= 'Z') c = c + 32;
+      if (c != kw[i]) {
+        matches = false;
+        break;
+      }
+      advance(lexer);
+    }
+
+    if (matches) return false;
+  }
 
   s->in_table = false;
   lexer->result_symbol = TOKEN_TABLE_BREAK_SYNC;
@@ -2142,6 +2179,7 @@ bool tree_sitter_org_external_scanner_scan(
   // context, even after a line that ended with a non-PRE character.
   if (col == 0) {
     s->prev_char = 0;
+    s->in_heading_line = false;
     reset_markup_open_state(s);
 
     // Keep table state in sync across element boundaries even when
