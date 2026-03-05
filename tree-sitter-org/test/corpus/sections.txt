@@ -61,6 +61,27 @@ This is a Fixed-Width style phrase.
       (plain_text))))
 
 ================
+Indented hash comment inside heading body
+================
+* Task
+(module foo (printer alocator)
+  # ...
+)
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (paragraph
+        (plain_text))
+      (comment)
+      (paragraph
+        (plain_text)))))
+
+================
 Paragraph keeps colon-wrapped text plain
 ================
 This doesn't work. :shrug:
@@ -199,6 +220,65 @@ Fixed_Width: Areas in paragraph.
 Paragraph keeps regex-like closing markers as plain text
 ================
 (a+) (a*) (a_) (a=) (a~)
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
+
+================
+Indented timestamp and link lines in heading section
+================
+* Log
+ [2011-11-27 nie 13:39]
+ [[file:~/org/TODO::*Repeat%20to%20German%20test.][Repeat to German test.]]
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (timestamp
+        year: (ts_year)
+        month: (ts_month)
+        day: (ts_day)
+        dayname: (ts_dayname)
+        time: (ts_time))
+      (regular_link
+        path: (link_path)
+        description: (plain_text)))))
+
+================
+Backslash text in paragraph body
+================
+* Math notes
+\noindent
+\[ cond(A) = \textbar A \textbar \]
+Hard break before next line\\
+next line
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (paragraph
+        (plain_text)
+        (plain_text)
+        (plain_text)
+        (line_break)
+        (plain_text)))))
+
+================
+Escaped closing bracket stays plain text
+================
+\textbar A^{-1} \textbar \textbar\]
 
 ---
 

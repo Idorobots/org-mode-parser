@@ -68,3 +68,20 @@ Zeroth and heading special keywords
       (special_keyword
         (keyword_key)
         (keyword_value)))))
+
+================
+Additional and arbitrary special keywords
+================
+#+CONSTANTS: pi=3.14
+#+MY_CUSTOM_KEY: enabled
+
+---
+
+(document
+  (zeroth_section
+    (special_keyword
+      (keyword_key)
+      (keyword_value))
+    (special_keyword
+      (keyword_key)
+      (keyword_value))))

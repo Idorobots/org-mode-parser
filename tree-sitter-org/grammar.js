@@ -195,6 +195,7 @@ module.exports = grammar({
       $.drawer,
       $.dynamic_block,
       $.footnote_definition,
+      $._indented_object_line,
       $._indented_plain_list,
       $.plain_list,
       $.org_table,
@@ -210,6 +211,7 @@ module.exports = grammar({
       $._greater_block,
       $.dynamic_block,
       $.footnote_definition,
+      $._indented_object_line,
       $.plain_list,
       $.org_table,
       $.tableel_table,
@@ -235,6 +237,13 @@ module.exports = grammar({
     _indented_plain_list: $ => seq(
       $._INDENT,
       $.plain_list,
+    ),
+
+    _indented_object_line: $ => seq(
+      $._INDENT,
+      choice($.timestamp, $.regular_link),
+      repeat($._object),
+      $._NL,
     ),
 
     // §6 Greater Elements
@@ -322,12 +331,12 @@ module.exports = grammar({
       $.plain_list,
     ),
 
-    _drawer_indented_timestamp_line: $ => seq(
+    _drawer_indented_timestamp_line: $ => prec(1, seq(
       $._INDENT,
       $.timestamp,
       repeat($._object),
       $._NL,
-    ),
+    )),
 
     drawer_kv_line: $ => seq(
       optional($._INDENT),
@@ -404,7 +413,7 @@ module.exports = grammar({
     // _blank_line is anonymous).
     plain_list: $ => seq(
       $._LIST_START,
-      repeat1(choice($.item, $._blank_line)),
+      repeat1($.item),
       $._LIST_END,
     ),
 
@@ -420,12 +429,26 @@ module.exports = grammar({
         seq(field('tag', $.item_tag), $._NL),
         seq(optional(field('first_line', $._item_first_line)), optional($._TRAILING), $._NL),
       ),
-      repeat(field('body', choice(
+      repeat(field('body', $._item_body)),
+      repeat($._blank_line),
+    ),
+
+    _item_body: $ => choice(
+      choice(
         alias($._item_drawer, $.drawer),
         $.fixed_width,
         $._item_block,
         $.item_continuation_line,
-      ))),
+      ),
+      seq(
+        repeat1($._blank_line),
+        choice(
+          alias($._item_drawer, $.drawer),
+          $.fixed_width,
+          $._item_block,
+          $.item_continuation_line,
+        ),
+      ),
     ),
 
     _item_block: $ => choice(
@@ -461,12 +484,10 @@ module.exports = grammar({
 
     item_continuation_line: $ => seq(
       $._INDENT,
-      field('content', alias($._ITEM_CONTINUATION_TEXT, $.plain_text)),
+      field('content', repeat1($._object)),
       optional($._TRAILING),
       $._NL,
     ),
-
-    _ITEM_CONTINUATION_TEXT: _ => /[^\n#|:][^\n]*/,
 
     _bullet: $ => choice(
       $._unordered_bullet,
@@ -751,8 +772,8 @@ module.exports = grammar({
     comment: $ => prec(1, repeat1($._comment_line)),
 
     _comment_line: $ => choice(
-      seq('#', ' ', optional(field('value', /[^\n]*/)), $._NL),
-      seq('#', $._NL),
+      seq(optional($._INDENT), '#', ' ', optional(field('value', /[^\n]*/)), $._NL),
+      seq(optional($._INDENT), '#', $._NL),
     ),
 
     // --- 7.6 Fixed-Width Areas ---
@@ -797,14 +818,7 @@ module.exports = grammar({
 
     _TODO_SPECIAL_KEY: _ => token(prec(2, ci('TODO'))),
 
-    _SPECIAL_KEY_NO_TODO: _ => token(prec(2, choice(
-      ci('TITLE'), ci('AUTHOR'), ci('DATE'), ci('EMAIL'),
-      ci('DESCRIPTION'), ci('KEYWORDS'), ci('LANGUAGE'),
-      ci('CATEGORY'), ci('FILETAGS'), ci('TAGS'),
-      ci('SEQ_TODO'), ci('TYP_TODO'),
-      ci('PRIORITIES'), ci('PROPERTY'), ci('STARTUP'),
-      ci('ARCHIVE'), ci('COLUMNS'), ci('OPTIONS'),
-    ))),
+    _SPECIAL_KEY_NO_TODO: _ => token(prec(1, /[A-Za-z][A-Za-z0-9_-]*/)),
 
     // --- 7.9 Affiliated Keywords ---
     _affiliated_keyword: $ => choice(
@@ -1011,7 +1025,7 @@ module.exports = grammar({
       ),
     ),
 
-    _link_path: _ => /([^\[\]\\]|\\]|\\\\)*/,
+    _link_path: _ => /([^\[\]]|\\.)*/,
 
     _link_description: $ => repeat1($._object_min),
 

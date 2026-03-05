@@ -576,6 +576,23 @@ List with checkboxes
         first_line: (plain_text)))))
 
 ================
+Invalid checkbox marker stays plain text
+================
+- [X] multiplying / adding random numbers
+- [?] evaluating all kinds of formulae
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
+
+================
 List items with slash and percent completion counters
 ================
 - [-] Sublist [1/2]
@@ -656,6 +673,26 @@ Blank-line-separated list items
         first_line: (plain_text)))))
 
 ================
+Blank line before indented continuation paragraph
+================
+- disconnect (optionally abruptly).
+
+    Flood FSM modifications:
+- execute a script once connected.
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        body: (item_continuation_line
+          content: (plain_text)))
+      (item
+        first_line: (plain_text)))))
+
+================
 Indented numeric continuation lines stay in list items
 ================
 - Days off
@@ -714,6 +751,32 @@ List items with bullet-like continuation paragraphs
         first_line: (line_break)
         body: (item_continuation_line
           content: (plain_text))))))
+
+================
+List continuation lines parse indented timestamps and links
+================
+- Progress updates
+  [2011-11-27 nie 13:39]
+  [[file:~/org/TODO::*Repeat%20to%20German%20test.][Repeat to German test.]]
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        body: (item_continuation_line
+          content: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time)))
+        body: (item_continuation_line
+          content: (regular_link
+            path: (link_path)
+            description: (plain_text)))))))
 
 ================
 List items with completion counter variants

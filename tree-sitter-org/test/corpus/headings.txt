@@ -193,6 +193,22 @@ Heading title keeps hash in plain text before tags
       (tag))))
 
 ================
+Heading title keeps double-backslash-star as plain text
+================
+* DONE sed \\* to something else in the notes.                    :COMP:note:
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (tags
+      (tag)
+      (tag))))
+
+================
 Level 2 heading
 ================
 * Parent
