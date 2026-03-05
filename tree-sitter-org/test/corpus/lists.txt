@@ -361,7 +361,7 @@ Multiple list items starting with inline markup
         first_line: (plain_text)))))
 
 ================
-Indented drawer stays in list item body
+Indented drawer starts after list item
 ================
 - List item
   :DRAWER:
@@ -374,13 +374,13 @@ Indented drawer stays in list item body
   (zeroth_section
     (plain_list
       (item
-        first_line: (plain_text)
-        body: (drawer
-          name: (drawer_name)
-          body: (drawer_kv_line))))))
+        first_line: (plain_text)))
+    (drawer
+      name: (drawer_name)
+      body: (drawer_kv_line))))
 
 ================
-Indented fixed-width stays in list item body
+Indented fixed-width starts after list item
 ================
 - List item
   : fixed-width body
@@ -391,11 +391,11 @@ Indented fixed-width stays in list item body
   (zeroth_section
     (plain_list
       (item
-        first_line: (plain_text)
-        body: (fixed_width)))))
+        first_line: (plain_text)))
+    (fixed_width)))
 
 ================
-Indented nested item drawer belongs to that item
+Indented nested item drawer starts after list
 ================
 - Parent
   - Child
@@ -413,15 +413,16 @@ Indented nested item drawer belongs to that item
         first_line: (plain_text))
       (item
         indent: (item_indent)
-        first_line: (plain_text)
-        body: (drawer
-          name: (drawer_name)
-          body: (drawer_kv_line)))
+        first_line: (plain_text)))
+    (drawer
+      name: (drawer_name)
+      body: (drawer_kv_line))
+    (plain_list
       (item
         first_line: (plain_text)))))
 
 ================
-Indented fixed-width belongs to nested list item body
+Indented nested fixed-width starts after list
 ================
 - Parent
   - Child
@@ -437,8 +438,9 @@ Indented fixed-width belongs to nested list item body
         first_line: (plain_text))
       (item
         indent: (item_indent)
-        first_line: (plain_text)
-        body: (fixed_width))
+        first_line: (plain_text)))
+    (fixed_width)
+    (plain_list
       (item
         first_line: (plain_text)))))
 

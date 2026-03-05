@@ -465,7 +465,7 @@ module.exports = grammar({
       $._NL,
     ),
 
-    _ITEM_CONTINUATION_TEXT: _ => /[^\n#|][^\n]*/,
+    _ITEM_CONTINUATION_TEXT: _ => /[^\n#|:][^\n]*/,
 
     _bullet: $ => choice(
       $._unordered_bullet,

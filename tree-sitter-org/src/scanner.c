@@ -1062,9 +1062,9 @@ static int scan_list_end(Scanner *s, TSLexer *lexer) {
     return 1;
   }
 
-  // Deeper-indented colon lines visually belong to the current item body
-  // (drawers/fixed-width/continuation), so keep the list open.
-  if (ch == ':' && col > current_indent) return 0;
+  // Colon-prefixed lines terminate the current list. Fixed-width lines
+  // (': ' / ':\n') are handled earlier by scan_listitem_indent.
+  (void)current_indent;
 
   // Heading '*' at col 0, keywords ('#'), drawers (':'), etc. — end the list.
   s->list_depth--;
@@ -1137,10 +1137,9 @@ static bool scan_item_tag_end(TSLexer *lexer) {
 //         lexer rewinds and grammar can parse the line as plain continuation text.
 //   2  — whitespace + deeper-indented fixed-width starter (': ' / ':\n'):
 //         TOKEN_FIXED_WIDTH_COLON emitted directly.
-//  -4  — whitespace + non-bullet line that starts an element-like construct
-//         (e.g. '|', or ':'/'#' at same/shallower indent); caller should
-//         fall through to LIST_END.
-static int scan_listitem_indent(const Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
+//  -4  — whitespace + non-bullet line that may start another construct
+//         (e.g. '|', '#', or ':...'); caller should fall through to LIST_END.
+static int scan_listitem_indent(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
   if (s->list_depth == 0) return 0;
 
   if (lookahead(lexer) != ' ' && lookahead(lexer) != '\t') return 0;
@@ -1179,20 +1178,8 @@ static int scan_listitem_indent(const Scanner *s, TSLexer *lexer, const bool *va
   // Indented non-bullet lines that clearly start other constructs should end
   // the current list instead of being treated as item continuation text.
   if (ch == ':' && s->list_depth > 0) {
-    // Deeper-indented colon lines visually belong to the current item body.
-    // Same-indentation (or shallower) colon lines terminate the current list.
-    uint16_t current_indent = s->list_indents[s->list_depth - 1];
-    if (indent_col > current_indent && valid_symbols[TOKEN_FIXED_WIDTH_COLON]) {
-      advance(lexer);  // consume ':'
-      int32_t next = lookahead(lexer);
-      if (is_fixed_width_tail_char(next, eof(lexer))) {
-        mark_end(lexer);
-        lexer->result_symbol = TOKEN_FIXED_WIDTH_COLON;
-        return 2;
-      }
-      return -1;
-    }
-    return (indent_col > current_indent) ? -1 : -4;
+    (void)indent_col;
+    return -4;
   }
 
   if (ch == '#' && s->list_depth > 0) {

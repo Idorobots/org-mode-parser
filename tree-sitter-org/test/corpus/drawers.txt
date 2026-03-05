@@ -195,6 +195,64 @@ Custom drawer with indented timestamp line
       body: (plain_text))))
 
 ================
+LOGBOOK drawer with mis-aligned end in archive style
+================
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2021-01-08 Fri 00:12]
+    - State "CANCELLED"  from "TODO"       [2016-01-24 Sun 20:03] \\
+      Not quite good enough.
+    - State "DONE"       from "TODO"       [2015-01-11 Sun 14:29]
+    - State "DONE"       from "TODO"       [2015-01-09 Fri 18:03]
+    :END:
+
+---
+
+(document
+  (zeroth_section
+    (drawer
+      name: (drawer_name)
+      body: (plain_list
+        (item
+          first_line: (plain_text)
+          first_line: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time)))
+        (item
+          indent: (item_indent)
+          first_line: (plain_text)
+          first_line: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time))
+          first_line: (plain_text)
+          first_line: (line_break)
+          body: (item_continuation_line
+            content: (plain_text)))
+        (item
+          indent: (item_indent)
+          first_line: (plain_text)
+          first_line: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time)))
+        (item
+          indent: (item_indent)
+          first_line: (plain_text)
+          first_line: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time)))))))
+
+================
 Indented LOGBOOK drawer in heading
 ================
 * H
