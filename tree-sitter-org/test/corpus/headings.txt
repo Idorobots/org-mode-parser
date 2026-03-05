@@ -337,6 +337,19 @@ Unknown TODO-like word with arbitrary brackets stays plain text
       (tag))))
 
 ================
+Heading keeps non-cookie bracket text and trailing counter
+================
+* Zombie apocalypse [sic] kit. [21/30]
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (completion_counter)))
+
+================
 Nested headings three levels
 ================
 * Level 1

@@ -1453,6 +1453,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   if (eof(lexer) || lookahead(lexer) == '\n') return false;
 
   bool found_any = false;
+  bool saw_plain_lbracket = false;
   bool maybe_clock_kw = (get_column(lexer) == 0 || s->prev_char == 0);
   int consumed_len = 0;
 
@@ -1644,20 +1645,25 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
       if (ch == ']') {
         advance(lexer);
         int32_t next = lookahead(lexer);
-
         bool spaced_text = (s->prev_char == ' ' || s->prev_char == '\t') &&
           (next == ' ' || next == '\t' || next == '\n' || eof(lexer));
         bool lone_bol_text = get_column(lexer) == 1 && (next == '\n' || eof(lexer));
 
-        if (spaced_text || lone_bol_text) {
-          s->prev_char = ch;
-          mark_end(lexer);
-          found_any = true;
-          continue;
+        // Preserve link/citation-style closing delimiters.
+        if (next == ']') {
+          if (!found_any) return false;
+          break;
         }
 
-        if (!found_any) return false;
-        break;
+        if (!(saw_plain_lbracket || spaced_text || lone_bol_text)) {
+          if (!found_any) return false;
+          break;
+        }
+
+        s->prev_char = ch;
+        mark_end(lexer);
+        found_any = true;
+        continue;
       }
 
       if (ch == '<' || ch == '[') {
@@ -1679,6 +1685,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
           break;
         }
 
+        if (ch == '[') saw_plain_lbracket = true;
         s->prev_char = ch;
         mark_end(lexer);
         found_any = true;
@@ -1789,12 +1796,12 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   if (ch == ']') {
     advance(lexer);
     int32_t next = lookahead(lexer);
-
     bool spaced_text = (s->prev_char == ' ' || s->prev_char == '\t') &&
       (next == ' ' || next == '\t' || next == '\n' || eof(lexer));
     bool lone_bol_text = get_column(lexer) == 1 && (next == '\n' || eof(lexer));
 
-    if (!spaced_text && !lone_bol_text) return false;
+    if (next == ']') return false;
+    if (!(saw_plain_lbracket || spaced_text || lone_bol_text)) return false;
 
     s->prev_char = ch;
     mark_end(lexer);

@@ -678,3 +678,36 @@ List items with completion counter variants
         first_line: (plain_text)
         first_line: (completion_counter)
         first_line: (plain_text)))))
+
+================
+List item keeps non-cookie bracket text and parses trailing counter
+================
+- Test [value] [%]
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter)))))
+
+================
+List items keep bracketed bus ranges as plain text
+================
+- Input[0:INPUT_BUS_SIZE] is the value passed into the continuation,
+- NextFunction[0:FUNCTION_BUS_SIZE] is the next function to call,
+- NextValue[0:INPUT_BUS_SIZE] is the next value passed into the continuation,
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
