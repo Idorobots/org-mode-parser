@@ -1615,6 +1615,7 @@ All the lines above should be text, even the heading title.
 *** TODO Other edge cases
 - Nested lists are parsed as items on the parent list, but include an indent
 - Malformed objects are usually treated as plaintext.
+
 ** DONE A script for checking example file coverage
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-03-05 Thu 18:12]
@@ -1675,6 +1676,10 @@ Let's try something different, make the script only find the leaf errors and dis
 
 By leaf errors I mean errors that are as close to a leaf as possible, not the top level errors, not necessarily errors at the very leaf of the expression - just the final level at which an error occurs that does not have an error embedded in them.
 
+** TODO Parser extensions
+*** TODO Support for Babel call syntax
+*** TODO Support for Org entities
+*** TODO Support for subscript/superscript
 * Semantic nodes implementation
 - somewhat compatible with orgparse node layout (root node & env separate, rich data abstractions)
 - mutable by default
@@ -1703,3 +1708,30 @@ Write the implementation plan down to docs/plans/python-wrapper-impl.md
 
 ** TODO Implement the Python wrapper
 Implement the plan from @docs/plans/python-wrapper-impl.md file.
+
+* Repo
+** DONE README.org
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-06 Fri 19:40]
+:END:
+Please create a simple README.org file that will diescribe the project a bit - it's a Tree-Sitter-based parser for the Emacs Org-Mode files, aiming for 100% feature coverage.
+
+Make sure to include some caveats in the README.org file:
+- Nested lists are parsed as items on the parent list, but include an indent for disambiguation.
+- Malformed objects are usually treated as plaintext.
+
+Please list the features that are explicitly not supported (mentioned in the docs directory, but please validate against the current state of the parser if that is the case still).
+
+Make sure to link the ROADMAP.org file.
+
+** TODO Docs update
+Update the target syntax documentation to reflect the currently supported syntax, and remove the "Notes on scope Drift" from the README file.
+
+** TODO GitHub Actions
+Please add a GitHub Actions workflow scaffold that will automatically run the tests.
+
+It should run the Tree Sitter corpus tests as the firs step, then generate the parser and run the check.py script on the examples/ directory files and the ROADMAP.org and README.org files.
+Any failures should be detected and rejected.
+
+** TODO Add a LICENSE file
+Use a MIT license with copyright for "Kajetan Rzepecki <k@spartan.works>".

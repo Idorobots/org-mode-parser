@@ -1,4 +1,4 @@
-#+TITLE: tree-sitter-org
+#+TITLE: Tree-Sitter Org-Mode parser
 #+OPTIONS: toc:t
 
 * Overview
@@ -7,6 +7,8 @@ This project implements a Tree-Sitter-based parser for Emacs Org-Mode files.
 The long-term goal is high fidelity and eventually 100% feature coverage, while
 keeping robust error recovery and useful parse trees for downstream processing.
 
+See [[file:examples/][examples directory]] to get an idea of the parser completeness.
+
 * Current Caveats
 - Nested lists are parsed in a *flat* form: nested items are emitted as items
   on the parent list, with an explicit indent marker so nesting can be
@@ -14,9 +16,7 @@ keeping robust error recovery and useful parse trees for downstream processing.
 - Malformed objects are usually treated as plaintext (or recovered with generic
   parse-error nodes) instead of hard-failing the full parse.
 
-* Explicitly Not Supported (validated)
-The docs list a target subset. Validating that against the current parser
-state:
+* Explicitly Not Supported
 
 - Inlinetasks are not represented as a dedicated node type; high-star headings
   are treated as regular headings.
@@ -33,13 +33,7 @@ state:
 - Radio-link auto-detection is deferred (radio targets are parsed, but
   auto-generated radio links are not resolved in-tree).
 
-* Notes On Scope Drift
-Some features previously documented as excluded are now supported in the
-current parser:
-
-- Arbitrary =#+KEY: VALUE= lines are parsed as =special_keyword=.
-- Statistics cookies (for example =[33%]=, =[1/3]=) are parsed as
-  =completion_counter=.
+The docs list a target Org-Mode syntax subset.
 
 * Roadmap
 See [[file:ROADMAP.org][ROADMAP.org]] for planned work and milestone history.

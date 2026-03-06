@@ -30,14 +30,12 @@ The following features are **explicitly excluded**:
 | Excluded feature | Syntax affected |
 |---|---|
 | Inlinetasks | Headings with ≥ `org-inlinetask-min-level` stars behave as ordinary headings |
-| Arbitrary keywords | `#+KEY: VALUE` is not parsed; only `#+CAPTION:` (affiliated) and special keywords are recognised |
 | LaTeX environments | `\begin{...}...\end{...}` is treated as plain text |
 | LaTeX fragments | `\(`, `\[`, `$$`, `$x$` forms are treated as plain text |
 | Babel (`#+call:`) | `#+call:` keyword is not parsed |
 | Inline Babel calls | `call_NAME(...)` objects are treated as plain text |
 | Entities | `\alpha`, `\cent`, etc. are treated as plain text |
 | Macros | `{{{name}}}` is treated as plain text |
-| Statistics cookies | `[33%]`, `[1/3]` are treated as plain text |
 | Subscript & superscript | `x^2`, `A_i` are treated as plain text |
 | Sexp timestamps | `<%%(SEXP)>` timestamp subtype is not parsed |
 
@@ -47,10 +45,10 @@ Everything not listed above is **in scope**, including: all block types, drawers
 
 Two keyword categories are in scope:
 
-- **Special keywords** — file-level metadata (`#+TITLE:`, `#+AUTHOR:`, etc.). Recognised only in the zeroth section.
-- **`#+CAPTION:`** — as an affiliated keyword, immediately preceding an affiliatable element.
+- **Special keywords** — parsed from `#+KEY: VALUE` in both the zeroth section and heading sections.
+- **Affiliated keywords** — `#+CAPTION:`, `#+TBLNAME:`, `#+RESULTS:`, `#+PLOT:` immediately preceding an affiliatable element.
 
-All other `#+KEY: VALUE` patterns are unrecognised and not part of the tree.
+For special keywords, `KEY` may be any token matching `[A-Za-z][A-Za-z0-9_-]*`. `TODO` / `SEQ_TODO` / `TYP_TODO` additionally update heading TODO keyword parsing state.
 
 ---
 
@@ -211,7 +209,11 @@ BULLET COUNTER-SET CHECK-BOX TAG CONTENTS
 
 #### 3.3.6 Plain Lists
 
-A sequence of consecutive items at the same indentation level. Items may contain nested plain lists.
+A sequence of consecutive items parsed in a flat model.
+
+Nested list structure is not emitted as nested `plain_list` nodes. Instead,
+indented items are emitted as sibling `item` nodes with explicit indent data,
+so post-processing can reconstruct hierarchy.
 
 | Condition | List type |
 |-----------|-----------|
@@ -380,7 +382,7 @@ A line of at least five consecutive hyphens and nothing else:
 
 #### 3.4.8 Special Keywords
 
-Recognised **only in the zeroth section**, these carry document-level metadata:
+These carry document-level metadata and parser configuration:
 
 ```
 #+KEY: VALUE
@@ -388,47 +390,44 @@ Recognised **only in the zeroth section**, these carry document-level metadata:
 
 `VALUE` is a raw string (not parsed as objects).
 
-Recognised keys:
+Supported key form:
+
+| Field | Rule |
+|-------|------|
+| `KEY` | `[A-Za-z][A-Za-z0-9_-]*` |
+
+Important key families:
 
 | Key | Meaning |
 |-----|---------|
-| `TITLE` | Document title |
-| `AUTHOR` | Author name(s) |
-| `DATE` | Document date |
-| `EMAIL` | Author email |
-| `DESCRIPTION` | Document description |
-| `KEYWORDS` | Document keywords |
-| `LANGUAGE` | Document language |
-| `CATEGORY` | Default agenda category |
-| `FILETAGS` | File-wide tags applied to all headings (`:tag1:tag2:` syntax) |
-| `TAGS` | Global tag list / tag groups |
-| `TODO` / `SEQ_TODO` / `TYP_TODO` | Custom TODO keyword sequences — updates `org-todo-keywords-1` for this file |
-| `PRIORITIES` | Custom priority range |
-| `PROPERTY` | File-level default property value |
-| `STARTUP` | Initial display options |
-| `ARCHIVE` | Default archive location |
-| `COLUMNS` | Column view format |
-| `OPTIONS` | Export and display flags |
+| `TODO` / `SEQ_TODO` / `TYP_TODO` | Updates `org-todo-keywords-1` for subsequent heading parsing |
+| Other keys (for example `TITLE`, `AUTHOR`, `DATE`, `EMAIL`, `DESCRIPTION`) | Preserved as `special_keyword` metadata |
 
-Any `#+KEY: VALUE` in the zeroth section whose key matches this list is a special keyword. All others are not parsed.
-
-Anywhere outside the zeroth section, `#+KEY: VALUE` patterns are not parsed (except `#+CAPTION:` as an affiliated keyword — see below, and `#+TBLFM:` which is part of a table).
+`VALUE` is parsed as a raw line value (`keyword_value`), not as object content.
 
 ---
 
-#### 3.4.9 `#+CAPTION:` Affiliated Keyword
+#### 3.4.9 Affiliated Keywords
 
-The only affiliated keyword in scope. Placed **immediately above** an affiliatable element (no blank line between):
+Affiliated keywords must appear **immediately above** an affiliatable element
+(no blank line between):
 
 ```
 #+CAPTION: VALUE
 #+CAPTION[OPTVAL]: VALUE
+#+TBLNAME: VALUE
+#+RESULTS: VALUE
+#+PLOT: VALUE
 ```
 
-`VALUE` — supported objects (excluding footnote references).  
-`OPTVAL` (optional) — any characters except newline; balanced brackets. Used for a short caption.
+`#+CAPTION:`
+- `VALUE` — supported objects (excluding footnote references).
+- `OPTVAL` (optional) — balanced bracket text used for short captions.
 
-Multiple `#+CAPTION:` lines before an element are concatenated. When no affiliatable element immediately follows, the line is not parsed.
+`#+TBLNAME:`, `#+RESULTS:`, `#+PLOT:`
+- `VALUE` — raw line text.
+
+Multiple affiliated keyword lines may precede one affiliatable element. If no affiliatable element follows, they are not parsed as affiliation.
 
 Elements that **cannot** be affiliated: comments, clocks, headings, items, node properties, planning, property drawers, sections, table rows.
 
@@ -470,7 +469,7 @@ Only in Org-type tables.
 
 ## 4. Objects
 
-Objects appear within element content. The supported object set is the full standard set minus: entities, LaTeX fragments, inline Babel calls, macros, statistics cookies, subscript, and superscript.
+Objects appear within element content. The supported object set is the full standard set minus: entities, LaTeX fragments, inline Babel calls, macros, subscript, and superscript.
 
 Explicitly supported:
 
@@ -482,14 +481,15 @@ Explicitly supported:
 | [Citation References](#44-citation-references) | `@key` within citations |
 | [Inline Source Blocks](#45-inline-source-blocks) | `src_lang{body}` |
 | [Line Breaks](#46-line-breaks) | `\\` at end of line |
-| [Links](#47-links) | radio, plain, angle, regular |
+| [Links](#47-links) | plain, angle, regular (radio-link detection deferred) |
 | [Targets & Radio Targets](#48-targets-and-radio-targets) | `<<target>>`, `<<<radio>>>` |
+| [Completion Counters](#413-completion-counters) | `[33%]`, `[1/3]`, `[%]`, `[/]` |
 | [Table Cells](#49-table-cells) | `content \|` |
 | [Timestamps](#410-timestamps) | active, inactive, ranges |
 | [Text Markup](#411-text-markup) | bold, italic, underline, verbatim, code, strike-through |
 | [Plain Text](#412-plain-text) | fallthrough string |
 
-Objects also appear in: heading and inlinetask `TITLE`, item `TAG`, `#+CAPTION:` values, verse block contents, and table cells.
+Objects also appear in: heading `TITLE`, item `TAG`, `#+CAPTION:` values, verse block contents, and table cells.
 
 ---
 
@@ -557,7 +557,7 @@ No whitespace between `KEYPREFIX`, `@KEY`, and `KEYSUFFIX`.
 | `KEY` | `[A-Za-z0-9\-.:?!\`'/*@+|(){}><&_^$#%~]+` |
 | `KEYSUFFIX` (optional) | Minimal-set objects; balanced brackets; no `;`. |
 
-The **minimal object set** in this target syntax contains: plain text, text markup, export snippets, inline source blocks, line breaks, links, targets, radio targets, and timestamps. (Entities, LaTeX fragments, macros, statistics cookies, sub/superscript are excluded from the full minimal set.)
+The **minimal object set** in this target syntax contains: plain text, text markup, export snippets, inline source blocks, line breaks, links, targets, radio targets, timestamps, and completion counters. (Entities, LaTeX fragments, macros, and sub/superscript are excluded from the full minimal set.)
 
 ---
 
@@ -589,13 +589,14 @@ PRE\\SPACE
 
 ### 4.7 Links
 
-#### Radio Links
+#### Radio Links (deferred)
 
 ```
 PRE RADIO POST
 ```
 
-Auto-generated when a matching radio target exists. `RADIO` contains minimal-set objects.
+Radio-link auto-detection is deferred to post-processing. The parser emits
+`radio_target` nodes but does not auto-resolve matching `radio_link` objects.
 
 `PRE` — non-alphanumeric or line-breakable character.  
 `POST` — non-alphanumeric or line-breakable character.
@@ -661,7 +662,7 @@ Whitespace sequences inside `PATHREG` are normalised to a single space.
 <<<CONTENTS>>>
 ```
 
-`CONTENTS` — minimal-set objects; starts and ends with non-whitespace; excludes `<`, `>`, `\n`. Defines an auto-link: every matching text occurrence in the document becomes a radio link.
+`CONTENTS` — minimal-set objects; starts and ends with non-whitespace; excludes `<`, `>`, `\n`. The parser emits `radio_target` nodes; automatic radio-link matching is deferred to post-processing.
 
 ---
 
@@ -751,6 +752,22 @@ Any string not matched by another object type. Whitespace within plain text is c
 
 ---
 
+### 4.13 Completion Counters
+
+Completion counters are parsed as standalone objects:
+
+```
+[NUM%]
+[NUM/TOTAL]
+[%]
+[/]
+```
+
+These can appear in headings, list item first lines, and other object-bearing
+contexts where the parser accepts inline objects.
+
+---
+
 ## 5. Containment Rules
 
 ### 5.1 Element Containers
@@ -791,7 +808,7 @@ Any string not matched by another object type. Whitespace within plain text is c
 | Bold / italic / underline / strike-through | Supported objects |
 | Verbatim / code | Plain string only |
 | Regular link `DESCRIPTION` | Minimal-set objects + export snippets, inline source blocks; plus plain/angle links |
-| Radio link | Minimal-set objects |
+| Completion counter | None (leaf object) |
 | Radio target | Minimal-set objects |
 | Footnote reference `DEFINITION` | Supported objects |
 | Citation `GLOBALPREFIX` / `GLOBALSUFFIX` | Supported objects |
@@ -807,8 +824,8 @@ Any string not matched by another object type. Whitespace within plain text is c
 | `org-todo-keywords-1` | `["TODO", "DONE"]` | Valid TODO keywords in heading `KEYWORD`. Updated by `#+TODO:` / `#+SEQ_TODO:` / `#+TYP_TODO:` special keywords during parse. **Must be configurable at parse time.** |
 | `org-footnote-section` | `"Footnotes"` | Heading title treated as a footnote section. Case-significant. |
 | `org-link-parameters` | `shell news mailto https http ftp help file elisp` | Recognised link type prefixes. |
-| `org-element-parsed-keywords` | `["CAPTION"]` | Only `CAPTION` — its value is parsed as objects. |
-| `org-element-affiliated-keywords` | `["CAPTION"]` | Only `CAPTION` is treated as an affiliated keyword in this subset. |
+| `org-element-parsed-keywords` | `["CAPTION"]` | `CAPTION` value is parsed as objects; `TBLNAME` / `RESULTS` / `PLOT` values are raw text. |
+| `org-element-affiliated-keywords` | `["CAPTION", "TBLNAME", "RESULTS", "PLOT"]` | Treated as affiliated keywords in this subset. |
 
 ---
 
@@ -826,13 +843,13 @@ Any string not matched by another object type. Whitespace within plain text is c
 
 Since subscript is excluded from this subset, this conflict cannot arise — but underline markup (`_text_`) is the only form parsed when `_` appears between PRE/POST characters.
 
-### 7.4 Affiliated keyword vs plain `#+CAPTION:`
+### 7.4 Affiliated keywords vs plain keyword text
 
-`#+CAPTION:` immediately above an affiliatable element (no blank line) is an affiliated keyword — a property of that element, not a standalone node. A blank line between `#+CAPTION:` and the element causes it to be ignored.
+`#+CAPTION:`, `#+TBLNAME:`, `#+RESULTS:`, and `#+PLOT:` immediately above an affiliatable element (no blank line) are affiliated keywords. A blank line between keyword and element breaks affiliation.
 
-### 7.5 Special keywords are zeroth-section only
+### 7.5 Special keywords in sections
 
-`#+TITLE:` and other special keywords are only recognised in the zeroth section. The same `#+KEY: VALUE` pattern inside a heading section is unrecognised and discarded (not parsed as a keyword or any other element).
+`#+KEY: VALUE` lines are parsed as `special_keyword` in both the zeroth section and heading sections.
 
 ### 7.6 TODO keywords must be updated during parse
 

@@ -163,17 +163,18 @@ comments (no other content before it). If any other element precedes
 
 ```peg
 # --- Zeroth-section elements ---
-_zs_element <- caption_keyword+ _affiliatable   # affiliated element
-             / special_keyword                   # zeroth-section only
+_zs_element <- affiliated_keyword+ _affiliatable
+             / special_keyword
              / _non_affiliatable
              / _affiliatable
 
 # --- Normal section elements ---
-_section_element <- caption_keyword+ _affiliatable   # affiliated element
+_section_element <- affiliated_keyword+ _affiliatable
+                  / special_keyword
                   / _non_affiliatable
                   / _affiliatable
 
-# --- Affiliatable elements (may be preceded by #+CAPTION:) ---
+# --- Affiliatable elements (may be preceded by affiliated keywords) ---
 _affiliatable <- _greater_block
                / drawer
                / dynamic_block
@@ -193,9 +194,9 @@ _non_affiliatable <- comment
 ```
 
 Ordered choice ensures that specific element patterns are tried before the
-paragraph catch-all. `caption_keyword+ _affiliatable` is tried first: if
-`#+CAPTION:` is not followed by an affiliatable element, it falls through and
-is consumed as paragraph text.
+paragraph catch-all. `affiliated_keyword+ _affiliatable` is tried first: if
+the keyword lines are not followed by an affiliatable element, they fall
+through and are consumed as paragraph text.
 
 ---
 
@@ -280,15 +281,12 @@ _fndef_body   <- (_section_element / _blank_line)*
 ### 6.5 Plain Lists and Items
 
 ```peg
-plain_list <- item+
+plain_list <- _LIST_START item+ _LIST_END
 
-# @scanner: All items in a plain list share the same indentation level.
-# List type is determined by the first item:
-#   - counter bullet  -> ordered
-#   - item has a tag  -> descriptive
-#   - otherwise       -> unordered
+# @scanner: Lists are parsed flat. Nested structure is not emitted as nested
+# plain_list nodes; indented items remain siblings and carry indent metadata.
 
-item <- _BOL indent:_INDENT?
+item <- indent:_LISTITEM_INDENT?
         bullet:_bullet
         counter_set:counter_set?
         checkbox:checkbox?
@@ -320,9 +318,8 @@ _tag_objects <- _object+
 
 _item_body  <- (_section_element / _blank_line)*
 # @scanner: Item body ends at:
-#   1. Next item at same or lesser indentation.
-#   2. A line indented <= the item's starting column (outside nested elements).
-#   3. Two consecutive blank lines.
+#   1. Next item boundary.
+#   2. Two consecutive blank lines.
 ```
 
 ### 6.6 Property Drawers and Node Properties
@@ -496,41 +493,51 @@ horizontal_rule <- _BOL _INDENT? '-----' '-'* _TRAILING? _NL
 ### 7.8 Special Keywords
 
 ```peg
-special_keyword <- _BOL '#+' key:_SPECIAL_KEY ':' value:(_S _REST_OF_LINE)? _NL
-# Recognised ONLY in the zeroth section.
+special_keyword <- _BOL '#+'
+                   ( key:_TODO_SPECIAL_KEY ':' value:(_S _REST_OF_LINE)?
+                   / key:_SPECIAL_KEY_NO_TODO ':' value:(_S _REST_OF_LINE)? ) _NL
+# Recognised in both zeroth and normal sections.
 # VALUE is a raw string (not parsed as objects).
 
-_SPECIAL_KEY <- 'TITLE'i / 'AUTHOR'i / 'DATE'i / 'EMAIL'i
-              / 'DESCRIPTION'i / 'KEYWORDS'i / 'LANGUAGE'i
-              / 'CATEGORY'i / 'FILETAGS'i / 'TAGS'i
-              / 'TODO'i / 'SEQ_TODO'i / 'TYP_TODO'i
-              / 'PRIORITIES'i / 'PROPERTY'i / 'STARTUP'i
-              / 'ARCHIVE'i / 'COLUMNS'i / 'OPTIONS'i
+_TODO_SPECIAL_KEY   <- 'TODO'i / 'SEQ_TODO'i / 'TYP_TODO'i
+_SPECIAL_KEY_NO_TODO <- [A-Za-z][A-Za-z0-9_-]*
 
 # @scanner: When #+TODO: / #+SEQ_TODO: / #+TYP_TODO: is encountered,
 # org-todo-keywords-1 must be updated BEFORE any subsequent heading
 # is parsed. Heading KEYWORD fields depend on this set.
 ```
 
-Outside the zeroth section, `#+KEY: VALUE` patterns are not parsed as
-special keywords. They are consumed as paragraph text (except `#+CAPTION:`
-as an affiliated keyword and `#+TBLFM:` as part of a table).
+Any `#+KEY: VALUE` matching the key forms above is parsed as `special_keyword`.
 
-### 7.9 Affiliated Keywords (`#+CAPTION:`)
+### 7.9 Affiliated Keywords
 
 ```peg
+affiliated_keyword <- caption_keyword
+                    / tblname_keyword
+                    / results_keyword
+                    / plot_keyword
+
 caption_keyword <- _BOL _INDENT? '#+CAPTION'i
                    optval:('[' _caption_optval ']')?
                    ':' value:(_S _object_nofn+)? _NL
+
+tblname_keyword <- _BOL _INDENT? '#+TBLNAME'i
+                   ':' value:(_S _REST_OF_LINE)? _NL
+
+results_keyword <- _BOL _INDENT? '#+RESULTS'i
+                   ':' value:(_S _REST_OF_LINE)? _NL
+
+plot_keyword    <- _BOL _INDENT? '#+PLOT'i
+                   ':' value:(_S _REST_OF_LINE)? _NL
 
 _caption_optval <- (![]\n] . / '[' _caption_optval ']')*
 # OPTVAL: any characters except newline; balanced brackets.
 # Square brackets must be paired; unbalanced ']' terminates.
 # VALUE: supported objects excluding footnote references.
 
-# Multiple #+CAPTION: lines before an element are concatenated.
-# When no affiliatable element immediately follows, the #+CAPTION:
-# line is not parsed as a keyword (falls through to paragraph).
+# Multiple affiliated keyword lines may precede one affiliatable element.
+# When no affiliatable element immediately follows, the lines fall through
+# to paragraph text.
 ```
 
 ### 7.10 Paragraphs
@@ -686,9 +693,8 @@ _PRE_BACKSLASH <- [^\\]
 
 ```peg
 radio_link <- &_LINK_PRE _object_min+ &_LINK_POST
-# Auto-generated when a matching radio target exists in the document.
-# @scanner: Radio link detection requires a pre-pass to collect all
-# radio targets, then a second pass to match their content as links.
+# Auto-generated radio-link detection is deferred to post-processing.
+# The tree-sitter parser emits radio_target nodes only.
 # @scanner: _LINK_PRE is a lookbehind for non-alphanumeric character.
 ```
 
@@ -1078,15 +1084,7 @@ here for future expansion.
 # _macro <- '{{{' [A-Za-z] [A-Za-z0-9_\-]* ('(' (!'}}}' .)* ')')? '}}}'
 ```
 
-### 11.7 Statistics Cookies
-
-```peg
-# [PERCENT%]  |  [NUM1/NUM2]
-# _statistics_cookie <- '[' [0-9]* '%' ']'
-#                     / '[' [0-9]* '/' [0-9]* ']'
-```
-
-### 11.8 Subscript and Superscript
+### 11.7 Subscript and Superscript
 
 ```peg
 # CHAR_SCRIPT (subscript)  |  CHAR^SCRIPT (superscript)
@@ -1098,7 +1096,7 @@ here for future expansion.
 #           / [+\-]? [A-Za-z0-9,.]* [A-Za-z0-9]
 ```
 
-### 11.9 Sexp Timestamps
+### 11.8 Sexp Timestamps
 
 ```peg
 # <%%(SEXP)>
@@ -1126,13 +1124,14 @@ with `*`-count <= current heading level, or at end of input.
 
 ### 12.2 Indentation and List Nesting
 
-**Problem:** Plain list items are grouped by indentation level. An item
-ends when the next line has indentation <= the item's bullet column
-(outside nested elements), or at two consecutive blank lines.
+**Problem:** Org lists are indentation-sensitive, but this parser keeps list
+structure flat for stability and recovery. Nested hierarchy is reconstructed
+later from indent metadata.
 
 **Scanner tokens:**
-- `_LIST_START` / `_LIST_END` — bracket a sequence of items at one level.
-- `_ITEM_END` — emitted when indentation or blank-line rules terminate an item.
+- `_LIST_START` / `_LIST_END` — bracket a plain list.
+- `_LISTITEM_INDENT` — emits per-item indentation for post-processing.
+- `_ITEM_END` — emitted when item-boundary rules terminate an item.
 
 ### 12.3 TODO Keyword Set
 
@@ -1205,10 +1204,9 @@ rightmost ` :: ` and emit `_ITEM_TAG_END` at that position.
 radio target's content. This requires knowledge of all radio targets
 in the document.
 
-**Implementation:** Collect radio targets in a first pass (or during
-incremental parse). In subsequent parses, the external scanner checks
-whether the current text position matches a known radio target and
-emits a `radio_link` token span.
+**Implementation status:** Deferred to post-processing (Python layer).
+The parser emits `radio_target` nodes, but does not auto-detect
+`radio_link` spans during parsing.
 
 ---
 
@@ -1230,14 +1228,16 @@ category.
 `comment_block`, `example_block`, `export_block`, `src_block`,
 `verse_block`, `clock`, `diary_sexp`, `planning`, `comment`,
 `fixed_width`, `horizontal_rule`, `special_keyword`,
-`caption_keyword`, `paragraph`
+`caption_keyword`, `tblname_keyword`, `results_keyword`,
+`plot_keyword`, `paragraph`
 
 **Objects:**
 `export_snippet`, `footnote_reference`, `citation`,
 `citation_reference`, `inline_source_block`, `line_break`,
-`regular_link`, `angle_link`, `plain_link`, `radio_link`,
-`target`, `radio_target`, `timestamp`, `bold`, `italic`,
-`underline`, `strike_through`, `verbatim`, `code`, `plain_text`
+`regular_link`, `angle_link`, `plain_link`,
+`target`, `radio_target`, `timestamp`, `completion_counter`,
+`bold`, `italic`, `underline`, `strike_through`,
+`verbatim`, `code`, `plain_text`
 
 **Heading sub-nodes:**
 `stars`, `todo_keyword`, `priority`, `tags`, `tag`
