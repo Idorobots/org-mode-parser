@@ -262,7 +262,16 @@ static bool scan_single_inline_hyphen(TSLexer *lexer) {
   // Leave double-hyphen constructs to grammar-level rules (timestamp ranges,
   // table rule rows, etc.). Returning false after advance is safe: the caller
   // returns false to tree-sitter, which rewinds lexer position.
-  if (lookahead(lexer) == '-') return false;
+  if (lookahead(lexer) == '-') {
+    // Preserve GNU-style switches (e.g. --watch, --serve) as plain text by
+    // allowing a single leading '-' token when a double dash is followed by
+    // an alphabetic character.
+    mark_end(lexer);
+    advance(lexer);
+    int32_t next = lookahead(lexer);
+    if (is_ascii_upper(next) || (next >= 'a' && next <= 'z')) return true;
+    return false;
+  }
 
   mark_end(lexer);
   return true;
@@ -904,6 +913,19 @@ static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols
       return 1;
     }
 
+    if (ch == '-' && lookahead(lexer) == '-') {
+      advance(lexer);
+      int32_t next = lookahead(lexer);
+      if (valid_symbols[TOKEN_PLAIN_TEXT] &&
+          (is_ascii_upper(next) || (next >= 'a' && next <= 'z'))) {
+        lexer->result_symbol = TOKEN_PLAIN_TEXT;
+        mark_end(lexer);
+        s->prev_char = '-';
+        return 2;
+      }
+      return -1;
+    }
+
     // Recovery for '+' at BOL/non-list contexts (e.g. "+strike+").
     // scan_list_start probes list bullets before markup scanners; if we
     // consumed '+' and it is not a bullet, emit strike-open when valid.
@@ -1462,12 +1484,20 @@ static bool probe_markup_close_in_rest_of_line(
 ) {
   bool has_body = false;
   int32_t prev = marker;
+  uint32_t probe_lbracket_depth = 0;
 
   if (last_consumed_char) *last_consumed_char = marker;
 
   while (!eof(lexer) && lookahead(lexer) != '\n') {
     int32_t ch = lookahead(lexer);
-    if (stop_before_right_bracket && ch == ']') return false;
+    if (stop_before_right_bracket && ch == ']') {
+      if (marker == '~' && probe_lbracket_depth > 0) {
+        probe_lbracket_depth--;
+      } else {
+        return false;
+      }
+    }
+    if (ch == '[') probe_lbracket_depth++;
     advance(lexer);
     if (last_consumed_char) *last_consumed_char = ch;
 

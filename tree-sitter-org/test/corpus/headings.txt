@@ -11,6 +11,26 @@ Level 1 heading
     (plain_text)))
 
 ================
+Heading and body lines keep double-dash switches as plain text
+================
+*** --watch & --serve switches
+--watch for file watching and updating live on changes
+--serve to start a server showing a visualization of the data
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (section
+      (paragraph
+        (plain_text)
+        (plain_text)
+        (plain_text)
+        (plain_text)))))
+
+================
 Heading with multiple regular links and plus in description
 ================
 *** TODO [[definitely][durchaus]], [[according to][zufolge (+dat.)]], [[according to][laut (+dat.)]]

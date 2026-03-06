@@ -138,6 +138,92 @@ This has ~code~ words.
       (plain_text))))
 
 ================
+Code span with bracketed generic type and trailing punctuation
+================
+text ~dict[str, int]~.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text))))
+
+================
+Indented code span with bracketed type
+================
+  indent  ~dict[date, int]~
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content)))))
+
+================
+Code span with method call
+================
+text ~TimeRange.update()~
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content)))))
+
+================
+Code span with bracketed dict inside parentheses
+================
+(effectively a ~dict[str, str]~).
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text))))
+
+================
+Code span with empty-arg call
+================
+text ~analyze()~
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content)))))
+
+================
+Code span with punctuation and bracket token
+================
+text ~.[O:L]~
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content)))))
+
+================
 Separated verbatim spans with plain text between
 ================
 =REFERENCES= contains one or more citation reference objects separated by =;=.
