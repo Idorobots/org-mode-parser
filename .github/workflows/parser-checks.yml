@@ -23,20 +23,19 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install tree-sitter-org dependencies
-        run: npm install
-        working-directory: tree-sitter-org
+      - name: Install Tree-sitter CLI
+        run: npm install --global tree-sitter-cli@0.26.6
 
-      - name: Add local tree-sitter CLI to PATH
-        run: echo "$GITHUB_WORKSPACE/tree-sitter-org/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Bootstrap generated parser artifacts for test runner
+        run: |
+          if [ ! -f src/grammar.json ]; then
+            tree-sitter generate
+          fi
+        working-directory: tree-sitter-org
 
       - name: Run Tree-sitter corpus tests
         run: tree-sitter test
         working-directory: tree-sitter-org
 
-      - name: Generate parser
-        run: tree-sitter generate
-        working-directory: tree-sitter-org
-
       - name: Parse-check examples and key Org files
-        run: python3 check.py "examples/**/*.org" ROADMAP.org README.org
+        run: python3 check.py "examples/*.org" "*.org"
