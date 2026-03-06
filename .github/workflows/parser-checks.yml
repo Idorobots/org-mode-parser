@@ -1,0 +1,42 @@
+name: Parser Checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-and-parse-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tree-sitter-org dependencies
+        run: npm install
+        working-directory: tree-sitter-org
+
+      - name: Add local tree-sitter CLI to PATH
+        run: echo "$GITHUB_WORKSPACE/tree-sitter-org/node_modules/.bin" >> "$GITHUB_PATH"
+
+      - name: Run Tree-sitter corpus tests
+        run: tree-sitter test
+        working-directory: tree-sitter-org
+
+      - name: Generate parser
+        run: tree-sitter generate
+        working-directory: tree-sitter-org
+
+      - name: Parse-check examples and key Org files
+        run: python3 check.py "examples/**/*.org" ROADMAP.org README.org
