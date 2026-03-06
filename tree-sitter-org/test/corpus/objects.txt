@@ -64,3 +64,63 @@ Radio target
     (paragraph
       (radio_target
         (plain_text)))))
+
+================
+Bracketed target-like text
+================
+[<<x>>]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (target
+        (target_text))
+      (plain_text))))
+
+================
+Bracketed timestamp-like text
+================
+[<2024-01-01 Mon>]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (timestamp
+        year: (ts_year)
+        month: (ts_month)
+        day: (ts_day)
+        dayname: (ts_dayname))
+      (plain_text))))
+
+================
+Erlang binary syntax with targets and brackets
+================
+    %jsonx:encode(comet_monitor:get_metrics(<<"foo.bar">>, [<<"foo.bar.baz">>, <<"foo.bar.faz">>, <<"foo.baz.bar">>, <<"foo.derp">>], [23, 5, nope, 13])).
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (target
+        (target_text))
+      (plain_text)
+      (target
+        (target_text))
+      (plain_text)
+      (target
+        (target_text))
+      (plain_text)
+      (target
+        (target_text))
+      (plain_text)
+      (target
+        (target_text))
+      (plain_text))))

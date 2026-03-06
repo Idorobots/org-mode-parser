@@ -63,6 +63,29 @@ DEADLINE: <2024-01-15 Mon 13:00>
         (ts_time)))))
 
 ================
+Planning lines with invalid timestamps fallback to plain text
+================
+* DONE Timestamps
+   DEADLINE: <2013-02-25 8:00>
+   SCHEDULED: [2013-08-07 śro ++1da]
+   CLOSED: .<2013-10-12 śro>
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (planning
+      (planning_keyword)
+      (plain_text)
+      (planning_keyword)
+      (plain_text)
+      (planning_keyword)
+      (plain_text))))
+
+================
 Heading with SCHEDULED time range and repeater
 ================
 * TODO Task

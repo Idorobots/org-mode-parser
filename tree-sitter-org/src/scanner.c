@@ -180,6 +180,11 @@ typedef struct {
   // Used by scan_table_start to prevent starting a new org_table mid-table,
   // which would cause each row to parse as a separate org_table node.
   bool in_table;
+
+  // Count of plain-text '[' characters consumed but not yet closed by a
+  // plain-text ']'. This lets plain-text scanning span grammar-level objects
+  // (for example [<<target>>]) without producing spurious parse errors.
+  uint16_t plain_lbracket_depth;
 } Scanner;
 
 // ---------------------------------------------------------------------------
@@ -330,6 +335,7 @@ void *tree_sitter_org_external_scanner_create(void) {
     scanner->num_todo_keywords = NUM_DEFAULT_TODO_KWS;
     scanner->prev_char = 0;
     scanner->last_column = 0;
+    scanner->plain_lbracket_depth = 0;
     reset_markup_open_state(scanner);
   }
   return scanner;
@@ -388,8 +394,9 @@ unsigned tree_sitter_org_external_scanner_serialize(
   }
 
   // prev_char, consecutive_blank_lines, in_table, last_column,
+  // plain_lbracket_depth,
   // markup-open flags, in_heading_line
-  if (pos + 15 > SERIALIZE_BUF_SIZE) return 0;
+  if (pos + 17 > SERIALIZE_BUF_SIZE) return 0;
   buffer[pos++] = (char)((s->prev_char >> 24) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 16) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 8) & 0xFF);
@@ -398,6 +405,8 @@ unsigned tree_sitter_org_external_scanner_serialize(
   buffer[pos++] = (char)(s->in_table ? 1 : 0);
   buffer[pos++] = (char)((s->last_column >> 8) & 0xFF);
   buffer[pos++] = (char)(s->last_column & 0xFF);
+  buffer[pos++] = (char)((s->plain_lbracket_depth >> 8) & 0xFF);
+  buffer[pos++] = (char)(s->plain_lbracket_depth & 0xFF);
   buffer[pos++] = (char)(s->bold_open ? 1 : 0);
   buffer[pos++] = (char)(s->italic_open ? 1 : 0);
   buffer[pos++] = (char)(s->underline_open ? 1 : 0);
@@ -423,6 +432,7 @@ void tree_sitter_org_external_scanner_deserialize(
   s->prev_char = 0;
   s->consecutive_blank_lines = 0;
   s->last_column = 0;
+  s->plain_lbracket_depth = 0;
   s->in_heading_line = false;
   reset_markup_open_state(s);
 
@@ -472,6 +482,7 @@ void tree_sitter_org_external_scanner_deserialize(
   }
 
   // prev_char, consecutive_blank_lines, in_table, last_column,
+  // plain_lbracket_depth,
   // markup-open flags, in_heading_line
   if (pos + 5 <= length) {
     s->prev_char = ((int32_t)(uint8_t)buffer[pos] << 24) |
@@ -486,6 +497,10 @@ void tree_sitter_org_external_scanner_deserialize(
   }
   if (pos + 1 < length) {
     s->last_column = (uint16_t)((uint8_t)buffer[pos] << 8 | (uint8_t)buffer[pos + 1]);
+    pos += 2;
+  }
+  if (pos + 1 < length) {
+    s->plain_lbracket_depth = (uint16_t)((uint8_t)buffer[pos] << 8 | (uint8_t)buffer[pos + 1]);
     pos += 2;
   }
   if (pos < length) {
@@ -1476,8 +1491,8 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   if (eof(lexer) || lookahead(lexer) == '\n') return false;
 
   bool found_any = false;
-  uint32_t plain_lbracket_depth = 0;
-  bool saw_plain_lbracket = false;
+  uint32_t plain_lbracket_depth = s->plain_lbracket_depth;
+  bool saw_plain_lbracket = plain_lbracket_depth > 0;
   bool maybe_clock_kw = (get_column(lexer) == 0 || s->prev_char == 0);
   int consumed_len = 0;
 
@@ -1622,6 +1637,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
           mark_end(lexer);
           found_any = true;
           lexer->result_symbol = TOKEN_PLAIN_TEXT;
+          s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
           return true;
         }
 
@@ -1737,7 +1753,8 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
 
         bool trailing_after_bracket_close = (next == '\n' || eof(lexer)) &&
           (s->prev_char == ']' || s->prev_char == '}');
-        bool bracket_ok = plain_lbracket_depth > 0 || saw_plain_lbracket || spaced_text || lone_bol_text || next == ')' || next == '}' || trailing_after_bracket_close;
+        bool bracket_ok = plain_lbracket_depth > 0 || saw_plain_lbracket || spaced_text || lone_bol_text ||
+          next == ')' || next == '}' || trailing_after_bracket_close;
         if (!bracket_ok) {
           if (!found_any) return false;
           break;
@@ -1823,6 +1840,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   // If we consumed some non-special chars, return them as plain text
   if (found_any) {
     lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
     return true;
   }
 
@@ -1836,6 +1854,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
       if (!scan_single_inline_hyphen(lexer)) return false;
       s->prev_char = ch;
       lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
       return true;
     }
 
@@ -1843,6 +1862,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
       if (!scan_single_inline_hyphen(lexer)) return false;
       s->prev_char = ch;
       lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
       return true;
     }
 
@@ -1862,6 +1882,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
       }
 
       lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
       return true;
     }
 
@@ -1869,6 +1890,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
     advance(lexer);
     mark_end(lexer);
     lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
     return true;
   }
 
@@ -1880,6 +1902,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
     s->prev_char = ch;
     mark_end(lexer);
     lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
     return true;
   }
 
@@ -1901,12 +1924,14 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
       s->prev_char = ch;
       mark_end(lexer);
       lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
       return true;
     }
 
     s->prev_char = ch;
     mark_end(lexer);
     lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
     return true;
   }
 
@@ -1917,6 +1942,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
       s->prev_char = ch;
       mark_end(lexer);
       lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
       return true;
     }
     bool spaced_text = (s->prev_char == ' ' || s->prev_char == '\t') &&
@@ -1942,6 +1968,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
         s->prev_char = ch;
         mark_end(lexer);
         lexer->result_symbol = TOKEN_PLAIN_TEXT;
+        s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
         return true;
       }
 
@@ -1950,7 +1977,8 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
 
     bool trailing_after_bracket_close = (next == '\n' || eof(lexer)) &&
       (s->prev_char == ']' || s->prev_char == '}');
-    bool bracket_ok = plain_lbracket_depth > 0 || saw_plain_lbracket || spaced_text || lone_bol_text || next == ')' || next == '}' || trailing_after_bracket_close;
+    bool bracket_ok = plain_lbracket_depth > 0 || saw_plain_lbracket || spaced_text || lone_bol_text ||
+      next == ')' || next == '}' || trailing_after_bracket_close;
     if (!bracket_ok) return false;
 
     if (plain_lbracket_depth > 0) {
@@ -1960,6 +1988,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
     s->prev_char = ch;
     mark_end(lexer);
     lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
     return true;
   }
 
@@ -1978,6 +2007,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
     s->prev_char = ch;
     mark_end(lexer);
     lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
     return true;
   }
 
@@ -1992,12 +2022,14 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
       s->prev_char = '\\';
       mark_end(lexer);
       lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
       return true;
     }
 
     s->prev_char = ch;
     mark_end(lexer);
     lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
     return true;
   }
 
@@ -2006,6 +2038,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
     advance(lexer);
     mark_end(lexer);
     lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
     return true;
   }
 
@@ -2354,6 +2387,7 @@ bool tree_sitter_org_external_scanner_scan(
   // context, even after a line that ended with a non-PRE character.
   if (col == 0) {
     s->prev_char = 0;
+    s->plain_lbracket_depth = 0;
     s->in_heading_line = false;
     reset_markup_open_state(s);
 
@@ -2373,6 +2407,7 @@ bool tree_sitter_org_external_scanner_scan(
     // In that case, treat context as PRE-whitespace so inline markup can
     // open at the beginning of the list item text.
     s->prev_char = ' ';
+    s->plain_lbracket_depth = 0;
   } else if (col > 0 && s->last_column == 0 && s->prev_char == 0) {
     // We left column 0 via grammar/internal tokens only (for example list
     // bullets/spaces or heading stars/space). No external scanner token has

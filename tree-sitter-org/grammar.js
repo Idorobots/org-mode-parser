@@ -780,11 +780,20 @@ module.exports = grammar({
     // --- 7.4 Planning ---
     planning: $ => prec(2, repeat1($._planning_line)),
 
-    _planning_line: $ => seq(
-      $._planning_entry,
-      repeat(seq($._S, $._planning_entry)),
-      optional($._TRAILING),
-      $._NL,
+    _planning_line: $ => choice(
+      prec(1, seq(
+        optional($._INDENT),
+        $._planning_entry,
+        repeat(seq($._S, $._planning_entry)),
+        optional($._TRAILING),
+        $._NL,
+      )),
+      prec(0, seq(
+        optional($._INDENT),
+        $._planning_entry_text,
+        optional($._TRAILING),
+        $._NL,
+      )),
     ),
 
     _planning_entry: $ => seq(
@@ -794,7 +803,21 @@ module.exports = grammar({
       field('value', $.timestamp),
     ),
 
+    _planning_entry_text: $ => seq(
+      field('keyword', alias($._PLAN_KW, $.planning_keyword)),
+      ':',
+      $._S,
+      field('value', alias($._PLANNING_VALUE_TEXT, $.plain_text)),
+    ),
+
     _PLAN_KW: $ => $._PLAN_KW_EXT,
+
+    _PLANNING_VALUE_TEXT: _ => choice(
+      /\.[^\n]+/,
+      /<[^>\n]* [0-9]:[0-9]{2}[^>\n]*>/,
+      /\[[^\]\n]*\+\+[0-9]+[A-Za-z]{2,}[^\]\n]*\]/,
+      /[^\n<\[][^\n]*/,
+    ),
 
     // --- 7.5 Comments ---
     comment: $ => prec(1, repeat1($._comment_line)),
