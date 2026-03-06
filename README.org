@@ -13,6 +13,8 @@ See [[file:examples/][examples directory]] to get an idea of the parser complete
 - Nested lists are parsed in a *flat* form: nested items are emitted as items
   on the parent list, with an explicit indent marker so nesting can be
   reconstructed in post-processing.
+- List items do not always "parent" complex elements such as tables, fixed-width areas or drawers.
+- Blank lines semantics are not kept - double blank lines do not terminate list items, etc.
 - Malformed objects are usually treated as plaintext (or recovered with generic
   parse-error nodes) instead of hard-failing the full parse.
 
