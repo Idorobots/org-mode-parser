@@ -1,5 +1,40 @@
 #+TITLE: A parser for Org Mode nodes
 
+* Repo
+** DONE README.org
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-06 Fri 19:40]
+:END:
+Please create a simple README.org file that will diescribe the project a bit - it's a Tree-Sitter-based parser for the Emacs Org-Mode files, aiming for 100% feature coverage.
+
+Make sure to include some caveats in the README.org file:
+- Nested lists are parsed as items on the parent list, but include an indent for disambiguation.
+- Malformed objects are usually treated as plaintext.
+
+Please list the features that are explicitly not supported (mentioned in the docs directory, but please validate against the current state of the parser if that is the case still).
+
+Make sure to link the ROADMAP.org file.
+
+** DONE Docs update
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-06 Fri 19:44]
+:END:
+Update the target syntax documentation to reflect the currently supported syntax, and remove the "Notes on scope Drift" from the README file.
+
+** DONE GitHub Actions
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-06 Fri 19:46]
+:END:
+Please add a GitHub Actions workflow scaffold that will automatically run the tests.
+
+It should run the Tree Sitter corpus tests as the firs step, then generate the parser and run the check.py script on the examples/ directory files and the ROADMAP.org and README.org files.
+Any failures should be detected and rejected.
+
+** DONE LICENSE
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-06 Fri 19:45]
+:END:
+Add a LICENSE file. Use a MIT license with copyright for "Kajetan Rzepecki <k@spartan.works>".
 * Formal-ish specification
 ** DONE Official docs analysis
 :LOGBOOK:
@@ -1709,29 +1744,3 @@ Write the implementation plan down to docs/plans/python-wrapper-impl.md
 ** TODO Implement the Python wrapper
 Implement the plan from @docs/plans/python-wrapper-impl.md file.
 
-* Repo
-** DONE README.org
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-06 Fri 19:40]
-:END:
-Please create a simple README.org file that will diescribe the project a bit - it's a Tree-Sitter-based parser for the Emacs Org-Mode files, aiming for 100% feature coverage.
-
-Make sure to include some caveats in the README.org file:
-- Nested lists are parsed as items on the parent list, but include an indent for disambiguation.
-- Malformed objects are usually treated as plaintext.
-
-Please list the features that are explicitly not supported (mentioned in the docs directory, but please validate against the current state of the parser if that is the case still).
-
-Make sure to link the ROADMAP.org file.
-
-** TODO Docs update
-Update the target syntax documentation to reflect the currently supported syntax, and remove the "Notes on scope Drift" from the README file.
-
-** TODO GitHub Actions
-Please add a GitHub Actions workflow scaffold that will automatically run the tests.
-
-It should run the Tree Sitter corpus tests as the firs step, then generate the parser and run the check.py script on the examples/ directory files and the ROADMAP.org and README.org files.
-Any failures should be detected and rejected.
-
-** TODO Add a LICENSE file
-Use a MIT license with copyright for "Kajetan Rzepecki <k@spartan.works>".
