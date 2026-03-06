@@ -1,0 +1,19 @@
+* Checkbox States
+
+- [ ] unchecked item
+- [X] checked item
+- [-] partial item
+
+* Checkboxes in an ordered list
+
+1. [X] step one complete
+2. [-] step two in progress
+3. [ ] step three not started
+
+* Nested checkboxes
+
+- [X] outer done
+  - [X] inner done
+  - [X] also done
+- [ ] outer pending
+  - [ ] inner pending

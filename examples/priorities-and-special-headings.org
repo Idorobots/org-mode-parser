@@ -1,0 +1,172 @@
+#+TITLE: Priority Cookies and Special Heading Forms
+#+AUTHOR: Quelby Flontsworth
+#+PRIORITIES: A F B
+#+TODO: TODO WAITING DELEGATED | DONE WONTFIX
+
+* Priority Cookies — All Forms
+
+** Letter priorities A through Z
+
+The standard priority range runs A (highest) to C (lowest) by default.
+This file uses A–F as its range (set in #+PRIORITIES above).
+
+* TODO [#A] Critical: production outage — payment service down :ops:critical:
+DEADLINE: <2025-01-06 Mon 09:00>
+
+* TODO [#B] High: memory leak in session handler :backend:performance:
+SCHEDULED: <2025-01-07 Tue>
+:PROPERTIES:
+:ticket: BE-1193
+:END:
+
+* TODO [#C] Medium: update dependency audit report :security:
+SCHEDULED: <2025-01-10 Fri>
+
+* TODO [#D] Normal: refactor user preferences endpoint :backend:
+* TODO [#E] Low: add dark mode to admin panel :frontend:ux:
+* WAITING [#F] Backlog: localise error messages :i18n:
+
+Additional letter priorities (Z = explicitly lowest in standard range):
+
+* TODO [#Z] Eventually: investigate WASM compilation target :research:experimental:
+
+** Numeric priorities
+
+Numeric priorities allow finer-grained ordering (0 = highest, 64 = lowest).
+
+* TODO [#0] Emergency: data integrity violation in production :ops:
+DEADLINE: <2025-01-06 Mon 08:00>
+
+* TODO [#1] Urgent: SSL certificate expires in 48 hours :security:ops:
+DEADLINE: <2025-01-08 Wed>
+
+* TODO [#10] Important: onboard new team member :hr:admin:
+SCHEDULED: <2025-01-13 Mon>
+
+* TODO [#27] Routine: update the team wiki :docs:
+* TODO [#50] Nice to have: improve test output formatting :testing:
+* TODO [#64] Someday: write a blog post about the parser :marketing:
+
+** Priority with no TODO keyword
+
+A priority cookie is valid even when there is no TODO keyword:
+
+* [#A] Architectural Decision Record: adopt event sourcing
+* [#B] Meeting notes: 2025-01-06 all-hands
+* [#C] Reference: glossary of distributed systems terms
+
+** All optional heading fields populated simultaneously
+
+The most complex valid heading form: STARS + KEYWORD + PRIORITY + TITLE + TAGS
+
+* TODO [#A] Complete the Org Mode parser implementation :parser:milestone:
+* DONE [#B] Write the syntax reference document :docs:research:
+* WAITING [#C] Await feedback on the grammar proposal :planning:
+* DELEGATED [#D] Handover test suite to QA team :testing:
+
+-----
+
+* COMMENT Headings
+
+A heading with the literal word =COMMENT= (case-significant) is a commented heading.
+Commented headings and their subtrees are not exported.
+
+** COMMENT Internal implementation notes
+
+These notes are excluded from all exports.
+
+The tokeniser currently uses a hand-written recursive descent parser.
+Consider switching to tree-sitter for better error recovery.
+
+Known issues:
+- Clock duration parsing fails for durations > 99:59.
+- Radio target matching is O(n²) — needs a trie or Aho-Corasick implementation.
+
+*** COMMENT Subheading under a commented heading
+
+Subtrees of COMMENT headings are also implicitly commented.
+This subheading would also be excluded from exports.
+
+** This heading is NOT commented
+
+The word COMMENT only triggers the commented state when it appears in the
+COMMENT field position — after KEYWORD and PRIORITY, before TITLE.
+
+A heading whose *title* contains the word COMMENT is a normal heading:
+* TODO Write a COMMENT on the proposal
+
+A heading with COMMENT in the right position:
+* TODO COMMENT This entire subtree is excluded from export :internal:
+
+** COMMENT Another top-level commented heading
+
+Completely excluded from export regardless of export settings.
+
+:PROPERTIES:
+:security: internal-only
+:END:
+
+Content here will not appear in any exported file.
+
+-----
+
+* The Archive Tag
+
+A heading tagged =:ARCHIVE:= is considered archived. The tag is case-significant.
+
+* DONE Set up CI/CD pipeline :ARCHIVE:
+CLOSED: [2024-09-15 Sun]
+:PROPERTIES:
+:archived_date: 2024-10-01
+:END:
+
+The above heading is archived. Archived headings are excluded from the agenda
+by default and often visually de-emphasised.
+
+* DONE Migrate from Jenkins to GitHub Actions :devops:ARCHIVE:
+CLOSED: [2024-11-30 Sat]
+
+Multiple tags are allowed; =ARCHIVE= can appear anywhere in the tag list.
+
+-----
+
+* The Footnote Section Heading
+
+The heading whose title exactly matches =org-footnote-section=
+(default value: ="Footnotes"=, case-significant) is treated as a footnote section.
+
+Inline reference to the footnote below.[fn:special-heading]
+
+* Footnotes
+
+[fn:special-heading] This heading "Footnotes" is a special footnote section.
+The parser flags it with a special type distinct from a regular heading.
+Its exact title must match the value of the =org-footnote-section= variable.
+
+Note: if you changed =org-footnote-section= to e.g. ="Bibliography"=, then
+a heading titled =Footnotes= would be an ordinary heading, not a footnote section.
+
+-----
+
+* Priority Interaction with Other Fields
+
+** Priority + all optional heading fields on one line
+
+* TODO [#A] COMMENT Classified quarterly budget figures :finance:confidential:
+SCHEDULED: <2025-03-31 Mon>
+
+This heading has: TODO keyword, priority, COMMENT flag, title, and tags.
+It is both commented (excluded from export) and has a priority and keyword.
+
+** Priority without a space before the title
+
+The priority cookie =[]= is followed by a space before the title begins:
+
+* [#A] Title begins after one space
+* [#B]  Title begins after two spaces (both valid — extra space is part of title matching)
+
+** Tags containing special characters
+
+Tag characters allowed: =a-z A-Z 0-9 _ @ # %=
+
+* TODO [#C] Multi-character special tags :backend_api:@mentions:#tickets:progress%:

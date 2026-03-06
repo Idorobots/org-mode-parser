@@ -1,0 +1,168 @@
+#+TITLE: Typographer's Companion — A Markup Style Guide
+#+AUTHOR: Brelda Flomsworth
+
+* The Six Markup Types
+
+This section demonstrates each of the six inline markup types in isolation.
+
+** *Bold* — for strong emphasis
+
+Use *bold* to draw attention to *critical terms* or *warnings*.
+Bold text can appear mid-sentence like *this*, or wrap a longer phrase like *the entire clause here*.
+
+*Bold at the very start of a line* is valid when the line itself is the PRE boundary.
+Equally, a sentence can end with bold*. No — that trailing asterisk would break it.
+A sentence can correctly end with *bold.*
+Another correct form: (*bold inside parentheses*).
+
+** /Italic/ — for titles, foreign words, and gentle stress
+
+The novel /The Name of the Rose/ by Umberto Eco is set in a medieval monastery.
+Introduce foreign phrases in italic: the concept of /Weltanschauung/ (worldview) is central here.
+Scientific names are italicised by convention: /Homo sapiens/, /Arabidopsis thaliana/.
+
+/Italic at the start of a line/ works because the line boundary is a valid PRE.
+End a sentence with italic: the answer is /always./
+Inside quotes: "She said it was /magnificent/."
+
+** _Underline_ — for proper nouns and UI labels
+
+Navigate to _Settings_ then _Privacy_ then _Location Services_.
+The treaty known as the _Peace of Westphalia_ (1648) reshaped European sovereignty.
+Click _Save Changes_ to confirm — _Cancel_ to discard.
+
+_Underlined_ text should be used sparingly to avoid confusion with hyperlinks.
+Consider: (_underline inside parentheses_) and -_underline after a hyphen_-.
+
+** =Verbatim= — literal characters, not parsed
+
+The variable =org-todo-keywords-1= controls which keywords are recognised.
+To insert a literal asterisk write =*= and it will not be treated as markup.
+File paths like =/usr/local/bin/emacs= should always be verbatim.
+The sequence =#+BEGIN_SRC= starts a source block — the =#+= prefix is significant.
+
+Verbatim contents are *never* parsed: =*this asterisk is not bold*= renders as-is.
+A verbatim span can itself contain what looks like other markup: =_not underlined_=.
+
+** ~Code~ — for inline code fragments
+
+Call the function ~calculate_checksum(data, algorithm="sha256")~ with a byte string.
+The shell command ~find . -name "*.org" -mtime -7~ lists recently modified Org files.
+In Python, ~dict.get(key, default)~ avoids a ~KeyError~ on missing keys.
+
+Like verbatim, code contents are not parsed: ~*not bold*~ and ~/not italic/~.
+Note the distinction: ~code~ is for executable fragments; =verbatim= is for literal text.
+
+** +Strike-through+ — for retracted or superseded content
+
+The original estimate was +three weeks+ — revised to *five weeks* after scoping.
++Delete this line+ — actually, keep it for historical context.
+The deprecated function +get_user_by_name()+ has been replaced by ~find_user(name=...)~.
+
++Strike-through at the start of a line+ is valid.
+Ending a sentence: the plan was abandoned +permanently.+
+
+-----
+
+* Markup in Heading Titles
+
+** *Bold* and /italic/ in the same heading
+** Report: =config.yml= is _malformed_
+** DONE +Deprecated+ approach replaced with ~new_api()~
+** TODO Review the _Peace of Westphalia_ chapter (/see also:/ bibliography)
+
+-----
+
+* Nested and Combined Markup
+
+Nesting markup creates compound emphasis:
+
+- */Bold and italic simultaneously/* — achieved by nesting one inside the other.
+- /*Italic wrapping bold*/ — the outer marker determines the outer type.
+- *A _bold underlined_ phrase* — underline nested inside bold.
+- /An _italic underlined_ passage/ — underline nested inside italic.
+- *A +bold struck-through+ segment* — strike-through nested inside bold.
+- _Both *bold* and /italic/ inside underline_ — two children in one parent.
+
+Markup adjacent to punctuation (the PRE/POST rule in action):
+
+- (*/nested bold-italic inside parens/*) — opens with =(= which is a valid PRE.
+- "/italic inside double quotes/" — double quote is a valid PRE.
+- '/italic inside single quotes/' — single quote is a valid PRE.
+- "Say it with *emphasis*!" — exclamation mark is a valid POST.
+- Was it /really/ that simple? — question mark is a valid POST.
+- The result: *42*. — full stop after closing marker is a valid POST.
+
+-----
+
+* Hard Line Breaks
+
+A hard line break forces a new line in the rendered output without ending the paragraph.\\
+This sentence follows immediately on the next visual line.\\
+And this one after that.
+
+In a verse or prose poem context, line breaks carry structural meaning:\\
+The fog comes\\
+on little cat feet.\\
+It sits looking\\
+over harbour and city.
+
+Line breaks are valid anywhere in a paragraph (not just at the end of a verse block).
+
+-----
+
+* Markup in List Items
+
+- This item has *bold* text and /italic/ text in it.
+- This item uses ~inline code~ to name the function ~process_batch~.
+- This item mentions the +old way+ replaced by the =new_way=.
+- *Entire item is bold from the first character.*
+- The item ends with emphasis on the _final word_. *Final.*
+
+Ordered list with markup:
+
+1. First, run ~git fetch --all~ to synchronise remote branches.
+2. Then, /carefully/ review the diff with ~git diff origin/main~.
+3. Finally, *merge only when CI is green*.
+
+-----
+
+* Markup in Table Cells
+
+| Feature       | Status          | Notes                                    |
+|---------------+-----------------+------------------------------------------|
+| *Bold*        | =implemented=   | Works in all /standard/ contexts         |
+| /Italic/      | =implemented=   | Used for _titles_ and foreign terms      |
+| ~Code~        | =implemented=   | Contents are +not+ parsed                |
+| +Strike+      | =implemented=   | For *superseded* content                 |
+| _Underline_   | =implemented=   | Avoid overuse — ~sparingly~              |
+| =Verbatim=    | =implemented=   | Also not parsed: ~/not italic/~          |
+
+-----
+
+* Edge Cases and Boundary Conditions
+
+** No markup when whitespace immediately follows the opening marker
+
+These do NOT form markup objects (space after opening marker):
+
+- = not verbatim = (space before closing)
+- * not bold * (space before closing)
+- / not italic / (space before closing)
+
+** Adjacent markup objects with no separator
+
+*Bold*/italic/ — two markup objects sharing a boundary.
+~code~=verbatim= — code immediately followed by verbatim.
+
+** Markup spanning only a single character
+
+*X* is valid bold.
+/A/ is valid italic.
+=!= is valid verbatim.
+~_~ is valid code (contains an underscore).
+
+** Markup that looks like a heading star
+
+A paragraph starting with text before an asterisk: the word *star* has markup.
+But =* at column zero= followed by a space is always a heading — comma-quoting required in blocks.

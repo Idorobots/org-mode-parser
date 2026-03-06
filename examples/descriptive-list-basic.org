@@ -1,0 +1,12 @@
+* Descriptive Lists
+
+- key :: value
+- term :: definition text
+- CPU :: Central Processing Unit
+- longer tag text :: description can contain *markup* and /italics/
+
+* Descriptive list with multi-word tags
+
+- first key :: first value
+- second key :: second value
+- the last :: double colon ~::~ must be surrounded by spaces

@@ -1,0 +1,87 @@
+================
+Title keyword
+================
+#+TITLE: My Document
+
+---
+
+(document
+  (zeroth_section
+    (special_keyword
+      (keyword_key)
+      (keyword_value))))
+
+================
+Author keyword
+================
+#+AUTHOR: Jane Doe
+
+---
+
+(document
+  (zeroth_section
+    (special_keyword
+      (keyword_key)
+      (keyword_value))))
+
+================
+Multiple keywords
+================
+#+TITLE: My Doc
+#+AUTHOR: Jane
+#+DATE: 2024-01-01
+
+---
+
+(document
+  (zeroth_section
+    (special_keyword
+      (keyword_key)
+      (keyword_value))
+    (special_keyword
+      (keyword_key)
+      (keyword_value))
+    (special_keyword
+      (keyword_key)
+      (keyword_value))))
+
+================
+Zeroth and heading special keywords
+================
+# Comment in zeroth section
+#+TODO: SPECIAL KEYWORD
+* Heading
+#+TODO: This is treated as a special keyword
+
+---
+
+(document
+  (zeroth_section
+    (comment)
+    (special_keyword
+      (keyword_key)
+      (keyword_value)))
+  (heading
+    (stars)
+    (plain_text)
+    (section
+      (special_keyword
+        (keyword_key)
+        (keyword_value)))))
+
+================
+Additional and arbitrary special keywords
+================
+#+CONSTANTS: pi=3.14
+#+MY_CUSTOM_KEY: enabled
+
+---
+
+(document
+  (zeroth_section
+    (special_keyword
+      (keyword_key)
+      (keyword_value))
+    (special_keyword
+      (keyword_key)
+      (keyword_value))))

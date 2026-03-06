@@ -1,0 +1,17 @@
+* Targets
+
+A plain target: <<section-one>>
+
+Text after the target.
+
+* Radio Targets
+
+A radio target: <<<important term>>>
+
+Now the phrase important term appears again as a radio link.
+
+* Links to Targets
+
+Link to the plain target: [[section-one]]
+
+Link with description: [[section-one][back to section one]]

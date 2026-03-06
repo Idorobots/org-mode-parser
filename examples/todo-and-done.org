@@ -1,0 +1,13 @@
+#+TODO: TODO IN-PROGRESS WAITING | DONE CANCELLED
+
+* TODO Task not yet started
+
+* IN-PROGRESS Task currently being worked on
+
+* WAITING Task blocked on external dependency
+
+* DONE Task completed successfully
+
+* CANCELLED Task abandoned
+
+* Heading with no keyword

@@ -1,0 +1,856 @@
+================
+Unordered list with dashes
+================
+- Item one
+- Item two
+- Item three
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
+
+================
+List items allow arrows inside verbatim markup
+================
+- Line
+- =map= - takes a function =A => B=
+- =apply= (=ap=) - applies a function =F[A => B]=
+- =pure= - wraps the value into the type constructor: =A => F[A]=,
+- Essentially combines several =D => F[A*]= in a chain, so that you get a single =Kleisli[F, D, R]= result at the end which you can then =run= with the dependency =D=.
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content)))
+      (item
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content)))
+      (item
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
+Unordered list with plus
+================
++ First
++ Second
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
+
+================
+Second list item starts with verbatim markup
+================
+- This is fine
+- =NOT OK=
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (verbatim
+          body: (verbatim_content))))))
+
+================
+Checkbox item with verbatim containing inner equals
+================
+- [X] Stale replica read returns error with =read_replicas=strict= config.
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
+List item code markup followed by slash text
+================
+- Stream data type (~XADD~, ~XREAD~, consumer groups).
+- Test
+- ~EVAL~ / Lua scripting (subset — no global state, no network access).
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (code
+          body: (code_content))
+        first_line: (plain_text)
+        first_line: (code
+          body: (code_content))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (code
+          body: (code_content))
+        first_line: (plain_text)))))
+
+================
+List items with URLs ending in slash
+================
+- The tree-sitter project is at https://tree-sitter.github.io/tree-sitter
+- See also https://www.gnu.org/software/emacs/
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
+
+================
+List items with inline code and trailing whitespace
+================
+- ~org-todo-keywords-1~ 
+- ~org-link-parameters~
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (code
+          body: (code_content)))
+      (item
+        first_line: (code
+          body: (code_content))))))
+
+================
+Plus sign in list item text is not a new bullet
+================
+- =protoc= 3.21+ (for the binary protocol code generation).
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
+Inline plus in list item text
+================
+- React + Redux
+- Elm sucks
+- Reframe on CLJS
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
+
+================
+Inline plus in indented list under heading
+================
+* Title
+ - React + Redux
+ - Elm sucks
+ - Reframe on CLJS
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (plain_list
+        (item
+          first_line: (plain_text))
+        (item
+          indent: (item_indent)
+          first_line: (plain_text))
+        (item
+          indent: (item_indent)
+          first_line: (plain_text))))))
+
+================
+Drawer-like tail stays plain text in list items
+================
+- DONE Core string, list, hash, set, sorted set operations. :feature:
+- DONE Three-node cluster with consistent hashing. :feature:
+- DONE LRU and TTL eviction policies. :feature:
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
+
+================
+Drawer-like tails with inline verbatim in list items
+================
+- DONE Fixed critical bug: =LMOVE= with =source == destination= corrupted the list. :bugfix:
+- DONE Added =OBJECT IDLETIME= command. :feature:
+- DONE Documented all configuration keys in =docs/configuration.md=. :docs:
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
+List items keep greater-than comparisons and drawer-like tails
+================
+- DONE Fixed =SCAN= cursor wraparound on very large keyspaces (> 100M keys). :bugfix:
+- DONE =ZADD GT/LT= options now correctly handle negative infinity scores. :bugfix:
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
+Horizontal rule after list
+================
+- List item
+
+----- 
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)))
+    (horizontal_rule)))
+
+================
+Multiple list items starting with inline markup
+================
+- *Plurals* (controversial): some style guides permit =the 1990's= -- others forbid it.
+- *Omission in poetry*: =o'er=, ='twas=, =ne'er=.
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (bold
+          body: (plain_text))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text))
+      (item
+        first_line: (bold
+          body: (plain_text))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text)))))
+
+================
+Indented drawer starts after list item
+================
+- List item
+  :DRAWER:
+  :test: 23
+  :END:
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)))
+    (drawer
+      name: (drawer_name)
+      body: (drawer_kv_line))))
+
+================
+Indented fixed-width starts after list item
+================
+- List item
+  : fixed-width body
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)))
+    (fixed_width)))
+
+================
+Indented nested item drawer starts after list
+================
+- Parent
+  - Child
+    :LOGBOOK:
+    :note: hello
+    :END:
+- Next
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        indent: (item_indent)
+        first_line: (plain_text)))
+    (drawer
+      name: (drawer_name)
+      body: (drawer_kv_line))
+    (plain_list
+      (item
+        first_line: (plain_text)))))
+
+================
+Indented nested fixed-width starts after list
+================
+- Parent
+  - Child
+    : body line
+- Next
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        indent: (item_indent)
+        first_line: (plain_text)))
+    (fixed_width)
+    (plain_list
+      (item
+        first_line: (plain_text)))))
+
+================
+Indented quote block after list item
+================
+** Items with sub-blocks
+
+- Stock types and their properties:
+  #+begin_quote
+  A good stock is the foundation of French cooking - it cannot be rushed.
+  Auguste Escoffier
+  #+end_quote
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (plain_list
+        (item
+          first_line: (plain_text)
+          body: (quote_block
+            body: (paragraph
+              (plain_text)
+              (plain_text))))))))
+
+================
+Indented src block belongs to nested list item body
+================
+- Parent
+  - Child
+    #+begin_src sh
+    echo ok
+    #+end_src
+- Sibling
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        indent: (item_indent)
+        first_line: (plain_text)
+        body: (src_block
+          language: (language)
+          body: (src_block_body
+            (src_line))))
+      (item
+        first_line: (plain_text)))))
+
+================
+Ordered list with numbers
+================
+1. First
+2. Second
+3. Third
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        counter: (counter)
+        first_line: (plain_text))
+      (item
+        counter: (counter)
+        first_line: (plain_text))
+      (item
+        counter: (counter)
+        first_line: (plain_text)))))
+
+================
+Ordered list counter-set cookie
+================
+5. [@5] fifth
+6. sixth
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        counter: (counter)
+        counter_set: (counter_set)
+        first_line: (plain_text))
+      (item
+        counter: (counter)
+        first_line: (plain_text)))))
+
+================
+Ordered list cookie with apostrophe text
+================
+5. [@5] Review the day's bookings and note dietary restrictions.
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        counter: (counter)
+        counter_set: (counter_set)
+        first_line: (plain_text)))))
+
+================
+List with checkboxes
+================
+- [ ] Unchecked
+- [X] Checked
+- [-] Partial
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text)))))
+
+================
+Invalid checkbox marker stays plain text
+================
+- [X] multiplying / adding random numbers
+- [?] evaluating all kinds of formulae
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
+
+================
+List items with slash and percent completion counters
+================
+- [-] Sublist [1/2]
+  + [ ] Unfinished
+  + [X] Finished
+- [-] Todo with an empty counter [/]
+- [ ] Another item, no counter
+- [ ] Progress [33%]
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        indent: (item_indent)
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        indent: (item_indent)
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text))
+      (item
+        checkbox: (checkbox)
+        first_line: (plain_text)
+        first_line: (completion_counter)))))
+
+================
+Nested list — flat with indent preserved
+================
+- Test
+  - Nested one
+  - Nested two
+- Not nested
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        indent: (item_indent)
+        first_line: (plain_text))
+      (item
+        indent: (item_indent)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
+
+================
+Blank-line-separated list items
+================
+- First
+
+- Second
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))
+
+================
+Blank line before indented continuation paragraph
+================
+- disconnect (optionally abruptly).
+
+    Flood FSM modifications:
+- execute a script once connected.
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        body: (item_continuation_line
+          content: (plain_text)))
+      (item
+        first_line: (plain_text)))))
+
+================
+Indented numeric continuation lines stay in list items
+================
+- Days off
+  28 days off accounted for (224 days a year working days, ~8 holidays as well)
+- Compensation?
+  45 EUR/h (80k per year for 224 worknig days).
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        body: (item_continuation_line
+          content: (plain_text)))
+      (item
+        first_line: (plain_text)
+        body: (item_continuation_line
+          content: (plain_text))))))
+
+================
+List items with bullet-like continuation paragraphs
+================
+- State "CANCELLED"  from "TODO"       [2014-06-06 pią 08:26] \\
+  -1 - any child at all.
+- State "CANCELLED"  from "TODO"       [2014-06-05 czw 15:31] \\
+  Wat. 0 = any child, same group, -1 = any child.
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (timestamp
+          year: (ts_year)
+          month: (ts_month)
+          day: (ts_day)
+          dayname: (ts_dayname)
+          time: (ts_time))
+        first_line: (plain_text)
+        first_line: (line_break)
+        body: (item_continuation_line
+          content: (plain_text)))
+      (item
+        first_line: (plain_text)
+        first_line: (timestamp
+          year: (ts_year)
+          month: (ts_month)
+          day: (ts_day)
+          dayname: (ts_dayname)
+          time: (ts_time))
+        first_line: (plain_text)
+        first_line: (line_break)
+        body: (item_continuation_line
+          content: (plain_text))))))
+
+================
+List continuation lines parse indented timestamps and links
+================
+- Progress updates
+  [2011-11-27 nie 13:39]
+  [[file:~/org/TODO::*Repeat%20to%20German%20test.][Repeat to German test.]]
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        body: (item_continuation_line
+          content: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time)))
+        body: (item_continuation_line
+          content: (regular_link
+            path: (link_path)
+            description: (plain_text)))))))
+
+================
+List items with completion counter variants
+================
+- [%] Empty percentage
+- Empty percentage at the end [%]
+- Set percentage [21%]
+- Set [33%] percentage
+- [/] Empty count
+- Empty count at the end [/]
+- Set count [1/6]
+- Set [4/6] count
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (completion_counter)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter)
+        first_line: (plain_text))
+      (item
+        first_line: (completion_counter)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter))
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter)
+        first_line: (plain_text)))))
+
+================
+List item keeps non-cookie bracket text and parses trailing counter
+================
+- Test [value] [%]
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (completion_counter)))))
+
+================
+List items keep bracketed bus ranges as plain text
+================
+- Input[0:INPUT_BUS_SIZE] is the value passed into the continuation,
+- NextFunction[0:FUNCTION_BUS_SIZE] is the next function to call,
+- NextValue[0:INPUT_BUS_SIZE] is the next value passed into the continuation,
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)))))

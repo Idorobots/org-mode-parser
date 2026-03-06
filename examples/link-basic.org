@@ -1,0 +1,21 @@
+* Links
+
+Plain link: https://orgmode.org
+
+Angle link: <https://orgmode.org>
+
+Regular link, no description: [[https://orgmode.org]]
+
+Regular link with description: [[https://orgmode.org][Org Mode]]
+
+File link: [[file:simple.org]]
+
+Fuzzy link to a heading: [[Links]]
+
+* Targets and References
+
+A target: <<my-target>>
+
+A link to it: [[my-target]]
+
+A link to it with description: [[my-target][jump to target]]

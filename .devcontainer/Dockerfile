@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     npm \
+    nodejs \
     libtree-sitter-dev \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
@@ -20,6 +21,9 @@ USER ubuntu
 RUN npm config set prefix '~/.local/'
 RUN npm i -g opencode-ai@latest
 RUN mkdir -p ~/.local/share/opencode
+
+# Install tree-sitter CLI
+RUN npm i -g tree-sitter-cli@latest
 
 # Install Poetry
 RUN pipx install poetry

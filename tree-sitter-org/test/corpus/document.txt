@@ -1,0 +1,51 @@
+================
+Empty document
+================
+
+---
+
+(document)
+
+================
+Zeroth section only
+================
+Some text here.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
+
+================
+Single heading
+================
+* Hello
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)))
+
+================
+Multiple headings
+================
+* First
+* Second
+* Third
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text))
+  (heading
+    (stars)
+    (plain_text))
+  (heading
+    (stars)
+    (plain_text)))

@@ -1,0 +1,288 @@
+================
+Zeroth section with text
+================
+This is the zeroth section.
+It has multiple lines.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text))))
+
+================
+Heading with section body
+================
+* Heading
+Body text here.
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (section
+      (paragraph
+        (plain_text)))))
+
+================
+Multiple paragraphs in section
+================
+* Heading
+First paragraph.
+
+Second paragraph.
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (section
+      (paragraph
+        (plain_text))
+      (paragraph
+        (plain_text)))))
+
+================
+Hyphenated paragraph text stays coalesced
+================
+This is a Fixed-Width style phrase.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
+
+================
+Indented hash comment inside heading body
+================
+* Task
+(module foo (printer alocator)
+  # ...
+)
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (paragraph
+        (plain_text))
+      (comment)
+      (paragraph
+        (plain_text)))))
+
+================
+Paragraph keeps colon-wrapped text plain
+================
+This doesn't work. :shrug:
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
+
+================
+Paragraph keeps unicode text as plain text
+================
+body → unit
+Zażółć gęślą jaźń.
+O(n²)
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text)
+      (plain_text))))
+
+================
+Caption with leading markup in zeroth section
+================
+#+CAPTION: *hurr* - durr derp
+works
+
+---
+
+(document
+  (zeroth_section
+    (caption_keyword
+      value: (plain_text))
+    (paragraph
+      (plain_text))))
+
+================
+Caption with leading markup in heading section
+================
+* Heading
+#+CAPTION: *hurr* - durr derp
+doesn't work
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (caption_keyword
+        value: (plain_text))
+      (paragraph
+        (plain_text)))))
+
+================
+Paragraph keeps at-sign in plain text
+================
+Report issues to mailto:bugs@example.org or via the issue tracker.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
+
+================
+Caption with markup characters parses as text
+================
+#+CAPTION: *_?=
+foo
+
+---
+
+(document
+  (zeroth_section
+    (caption_keyword
+      value: (plain_text))
+    (paragraph
+      (plain_text))))
+
+================
+Paragraph keeps standalone bracket and angle characters
+================
+Test > hurr
+Durr < derp
+Foo [ bar
+Bar ] baz
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text)
+      (plain_text)
+      (plain_text))))
+
+================
+Paragraph line starting with number hyphen is text
+================
+The earliest printed books, incunabula, often had no punctuation at all,
+leaving spaces for readers or scribes to add marks by hand. Gutenberg's
+42-line Bible c. 1455) is a notable early example.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text)
+      (plain_text))))
+
+================
+Paragraph keeps underscore and colon as plain text
+================
+Fixed_Width: Areas in paragraph.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
+
+================
+Paragraph keeps regex-like closing markers as plain text
+================
+(a+) (a*) (a_) (a=) (a~)
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
+
+================
+Indented timestamp and link lines in heading section
+================
+* Log
+ [2011-11-27 nie 13:39]
+ [[file:~/org/TODO::*Repeat%20to%20German%20test.][Repeat to German test.]]
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (timestamp
+        year: (ts_year)
+        month: (ts_month)
+        day: (ts_day)
+        dayname: (ts_dayname)
+        time: (ts_time))
+      (regular_link
+        path: (link_path)
+        description: (plain_text)))))
+
+================
+Backslash text in paragraph body
+================
+* Math notes
+\noindent
+\[ cond(A) = \textbar A \textbar \]
+Hard break before next line\\
+next line
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (paragraph
+        (plain_text)
+        (plain_text)
+        (plain_text)
+        (line_break)
+        (plain_text)))))
+
+================
+Escaped closing bracket stays plain text
+================
+\textbar A^{-1} \textbar \textbar\]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))

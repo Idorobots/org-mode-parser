@@ -1,0 +1,22 @@
+* Source Blocks
+
+#+begin_src python
+print("hello")
+#+end_src
+
+#+begin_src python
+def add(a, b):
+    return a + b
+#+end_src
+
+#+begin_src bash
+echo "hello world"
+#+end_src
+
+* Source block with line numbers
+
+#+begin_src python -n
+x = 1
+y = 2
+z = x + y
+#+end_src

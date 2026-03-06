@@ -1,0 +1,19 @@
+* First top-level heading
+
+Section content under the first heading.
+
+** First sub-heading
+
+Content of the first sub-heading.
+
+** Second sub-heading
+
+Content of the second sub-heading.
+
+*** Deeply nested heading
+
+Content under a level-three heading.
+
+* Second top-level heading
+
+Section content under the second heading.

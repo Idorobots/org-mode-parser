@@ -1,0 +1,39 @@
+#+TITLE: Tree-Sitter Org-Mode parser
+#+OPTIONS: toc:t
+
+* Overview
+This project implements a Tree-Sitter-based parser for Emacs Org-Mode files.
+
+The long-term goal is high fidelity and eventually 100% feature coverage, while
+keeping robust error recovery and useful parse trees for downstream processing.
+
+See [[file:examples/][examples directory]] to get an idea of the parser completeness.
+
+* Current Caveats
+- Nested lists are parsed in a *flat* form: nested items are emitted as items
+  on the parent list, with an explicit indent marker so nesting can be
+  reconstructed in post-processing.
+- Malformed objects are usually treated as plaintext (or recovered with generic
+  parse-error nodes) instead of hard-failing the full parse.
+
+* Explicitly Not Supported
+
+- Inlinetasks are not represented as a dedicated node type; high-star headings
+  are treated as regular headings.
+- LaTeX environments are not parsed as structured Org objects.
+- LaTeX fragments are not parsed as structured Org objects.
+- Babel call syntax (=#+call:=) has no dedicated Babel AST node.
+- Inline Babel calls (=call_NAME(...)=) have no dedicated AST node.
+- Org entities (like =\alpha=, =\cent=) are not parsed as dedicated entity
+  nodes.
+- Org macros (like ={{{name}}}=) are not parsed as dedicated macro nodes.
+- Subscript/superscript syntax is not parsed as dedicated sub/superscript
+  nodes.
+- Sexp timestamps (like =<%%(...)>=) are not parsed as regular timestamp nodes.
+- Radio-link auto-detection is deferred (radio targets are parsed, but
+  auto-generated radio links are not resolved in-tree).
+
+The docs list a target Org-Mode syntax subset.
+
+* Roadmap
+See [[file:ROADMAP.org][ROADMAP.org]] for planned work and milestone history.

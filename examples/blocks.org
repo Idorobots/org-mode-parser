@@ -1,0 +1,351 @@
+#+TITLE: Block Types — Complete Demonstration
+#+AUTHOR: Morthea Plunshaw
+
+* Greater Blocks
+
+Greater blocks can contain other elements, including nested greater blocks.
+
+** Quote Blocks
+
+A simple attribution:
+
+#+begin_quote
+The programmer, like the poet, works only slightly removed from pure
+thought-stuff. He builds his castles in the air, from air, creating by
+exertion of the imagination.
+
+— Fred Brooks, /The Mythical Man-Month/
+#+end_quote
+
+A quote containing a list:
+
+#+begin_quote
+Three virtues of a great programmer, according to Larry Wall:
+
+- Laziness — the quality that makes you write general solutions that save work later.
+- Impatience — the anger you feel when the computer is being slow, driving you to make it faster.
+- Hubris — excessive pride that makes you write programs other people won't say bad things about.
+#+end_quote
+
+Nested quote blocks:
+
+#+begin_quote
+Dijkstra wrote:
+
+#+begin_quote
+The question of whether a computer can think is no more interesting than
+the question of whether a submarine can swim.
+#+end_quote
+
+This is often cited out of context. The full passage makes a deeper point
+about the nature of simulation versus instantiation.
+#+end_quote
+
+** Center Blocks
+
+#+begin_center
+*Quatremont Institute*
+Annual Symposium on Computational Linguistics
+12–14 March 2025 · Grumblewick, Northshire
+#+end_center
+
+#+begin_center
+/This page intentionally left blank./
+#+end_center
+
+A center block with structured content:
+
+#+begin_center
+| Award                  | Recipient             | Year |
+|------------------------+-----------------------+------|
+| Best Paper             | Pruxwick & Blumvane   | 2023 |
+| Outstanding Poster     | Flomsworth et al.     | 2024 |
+| Distinguished Reviewer | Prof. N. Glorbleby    | 2024 |
+#+end_center
+
+** Special Blocks (custom names)
+
+A =warning= special block:
+
+#+begin_warning
+*Data loss risk:* this operation permanently deletes the source files.
+Ensure backups exist before proceeding. There is no undo.
+#+end_warning
+
+An =abstract= special block (common in academic documents):
+
+#+begin_abstract
+We present a novel approach to parsing context-sensitive grammars using
+a two-pass algorithm that separates structural recognition from object
+resolution. Empirical evaluation on a corpus of 10,000 Org Mode documents
+demonstrates a 40% reduction in parse time compared to the reference
+implementation, with identical output on 99.97% of inputs.
+#+end_abstract
+
+A =note= block with nested elements:
+
+#+begin_note
+The following configuration values are defaults and can be overridden
+per-file using special keywords in the zeroth section.
+
+- ~org-todo-keywords-1~: controls TODO keyword recognition.
+- ~org-link-parameters~: controls plain-link type recognition.
+
+See the [[https://orgmode.org/manual/][Org Manual]] for the full list of configurable variables.
+#+end_note
+
+A =figure= block containing a caption-affiliated element:
+
+#+begin_figure
+#+CAPTION: Architecture diagram — request lifecycle
+#+begin_example
+Client → Load Balancer → API Gateway → Service Mesh → Microservice
+                                    ↓
+                              Auth Service
+#+end_example
+#+end_figure
+
+** Nested Greater Blocks
+
+#+begin_quote
+Here is a center block nested inside a quote:
+
+#+begin_center
+*The key insight* is that nesting is allowed between /different/ block types.
+#+end_center
+
+And the quote continues after the nested center block.
+#+end_quote
+
+-----
+
+* Lesser Blocks
+
+Lesser blocks cannot contain other elements (except verse blocks, which contain objects).
+
+** Comment Blocks
+
+Comment blocks are never exported or rendered.
+
+#+begin_comment
+TODO: add benchmark results from the Grumblewick corpus run.
+The numbers from the Velstow subset are in ~/data/velstow-results.csv.
+Do not publish until peer-reviewed.
+#+end_comment
+
+#+begin_comment
+REVIEWER NOTE (internal):
+The abstract above needs tightening — currently 117 words, target is 100.
+Sections 3 and 4 can be condensed once the figures are finalised.
+#+end_comment
+
+** Example Blocks
+
+Example blocks preserve whitespace and are not parsed for objects.
+
+#+CAPTION: Example of a minimal Org document
+#+begin_example
+#+TITLE: My Document
+
+,* First Heading
+
+This is a paragraph under the first heading.
+
+,** Sub-heading
+
+Another paragraph.
+#+end_example
+
+An example block showing a shell session:
+
+#+begin_example
+$ git clone https://github.com/example/org-parser.git
+Cloning into 'org-parser'...
+remote: Enumerating objects: 1842, done.
+remote: Counting objects: 100% (1842/1842), done.
+Receiving objects: 100% (1842/1842), 3.21 MiB | 4.5 MiB/s, done.
+$ cd org-parser
+$ poetry install
+Installing dependencies from lock file
+...
+All packages installed successfully.
+$ poetry run pytest
+======================== 247 passed in 4.32s ========================
+#+end_example
+
+Note comma-quoting in example block above: lines that would start with =,*= (like =,* First Heading=) are comma-quoted.
+
+** Verse Blocks
+
+Verse blocks parse objects (markup, links, etc.) while preserving line structure.
+
+#+CAPTION: Excerpt from "The Wasteland" — T.S. Eliot
+#+begin_verse
+April is the cruellest month, breeding
+Lilacs out of the dead land, mixing
+Memory and desire, stirring
+Dull roots with spring rain.
+#+end_verse
+
+A verse block with markup and a hard line break:
+
+#+begin_verse
+*Do not go gentle* into that good night,
+Old age should burn and rave at close of day;
+/Rage, rage/ against the dying of the light.
+
+Though wise men at their end know _dark is right_,
+Because their words had forked no lightning they
+*Do not go gentle* into that good night.
+
+— Dylan Thomas
+#+end_verse
+
+A verse block with a link:
+
+#+begin_verse
+Come, my friends,
+'Tis not too late to seek a newer world.
+Push off, and sitting well in order smite
+The sounding furrows; for my purpose holds
+To sail beyond the sunset — see [[https://www.poetryfoundation.org/poems/45392/ulysses][the full poem]].
+#+end_verse
+
+** Source Blocks
+
+Basic source block:
+
+#+CAPTION: Greatest common divisor — Euclidean algorithm
+#+begin_src python
+def gcd(a: int, b: int) -> int:
+    """Return the greatest common divisor of a and b."""
+    while b:
+        a, b = b, a % b
+    return a
+#+end_src
+
+Source block with line numbering switch:
+
+#+begin_src emacs-lisp -n
+(defun org-parse-heading (element)
+  "Extract heading metadata from ELEMENT."
+  (let ((level (org-element-property :level element))
+        (todo  (org-element-property :todo-keyword element))
+        (title (org-element-property :raw-value element)))
+    (list :level level :todo todo :title title)))
+#+end_src
+
+Source block with continuation numbering (+n):
+
+#+begin_src emacs-lisp +n 10
+(defun org-parse-section (element)
+  "Extract section contents from ELEMENT."
+  (org-element-contents element))
+#+end_src
+
+Source block with reference links disabled (-r) and line numbers (-n):
+
+#+begin_src c -n -r
+#include <stdio.h>
+
+int main(void) {
+    printf("Hello, world!\n"); /* (ref:hello) */
+    return 0;
+}
+#+end_src
+
+Shell script example:
+
+#+begin_src bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly INPUT_DIR="${1:?Usage: $0 <input-dir>}"
+readonly OUTPUT_DIR="${2:-./output}"
+
+mkdir -p "$OUTPUT_DIR"
+
+find "$INPUT_DIR" -name "*.org" -print0 | while IFS= read -r -d '' file; do
+    base="$(basename "$file" .org)"
+    echo "Processing: $file"
+    # Placeholder for actual processing
+    cp "$file" "$OUTPUT_DIR/${base}.processed.org"
+done
+
+echo "Done. Processed $(find "$OUTPUT_DIR" -name "*.processed.org" | wc -l) files."
+#+end_src
+
+Source block with arguments:
+
+#+begin_src python :results output :exports both
+import sys
+print(f"Python {sys.version}")
+print("Parser ready.")
+#+end_src
+
+** Export Blocks
+
+Export blocks pass raw content through to a specific backend unchanged.
+
+#+begin_export html
+<div class="callout callout-warning">
+  <h4>Browser Compatibility</h4>
+  <p>The interactive features on this page require a modern browser
+  with ES2020 support. Internet Explorer is not supported.</p>
+</div>
+#+end_export
+
+#+begin_export latex
+\begin{theorem}
+For any integer $n > 1$, there exists a prime $p$ such that $n < p < 2n$.
+\end{theorem}
+\begin{proof}
+This is Bertrand's postulate, proven by Chebyshev in 1852.
+\end{proof}
+#+end_export
+
+#+begin_export odt
+<text:p text:style-name="Heading_20_1">Section Title</text:p>
+<text:p text:style-name="Text_20_Body">Body content in ODT format.</text:p>
+#+end_export
+
+-----
+
+* Dynamic Blocks
+
+Dynamic blocks are populated programmatically. In a static parse, their contents are treated as ordinary elements.
+
+#+begin: clocktable :scope subtree :maxlevel 3
+| Headline             | Time   |
+|----------------------+--------|
+| *Total time*         | *3:45* |
+|----------------------+--------|
+| Chapter 1 drafting   | 2:00   |
+| Chapter 2 revision   | 1:15   |
+| Bibliography check   | 0:30   |
+#+end:
+
+#+begin: columnview :hlines 1 :id local
+| ITEM                     | TODO | PRIORITY | TAGS       |
+|--------------------------+------+----------+------------|
+| Planning document        | TODO | A        | :admin:    |
+| First chapter            | DONE |          | :writing:  |
+| Second chapter           | TODO | B        | :writing:  |
+#+end:
+
+-----
+
+* Comma-Quoting in Block Contents
+
+Inside any block, lines beginning with =*= must be comma-quoted with a leading comma.
+Lines beginning with =#+= may also be comma-quoted.
+
+#+begin_example
+,* This line starts with an asterisk — comma-quoted.
+,** So does this — also comma-quoted.
+
+Normal text needs no quoting.
+
+,#+TITLE: This #+KEY line is also comma-quoted (optional for safety).
+#+TITLE: This one is not quoted — the parser strips commas only from ,#+ and ,* lines.
+#+end_example

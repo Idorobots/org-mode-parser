@@ -1,0 +1,607 @@
+================
+Bold text
+================
+This has *bold* words.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (bold
+        (plain_text))
+      (plain_text))))
+
+================
+Italic text
+================
+This has /italic/ words.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (italic
+        (plain_text))
+      (plain_text))))
+
+================
+Underline text
+================
+This has _underline_ words.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (underline
+        (plain_text))
+      (plain_text))))
+
+================
+Underline with parentheses and hyphen boundaries
+================
+_Underlined_ text should be used sparingly to avoid confusion with hyperlinks.
+Consider: (_underline inside parentheses_) and -_underline after a hyphen_-.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (underline
+        (plain_text))
+      (plain_text)
+      (plain_text)
+      (underline
+        (plain_text))
+      (plain_text)
+      (underline
+        (plain_text))
+      (plain_text))))
+
+================
+Strikethrough text
+================
+This has +deleted+ words.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (strike_through
+        (plain_text))
+      (plain_text))))
+
+================
+Strikethrough at beginning of line
+================
++so is this+
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (strike_through
+        (plain_text)))))
+
+================
+Strikethrough at line start with trailing text
+================
++And also+ this
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (strike_through
+        (plain_text))
+      (plain_text))))
+
+================
+Verbatim text
+================
+This has =verbatim= words.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (verbatim
+        (verbatim_content))
+      (plain_text))))
+
+================
+Code text
+================
+This has ~code~ words.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text))))
+
+================
+Code span with bracketed generic type and trailing punctuation
+================
+text ~dict[str, int]~.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text))))
+
+================
+Indented code span with bracketed type
+================
+  indent  ~dict[date, int]~
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content)))))
+
+================
+Code span with method call
+================
+text ~TimeRange.update()~
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content)))))
+
+================
+Code span with bracketed dict inside parentheses
+================
+(effectively a ~dict[str, str]~).
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text))))
+
+================
+Code span with empty-arg call
+================
+text ~analyze()~
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content)))))
+
+================
+Code span with punctuation and bracket token
+================
+text ~.[O:L]~
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content)))))
+
+================
+Separated verbatim spans with plain text between
+================
+=REFERENCES= contains one or more citation reference objects separated by =;=.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (verbatim
+        (verbatim_content))
+      (plain_text)
+      (verbatim
+        (verbatim_content))
+      (plain_text))))
+
+================
+Separated verbatim spans around explanatory text
+================
+Note comma-quoting in example block above: lines that would start with =,*= (like =,* First Heading=) are comma-quoted.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (verbatim
+        (verbatim_content))
+      (plain_text)
+      (verbatim
+        (verbatim_content))
+      (plain_text))))
+
+================
+Separated code spans with plain text between
+================
+~REFERENCES~ contains one or more citation reference objects separated by ~;~.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (code
+        (code_content))
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text))))
+
+================
+Separated code spans around explanatory text
+================
+Note comma-quoting in example block above: lines that would start with ~,*~ (like ~,* First Heading~) are comma-quoted.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text))))
+
+================
+Invalid spaced markup markers stay plain text
+================
+- = not verbatim = (space before closing)
+- * not bold * (space before closing)
+- / not italic / (space before closing)
+- _ not underline _ (space before closing)
+- + not strike + (space before closing)
+- ~ not code ~ (space before closing)
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (plain_text)))))
+
+================
+Nested markup openings in list items
+================
+- */Bold and italic simultaneously/*
+- /*Italic wrapping bold*/
+- *A _bold underlined_ phrase*
+- /An _italic underlined_ passage/
+- (*/nested bold-italic inside parens/*)
+- "/italic inside double quotes/"
+- '/italic inside single quotes/'
+
+---
+
+(document
+  (zeroth_section
+    (plain_list
+      (item
+        first_line: (bold
+          body: (italic
+            body: (plain_text))))
+      (item
+        first_line: (italic
+          body: (bold
+            body: (plain_text))))
+      (item
+        first_line: (bold
+          body: (plain_text)
+          body: (underline
+            body: (plain_text))
+          body: (plain_text)))
+      (item
+        first_line: (italic
+          body: (plain_text)
+          body: (underline
+            body: (plain_text))
+          body: (plain_text)))
+      (item
+        first_line: (plain_text)
+        first_line: (bold
+          body: (italic
+            body: (plain_text)))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (italic
+          body: (plain_text))
+        first_line: (plain_text))
+      (item
+        first_line: (plain_text)
+        first_line: (italic
+          body: (plain_text))
+        first_line: (plain_text)))))
+
+================
+Verbatim with inner equals before final close
+================
+=Foo = bar=
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (verbatim
+        (verbatim_content)))))
+
+================
+Verbatim and code allow doubled inner markers
+================
+=source == destination= and ~source ~~ destination~
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (verbatim
+        (verbatim_content))
+      (plain_text)
+      (code
+        (code_content)))))
+
+================
+Bold at beginning of line
+================
+*bold text* here.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (bold
+        (plain_text))
+      (plain_text))))
+
+================
+Bold at start of paragraph continuation line
+================
+line one
+*bold line two*
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (bold
+        (plain_text)))))
+
+================
+Nested markup — italic inside bold
+================
+*outer /inner/ text*
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (bold
+        (plain_text)
+        (italic
+          (plain_text))
+        (plain_text)))))
+
+================
+Multiple markup types in one paragraph
+================
+*bold* and /italic/
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (bold
+        (plain_text))
+      (plain_text)
+      (italic
+        (plain_text)))))
+
+================
+Bold in heading title — markup after plain text
+================
+* Hello *bold* world
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (bold
+      (plain_text))
+    (plain_text)))
+
+================
+Bold at start of heading title
+================
+* *bold* title
+
+---
+
+(document
+  (heading
+    (stars)
+    (bold
+      (plain_text))
+    (plain_text)))
+
+================
+Bold in heading title after TODO keyword
+================
+* TODO *bold* task
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (bold
+      (plain_text))
+    (plain_text)))
+
+================
+Strikethrough in heading title after plain text
+================
+* Heading +strike+
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (strike_through
+      (plain_text))))
+
+================
+Strikethrough at start of heading title
+================
+* +strike throguh+ yeah
+
+---
+
+(document
+  (heading
+    (stars)
+    (strike_through
+      (plain_text))
+    (plain_text)))
+
+================
+Strikethrough in heading title after TODO keyword
+================
+* TODO  +strike throguh+
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (strike_through
+      (plain_text))))
+
+================
+Adjacent markup with slash boundary
+================
+*Bold*/italic/ -- two markup objects sharing a boundary.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (bold
+        (plain_text))
+      (italic
+        (plain_text))
+      (plain_text))))
+
+================
+Adjacent literal markup with shared boundary
+================
+~code~=verbatim= -- code immediately followed by verbatim.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (code
+        (code_content))
+      (verbatim
+        (verbatim_content))
+      (plain_text))))
+
+================
+Adjacent code spans with slash separator
+================
+Increment hash field values atomically -- identical semantics to ~INCR~/~INCRBYFLOAT~.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text)
+      (code
+        (code_content))
+      (plain_text))))

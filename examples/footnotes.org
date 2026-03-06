@@ -1,0 +1,144 @@
+#+TITLE: A Brief History of Punctuation — Footnote Showcase
+#+AUTHOR: Quorra Briskett
+
+* Standard Footnote References and Definitions
+
+The comma, whose origins can be traced to the Greek scholars of Alexandria,[fn:1]
+was not used consistently in European manuscripts until the advent of movable
+type printing in the fifteenth century.[fn:2]
+
+The semicolon is a relative latecomer among punctuation marks.[fn:semicolon]
+It first appeared in Italian humanist printing around 1494[fn:3] and was
+systematised by Aldus Manutius the Elder,[fn:aldus] whose press in Venice
+became the model for scholarly typography across Europe.
+
+The em dash — beloved by writers, despised by copy editors[fn:4] — has no
+single origin story. It derives from a longer tradition of manuscript
+annotation marks.[fn:5]
+
+[fn:1] Aristophanes of Byzantium (c. 257–180 BCE) is often credited with
+devising the earliest systematic punctuation system for Greek texts, using
+three levels of dot placement to indicate short, medium, and long pauses.
+
+[fn:2] The earliest printed books, incunabula, often had no punctuation at all,
+leaving spaces for readers or scribes to add marks by hand. Gutenberg's
+42-line Bible (c. 1455) is a notable early example.
+
+[fn:semicolon] The word "semicolon" itself is a compound of the Greek /semi/ (half)
+and /colon/ (member or clause). Its modern name did not stabilise until the
+seventeenth century in English usage.
+
+[fn:3] Specifically, Pietro Bembo's /De Aetna/ (1495), printed by Aldus Manutius,
+is frequently cited as the earliest surviving printed work to use the semicolon
+consistently. The date is sometimes given as 1494 in sources that use the old
+calendar.
+
+[fn:aldus] Aldus Manutius (1449–1515) also invented the italic typeface and the
+portable octavo book format, transforming books from lectern objects to pocket
+companions. See [[https://en.wikipedia.org/wiki/Aldus_Manutius][his Wikipedia article]] for an overview.
+
+[fn:4] The Chicago Manual of Style (17th ed., 2017) devotes §6.85–6.89 to the em
+dash, noting that it "is perhaps the most versatile punctuation mark" while
+cautioning against overuse.
+
+[fn:5] Specifically, the medieval /positura/ system included marks resembling
+modern dashes used to indicate pauses at the end of a clause.
+
+-----
+
+* Inline Footnotes
+
+Inline footnotes embed the definition directly at the point of reference.
+
+The interrobang[fn:interrobang:The interrobang (‽) is a non-standard punctuation
+mark combining the functions of a question mark and an exclamation point. It was
+proposed by Wulbert Grumshaw in 1962 and has never achieved wide adoption in
+formal writing.] is the most whimsical of all punctuation marks.
+
+The Oxford comma[fn:oxford:Also called the serial comma or Harvard comma, it is
+the comma placed before the conjunction in a list of three or more items. Its
+use is *mandatory* in American English by most style guides, but /discouraged/
+in British English by many publishers.] divides writers into two irreconcilable camps.
+
+The pilcrow (¶)[fn:pilcrow:The pilcrow derives from the Latin /capitulum/ (chapter)
+via Old French /paragraphe/. In medieval manuscripts, it was drawn in red or blue
+ink by a rubricator — a specialist scribe — to mark paragraph breaks. See also:
+[[https://en.wikipedia.org/wiki/Pilcrow][Wikipedia on the pilcrow]].] marks
+the paragraph in proofreading and older typography conventions.
+
+An inline footnote with a very short definition: the slash is called a
+solidus[fn:solidus:From Latin /solidus/, a gold coin whose abbreviation /s/ was
+written in the numerator position of the price fraction.] in formal contexts.
+
+-----
+
+* Anonymous Footnotes
+
+Anonymous footnotes have no label and cannot be referenced by name — each
+occurrence is a fresh footnote.
+
+The question mark originated in medieval scribal practice[fn::The Latin word
+/quaestio/ (question) was abbreviated as =qo=, which scribes eventually
+combined into a single glyph — a =q= over an =o= — that gradually evolved
+into the modern =?=.] and is now universal across writing systems.
+
+The exclamation mark has a similarly murky history.[fn::One theory holds that
+it derives from the Latin word /io/ (an exclamation of joy), written vertically
+with the =i= above the =o= — again a scribal compression that became a glyph.
+Another theory links it to medieval manuscript =nota= (note) marks.]
+
+Both anonymous footnotes above are distinct even though they appear in the same
+section. They will receive sequential numbers in the rendered output.
+
+-----
+
+* Footnotes with Complex Content
+
+Standard footnotes can contain multiple paragraphs, lists, tables, and markup.
+
+The history of the apostrophe is entangled with the history of the elision mark
+in Greek.[fn:apostrophe]
+
+[fn:apostrophe] The apostrophe entered English in the sixteenth century, initially
+to mark the omission of a letter (as in /don't/ for /do not/). Its use as a
+possessive marker came later and was inconsistently applied until the nineteenth
+century.
+
+Key functions of the modern apostrophe:
+
+- *Contraction*: marking omitted letters (=it's=, =don't=, =they're=).
+- *Possession*: indicating ownership (=the dog's lead=, =the dogs' leads=).
+- *Plurals* (controversial): some style guides permit =the 1990's= — others forbid it.
+- *Omission in poetry*: =o'er=, ='twas=, =ne'er=.
+
+Misuse statistics[fn:7]:
+
+| Error type                  | Frequency (%) |
+|-----------------------------+---------------|
+| Greengrocer's apostrophe    |            42 |
+| Missing possessive          |            28 |
+| /It's/ vs /its/ confusion   |            19 |
+| Other                       |            11 |
+
+[fn:7] These figures are illustrative and not derived from a real corpus study.
+See [cite:@crystal2003] for actual quantitative analysis of punctuation errors
+in learner writing.
+
+-----
+
+* Footnote Section
+
+The heading whose title equals =org-footnote-section= (default: "Footnotes") is
+treated specially by the parser — it is a "footnote section".
+
+* Footnotes
+
+[fn:numeric-only] A footnote using a purely numeric label. Numeric labels are
+treated identically to word labels by the parser — the distinction is only
+cosmetic in the source.
+
+[fn:10] Another numeric-label footnote, demonstrating that label numbers need
+not be sequential or start at 1.
+
+[fn:multiword-label-with-hyphens] Labels can contain hyphens and underscores
+in addition to alphanumeric characters: =fn:my_label-2= is a valid label.

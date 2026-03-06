@@ -1,0 +1,16 @@
+* Horizontal Rules
+
+-----
+
+Paragraph between rules.
+
+----------
+
+Another paragraph.
+
+-----
+
+* Two rules with no content between
+
+-----
+-----

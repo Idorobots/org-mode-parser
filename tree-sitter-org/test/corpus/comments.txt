@@ -1,0 +1,23 @@
+================
+Single comment line
+================
+# This is a comment
+
+---
+
+(document
+  (zeroth_section
+    (comment)))
+
+================
+Multiple comment lines
+================
+# First comment
+# Second comment
+
+---
+
+(document
+  (zeroth_section
+    (comment)
+    (comment)))

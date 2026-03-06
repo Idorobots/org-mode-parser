@@ -1,0 +1,269 @@
+#+TITLE: Technical Specification Fragment — Fixed-Width Areas and Horizontal Rules
+#+AUTHOR: Blorcus Grumwiddle
+
+* Fixed-Width Areas
+
+A fixed-width area consists of one or more consecutive lines beginning with
+=:= followed by a space (or end of line).
+
+** Basic fixed-width areas
+
+: This is a single fixed-width line.
+
+:
+: An empty fixed-width line (the colon alone forms a valid fixed-width line).
+:
+
+: Fixed-width area
+: spanning multiple consecutive lines.
+: Each line begins with ": ".
+: The content is preserved verbatim — including   extra   spaces.
+
+** Fixed-width areas showing code and terminal output
+
+Terminal session:
+
+: $ cargo build --release
+:    Compiling org-parser v0.1.0
+:     Finished release [optimized] target(s) in 12.43s
+:      Running `target/release/org-parser`
+
+: $ ./target/release/org-parser examples/simple.org
+: Parsed 1 heading in 0.003ms.
+
+Configuration file content:
+
+: [parser]
+: max_nesting_depth = 32
+: strict_mode = true
+: encoding = "utf-8"
+:
+: [output]
+: format = "json"
+: pretty_print = true
+: include_positions = true
+
+** Fixed-width area with special characters
+
+: Line with *asterisks* — not markup here (fixed-width is verbatim).
+: Line with /slashes/ — also not italic.
+: Line with [[link syntax]] — not a link.
+: Line with #+KEYWORD: — not a keyword.
+: Line with a trailing backslash \
+: Line with a blank colon below:
+
+:
+
+** Fixed-width area terminated by a paragraph
+
+: First area, lines 1–3.
+: Line 2 of the first area.
+: Line 3 of the first area.
+
+This paragraph terminates the fixed-width area above (non-fixed-width line).
+
+: Second area, after the paragraph.
+: The two areas are distinct fixed-width elements.
+
+** Fixed-width vs fixed-width line termination rule
+
+A fixed-width area ends the moment a line does not start with =:= followed
+by a space or end of line. The following demonstrates the boundary:
+
+: Part of the area.
+: Also part of the area.
+This line starts with no colon — it terminates the area and is a paragraph.
+: A new, separate fixed-width area begins here.
+
+** Fixed-width area inside a drawer
+
+:TECHNICAL_NOTES:
+: Heap allocation profile (1M document corpus):
+:   Headings:          38.2 MiB
+:   Paragraphs:        241.7 MiB
+:   Properties:        12.4 MiB
+:   Blocks:            19.8 MiB
+:   Total:             312.1 MiB
+:
+: Peak RSS: 487 MiB (during link resolution pass)
+:END:
+
+** Fixed-width area inside a list item
+
+Benchmark results by backend:
+
+- Emacs org-element (reference)
+  : Parse time:     4,230 ms
+  : Memory:         812 MiB
+  : Accuracy:       100% (reference)
+
+- tree-sitter (this parser)
+  : Parse time:       187 ms
+  : Memory:           94 MiB
+  : Accuracy:        99.97% (3 edge cases differ)
+
+- orgparse (Python)
+  : Parse time:       980 ms
+  : Memory:           210 MiB
+  : Accuracy:        ~95% (many edge cases unsupported)
+
+-----
+
+* Horizontal Rules
+
+A horizontal rule is a line of at least five consecutive hyphens and nothing else
+(trailing whitespace is acceptable).
+
+** Minimum-length rule (five hyphens)
+
+-----
+
+** Longer rules
+
+----------
+
+--------------------------------------------------
+
+** Rules as section dividers
+
+This section uses horizontal rules to visually delimit content regions.
+
+Preamble paragraph with introductory remarks.
+
+-----
+
+First region: core concepts.
+
+Content of the first region.
+More content.
+
+-----
+
+Second region: advanced topics.
+
+Content of the second region.
+
+-----
+
+Third region: appendix material.
+
+Content of the third region.
+
+-----
+
+** Rules between different element types
+
+A paragraph before the rule.
+
+-----
+
+| Table | after | the | rule |
+|-------+-------+-----+------|
+| A     | B     | C   | D    |
+
+-----
+
+: Fixed-width area after another rule.
+: Second line of the fixed-width area.
+
+-----
+
+- A list after a rule.
+- Second item.
+- Third item.
+
+-----
+
+#+begin_quote
+A block quote after a rule.
+#+end_quote
+
+-----
+
+** Adjacent rules
+
+Two consecutive rules are two separate horizontal rule elements:
+
+-----
+-----
+
+Three consecutive rules:
+
+-----
+-----
+-----
+
+** Rules with trailing whitespace (valid)
+
+The trailing spaces below do not invalidate the rule:
+
+-----   
+
+----------     
+
+-----
+
+* Combinations of Fixed-Width and Horizontal Rules
+
+A realistic technical specification pattern:
+
+** Protocol message format
+
+The wire format for a =PARSE_REQUEST= message is as follows:
+
+-----
+
+: Offset  Size  Field
+: ------  ----  -----
+:      0     4  Magic number: 0x4F524721  ("ORG!")
+:      4     2  Version: 0x0002
+:      6     2  Flags (bitfield)
+:      8     4  Payload length (uint32, big-endian)
+:     12     N  Payload (UTF-8 encoded Org source)
+
+-----
+
+Flags field (2 bytes):
+
+: Bit 15: strict_mode     — fail on unrecognised syntax
+: Bit 14: include_src     — parse source block contents
+: Bit 13: resolve_links   — resolve fuzzy links at parse time
+: Bits 12-0: reserved, must be zero
+
+-----
+
+Response format:
+
+: Offset  Size  Field
+:      0     4  Magic: 0x4F524752  ("ORGR")
+:      4     4  Status code (0 = success)
+:      8     4  Node count
+:     12     4  Result length
+:     16     N  Result payload (JSON or msgpack)
+
+-----
+
+** Version history
+
+-----
+
+: v2.0.0  2025-01-06  Rewrote parser core using tree-sitter grammar.
+:                     Reduced parse time by 75%. Broke several edge-case
+:                     behaviours that are now tracked in the issue list.
+
+-----
+
+: v1.5.2  2024-11-20  Fixed off-by-one in clock duration parsing.
+:                     Fixed radio target matching for targets containing markup.
+
+-----
+
+: v1.5.0  2024-10-01  Added citation object support (Org 9.5 syntax).
+:                     Added inline source block support.
+:                     Deprecated the orgparse compatibility shim.
+
+-----
+
+: v1.0.0  2024-06-15  Initial public release.
+
+-----

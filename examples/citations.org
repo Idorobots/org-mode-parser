@@ -1,0 +1,180 @@
+#+TITLE: Academic Bibliography — Citation Syntax Showcase
+#+AUTHOR: Dr. Grix Floamwhistle
+
+* Introduction to the Citation Syntax
+
+Org Mode's citation syntax (introduced in Org 9.5) provides a structured way
+to embed bibliographic references. The general form is:
+
+#+begin_example
+[cite CITESTYLE: REFERENCES]
+#+end_example
+
+where =CITESTYLE= (optional) qualifies /how/ the citation is rendered, and
+=REFERENCES= contains one or more citation reference objects separated by =;=.
+
+-----
+
+* Basic Citations
+
+The simplest citation references a single key:
+
+[cite:@shannon1948]
+
+In prose: the foundational theory of information [cite:@shannon1948] was
+published in 1948. The companion paper on communication in the presence of
+noise appeared the following year [cite:@shannon1949].
+
+Multiple references to the same in-text position are separated by semicolons:
+
+Early neural language models include [cite:@bengio2003;@collobert2008].
+
+Three or more references:
+
+For a comprehensive survey of the field see [cite:@goodfellow2016;@lecun2015;@schmidhuber2015].
+
+-----
+
+* Citation Styles
+
+The style is appended immediately to =cite= with a leading slash.
+
+** Textual citation (/t) — author as part of the prose
+
+[cite/t:@turing1950] argued that the question of machine intelligence should
+be replaced by the more tractable question of behavioural indistinguishability.
+
+[cite/t:@chomsky1965] proposed a formal distinction between competence and
+performance in linguistic theory.
+
+** Author-only citation (/a)
+
+Work by [cite/a:@knuth1968] spans decades; see also [cite/a:@dijkstra1972].
+
+** Year-only citation (/y)
+
+The recursive descent technique dates to [cite/y:@lucas1961].
+
+** Noauthor citation (/na) — suppress author in parenthetical
+
+Parsing theory was significantly advanced [cite/na:@earley1970] in this period.
+
+** Styles with variants (/STYLE/VARIANT)
+
+Full citation with note variant — typically renders footnote-style:
+
+[cite/f/f:@church1936]
+
+Author-in-text with a short variant:
+
+[cite/a/s:@greibach1965]
+
+A hypothetical style/variant pair for a specific bibliography system:
+
+[cite/numeric/brackets:@hopcroft1979]
+
+-----
+
+* Global Prefix and Suffix
+
+A citation can have a prefix that applies to the entire citation bracket,
+and a suffix that follows all references.
+
+** Global prefix (before all references)
+
+[cite: see;@martin2009]
+
+[cite: e.g.;@liskov1987;@meyer1988]
+
+[cite: for a contrasting view, see;@wirth1974]
+
+** Global suffix (after all references)
+
+[cite:@parnas1972; for a modern retrospective]
+
+[cite:@brooks1975;@boehm1981; remain essential reading today]
+
+** Both prefix and suffix
+
+[cite: as discussed in;@hoare1969;@floyd1967; these results were later unified]
+
+[cite: see;@church1936;@turing1936; for the foundational independence results]
+
+-----
+
+* Citation References with Key Prefix and Suffix
+
+Individual references within a citation can have their own prefix (KEYPREFIX)
+and suffix (KEYSUFFIX) — no whitespace between the elements.
+
+A page reference as key suffix:
+
+[cite:@knuth1997 pp. 1-10]
+
+Multiple references with individual suffixes:
+
+[cite:@shannon1948 §2;@wiener1948 ch. 3]
+
+A reference with both prefix and suffix:
+
+[cite:see @turing1950 §6 for the imitation game]
+
+Multiple references with mixed prefix/suffix:
+
+[cite: see also;see @chomsky1956 §4;cf. @bar-hillel1961 pp. 91-92;@ginsburg1966]
+
+-----
+
+* Citations in Different Contexts
+
+** In a paragraph with other markup
+
+The seminal work on *attention mechanisms* [cite:@bahdanau2015] paved the
+way for the /transformer architecture/ [cite:@vaswani2017] which is now
+the dominant paradigm in natural language processing [cite:@devlin2019;@brown2020].
+
+** Inside a footnote definition
+
+The concept of a universal computing machine was formalised independently
+by Church [fn:church-turing] and Turing in the 1930s.
+
+[fn:church-turing] See [cite:@church1936] for the lambda calculus formulation
+and [cite:@turing1936] for the Turing machine model. The equivalence of the
+two formalisms is known as the Church–Turing thesis.
+
+** In a list item
+
+Key milestones in programming language theory:
+
+- Lambda calculus [cite:@church1936] — the foundation of functional programming.
+- Turing machines [cite:@turing1936] — the imperative computation model.
+- LISP [cite:@mccarthy1960] — first language with garbage collection and recursion.
+- Structured programming [cite:@dijkstra1968] — =goto= considered harmful.
+- Object-oriented programming [cite:@dahl1972] — Simula's lasting influence.
+- Functional purity [cite:@backus1978] — Turing Award lecture, "Can programming be liberated?"
+
+** In a table cell
+
+#+CAPTION: Landmark papers in computer science
+| Year | Authors              | Citation               | Contribution               |
+|------+----------------------+------------------------+----------------------------|
+| 1936 | Church               | [cite:@church1936]     | Lambda calculus            |
+| 1936 | Turing               | [cite:@turing1936]     | Turing machines            |
+| 1948 | Shannon              | [cite:@shannon1948]    | Information theory         |
+| 1950 | Turing               | [cite:@turing1950]     | Computing machinery & int. |
+| 1968 | Dijkstra             | [cite:@dijkstra1968]   | Structured programming     |
+| 2017 | Vaswani et al.       | [cite:@vaswani2017]    | Transformer architecture   |
+
+-----
+
+* Complex Multi-Reference Citations
+
+A citation review passage:
+
+The question of whether neural networks can learn formal grammars has been
+studied extensively [cite: see the surveys in;@chomsky1956;@gold1967;@angluin1987;
+see also recent work on;@bhattamishra2020;@hahn2020; for transformer-specific results].
+
+A citation with a long global prefix containing markup:
+
+[cite: as argued by *three independent groups* almost simultaneously,;@vaswani2017;@gehring2017;@wu2016]

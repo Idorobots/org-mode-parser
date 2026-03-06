@@ -1,0 +1,183 @@
+================
+Comment block
+================
+#+begin_comment
+This is hidden.
+#+end_comment
+
+---
+
+(document
+  (zeroth_section
+    (comment_block)))
+
+================
+Example block
+================
+#+begin_example
+Some example text.
+#+end_example
+
+---
+
+(document
+  (zeroth_section
+    (example_block
+      (example_block_body
+        (example_line)))))
+
+================
+Src block with language
+================
+#+begin_src python
+print("hello")
+#+end_src
+
+---
+
+(document
+  (zeroth_section
+    (src_block
+      (language)
+      (src_block_body
+        (src_line)))))
+
+================
+Src block with switches and body
+================
+#+begin_src python -n
+x = 1
+y = 2
+z = x + y
+#+end_src
+
+---
+
+(document
+  (zeroth_section
+    (src_block
+      (language)
+      (src_switches)
+      (src_block_body
+        (src_line)
+        (src_line)
+        (src_line)))))
+
+================
+Verse block
+================
+#+begin_verse
+Roses are red,
+Violets are blue.
+#+end_verse
+
+---
+
+(document
+  (zeroth_section
+    (verse_block
+      (paragraph
+        (plain_text)
+        (plain_text)))))
+
+================
+Example block preserves indentation in body lines
+================
+#+begin_example
+verbatim content
+  preserved indentation
+#+end_example
+
+---
+
+(document
+  (zeroth_section
+    (example_block
+      (example_block_body
+        (example_line)
+        (example_line)))))
+
+================
+Example block with comma-quoted contents
+================
+#+begin_example
+,* This line starts with an asterisk - comma-quoted.
+,** So does this - also comma-quoted.
+
+Normal text needs no quoting.
+
+,#+TITLE: This #+KEY line is also comma-quoted (optional for safety).
+#+TITLE: This one is not quoted
+#+end_example
+
+---
+
+(document
+  (zeroth_section
+    (example_block
+      (example_block_body
+        (example_line)
+        (example_line)
+        (example_line)
+        (example_line)
+        (example_line)
+        (example_line)
+        (example_line)))))
+
+================
+Example block body with pipe character
+================
+#+begin_example
+Receiving objects: 100% (1842/1842), 3.21 MiB | 4.5 MiB/s, done.
+#+end_example
+
+---
+
+(document
+  (zeroth_section
+    (example_block
+      (example_block_body
+        (example_line)))))
+
+================
+Indented lesser blocks
+================
+  #+begin_comment
+  hidden
+  #+end_comment
+
+  #+begin_example
+  sample
+  #+end_example
+
+  #+begin_export html
+  <p>hello</p>
+  #+end_export
+
+  #+begin_src python
+  print("hello")
+  #+end_src
+
+  #+begin_verse
+  Roses are red,
+  Violets are blue.
+  #+end_verse
+
+---
+
+(document
+  (zeroth_section
+    (comment_block)
+    (example_block
+      (example_block_body
+        (example_line)))
+    (export_block
+      (export_backend))
+    (src_block
+      (language)
+      (src_block_body
+        (src_line)))
+    (verse_block
+      (paragraph
+        (plain_text)
+        (plain_text)))))

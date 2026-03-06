@@ -1,0 +1,21 @@
+* Dynamic Blocks
+
+Dynamic blocks are populated programmatically. In a static parse, their contents are treated as ordinary elements.
+
+#+begin: clocktable :scope subtree :maxlevel 3
+| Headline             | Time   |
+|----------------------+--------|
+| *Total time*         | *3:45* |
+|----------------------+--------|
+| Chapter 1 drafting   | 2:00   |
+| Chapter 2 revision   | 1:15   |
+| Bibliography check   | 0:30   |
+#+end:
+
+#+begin: columnview :hlines 1 :id local
+| ITEM                     | TODO | PRIORITY | TAGS       |
+|--------------------------+------+----------+------------|
+| Planning document        | TODO | A        | :admin:    |
+| First chapter            | DONE |          | :writing:  |
+| Second chapter           | TODO | B        | :writing:  |
+#+end:

@@ -1,0 +1,13 @@
+* Fixed-Width Areas
+
+: single fixed-width line
+
+: first line
+: second line
+: third line
+
+Paragraph between two areas.
+
+: area after paragraph
+:
+: empty fixed-width line above

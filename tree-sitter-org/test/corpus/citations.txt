@@ -1,0 +1,114 @@
+================
+Simple citation
+================
+[cite:@key]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (citation
+        (citation_body)))))
+
+================
+Citation with style
+================
+[cite/t:@key]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (citation
+        (cite_style_name)
+        (citation_body)))))
+
+================
+Citation edge cases in prose/list/table and affixes
+================
+In prose: the foundational theory of information [cite:@shannon1948] was
+
+- Lambda calculus [cite:@church1936] — the foundation of functional programming.
+
+| 1936 | Church               | [cite:@church1936]     | Lambda calculus            |
+
+[cite/a:@knuth1968]
+[cite/numeric/brackets:@hopcroft1979]
+
+[cite: see;@martin2009]
+[cite: e.g.;@liskov1987;@meyer1988]
+[cite: for a contrasting view, see;@wirth1974]
+
+[cite: see also;see @chomsky1956 §4;cf. @bar-hillel1961 pp. 91-92;@ginsburg1966]
+
+[cite: as argued by *three independent groups* almost simultaneously,;@vaswani2017;@gehring2017;@wu2016]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (citation
+        body: (citation_body))
+      (plain_text))
+    (plain_list
+      (item
+        first_line: (plain_text)
+        first_line: (citation
+          body: (citation_body))
+        first_line: (plain_text)))
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)
+          (citation
+            body: (citation_body))
+          (plain_text))
+        (table_cell
+          (plain_text))))
+    (paragraph
+      (citation
+        style: (cite_style_name)
+        body: (citation_body))
+      (citation
+        style: (cite_style_name)
+        variant: (cite_variant)
+        body: (citation_body)))
+    (paragraph
+      (citation
+        body: (citation_body))
+      (citation
+        body: (citation_body))
+      (citation
+        body: (citation_body)))
+    (paragraph
+      (citation
+        body: (citation_body)))
+    (paragraph
+      (citation
+        body: (citation_body)))))
+
+================
+Multiline citation
+================
+The question of whether neural networks can learn formal grammars has been
+studied extensively [cite: see the surveys in;@chomsky1956;@gold1967;@angluin1987;
+see also recent work on;@bhattamishra2020;@hahn2020; for transformer-specific results].
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text)
+      (citation
+        body: (citation_body))
+      (plain_text))))

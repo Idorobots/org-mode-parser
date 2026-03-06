@@ -1,0 +1,254 @@
+#+TITLE: Recurring Habit and Schedule Tracker
+#+AUTHOR: Vorwick Thrumble
+#+TODO: TODO DOING WAITING | DONE SKIPPED
+
+* Active and Inactive Timestamps
+
+** Active timestamps — appear in the agenda
+
+A scheduled event: <2025-03-15 Sat>
+An event with time: <2025-03-15 Sat 09:30>
+A date without day name (minimal form): <2025-03-15>
+
+Active timestamps inline in text:
+
+The project kickoff is on <2025-01-20 Mon> and the first review is scheduled
+for <2025-02-10 Mon 14:00>. The final deadline is <2025-06-30 Mon>.
+
+** Inactive timestamps — do not appear in the agenda
+
+Created: [2025-01-06 Mon 11:42]
+Last modified: [2025-01-06 Mon 15:03]
+Reviewed: [2024-12-20 Fri]
+
+Inactive timestamps in text:
+
+This document was originally drafted [2024-11-01 Fri] and substantially
+revised [2024-12-15 Sun]. The version history begins at [2024-10-15 Tue 09:00].
+
+-----
+
+* Date and Time Ranges
+
+** Multi-day active range
+
+Conference attendance:
+<2025-03-12 Wed>--<2025-03-14 Fri>
+
+Annual leave:
+<2025-07-21 Mon>--<2025-08-01 Fri>
+
+** Multi-day inactive range
+
+Reference period:
+[2024-01-01 Mon]--[2024-12-31 Tue]
+
+Sprint duration:
+[2025-01-06 Mon]--[2025-01-17 Fri]
+
+** Same-day time range (active)
+
+Morning block: <2025-01-20 Mon 09:00-12:00>
+Afternoon session: <2025-02-05 Wed 14:30-16:45>
+Evening seminar: <2025-03-01 Sat 19:00-21:30>
+
+** Same-day time range (inactive)
+
+Historical record: [2024-12-18 Wed 10:00-11:30]
+Meeting log: [2024-11-07 Thu 15:00-15:45]
+
+-----
+
+* Repeaters
+
+** Cumulative repeater (+) — always reschedule by N units from original date
+
+Daily stand-up (every weekday — approximated as daily):
+
+* TODO Morning stand-up :team:
+SCHEDULED: <2025-01-06 Mon 09:00 +1d>
+:PROPERTIES:
+:ID: d1a2b3c4-e5f6-7890-abcd-ef1234567890
+:END:
+
+Weekly review:
+
+* TODO Weekly review :planning:
+SCHEDULED: <2025-01-10 Fri 16:00 +1w>
+:PROPERTIES:
+:effort: 1:00
+:END:
+
+Monthly one-on-one:
+
+* TODO One-on-one with manager :admin:
+SCHEDULED: <2025-01-15 Wed +1m>
+
+Quarterly board report:
+
+* TODO Prepare board report :reporting:admin:
+DEADLINE: <2025-03-31 Mon +3m>
+
+Annual performance review:
+
+* TODO Complete self-assessment :hr:
+DEADLINE: <2025-12-01 Mon +1y>
+
+** Catch-up repeater (++) — reschedule from today, skipping missed occurrences
+
+Bi-weekly newsletter:
+
+* TODO Draft newsletter :comms:
+SCHEDULED: <2025-01-14 Tue ++2w>
+
+Every-other-day medication log:
+
+* TODO Take vitamin D supplement :health:
+SCHEDULED: <2025-01-06 Mon ++2d>
+
+** Restart repeater (.+) — reschedule N units from the completion date
+
+Irregular maintenance — reset the clock from when last done:
+
+* TODO Water the office plants :maintenance:
+SCHEDULED: <2025-01-06 Mon .+3d>
+
+* TODO Back up development database :sysadmin:
+SCHEDULED: <2025-01-06 Mon .+1w>
+
+* TODO Update project dependencies :maintenance:dev:
+SCHEDULED: <2025-01-06 Mon .+1m>
+
+-----
+
+* Delays
+
+** All-type delay (-) — warn this many units before the date for all occurrences
+
+Task with a one-week warning before the deadline:
+
+* TODO Submit grant application :research:
+DEADLINE: <2025-04-30 Wed -1w>
+
+Task with a two-day warning:
+
+* TODO Pay quarterly tax :finance:
+DEADLINE: <2025-04-05 Sat -2d>
+
+** First-type delay (--) — warn only for the first (upcoming) occurrence
+
+Repeating task — warn only for the next occurrence, not all future ones:
+
+* TODO Monthly server audit :sysadmin:
+SCHEDULED: <2025-02-01 Sat +1m --3d>
+
+-----
+
+* Combined Repeater and Delay
+
+A repeater with a delay combines both markers in the REPEATER-OR-DELAY field.
+The order of the two markers is not significant.
+
+Weekly team sync — repeat weekly, warn two days before:
+
+* TODO Team sync preparation :team:planning:
+SCHEDULED: <2025-01-10 Fri 10:00 +1w -2d>
+
+Monthly financial close — cumulative repeat, three-day all-type warning:
+
+* DOING Monthly financial close :finance:
+SCHEDULED: <2025-01-31 Fri +1m -3d>
+:PROPERTIES:
+:effort: 4:00
+:assignee: Vorwick Thrumble
+:END:
+
+Quarterly report — catch-up repeat with first-type warning:
+
+* TODO Draft quarterly report :reporting:
+DEADLINE: <2025-03-31 Mon ++3m --1w>
+
+-----
+
+* Repeater with Upper Bound
+
+The upper bound form =MARK VALUE UNIT/VALUE UNIT= limits how far ahead a
+cumulative repeater will advance when catching up after a long absence.
+
+Weekly habit with a two-week catch-up limit:
+
+* TODO Write in journal :personal:
+SCHEDULED: <2025-01-06 Mon +1d/1w>
+:PROPERTIES:
+:effort: 0:15
+:END:
+
+Monthly review with a three-month upper bound:
+
+* TODO Audit access permissions :security:sysadmin:
+SCHEDULED: <2025-01-31 Fri +1m/3m>
+
+Yearly archiving with a two-year limit:
+
+* TODO Archive old project files :admin:
+SCHEDULED: <2025-12-31 Wed +1y/2y>
+
+-----
+
+* Full Planning Lines — All Three Keywords Together
+
+A task that has been closed but retains its scheduled and deadline timestamps
+for historical reference:
+
+* DONE Migrate production database :ops:
+SCHEDULED: <2025-01-03 Fri> DEADLINE: <2025-01-05 Sun> CLOSED: [2025-01-04 Sat 23:47]
+:PROPERTIES:
+:effort: 6:00
+:actual_time: 7:30
+:END:
+
+Migration completed one day ahead of deadline. Actual time exceeded estimate due
+to an unexpected schema conflict in the =user_sessions= table.
+
+Another fully-planned task:
+
+* DONE Launch staging environment :devops:
+SCHEDULED: <2024-12-16 Mon> DEADLINE: <2024-12-20 Fri> CLOSED: [2024-12-18 Wed 14:22]
+:PROPERTIES:
+:environment: staging
+:region: eu-west-1
+:END:
+
+A task with repeated keyword (last instance wins):
+
+* TODO Renew SSL certificates :security:
+SCHEDULED: <2025-06-01 Sun> DEADLINE: <2025-06-15 Sun> DEADLINE: <2025-06-10 Tue>
+
+The effective deadline above is <2025-06-10 Tue> — the last DEADLINE wins.
+
+-----
+
+* Timestamps Inline in Paragraphs
+
+Timestamps can appear anywhere objects are valid — not just in planning lines.
+
+The first public release of Emacs was on [1985-01-01 Tue] (approximately — the
+exact date is debated). GNU Emacs 19.1 shipped on <1993-05-31 Mon>. Version 21
+arrived <2001-10-28 Sun>, followed by 22 on <2007-06-02 Sat>.
+
+The tree-sitter integration was merged into Emacs during the period
+<2022-09-01 Thu>--<2022-11-01 Tue>, shipping in Emacs 29.1 on <2023-07-30 Sun>.
+
+Meeting notes cross-reference: discussed [2025-01-06 Mon 14:00] with outcome
+to revisit [2025-01-13 Mon 14:00].
+
+-----
+
+* SKIPPED Timestamps with No Day Name
+
+These timestamps omit the optional =DAYNAME= field:
+
+SCHEDULED: <2025-06-15>
+DEADLINE: [2025-09-01]
+
+Inline: project window is <2025-06-01>--<2025-08-31>, reviewed at [2025-07-15].

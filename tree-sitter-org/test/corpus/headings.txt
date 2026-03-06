@@ -1,0 +1,486 @@
+================
+Level 1 heading
+================
+* Hello world
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)))
+
+================
+Heading and body lines keep double-dash switches as plain text
+================
+*** --watch & --serve switches
+--watch for file watching and updating live on changes
+--serve to start a server showing a visualization of the data
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (section
+      (paragraph
+        (plain_text)
+        (plain_text)
+        (plain_text)
+        (plain_text)))))
+
+================
+Heading with multiple regular links and plus in description
+================
+*** TODO [[definitely][durchaus]], [[according to][zufolge (+dat.)]], [[according to][laut (+dat.)]]
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (regular_link
+      (link_path)
+      (plain_text))
+    (plain_text)
+    (regular_link
+      (link_path)
+      (plain_text))
+    (plain_text)
+    (regular_link
+      (link_path)
+      (plain_text))))
+
+================
+Heading counters with TODO and priority variants
+================
+* TODO [#A] [%] Priority and empty counter
+* TODO [#A] [20%] Priority and counter
+* TODO [#B] [2/10] Priority and counter
+* TODO [#C] Priority and counter [10/10]
+* TODO No priority [1/5] and counter in the middle
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority)
+    (completion_counter)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority)
+    (completion_counter)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority)
+    (completion_counter)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority)
+    (plain_text)
+    (completion_counter))
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (completion_counter)
+    (plain_text)))
+
+================
+TODO keywords accumulate from #+TODO lines
+================
+#+TODO: TODO | DONE
+#+TODO: SUSPENDED
+#+TODO: WORKING |
+#+TODO: TODO(t) | DONE(d@/!)
+#+TODO: | CANCELLED(c@/!) REWORKED(r@/!)
+* SUSPENDED Suspended task
+* WORKING In progress
+* CANCELLED Cancelled task
+* REWORKED Reworked task
+* TODO Default todo still valid
+* DONE Default done still valid
+
+---
+
+(document
+  (zeroth_section
+    (special_keyword
+      (keyword_key)
+      (keyword_value))
+    (special_keyword
+      (keyword_key)
+      (keyword_value))
+    (special_keyword
+      (keyword_key)
+      (keyword_value))
+    (special_keyword
+      (keyword_key)
+      (keyword_value))
+    (special_keyword
+      (keyword_key)
+      (keyword_value)))
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)))
+
+================
+Heading title contains colon before real tags
+================
+* TODO Try to debug the ejabberd_tls:send timouts.                :Debugging:Erlang:XMPP:
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (tags
+      (tag)
+      (tag)
+      (tag))))
+
+================
+Heading with colon in title and no tags
+================
+* Investigate api:send timeout handling
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)))
+
+================
+Heading title keeps underscore and colon as plain text
+================
+* Fixed_Width: Areas
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)))
+
+================
+Heading title keeps hash in plain text before tags
+================
+* REVIEWING Code review: PR #412 :review:backend:
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (plain_text)
+    (tags
+      (tag)
+      (tag))))
+
+================
+Heading title keeps double-backslash-star as plain text
+================
+* DONE sed \\* to something else in the notes.                    :COMP:note:
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (tags
+      (tag)
+      (tag))))
+
+================
+Level 2 heading
+================
+* Parent
+** Child
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (heading
+      (stars)
+      (plain_text))))
+
+================
+Heading with TODO keyword
+================
+* TODO Fix the bug
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)))
+
+================
+Heading with DONE keyword
+================
+* DONE Completed task
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)))
+
+================
+Heading with priority
+================
+* [#A] Important task
+
+---
+
+(document
+  (heading
+    (stars)
+    (priority)
+    (plain_text)))
+
+================
+Heading with slash completion counter
+================
+* List [0/3]
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (completion_counter)))
+
+================
+Heading with TODO, priority, and empty completion counter
+================
+* TODO [#B] [/] Priority and counter
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority)
+    (completion_counter)
+    (plain_text)))
+
+================
+Heading with tags
+================
+* Tagged heading :tag1:tag2:
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (tags
+      (tag)
+      (tag))))
+
+================
+Heading with TODO, priority, and tags
+================
+* TODO [#B] Complete task :work:urgent:
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority)
+    (plain_text)
+    (tags
+      (tag)
+      (tag))))
+
+================
+Unknown TODO-like word with priority marker stays plain text
+================
+* PREPRODUCTION [#B] Salt and Longitude :thriller:contemporary:
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (tags
+      (tag)
+      (tag))))
+
+================
+Unknown TODO-like word with arbitrary brackets stays plain text
+================
+* PREPRODUCTION [anything-goes] Salt and Longitude :thriller:
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (tags
+      (tag))))
+
+================
+Heading keeps non-cookie bracket text and trailing counter
+================
+* Zombie apocalypse [sic] kit. [21/30]
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (completion_counter)))
+
+================
+Nested headings three levels
+================
+* Level 1
+** Level 2
+*** Level 3
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (heading
+      (stars)
+      (plain_text)
+      (heading
+        (stars)
+        (plain_text)))))
+
+================
+COMMENT heading
+================
+* COMMENT This is commented out
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)))
+
+================
+Heading with body and next sibling
+================
+* First
+Some body text.
+* Second
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (section
+      (paragraph
+        (plain_text))))
+  (heading
+    (stars)
+    (plain_text)))
+
+================
+Nested headings then back to parent level
+================
+* A
+** B
+** C
+* D
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (heading
+      (stars)
+      (plain_text))
+    (heading
+      (stars)
+      (plain_text)))
+  (heading
+    (stars)
+    (plain_text)))
+
+================
+Heading with hyphenated title
+================
+* Fixed-Width Areas
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)))
+
+================
+Heading title keeps regex-like (.+) plain text
+================
+** Restart repeater (.+) - reschedule N units from the completion date
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)))

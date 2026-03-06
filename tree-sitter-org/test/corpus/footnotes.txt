@@ -1,0 +1,54 @@
+================
+Footnote reference
+================
+See footnote [fn:1].
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (footnote_reference
+        (fn_label))
+      (plain_text))))
+
+================
+Footnote definition
+================
+[fn:1] This is the footnote text.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (footnote_reference
+        (fn_label))
+      (plain_text))))
+
+================
+Multiline inline footnote
+================
+An inline footnote with a very short definition: the slash is called a
+solidus[fn:solidus:From Latin /solidus/, a gold coin whose abbreviation /s/ was
+written in the numerator position of the price fraction.] in formal contexts.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (plain_text)
+      (footnote_reference
+        (fn_label)
+        (plain_text)
+        (italic
+          (plain_text))
+        (plain_text)
+        (italic
+          (plain_text))
+        (plain_text)
+        (plain_text))
+      (plain_text))))

@@ -1,0 +1,5 @@
+#+TITLE: Zeroth Section Only
+
+A paragraph in the zeroth section. No headings follow.
+
+Second paragraph, still in the zeroth section.

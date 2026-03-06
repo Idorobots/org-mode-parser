@@ -1,0 +1,809 @@
+================
+Simple drawer
+================
+:NOTES:
+Some notes here.
+:END:
+
+---
+
+(document
+  (zeroth_section
+    (drawer
+      (drawer_name)
+      (paragraph
+        (plain_text)))))
+
+================
+Property drawer
+================
+* Heading
+:PROPERTIES:
+:ID: unique-id
+:END:
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (section
+      (property_drawer
+        (node_property
+          (property_name)
+          (property_value))))))
+
+================
+Property drawer timestamp value
+================
+** TODO Test
+:PROPERTIES:
+:LAST_REPEAT: [2025-06-28 sob 14:16]
+:END:
+
+---
+
+(document
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)
+    (section
+      (property_drawer
+        (node_property
+          (property_name)
+          (timestamp
+            (ts_year)
+            (ts_month)
+            (ts_day)
+            (ts_dayname)
+            (ts_time)))))))
+
+================
+Property drawer with multiple properties
+================
+* Heading
+:PROPERTIES:
+:ID: unique-id
+:CATEGORY: work
+:END:
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (section
+      (property_drawer
+        (node_property
+          (property_name)
+          (property_value))
+        (node_property
+          (property_name)
+          (property_value))))))
+
+================
+Property drawer with empty body
+================
+:PROPERTIES:
+
+:END:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer)))
+
+================
+Property drawer with empty values
+================
+:PROPERTIES:
+:KEY:
+:CONTEXT: 
+:SOME_KEY: value
+:END:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name))
+      (node_property
+        name: (property_name))
+      (node_property
+        name: (property_name)
+        value: (property_value)))))
+
+================
+Property value with colon
+================
+:PROPERTIES:
+:FIELD: value
+:SOME_KEY: value:test
+:END:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name)
+        value: (property_value))
+      (node_property
+        name: (property_name)
+        value: (property_value)))))
+
+================
+Indented drawer
+================
+  :DRAWER:
+  :END:
+
+---
+
+(document
+  (zeroth_section
+    (drawer
+      (drawer_name))))
+
+================
+Indented property drawer in heading
+================
+* H
+  :PROPERTIES:
+  :KEY: ~/test/value
+  :END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (property_drawer
+        (node_property
+          name: (property_name)
+          value: (property_value))))))
+
+================
+Property link with multiline description
+================
+:PROPERTIES:
+:context:  [[file:/flood/src/flood_manager.erl::handle_call(Request,%20From,%20State)%20->%0A%20lager:warning("Unhandled%20Manager%20call%20change."),%0A%20{reply,%20ok,%20State}.%0A][file:/flood/src/flood_manager.erl::handle_call(Request, From, State) ->
+    lager:warning("Unhandled Manager call change."),
+    {reply, ok, State}.
+    ]]
+:END:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path)
+          description: (plain_text)
+          description: (plain_text)
+          description: (plain_text)
+          description: (plain_text))))))
+
+================
+Drawer transition after property link keeps logbook timestamp
+================
+:PROPERTIES:
+:context: [[file:~/tmp::*Default FILE to *.org in cwd][Default FILE to *.org in cwd]]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-02-21 Sat 17:52]
+:END:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path)
+          description: (plain_text))))
+    (drawer
+      name: (drawer_name)
+      body: (plain_list
+        (item
+          first_line: (plain_text)
+          first_line: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time)))))))
+
+================
+Indented logbook then properties with multiline link
+================
+*** Test
+    :LOGBOOK:
+- State "DONE"       from "TODO"       [2013-08-28 śro 08:51]
+    :END:
+    :PROPERTIES:
+    :context:  [[file:/flood/src/flood_manager.erl::handle_call(Request,%20From,%20State)%20->%0A%20lager:warning("Unhandled%20Manager%20call%20change."),%0A%20{reply,%20ok,%20State}.%0A][file:/flood/src/flood_manager.erl::handle_call(Request, From, State) ->
+    lager:warning("Unhandled Manager call change."),
+    {reply, ok, State}.
+    ]]
+    :END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (drawer
+        name: (drawer_name)
+        body: (plain_list
+          (item
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time)))))
+      (property_drawer
+        (node_property
+          name: (property_name)
+          value: (regular_link
+            path: (link_path)
+            description: (plain_text)
+            description: (plain_text)
+            description: (plain_text)
+            description: (plain_text)))))))
+
+================
+Property drawer after logbook in heading body
+================
+** Test
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2013-05-20 pon 09:28]
+:END:
+:PROPERTIES:
+:context: [[file:/test.erl::handle_call({kill_clients,%20Number},%20_,%20Clients)%20->][file:/brain-flood/src/flood_serv.erl::handle_call({kill_clients, Number}, _, Clients) ->]]
+:END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (drawer
+        name: (drawer_name)
+        body: (plain_list
+          (item
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time)))))
+      (property_drawer
+        (node_property
+          name: (property_name)
+          value: (regular_link
+            path: (link_path)
+            description: (plain_text)))))))
+
+================
+Malformed property link value does not break next heading drawer
+================
+*** Test
+    :PROPERTIES:
+    :context:  [[file:/flood/src/flood_fsm.erl::{Url,%20%5B{"connection","keep-alive"},][file:flood/src/flood_fsm.erl::{Url, [{"connection","keep-alive"},]]
+    :END:
+    Ibrowse with set_max_sessions seems to work, but requires host and port.
+
+*** Another test
+    :LOGBOOK:
+- State "DONE"       from "ACTIVE"     [2013-08-19 pon 15:00]
+- State "ACTIVE"     from "TODO"       [2013-08-19 pon 12:58]
+    :END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (property_drawer
+        (node_property
+          name: (property_name)
+          value: (regular_link
+            path: (link_path)
+            description: (plain_text))))
+      (paragraph
+        (plain_text))))
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (drawer
+        name: (drawer_name)
+        body: (plain_list
+          (item
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time)))
+          (item
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time))))))))
+
+================
+Custom drawer with key-like empty value line
+================
+:DRAWER:
+:TEST:
+:END:
+
+---
+
+(document
+  (zeroth_section
+    (drawer
+      name: (drawer_name)
+      body: (drawer_kv_line))))
+
+================
+Custom drawer with double-colon text line
+================
+:DRAWER:
+2025-01-12 :: foo bar
+:END:
+
+---
+
+(document
+  (zeroth_section
+    (drawer
+      name: (drawer_name)
+      body: (paragraph
+        (plain_text)))))
+
+================
+Custom drawer with indented timestamp line
+================
+:PROGRESS:
+  [2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
+:END:
+
+---
+
+(document
+  (zeroth_section
+    (drawer
+      name: (drawer_name)
+      body: (timestamp
+        year: (ts_year)
+        month: (ts_month)
+        day: (ts_day)
+        dayname: (ts_dayname))
+      body: (plain_text))))
+
+================
+LOGBOOK drawer with mis-aligned end in archive style
+================
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2021-01-08 Fri 00:12]
+    - State "CANCELLED"  from "TODO"       [2016-01-24 Sun 20:03] \\
+      Not quite good enough.
+    - State "DONE"       from "TODO"       [2015-01-11 Sun 14:29]
+    - State "DONE"       from "TODO"       [2015-01-09 Fri 18:03]
+    :END:
+
+---
+
+(document
+  (zeroth_section
+    (drawer
+      name: (drawer_name)
+      body: (plain_list
+        (item
+          first_line: (plain_text)
+          first_line: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time)))
+        (item
+          indent: (item_indent)
+          first_line: (plain_text)
+          first_line: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time))
+          first_line: (plain_text)
+          first_line: (line_break)
+          body: (item_continuation_line
+            content: (plain_text)))
+        (item
+          indent: (item_indent)
+          first_line: (plain_text)
+          first_line: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time)))
+        (item
+          indent: (item_indent)
+          first_line: (plain_text)
+          first_line: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time)))))))
+
+================
+Indented LOGBOOK drawer in heading
+================
+* H
+    :LOGBOOK:
+    - State "DONE"       from "TODO"       [2025-07-28 Mon 18:33]
+    :END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (drawer
+        name: (drawer_name)
+        body: (plain_list
+          (item
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time))))))))
+
+================
+Indented LOGBOOK drawer with note line
+================
+* H
+    :LOGBOOK:
+    - State "CANCELLED"  from "TODO"       [2025-07-28 Mon 18:41] \\
+      No need to.
+    :END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (drawer
+        name: (drawer_name)
+        body: (plain_list
+          (item
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time))
+            first_line: (plain_text)
+            first_line: (line_break)
+            body: (item_continuation_line
+              content: (plain_text))))))))
+
+================
+LOGBOOK drawer start line with inline text and unindented list
+================
+*** DONE Test
+    :LOGBOOK:  1
+- State "DONE"       from "ACTIVE"     [2013-08-19 pon 16:08]
+- State "ACTIVE"     from "TODO"       [2013-08-19 pon 15:00]
+    :END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    todo: (todo_keyword)
+    title: (plain_text)
+    body: (section
+      (drawer
+        name: (drawer_name)
+        body: (drawer_start_text)
+        body: (plain_list
+          (item
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time)))
+          (item
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time))))))))
+
+================
+Indented property drawer with >>> in link description
+================
+ :PROPERTIES:
+ :context:  [[file:/deps/websocket_client/src/websocket_client.erl::io:format("---->>>%20m:%20~s",%20%5BBuffer%5D),][file:/deps/websocket_client/src/websocket_client.erl::io:format("---->>> m: ~s", [Buffer]),]]
+ :END:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path)
+          description: (plain_text)
+          description: (plain_text))))))
+
+================
+Non-indented property drawer with >>> in link description
+================
+:PROPERTIES:
+:context:  [[file:/deps/websocket_client/src/websocket_client.erl::io:format("---->>>%20m:%20~s",%20%5BBuffer%5D),][file:/deps/websocket_client/src/websocket_client.erl::io:format("---->>> m: ~s", [Buffer]),]]
+:END:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path)
+          description: (plain_text)
+          description: (plain_text))))))
+
+================
+Property link description ending with []] in archive-style heading
+================
+*** DONE JSON.
+    :PROPERTIES:
+    :gamify_exp: 15
+    :capture_time: [2013-08-23 pią 08:29]
+    :context:  [[file:/examples/2.json::%5B"on_socketio",%20{"opcode"%20:%20"0",%20"do"%20:%20%5B][file:/examples/2.json::["on_socketio", {"opcode" : "0", "do" : []]
+    :END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    todo: (todo_keyword)
+    title: (plain_text)
+    body: (section
+      (property_drawer
+        (node_property
+          name: (property_name)
+          value: (property_value))
+        (node_property
+          name: (property_name)
+          value: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time)))
+        (node_property
+          name: (property_name)
+          value: (regular_link
+            path: (link_path)
+            description: (plain_text)))))))
+
+================
+Logbook before properties with []] link description tail
+================
+*** DONE More JSON
+    :LOGBOOK:
+- State "ACTIVE"     from "TODO"       [2013-08-23 pią 13:39]
+    :END:
+    :PROPERTIES:
+    :context:  [[file:/flood/examples/2.json::%5B"on_socketio",%20{"opcode"%20:%20"0",%20"do"%20:%20%5B][file:/examples/2.json::["on_socketio", {"opcode" : "0", "do" : []]
+    :END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    todo: (todo_keyword)
+    title: (plain_text)
+    body: (section
+      (drawer
+        name: (drawer_name)
+        body: (plain_list
+          (item
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time)))))
+      (property_drawer
+        (node_property
+          name: (property_name)
+          value: (regular_link
+            path: (link_path)
+            description: (plain_text)))))))
+
+================
+Property link description with bracket list and <<":">> fragment
+================
+    :PROPERTIES:
+    :context:  [[file:/src/flood_fsm.erl::%5BSid,%20_Heartbeat,%20_Timeout,%20_Transports%5D%20%3D%20binary:split(Msg,%20<<":">>,%20%5Bglobal%5D),][file:/src/flood_fsm.erl::[Sid, _Heartbeat, _Timeout, _Transports] = binary:split(Msg, <<":">>, [global]),]]
+    :END:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path)
+          description: (plain_text)
+          description: (plain_text)
+          description: (plain_text))))))
+
+================
+Property link-like value with unmatched trailing brackets falls back to property_value
+================
+:PROPERTIES:
+:context: [[file:/brain-server/.config::{backend,%20cowboy}%5D}%5D][file:/brain-server/.config::{backend, cowboy}]}]]]
+:END:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name)
+        value: (property_value)))))
+
+================
+Property link with C++ stream operators in description
+================
+:properties:
+:context: [[file:~/main.cpp::std::cout%20<<%20i->first%20<<%20"%20-->%20"%20<<%20i->second%20<<%20"\n"%3B][file:~c/main.cpp::std::cout << i->first << " --> " << i->second << "\n";]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path)
+          description: (plain_text))))))
+
+================
+Property link with Erlang tuple and records in description
+================
+:properties:
+:context: [[file:/echo_hook.erl::Ack%20->%20{reply,%20%5B#sio_message{type%20%3D%20ack,%20data%20%3D%20hive_socketio_parser:encode_id(Ack)}%5D,%20State}][file:/echo_hook.erl::Ack -> {reply, [#sio_message{type = ack, data = hive_socketio_parser:encode_id(Ack)}], State}]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path)
+          description: (plain_text)
+          description: (plain_text))))))
+
+================
+Property link with templated command and bracketed key
+================
+:properties:
+:context: [[file:/hive-server.conf.j2::command%5Bcheck_hive_uptime%5D%3D/usr/lib/nagios/plugins/check_http%20-I%20localhost%20-u%20"/socket.io/1/"%20-p%20{{%20hive_port%20}}%20-r%20-w%200.5%20-c%201.0][file:/hive-server.conf.j2::command[check_hive_uptime]=/usr/lib/nagios/plugins/check_http -I localhost -u "/socket.io/1/" -p {{ hive_port }} -r -w 0.5 -c 1.0]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path)
+          description: (plain_text)
+          description: (plain_text))))))
+
+================
+Property link with templated filters and quoted headers
+================
+:properties:
+:context: [[file:/hive-server.conf.j2::command%5Bcheck_hive_connection%20%5D%3D/usr/lib/nagios/plugins/check_http%20-I%20localhost%20-u%20"/socket.io/1/"%20-r%20"Hive"%20-p%20{{%20hive_port|mandatory%20}}%20-k%20"Origin:%20{{%20market_vars.domain%20}}"%20-w%200.5%20-c%201.0][file:/hive-server.conf.j2::command[check_hive_connection ]=/usr/lib/nagios/plugins/check_http -I localhost -u "/socket.io/1/" -r "Hive" -p {{ hive_port|mandatory }} -k "Origin: {{ market_vars.domain }}" -w 0.5 -c 1.0]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    properties: (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path)
+          description: (plain_text)
+          description: (plain_text))))))
+
+================
+Fully indented custom drawer with timestamp line
+================
+  :PROGRESS:
+  [2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
+  :END:
+
+---
+
+(document
+  (zeroth_section
+    (drawer
+      name: (drawer_name)
+      body: (timestamp
+        year: (ts_year)
+        month: (ts_month)
+        day: (ts_day)
+        dayname: (ts_dayname))
+      body: (plain_text))))

@@ -1,0 +1,13 @@
+# A comment line.
+
+# Another comment line.
+# Consecutive comment lines form one comment element.
+
+* Heading
+
+# Comment inside a section.
+
+Paragraph after the comment.
+
+#
+# Comment with an empty comment line above.

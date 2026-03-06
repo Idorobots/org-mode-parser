@@ -1,0 +1,286 @@
+================
+Regular link path only
+================
+[[/path/to/file]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)))))
+
+================
+Regular link with free-form description and trailing brackets
+================
+[[file:/brain-server/.config::{backend,%20cowboy}%5D}%5D][file:/brain-server/.config::{backend, cowboy}]}]]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text))
+      (plain_text))))
+
+================
+Regular link description with search option and path fragment
+================
+[[file:~/code/asm/tests/asm/unions.d::if(isOP)%20{%20//%20TODO%20Pretty%20up%20or%20make%20a%20binary%20dump.][file:~/code/asm/tests/asm/unions.d::if(isOP) { // TODO Pretty up or make a binary dump.]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)))))
+
+================
+Regular link description with bracket before close paren
+================
+[[file:/flood/src/floodfsm.erl::io:format("~w:%20~s\n",%20%5Bself(),%20Msg%5D).][file:/flood/src/floodfsm.erl::io:format("~w: ~s\n", [self(), Msg]).]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)))))
+
+================
+Regular link with wildcard star text
+================
+[[file:~/tmp::*Default FILE to *.org in cwd][Default FILE to *.org in cwd]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)))))
+
+================
+Regular link description with doubled operators
+================
+[[file:~/projects/code/mall-sim/src/sim/model/algo/Tactical.java::if(x%20%3D%3D%20i%20&&%20y%20%3D%3D%20j)%20continue%3B][file:~/projects/code/mall-sim/src/sim/model/algo/Tactical.java::if(x == i && y == j) continue;]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)))))
+
+================
+Regular link with arbitrary search option payload
+================
+[[file:~/.emacs.d/site-lisp/gamify.el::(insert%20(format%20"node%20%5Bshape%3D%25s,%20width%3D%25.2f,%20color%3D\"#e0e0e0\",%20fontcolor%3D\"#d8d8d8\",%20fixedsize%3Dtrue%5D%3B"][file:~/.emacs.d/site-lisp/gamify.el::(insert (format "node [shape=%s, width=%.2f, color=\"#e0e0e0\", fontcolor=\"#d8d8d8\", fixedsize=true];"]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)))))
+
+================
+Regular link description with literal square brackets
+================
+[[file:~/projects/code/mall-sim/docs/docs.tex::\begin{figure}%5Bh!%5D][file:~/projects/code/mall-sim/docs/docs.tex::\begin{figure}[h!]]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)))))
+
+================
+Regular link description keeps unparsed radio target text
+================
+[[file:x][io:format("---->>> m: ~s", [Buffer]),]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)
+        (plain_text)
+        (plain_text)))))
+
+================
+Regular link with description
+================
+[[https://example.com][Click here]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)))))
+
+================
+Regular link description with slash characters
+================
+[[https://orgmode.org][See also https://orgmode.org/worg/ for community docs]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)))))
+
+================
+Regular link description with curly braces
+================
+[[file:~/org/TODO::*Refile%20stuff%20from%20%5B%5B~/org/refile.org%5D%5Brefile.org%5D%5D.][Refile stuff from {{~/org/refile.org}{refile.org}}.]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)))))
+
+================
+Regular link description with curly braces and slash
+================
+[[file:x][Read {{/media/books/compilers/sicp.pdf}{Structure and Interpretation of Computer Programs}}]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)
+        (plain_text)))))
+
+================
+Angle link
+================
+<https://example.com/path>
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (angle_link
+        (link_type)
+        (link_path)))))
+
+================
+Angle link bare email address
+================
+<test@example.com>
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (angle_link
+        (link_path)))))
+
+================
+Angle link mailto and bare email in text
+================
+Test <test@example.com>,
+Test <mailto:test@example.com>,
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (angle_link
+        (link_path))
+      (plain_text)
+      (plain_text)
+      (angle_link
+        (link_type)
+        (link_path))
+      (plain_text))))
+
+================
+Quoted text with pipe before angle email
+================
+"Test. Test | Test" <test.test-test@example.com>,
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (angle_link
+        (link_path))
+      (plain_text))))
+
+================
+Plain URL with placeholders and ampersands
+================
+OTA updates: https://fota.pintracview.com/fota/T9/check_update.php?carrier=<CARRIER>&rev=<CURRENTVERSION>&imei=<IMEI>
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
+
+================
+Multiline angle link
+================
+<https://very-long-domain-name.example.com/with/a/very/long/
+path/that/spans/multiple/lines/for/testing/purposes>
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (angle_link
+        (link_type)
+        (link_path)))))
+
+================
+Regular link path with backslashes and braces
+================
+[[file:~/Dokumenty/presentation/beamerthemeIdorobots.sty::\DeclareOptionBeamer{compress}{\beamer@compresstrue}]]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (regular_link
+        (link_path)))))

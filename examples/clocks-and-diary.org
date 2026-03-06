@@ -1,0 +1,183 @@
+#+TITLE: Time Tracking Log — Clocks and Diary Sexps
+#+AUTHOR: Grumbal Thruss
+#+TODO: TODO CLOCKED REVIEWING | DONE BILLED
+
+# Diary sexp entries can appear in the zeroth section too, though
+# they are more commonly placed in dedicated calendar files.
+
+%%(diary-anniversary 1989 3 14) Birthday of %d-year-old Pi Day baby
+
+* Clock Elements
+
+** Open clocks (no end time — currently running or left unclosed)
+
+An open clock records a start time with no end time:
+
+CLOCK: [2025-01-06 Mon 09:15]
+
+Another open clock (different heading — parser encounters it):
+
+* TODO Refactor authentication module :backend:security:
+CLOCK: [2025-01-06 Mon 14:30]
+:PROPERTIES:
+:effort: 3:00
+:END:
+
+** Closed clocks with duration
+
+CLOCK: [2025-01-05 Sun 20:00]--[2025-01-05 Sun 21:45] =>  1:45
+
+CLOCK: [2025-01-04 Sat 10:00]--[2025-01-04 Sat 13:30] =>  3:30
+
+A clock where the hours in the duration exceed 9 (multi-digit HH):
+
+CLOCK: [2025-01-03 Fri 08:00]--[2025-01-04 Sat 08:00] => 24:00
+
+** Duration-only clocks (rare but valid)
+
+CLOCK: =>  0:42
+CLOCK: => 12:00
+CLOCK: => 100:30
+
+** Clocks in LOGBOOK drawers
+
+The conventional usage is to store clocks inside a =:LOGBOOK:= drawer:
+
+* DONE Write technical specification :docs:
+CLOSED: [2025-01-05 Sun 18:00]
+:PROPERTIES:
+:effort: 5:00
+:END:
+:LOGBOOK:
+CLOCK: [2025-01-05 Sun 14:00]--[2025-01-05 Sun 18:00] =>  4:00
+CLOCK: [2025-01-04 Sat 16:00]--[2025-01-04 Sat 17:00] =>  1:00
+:END:
+
+* DONE Implement rate limiting :backend:security:
+CLOSED: [2025-01-03 Fri 17:30]
+:PROPERTIES:
+:effort: 4:00
+:END:
+:LOGBOOK:
+- State "DONE"         from "CLOCKED"      [2025-01-03 Fri 17:30]
+- State "CLOCKED"      from "TODO"         [2025-01-02 Thu 09:00]
+CLOCK: [2025-01-03 Fri 13:00]--[2025-01-03 Fri 17:30] =>  4:30
+CLOCK: [2025-01-02 Thu 09:00]--[2025-01-02 Thu 13:00] =>  4:00
+CLOCK: [2025-01-02 Thu 14:00]--[2025-01-02 Thu 17:30] =>  3:30
+:END:
+
+** Clocks with a zero duration
+
+CLOCK: [2025-01-06 Mon 12:00]--[2025-01-06 Mon 12:00] =>  0:00
+
+** Clocks inside list items
+
+Weekly summary:
+
+- Monday
+  CLOCK: [2025-01-06 Mon 09:00]--[2025-01-06 Mon 12:30] =>  3:30
+  CLOCK: [2025-01-06 Mon 13:30]--[2025-01-06 Mon 17:00] =>  3:30
+
+- Tuesday
+  CLOCK: [2025-01-07 Tue 09:15]--[2025-01-07 Tue 18:00] =>  8:45
+
+-----
+
+* Planning Lines with All Three Keywords
+
+** All three keywords on one line
+
+* DONE Deploy hotfix to production :ops:
+SCHEDULED: <2025-01-05 Sun 22:00> DEADLINE: <2025-01-05 Sun 23:59> CLOSED: [2025-01-05 Sun 22:47]
+:PROPERTIES:
+:ticket: OPS-2847
+:severity: critical
+:END:
+
+** Planning with inactive scheduled timestamp
+
+Some tools use inactive timestamps in SCHEDULED for reference-only dates:
+
+* REVIEWING Code review: PR #412 :review:backend:
+SCHEDULED: [2025-01-06 Mon] DEADLINE: <2025-01-07 Tue>
+:PROPERTIES:
+:pr_number: 412
+:reviewer: Grumbal Thruss
+:END:
+
+** Repeated deadline keyword (last wins)
+
+* TODO Renew infrastructure contracts :admin:
+SCHEDULED: <2025-11-01 Sat> DEADLINE: <2025-12-01 Mon> DEADLINE: <2025-11-15 Sat>
+:PROPERTIES:
+:contract_value: 48000
+:currency: GBP
+:END:
+
+The effective deadline is <2025-11-15 Sat> — the second DEADLINE keyword wins.
+
+-----
+
+* Diary Sexp Elements
+
+Diary sexp elements (=%%SEXP=) are lesser elements that can appear in any
+section. They hold calendar expressions evaluated by the Emacs diary.
+
+Each line is a separate diary sexp element:
+
+%%(diary-anniversary 1969 7 20) Apollo 11 moon landing — %d years ago
+%%(diary-anniversary 1991 8 25) Linux kernel first announced — %d years
+%%(diary-anniversary 1983 1 1) The ARPANET transitions to TCP/IP — %d years
+
+%%(diary-float t 4 2) Second Thursday of the month — team retrospective
+%%(diary-float t 5 3) Third Friday of the month — invoice deadline
+
+A diary sexp with no arguments (a fixed-date trigger):
+%%(org-calendar-holiday)
+
+Diary sexps can also appear at the heading level:
+
+* Calendar Entries
+
+%%(diary-anniversary 1990 5 15) Project lead's work anniversary — %d years
+%%(diary-float 3 3 -1) Last Wednesday of March — Q1 close
+
+* Recurring Administrative Events
+
+%%(diary-float t 1 1) First Monday of every month — expense report due
+%%(diary-float t 4 4) Fourth Thursday of November — US Thanksgiving (if applicable)
+%%(diary-float t 1 -1) Last Monday of every month — team planning session
+
+-----
+
+* Mixed Clocks, Planning, and Diary Sexps
+
+A realistic time-tracking section:
+
+* TODO Prepare quarterly board presentation :management:reporting:
+SCHEDULED: <2025-03-20 Thu> DEADLINE: <2025-03-28 Fri>
+:PROPERTIES:
+:effort: 8:00
+:audience: board_of_directors
+:slide_count_target: 20
+:END:
+:LOGBOOK:
+CLOCK: [2025-01-06 Mon 16:00]--[2025-01-06 Mon 17:30] =>  1:30
+:END:
+
+Preparation notes: the previous quarter's presentation is at
+[[file:archive.org::*Harbour Light][Harbour Light archive entry]] for reference.
+
+** Slide outline
+
+- [ ] Executive summary (2 slides)
+- [ ] Revenue and KPIs (4 slides)
+- [-] Product roadmap (3 slides — in progress)
+- [ ] Headcount and hiring (2 slides)
+- [ ] Risk register update (2 slides)
+- [ ] Q2 outlook (3 slides)
+- [ ] Appendix (4 slides)
+
+** Related diary entries
+
+%%(diary-float 3 5 4) Fourth Friday of March — board meeting day

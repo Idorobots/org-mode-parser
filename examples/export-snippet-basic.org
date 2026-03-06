@@ -1,0 +1,11 @@
+* Export Snippets
+
+An HTML snippet: @@html:<br>@@
+
+A LaTeX snippet: @@latex:\newpage@@
+
+Both in one paragraph: @@html:<b>@@bold@@html:</b>@@ and @@latex:\textbf{bold}@@
+
+An empty snippet: @@html:@@
+
+* Snippet in a heading: @@html:<em>@@emphasis@@html:</em>@@

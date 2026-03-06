@@ -1,0 +1,203 @@
+#+TITLE: Links and Targets — A Wiki of Linked Articles
+#+AUTHOR: Flemwick Clobbe
+
+* Targets and Radio Targets
+
+** Defining Targets
+
+A target is an invisible anchor for cross-document links.
+This section contains several targets:
+
+<<introduction>> The introduction begins here.
+<<parsing-overview>> This is where the parsing overview anchor sits.
+<<api-design>> The API design notes anchor.
+
+Text continues after the inline target — the target markup is not rendered,
+just the surrounding text.
+
+Multiple targets can appear in a single paragraph: <<target-alpha>>
+some text, then <<target-beta>> more text, then <<target-gamma>> final text.
+
+** Defining Radio Targets
+
+Radio targets automatically turn every matching text occurrence into a link.
+
+The <<<Org Mode parser>>> is the subject of this repository.
+The <<<zeroth section>>> is everything before the first heading.
+<<<property drawers>>> hold node-level metadata.
+<<<affiliated keywords>>> annotate the element immediately following them.
+
+Now in ordinary text below, whenever these phrases appear they become links:
+
+The Org Mode parser processes the zeroth section first, then descends into
+headings. property drawers are attached to headings or the zeroth section.
+affiliated keywords like =#+CAPTION:= are not standalone elements.
+
+** Explicit Links to Targets
+
+Linking to the targets defined above:
+
+- [[introduction]] — links to the =<<introduction>>= target.
+- [[parsing-overview]] — links to the =<<parsing-overview>>= target.
+- [[api-design]] — links to the =<<api-design>>= target.
+- [[target-alpha]] and [[target-beta]] and [[target-gamma]].
+
+With descriptions:
+
+- [[introduction][Jump to the introduction]]
+- [[parsing-overview][Skip to parsing overview]]
+
+-----
+
+* Plain Links
+
+Plain links are recognised automatically when a known link type prefix appears.
+
+HTTPS links:
+- Visit https://orgmode.org for the official documentation.
+- The tree-sitter project is at https://tree-sitter.github.io/tree-sitter/.
+- See also https://www.gnu.org/software/emacs/.
+
+HTTP (still valid):
+- Legacy documentation at http://orgmode.org/worg/.
+
+FTP:
+- Archive at ftp://ftp.gnu.org/gnu/emacs/.
+
+Mailto:
+- Contact mailto:maintainer@example.org with questions.
+
+Plain links with path components:
+- Specific page: https://orgmode.org/worg/org-syntax.html
+- With query string: https://example.com/search?q=org+mode&lang=en
+- Path ending with slash: https://example.com/docs/
+- Path with parenthesised component: https://en.wikipedia.org/wiki/Org_(software)
+
+Note: plain links must end at a word boundary or =/ = or a parenthesised segment.
+The trailing punctuation (period, comma) is NOT part of the link:
+- See https://orgmode.org. (The period is POST, not in the link.)
+- "Visit https://orgmode.org!" (Exclamation is POST.)
+
+-----
+
+* Angle Links
+
+Angle links allow spaces in paths and other characters not permitted in plain links.
+
+<https://example.com/path with spaces/document.html>
+<https://example.com/search?q=org mode parser>
+<mailto:user+tag@example.org>
+<file:/home/user/documents/my notes.org>
+
+Angle links with line continuations (newlines inside are ignored):
+
+<https://very-long-domain-name.example.com/with/a/very/long/
+path/that/spans/multiple/lines/for/testing/purposes>
+
+-----
+
+* Regular Links — All Path Types
+
+** File links
+
+Local file, relative path:
+[[file:simple.org]]
+[[file:../docs/research/syntax.md]]
+[[file:../docs/research/syntax.md][Target syntax reference]]
+
+Local file, absolute path:
+[[file:/etc/hosts]]
+[[file:/usr/share/doc/org-mode/README]]
+
+File with search string (heading):
+[[file:blocks.org::*Lesser Blocks]]
+
+** HTTPS and other URI links
+
+[[https://orgmode.org]]
+[[https://orgmode.org][The Org Mode homepage]]
+[[https://tree-sitter.github.io/tree-sitter/][Tree-sitter documentation]]
+[[mailto:contact@example.org][Send an email]]
+[[ftp://ftp.gnu.org/gnu/][GNU FTP archive]]
+
+** ID links
+
+Links to headings by their unique =ID= property (UUID-style):
+
+[[id:a3f8b2c1-4d5e-6f7a-8b9c-0d1e2f3a4b5c]]
+[[id:a3f8b2c1-4d5e-6f7a-8b9c-0d1e2f3a4b5c][The heading with this ID]]
+
+** Custom-ID links
+
+Links to headings by their =CUSTOM_ID= property:
+
+[[#introduction-to-parsing][Introduction to Parsing]]
+[[#api-reference]]
+[[#configuration-options][Configuration options section]]
+
+** Code reference links
+
+Links to labelled lines inside source blocks (coderef type):
+
+In the source block below, line 4 is labelled:
+
+#+begin_src c -n -r
+#include <stdio.h>
+
+int main(void) {
+    printf("Hello, world!\n"); /* (ref:main-print) */
+    return 0;                  /* (ref:main-return) */
+}
+#+end_src
+
+Now we can reference those lines:
+- The print statement is at [[(main-print)]].
+- The return statement is at [[(main-return)]].
+- With description: see [[(main-print)][the printf call]].
+
+** Fuzzy links (heading text, target names)
+
+Fuzzy links resolve to: a target, a radio target, or a heading title — in that order.
+
+[[introduction]] — matches the =<<introduction>>= target defined earlier.
+[[Targets and Radio Targets]] — matches a heading title.
+[[Plain Links]] — matches the heading "Plain Links".
+[[Links and Targets — A Wiki of Linked Articles]] — matches the top-level heading (= document title heading if present).
+
+A fuzzy link with description:
+[[Plain Links][Jump to the plain links section]]
+[[Targets and Radio Targets][Back to targets]]
+
+** Links with complex descriptions
+
+Descriptions can contain markup, export snippets, and other inline objects:
+
+[[https://orgmode.org][*Official* /Org Mode/ homepage]]
+[[https://orgmode.org][The =orgmode.org= site — @@html:<strong>@@recommended@@html:</strong>@@]]
+[[https://tree-sitter.github.io][~tree-sitter~ — a _fast_ incremental parser library]]
+
+A link whose description contains another link (plain link only):
+
+[[https://orgmode.org][See also https://orgmode.org/worg/ for community docs]]
+
+** Whitespace normalisation in paths
+
+Regular link paths normalise internal whitespace — these two are equivalent:
+
+[[file:path/to/my
+    document.org][Same path, broken across lines]]
+
+[[file:path/to/my document.org][Same path on one line]]
+
+-----
+
+* All Link Types in One Section
+
+This paragraph exercises multiple link types together.
+Visit the project at [[https://github.com/example/org-parser][GitHub]] or
+read the [[file:../docs/research/target-syntax.md][target syntax document]].
+Report issues to mailto:bugs@example.org or via the
+<https://github.com/example/org-parser/issues> tracker.
+The [[introduction]] anchor earlier in this document is also reachable.
+For the Org Mode parser specifically, see
+https://orgmode.org/worg/org-syntax.html (the canonical specification).

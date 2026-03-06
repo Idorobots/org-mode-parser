@@ -1,0 +1,141 @@
+================
+Active timestamp
+================
+<2024-01-15 Mon>
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)))))
+
+================
+Inactive timestamp
+================
+[2024-01-15 Mon]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)))))
+
+================
+Active timestamp with time
+================
+<2024-01-15 Mon 14:30>
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (ts_time)))))
+
+================
+Inactive timestamp with time
+================
+[2024-01-15 Mon 14:30]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (ts_time)))))
+
+================
+Active same-day time range
+================
+<2024-01-15 Mon 10:00-12:00>
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (ts_time)
+        (ts_time)))))
+
+================
+Inactive same-day time range
+================
+[2024-01-15 Mon 10:00-12:00]
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (ts_time)
+        (ts_time)))))
+
+================
+Active same-day time range with repeater
+================
+<2026-02-28 Sat 10:00-12:00 +1d>
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (ts_time)
+        (ts_time)
+        (repeater_mark)
+        (time_unit)))))
+
+================
+Timestamp range
+================
+<2024-01-15 Mon>--<2024-01-20 Fri>
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)))))

@@ -1,0 +1,24 @@
+* Ordered Lists
+
+Period-terminated digit counter:
+
+1. first
+2. second
+3. third
+
+Parenthesis-terminated digit counter:
+
+1) one
+2) two
+3) three
+
+Letter counter:
+
+a. alpha
+b. beta
+c. gamma
+
+Counter-set (reset to 5):
+
+5. [@5] fifth
+6. sixth

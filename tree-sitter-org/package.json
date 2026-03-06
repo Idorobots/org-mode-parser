@@ -1,0 +1,59 @@
+{
+  "name": "tree-sitter-org",
+  "version": "0.1.0",
+  "description": "Tree-sitter grammar for Org Mode syntax",
+  "license": "MIT",
+  "main": "bindings/node",
+  "keywords": [
+    "parser",
+    "tree-sitter",
+    "org-mode",
+    "org"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/tree-sitter-org.git"
+  },
+  "files": [
+    "grammar.js",
+    "binding.gyp",
+    "prebuilds/**",
+    "bindings/node/*",
+    "queries/*",
+    "src/**",
+    "*.wasm"
+  ],
+  "dependencies": {
+    "node-addon-api": "^8.0.0",
+    "node-gyp-build": "^4.8.0"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.26.0",
+    "prebuildify": "^6.0.0"
+  },
+  "peerDependencies": {
+    "tree-sitter": "^0.22.0"
+  },
+  "peerDependenciesMeta": {
+    "tree-sitter": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "tree-sitter generate && node-gyp build",
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test",
+    "parse": "tree-sitter parse",
+    "install": "node-gyp-build"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.org",
+      "file-types": [
+        "org"
+      ],
+      "highlights": "queries/highlights.scm",
+      "injection-regex": "^org$"
+    }
+  ]
+}

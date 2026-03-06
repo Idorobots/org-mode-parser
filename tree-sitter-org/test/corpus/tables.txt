@@ -1,0 +1,451 @@
+================
+Simple org table
+================
+| A | B |
+| 1 | 2 |
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))))
+
+================
+Table with TBLFM formula line
+================
+|------------+---------+-------+-----------------+---------+------------------+--------------------+------------------|
+|    *Total* |         |       |                 |         |              152 |                115 |               37 |
+#+TBLFM: @2$5..@>>$5='(format-consultancy-hours "%h:%.2m" $1 $2 $3 $4)
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_rule))
+      (table_row
+        (table_cell
+          (plain_text)
+          (bold
+            (plain_text))
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (tblfm_line))))
+
+================
+Table with rule row
+================
+| Name | Age |
+|------+-----|
+| Alice | 30 |
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_rule))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))))
+
+================
+Indented table with caption
+================
+#+CAPTION: A small reference table
+  | Key | Value |
+  |-----+-------|
+  | a   |     1 |
+  | b   |     2 |
+
+---
+
+(document
+  (zeroth_section
+    (caption_keyword
+      (plain_text))
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_rule))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))))
+
+================
+Indented single-column table with rule row
+================
+  | Item    |
+  |---------|
+  | apple   |
+  | banana  |
+  | cherry  |
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_rule))
+      (table_row
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))))))
+
+================
+Markup ending directly before table separator
+================
+| =[persistence]=| ~aof_enabled~| bool | =false=|
+| =[persistence]=| ~aof_fsync~| enum | =everysec=|
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text)
+          (verbatim
+            (verbatim_content)))
+        (table_cell
+          (plain_text)
+          (code
+            (code_content)))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)
+          (verbatim
+            (verbatim_content))))
+      (table_row
+        (table_cell
+          (plain_text)
+          (verbatim
+            (verbatim_content)))
+        (table_cell
+          (plain_text)
+          (code
+            (code_content)))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)
+          (verbatim
+            (verbatim_content)))))))
+
+================
+Table cells with plus signs stay plain text
+================
+| CPU      | 4 vCPU   | 8+ vCPU     |
+| RAM      | 8 GiB    | 32+ GiB     |
+| Storage  | 20 GiB   | 100+ GiB NVMe |
+| Network  | 1 Gbps   | 10 Gbps     |
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))))
+
+================
+Table.el grid table
+================
++-------------------+-----------+-------------------+
+| Name              | Extension | Description       |
++-------------------+-----------+-------------------+
+| Plain text        | .txt      | Unformatted ASCII |
+| HyperText Markup  | .html     | Web standard      |
+| Portable Document | .pdf      | Print-ready       |
+| Org Mode          | .org      | This format       |
++-------------------+-----------+-------------------+
+| Markdown          | .md       | Lightweight markup|
+| reStructuredText  | .rst      | Python docs       |
++-------------------+-----------+-------------------+
+
+---
+
+(document
+  (zeroth_section
+    (tableel_table)
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+          (table_cell
+            (plain_text))))
+    (tableel_table)
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))
+    (tableel_table)
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))
+    (tableel_table)))
+
+================
+Table.el header only
+================
++----------+----------+
+| Column A | Column B |
++----------+----------+
+
+---
+
+(document
+  (zeroth_section
+    (tableel_table)
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))
+    (tableel_table)))
+
+================
+Affiliated keywords between tables
+================
+| A |
+|---|
+
+#+CAPTION: first split
+| B |
+|---|
+
+#+TBLNAME: second split
+| C |
+|---|
+
+#+RESULTS:
+| D |
+|---|
+
+#+PLOT: type:2d
+| E |
+|---|
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_rule)))
+    (caption_keyword
+      (plain_text))
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_rule)))
+    (tblname_keyword
+      (plain_text))
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_rule)))
+    (results_keyword)
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_rule)))
+    (plot_keyword
+      (plain_text))
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_rule)))))
+
+================
+Affiliated keywords before table
+================
+#+TBLNAME: inventory
+#+RESULTS: cached
+#+PLOT: type:2d
+| Item | Qty |
+|------+-----|
+| Pen  | 12  |
+
+---
+
+(document
+  (zeroth_section
+    (tblname_keyword
+      (plain_text))
+    (results_keyword
+      (plain_text))
+    (plot_keyword
+      (plain_text))
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (table_row
+        (table_rule))
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))))
+
+================
+Tables separated by blank line
+================
+| Foo | Bar |
+
+| Baz | | Bar | Foo |
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))))))

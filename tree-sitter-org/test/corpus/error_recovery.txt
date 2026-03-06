@@ -1,0 +1,25 @@
+================
+Unclosed bold treated as text
+================
+This has *unclosed markup on one line.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text))))
+
+================
+Standalone stars not heading (no space)
+================
+*not a heading
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (bold
+        (plain_text)
+        (MISSING _MARKUP_CLOSE_BOLD)))))
