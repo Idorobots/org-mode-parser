@@ -1,1 +1,5 @@
 .agent-shell
+.coverage
+src/org_parser/__pycache__/
+src/org_parser/document/__pycache__/
+tests/__pycache__/

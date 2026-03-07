@@ -1,8 +1,8 @@
-#+TITLE: Tree-Sitter Org-Mode parser
+#+TITLE: Org-Mode parser
 #+OPTIONS: toc:t
 
 * Overview
-This project implements a Tree-Sitter-based parser for Emacs Org-Mode files.
+This project implements a Tree-Sitter-based parser for Emacs Org-Mode files with a Python wrapper presenting "nicer" semantic nodes.
 
 The long-term goal is high fidelity and eventually 100% feature coverage, while
 keeping robust error recovery and useful parse trees for downstream processing.
@@ -17,6 +17,7 @@ See [[file:examples/][examples directory]] to get an idea of the parser complete
 - Blank lines semantics are not kept - double blank lines do not terminate list items, etc.
 - Malformed objects are usually treated as plaintext (or recovered with generic
   parse-error nodes) instead of hard-failing the full parse.
+- Table.el tables parse as multiple Org-Mode tables intertwined with =tableel_table= elements.
 
 * Explicitly Not Supported
 

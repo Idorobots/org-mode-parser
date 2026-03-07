@@ -1715,32 +1715,108 @@ By leaf errors I mean errors that are as close to a leaf as possible, not the to
 *** TODO Support for Babel call syntax
 *** TODO Support for Org entities
 *** TODO Support for subscript/superscript
-* Semantic nodes implementation
-- somewhat compatible with orgparse node layout (root node & env separate, rich data abstractions)
-- mutable by default
-- supports any drawers, spacial treatment for logbook & properties
-- env supporting special comments, files etc (title, category, todo, etc, tags)
-- nodes tags & inherited tags field (file-order lists not sets)
-- nodes category & inherited category field
-- extra fields for convevience - parent, children, siblings, latest_timestamp, earliest_timestamp, is_completed, is_root, is_terminal
-- env nodes property - returns all nodes in the env, file order
-- load, loads and dump, dumps
-- preserves original whitespace until a mutation is made
-- all text returning functions return a rich text by default, option to strip markup and turn that into a plain string
-** TODO Heading line abstraction
+*** TODO Better support for tableel tables
+*** TODO Bind indent in lesser/greater elements
+This will be used by semantic analysis to recover list nesting.
+*** TODO Heading line abstraction
 Add an abstraction over the heading line, so that the heading consists of a =heading_line= and a =body=.
 
-** TODO Python wrapper on tree-sitter
-Create a scaffold of a Python project using Poetry as the build tool. Include =mypy= for typings, =ruff= for linting and formatting and =pytest= for tests. The project will be a library that wraps the tree-sitter based parser, so include =py-tree-sitter= in the dependencies as well. For development, add =pyright= lang server.
-
+* Semantic nodes implementation
+** DONE Python scaffold
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-07 Sat 13:41]
+:END:
+Create a scaffold of a Python project using Poetry as the build tool. Include =mypy= for typings, =ruff= for linting and formatting and =pytest= for tests. The project will be a library that wraps the tree-sitter based parser, so include =py-tree-sitter= in the dependencies as well. For development, add =pyright= LSP server.
 Make sure that the setting for all of these tools are fairly strict, we want this project to be very well validated.
 
-The source code of the library should expose the tree-sitter parser with thin Python bindings. Don't worry about ease-of-use of the parser just yet, we will be addressing the user experience next.
+I'd like the layout of the library to be as follows:
 
-Create an extensive test suite that will run the parser against the test files.
+#+begin_example
+src - main Python source folder
+|-- org_parser - main module
+    |-- document - document-level objects
+    |-- element - lesser & greater elements
+    |-- text - rich text support
+tests - the test suite
+#+end_example
 
-Write the implementation plan down to docs/plans/python-wrapper-impl.md
+The source code of the library should expose the tree-sitter parser with thin Python bindings. Don't worry about ease-of-use of the parser just yet, we will be addressing the user experience next. It is enough to provide an =org_parser.document.load_raw()= function that reads an org file and returns th raw parse tree.
 
-** TODO Implement the Python wrapper
-Implement the plan from @docs/plans/python-wrapper-impl.md file.
+Create a test suite that will run the parser against some basic example files. We will be expanding the code soon, so there's no need to validate that it works too much.
 
+Before starting, write the implementation plan to docs/plans/ as a markdown file.
+
+** DONE Update the CI & AGENTS.md
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-07 Sat 13:41]
+:END:
+Update GitHub Actions workflow to also test the python portion of the project.
+
+Update AGENTS.md with instructions for the Python portion of the project.
+
+** load, loads and dump, dumps
+=org_parser.document.*=
+
+- load, loads and dump, dumps
+
+** Semantic nodes
+*** Env, Document, Heading
+
+=org_parser.document.*=
+
+- somewhat compatible with orgparse node layout (root node & env separate, rich data abstractions)
+
+- all properties return rich text by default, option to strip markup and turn that into a plain string
+- extra fields for convevience - parent, children, siblings, latest_timestamp, earliest_timestamp, is_completed, is_root, is_terminal
+
+All objects should point to an =env= object that contains all the global information, such as todo keys etc.
+
+- env nodes property - returns all nodes in the env, file order
+- env supporting special comments, files etc (title, category, todo, etc, tags)
+
+*** Element, Table, List, Block, Paragraph, Drawer, Keywords
+- supports any drawers, spacial treatment for logbook & properties
+
+=org_parser.elements.*=
+
+*** Rich text
+=org_parser.text.*=
+
+- PlainText, Bold, Italic, etc
+
+*** raw()
+A method returning the raw Tree-Sitter parse tree on None for manually created nodes..
+
+*** __str__
+
+A string conversion that uses the raw parse tree data for the display of nodes, or reconstructs from scratch.
+
+- preserves original whitespace until a mutation is made
+
+*** Mutability
+Implement setters for all the properties on all the objects.
+Whenever, an object is mutated, it should be marked as dirty and it's representation should be built from scratch instead of re-using the raw() parse tree.
+
+- mutable by default
+
+*** mark_dirty()
+A method for marking the nodes as dirty programatically.
+
+*** iterator interface
+Document and Heading should support an iterator interface.
+- Document iterates over all the headings contained within, including subheadings
+- Heading iterates over the children
+- Table iterates over the rows, which iterate over the colums.
+- List iterates over the list items.
+
+=document[0][2].body[2][x][y]= - x,y table cell in a body of third child of the first heading in a document.
+
+*** Strong typing
+** Recover list & element nesting
+- List nesting & item bodies should be adjusted to support the indent-level objects
+
+** Recover inherited tags
+- nodes tags & inherited tags field (file-order lists not sets)
+
+** Recover inherited categories
+- nodes category & inherited category field
