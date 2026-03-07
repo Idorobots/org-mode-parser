@@ -1,0 +1,127 @@
+[tool.poetry]
+name = "org-parser"
+version = "0.1.0"
+description = "Python bindings for the tree-sitter org-mode parser"
+authors = []
+license = "MIT"
+readme = "README.org"
+packages = [{ include = "org_parser", from = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+tree-sitter = ">=0.24,<1.0"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.11"
+ruff = "^0.8"
+pytest = "^8.3"
+pytest-cov = "^6.0"
+pyright = "^1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# ---------------------------------------------------------------------------
+# ruff — linting & formatting
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "D",    # pydocstrings
+    "UP",   # pyupgrade
+    "ANN",  # flake8-annotations
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "PERF", # perflint
+    "RUF",  # ruff-specific rules
+    "PL",   # pylint
+]
+ignore = [
+    # Docstring style: prefer D211 (no blank line before class docstring) and
+    # D212 (summary on first line); disable the conflicting alternatives.
+    "D203",   # one-blank-line-before-class (conflicts with D211)
+    "D213",   # multi-line-summary-second-line (conflicts with D212)
+    # Overly strict in small internal modules
+    "ANN401", # dynamically-typed-expression (Any) — needed for ctypes interop
+    # Pylint rules that duplicate other checks or are too noisy
+    "PLR0913", # too-many-arguments
+    "PLR2004", # magic-value-comparison (too many false positives in tests)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "D",      # docstrings not required in test files
+    "ANN",    # type annotations not required in test helpers
+    "S101",   # assert is expected in tests
+    "PT",     # flake8-pytest-style (selected per-file below)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["org_parser"]
+force-sort-within-sections = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+# ---------------------------------------------------------------------------
+# mypy — static type checking
+# ---------------------------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_reexport = true
+show_error_codes = true
+pretty = true
+# Use the src layout
+mypy_path = "src"
+
+[[tool.mypy.overrides]]
+# tree-sitter ships incomplete type stubs; suppress import errors for it.
+module = ["tree_sitter", "tree_sitter.*"]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# pytest
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--tb=short --strict-markers -q"
+markers = ["integration: tests that require the compiled org.so shared library"]
+
+# ---------------------------------------------------------------------------
+# coverage
+# ---------------------------------------------------------------------------
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+omit = ["*/__init__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 0
