@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from org_parser.element._element import Element
+from org_parser.text._inline import CompletionCounter
 from org_parser.text._rich_text import RichText
 
 if TYPE_CHECKING:
@@ -35,8 +36,7 @@ class Heading:
         priority: The priority letter or number (e.g. ``"A"``, ``"1"``), or
             *None*.
         title: The heading title as :class:`RichText`, or *None*.
-        counter: Inner value of the completion counter (e.g. ``"1/3"``,
-            ``"50%"``), or *None*.
+        counter: Completion counter object (e.g. ``[1/3]``), or *None*.
         tags: A list of tag strings in source order.
         body: Body elements of the heading (excludes sub-headings).
         children: Direct sub-headings of this heading.
@@ -51,7 +51,7 @@ class Heading:
         todo: str | None = None,
         priority: str | None = None,
         title: RichText | None = None,
-        counter: str | None = None,
+        counter: CompletionCounter | None = None,
         tags: list[str] | None = None,
         body: list[Element] | None = None,
         children: list[Heading] | None = None,
@@ -185,12 +185,12 @@ class Heading:
         self._mark_dirty()
 
     @property
-    def counter(self) -> str | None:
-        """The completion counter inner value (e.g. ``"1/3"``), or *None*."""
+    def counter(self) -> CompletionCounter | None:
+        """The completion counter object, or *None* if absent."""
         return self._counter
 
     @counter.setter
-    def counter(self, value: str | None) -> None:
+    def counter(self, value: CompletionCounter | None) -> None:
         """Set the completion counter and mark this heading as dirty."""
         self._counter = value
         self._mark_dirty()
@@ -322,7 +322,7 @@ def _extract_priority(node: tree_sitter.Node) -> str | None:
 
 def _extract_counter(
     title_nodes: list[tree_sitter.Node],
-) -> str | None:
+) -> CompletionCounter | None:
     """Scan title children for a ``completion_counter`` and return its inner value.
 
     The completion counter node stores its value in the ``value`` field.
@@ -332,7 +332,10 @@ def _extract_counter(
             value_node = n.child_by_field_name("value")
             if value_node is None or value_node.text is None:
                 continue  # pragma: no cover - defensive
-            return value_node.text.decode() or None
+            value = value_node.text.decode()
+            if value == "":
+                return None
+            return CompletionCounter(value)
     return None
 
 

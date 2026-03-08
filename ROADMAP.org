@@ -1929,13 +1929,20 @@ All of the inline markup abstractions should cache the exact values they represe
 
 All of these abstractions should be publicly available via the =org_parser.text.*= module so that new =RichText= objects can be created programatically and attached to headings/document.
 
+Update the =Heading.counter= property to return a =CompletionCounter= instead of plain string.
+
 *** Heading planing
+Expand the =Timestamp= class to store all the individual values of a timestamp, including the date, time, optionally a duration, active/inactive state etc.
+Ideally, =Timestamp= should be moved to a dedicated module =org_parser.time= as there will be more related abstractions there.
+
+Timestamps should have a =start= and =end= properties, with =end= being optional (only available if the timestamp has a duration). Timestamp should be convertible to a Python datetime (use the =start= property). There is no need to make the timestamp fields mutable.
+
 Add the planning fields to the =Heading= class:
 - =scheduled: Timestamp | None=
 - =closed: Timestamp | None=
 - =deadline: Timestamp | None=
 
-These should be mutable. Update the representation for =Heading= to take them into account when the heading is marked as dirty.
+These fields should be mutable. Update the representation for =Heading= to take them into account when the heading is marked as dirty.
 
 *** Element
 =org_parser.elements.*=
@@ -1976,6 +1983,8 @@ Document, Heading and RichText should support an iterator interface.
 
 =document[0][2].body[2][x][y]= - x,y table cell in a body of third child of the first heading in a document.
 
+** Programatically create RichText from strings
+Invoke the tree sitter parser on text mutation.
 ** Recover list & element nesting
 - List nesting & item bodies should be adjusted to support the indent-level objects
 

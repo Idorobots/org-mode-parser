@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from org_parser import load
 from org_parser.document import Document, Heading
 from org_parser.element import Element
-from org_parser.text import RichText
+from org_parser.text import CompletionCounter, RichText
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -85,7 +85,7 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
     heading.todo = "TODO"
     heading.priority = "A"
     heading.title = RichText("Heading")
-    heading.counter = "1/2"
+    heading.counter = CompletionCounter("1/2")
     heading.tags = ["work", "next"]
     heading.body = [Element(node_type="paragraph", source_text="Text")]
     heading.parent = document
@@ -98,7 +98,7 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
     assert heading.todo == "TODO"
     assert heading.priority == "A"
     assert heading.title == "Heading"
-    assert heading.counter == "1/2"
+    assert heading.counter == CompletionCounter("1/2")
     assert heading.tags == ["work", "next"]
     assert len(heading.body) == 1
     assert heading.parent is document

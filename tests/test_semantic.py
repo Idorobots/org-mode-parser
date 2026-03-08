@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from org_parser.document import Document, Heading, load_raw
 from org_parser.element import Element
-from org_parser.text import RichText
+from org_parser.text import CompletionCounter, RichText
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -364,7 +364,7 @@ class TestHeadingFields:
         org = tmp_path / "counter.org"
         org.write_bytes(b"* Tasks [1/3] remaining\n* No counter here\n")
         doc = _load_document(org)
-        assert doc.children[0].counter == "1/3"
+        assert doc.children[0].counter == CompletionCounter("1/3")
         assert doc.children[1].counter is None
 
     def test_completion_counter_percent(self, tmp_path: Path) -> None:
@@ -372,7 +372,7 @@ class TestHeadingFields:
         org = tmp_path / "pct.org"
         org.write_bytes(b"* Progress [50%] on feature\n")
         doc = _load_document(org)
-        assert doc.children[0].counter == "50%"
+        assert doc.children[0].counter == CompletionCounter("50%")
 
     def test_title_verbatim_with_counter(self, tmp_path: Path) -> None:
         """Title text preserves verbatim source including the counter."""
