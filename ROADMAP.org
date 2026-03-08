@@ -1981,7 +1981,10 @@ Add a dedicated =Element= subclass for the paragraph element - =Paragraph=. The 
 
 Add support for this new element type when processing document/heading bodies that can contain paragraphs.
 
-*** TODO Table
+*** DONE Table
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:12]
+:END:
 Add a dedicated =Element= subclass for the table element - =Table=. The class should represent an Org table or a Table.el table, with dedicated abstractions for table rows and table cells. Table cells and rows should be mutable, marking the whole table as dirty. Table cell values can remain =RichText= for now, but the parent element of these rich text elements should be the table.
 
 Tables should also support the table formula lines.

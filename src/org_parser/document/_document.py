@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from org_parser.element._element import Element
 from org_parser.element._keyword import Keyword
 from org_parser.element._paragraph import Paragraph
+from org_parser.element._table import Table
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -20,6 +21,8 @@ _ZEROTH_SECTION = "zeroth_section"
 _HEADING = "heading"
 _SPECIAL_KEYWORD = "special_keyword"
 _PARAGRAPH = "paragraph"
+_ORG_TABLE = "org_table"
+_TABLEEL_TABLE = "tableel_table"
 _TITLE = "TITLE"
 _AUTHOR = "AUTHOR"
 _CATEGORY = "CATEGORY"
@@ -442,6 +445,8 @@ def _extract_body_element(
     """Build one body element instance from a tree-sitter node."""
     if node.type == _PARAGRAPH:
         return Paragraph.from_node(node, source, parent=parent)
+    if node.type in {_ORG_TABLE, _TABLEEL_TABLE}:
+        return Table.from_node(node, source, parent=parent)
     return Element.from_node(node, source, parent=parent)
 
 

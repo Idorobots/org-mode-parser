@@ -13,5 +13,6 @@ subsequent iterations.
 from org_parser.element._element import Element
 from org_parser.element._keyword import Keyword
 from org_parser.element._paragraph import Paragraph
+from org_parser.element._table import Table, TableCell, TableRow
 
-__all__ = ["Element", "Keyword", "Paragraph"]
+__all__ = ["Element", "Keyword", "Paragraph", "Table", "TableCell", "TableRow"]

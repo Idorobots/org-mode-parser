@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from org_parser.element._element import Element
 from org_parser.element._paragraph import Paragraph
+from org_parser.element._table import Table
 from org_parser.text._inline import CompletionCounter
 from org_parser.text._rich_text import RichText
 from org_parser.time import Timestamp
@@ -25,6 +26,8 @@ _PLANNING = "planning"
 _PLANNING_KEYWORD = "planning_keyword"
 _TIMESTAMP = "timestamp"
 _PARAGRAPH = "paragraph"
+_ORG_TABLE = "org_table"
+_TABLEEL_TABLE = "tableel_table"
 
 
 class Heading:
@@ -465,6 +468,8 @@ def _extract_body_element(
     """Build one heading body element instance from a tree-sitter node."""
     if node.type == _PARAGRAPH:
         return Paragraph.from_node(node, source, parent=parent)
+    if node.type in {_ORG_TABLE, _TABLEEL_TABLE}:
+        return Table.from_node(node, source, parent=parent)
     return Element.from_node(node, source, parent=parent)
 
 
