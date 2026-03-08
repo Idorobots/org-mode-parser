@@ -95,6 +95,14 @@ class Element:
 
     # -- dunder protocols ----------------------------------------------------
 
+    def __str__(self) -> str:
+        """Return the element text representation.
+
+        This is currently a simple passthrough of the stored source text while
+        element-specific reconstruction is still a stub.
+        """
+        return self._source_text
+
     def __repr__(self) -> str:
         """Return a developer-friendly representation."""
         text_preview = self._source_text[:40]

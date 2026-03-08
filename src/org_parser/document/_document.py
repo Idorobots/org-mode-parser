@@ -253,6 +253,22 @@ class Document:
 
     # -- dunder protocols ----------------------------------------------------
 
+    def __str__(self) -> str:
+        """Return a textual representation of the document zeroth section.
+
+        When the document is clean and still backed by a parse tree, this
+        returns the exact source slice for the zeroth section to preserve
+        original whitespace and formatting. Once the document is dirty, this
+        falls back to a reconstructed representation from semantic fields.
+        """
+        if not self._dirty and self._node is not None:
+            zeroth = _find_first_child_by_type(self._node, _ZEROTH_SECTION)
+            if zeroth is None:
+                return ""
+            return self._source[zeroth.start_byte : zeroth.end_byte].decode()
+
+        return _render_document_dirty(self)
+
     def __repr__(self) -> str:
         """Return a developer-friendly representation."""
         return (
@@ -316,3 +332,45 @@ def _extract_keyword(
     )
 
     return key, value
+
+
+def _find_first_child_by_type(
+    node: tree_sitter.Node,
+    node_type: str,
+) -> tree_sitter.Node | None:
+    """Return the first direct child with the given type, if any."""
+    for child in node.children:
+        if child.type == node_type:
+            return child
+    return None
+
+
+def _render_document_dirty(document: Document) -> str:
+    """Render a dirty document from semantic fields only."""
+    parts: list[str] = []
+
+    dedicated_keywords = [
+        ("TITLE", document.title),
+        ("AUTHOR", document.author),
+        ("CATEGORY", document.category),
+        ("DESCRIPTION", document.description),
+        ("TODO", document.todo),
+    ]
+
+    for key, value in dedicated_keywords:
+        if value is not None:
+            parts.append(_render_keyword_line(key, str(value)))
+
+    for key, value in document.keywords.items():
+        parts.append(_render_keyword_line(key, str(value)))
+
+    parts.extend(str(element) for element in document.body)
+
+    return "".join(parts)
+
+
+def _render_keyword_line(key: str, value: str) -> str:
+    """Render one special keyword line in Org syntax."""
+    if value == "":
+        return f"#+{key}:\n"
+    return f"#+{key}: {value}\n"

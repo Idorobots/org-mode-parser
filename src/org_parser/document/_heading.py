@@ -260,6 +260,23 @@ class Heading:
 
     # -- dunder protocols ----------------------------------------------------
 
+    def __str__(self) -> str:
+        """Return a textual representation of this heading and its body.
+
+        When the heading is clean and still backed by a parse tree, this
+        returns the exact source slice that spans the heading line and body
+        section only, excluding any sub-headings. Once dirty, this is rebuilt
+        from semantic fields.
+        """
+        if not self._dirty and self._node is not None:
+            end_byte = self._node.end_byte
+            first_subheading = _find_first_subheading(self._node)
+            if first_subheading is not None:
+                end_byte = first_subheading.start_byte
+            return self.document.source[self._node.start_byte : end_byte].decode()
+
+        return _render_heading_dirty(self)
+
     def __repr__(self) -> str:
         """Return a developer-friendly representation."""
         stars = "*" * self._level
@@ -340,3 +357,34 @@ def _extract_body(
     if section_node is None:
         return []
     return [Element.from_node(child, source) for child in section_node.named_children]
+
+
+def _find_first_subheading(node: tree_sitter.Node) -> tree_sitter.Node | None:
+    """Return the first direct sub-heading node, if present."""
+    for child in node.children:
+        if child.type == _HEADING:
+            return child
+    return None
+
+
+def _render_heading_dirty(heading: Heading) -> str:
+    """Render a dirty heading from semantic fields only."""
+    line_parts: list[str] = ["*" * heading.level]
+
+    if heading.todo:
+        line_parts.append(heading.todo)
+
+    if heading.priority:
+        line_parts.append(f"[#{heading.priority}]")
+
+    if heading.title is not None:
+        line_parts.append(str(heading.title))
+
+    headline = " ".join(line_parts)
+
+    if heading.tags:
+        headline = f"{headline} :{':'.join(heading.tags)}:"
+
+    parts = [f"{headline}\n"]
+    parts.extend(str(element) for element in heading.body)
+    return "".join(parts)
