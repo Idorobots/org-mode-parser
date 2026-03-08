@@ -1993,7 +1993,10 @@ When the element is marked dirty, the table should be formatted according to the
 
 Add support for this new element type when processing document/heading bodies that can contain tables.
 
-*** TODO Clock
+*** DONE Clock
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:22]
+:END:
 Add a dedicated =Element= subclass for the clock log line. This element should support the various forms a =CLOCK:= line can assume - including an active and inactive timestamp, a timerange and the duration.
 The element should be placed in the =org_parser.time.*= module and re-use the =Timestamp= class for the actual time component.
 Clocks should be mutable by setting the entire timestamp. The duration value should be recomputed after the timestamp is set with a duration (start and end populated).

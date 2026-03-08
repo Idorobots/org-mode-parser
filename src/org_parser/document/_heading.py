@@ -9,7 +9,7 @@ from org_parser.element._paragraph import Paragraph
 from org_parser.element._table import Table
 from org_parser.text._inline import CompletionCounter
 from org_parser.text._rich_text import RichText
-from org_parser.time import Timestamp
+from org_parser.time import Clock, Timestamp
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -28,6 +28,7 @@ _TIMESTAMP = "timestamp"
 _PARAGRAPH = "paragraph"
 _ORG_TABLE = "org_table"
 _TABLEEL_TABLE = "tableel_table"
+_CLOCK = "clock"
 
 
 class Heading:
@@ -470,6 +471,8 @@ def _extract_body_element(
         return Paragraph.from_node(node, source, parent=parent)
     if node.type in {_ORG_TABLE, _TABLEEL_TABLE}:
         return Table.from_node(node, source, parent=parent)
+    if node.type == _CLOCK:
+        return Clock.from_node(node, source, parent=parent)
     return Element.from_node(node, source, parent=parent)
 
 

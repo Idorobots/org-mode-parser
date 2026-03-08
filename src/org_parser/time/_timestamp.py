@@ -54,8 +54,8 @@ class Timestamp:
 
     @classmethod
     def from_node(cls, node: tree_sitter.Node, source: bytes) -> Timestamp:
-        """Create a :class:`Timestamp` from a tree-sitter ``timestamp`` node."""
-        raw = source[node.start_byte : node.end_byte].decode()
+        """Create a :class:`Timestamp` from a tree-sitter timestamp-like node."""
+        raw = _extract_raw_timestamp_text(node, source)
         is_active = raw.startswith("<")
 
         year_nodes = list(_descendants_by_type(node, "ts_year"))
@@ -144,6 +144,17 @@ class Timestamp:
     def __str__(self) -> str:
         """Render timestamp as original source text."""
         return self.raw
+
+
+def _extract_raw_timestamp_text(node: tree_sitter.Node, source: bytes) -> str:
+    """Return timestamp text slice for one timestamp-like parser node."""
+    if node.type == "timestamp":
+        return source[node.start_byte : node.end_byte].decode()
+
+    value_nodes = node.children_by_field_name("value")
+    if not value_nodes:
+        raise ValueError("Node does not contain a timestamp value")
+    return source[value_nodes[0].start_byte : value_nodes[-1].end_byte].decode()
 
 
 def _descendants_by_type(

@@ -8,6 +8,7 @@ from org_parser.element._element import Element
 from org_parser.element._keyword import Keyword
 from org_parser.element._paragraph import Paragraph
 from org_parser.element._table import Table
+from org_parser.time import Clock
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -23,6 +24,7 @@ _SPECIAL_KEYWORD = "special_keyword"
 _PARAGRAPH = "paragraph"
 _ORG_TABLE = "org_table"
 _TABLEEL_TABLE = "tableel_table"
+_CLOCK = "clock"
 _TITLE = "TITLE"
 _AUTHOR = "AUTHOR"
 _CATEGORY = "CATEGORY"
@@ -447,6 +449,8 @@ def _extract_body_element(
         return Paragraph.from_node(node, source, parent=parent)
     if node.type in {_ORG_TABLE, _TABLEEL_TABLE}:
         return Table.from_node(node, source, parent=parent)
+    if node.type == _CLOCK:
+        return Clock.from_node(node, source, parent=parent)
     return Element.from_node(node, source, parent=parent)
 
 
