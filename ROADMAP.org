@@ -2006,7 +2006,10 @@ Clocks should be mutable by setting the entire timestamp. The duration value sho
 
 Add support for this new element type when processing document/heading bodies that can contain clock lines.
 
-*** TODO Properties, Logbook, Drawer
+*** DONE Properties, Logbook, Drawer
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]
+:END:
 Add a dedicated =Element= subclass for the drawer elements: =Properties=, =Logbook= and =Drawer=. These classes should represent the Org Mode drawers, including the key-value pairs stored within them (for properties) as well as the other types of objects that can be a part of a drawer (other drawer types).
 
 For =Properties= do extract the vlues from tree-sitter's =property_drawer=, specifically the key-value pairs for =node_property=.

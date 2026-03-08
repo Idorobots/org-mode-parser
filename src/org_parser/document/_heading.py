@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from org_parser.element import Drawer, Logbook, Properties
 from org_parser.element._element import Element
 from org_parser.element._paragraph import Paragraph
 from org_parser.element._table import Table
@@ -29,6 +30,9 @@ _PARAGRAPH = "paragraph"
 _ORG_TABLE = "org_table"
 _TABLEEL_TABLE = "tableel_table"
 _CLOCK = "clock"
+_DRAWER = "drawer"
+_LOGBOOK_DRAWER = "logbook_drawer"
+_PROPERTY_DRAWER = "property_drawer"
 
 
 class Heading:
@@ -451,13 +455,19 @@ def _extract_body(
     parent: Heading | Document,
 ) -> list[Element]:
     """Return :class:`Element` instances for each child of the body section."""
+    body: list[Element] = []
+    properties_node = node.child_by_field_name("properties")
+    if properties_node is not None:
+        body.append(_extract_body_element(properties_node, source, parent=parent))
+
     section_node = node.child_by_field_name("body")
     if section_node is None:
-        return []
-    return [
+        return body
+    body.extend(
         _extract_body_element(child, source, parent=parent)
         for child in section_node.named_children
-    ]
+    )
+    return body
 
 
 def _extract_body_element(
@@ -467,13 +477,22 @@ def _extract_body_element(
     parent: Heading | Document,
 ) -> Element:
     """Build one heading body element instance from a tree-sitter node."""
+    element: Element
     if node.type == _PARAGRAPH:
-        return Paragraph.from_node(node, source, parent=parent)
-    if node.type in {_ORG_TABLE, _TABLEEL_TABLE}:
-        return Table.from_node(node, source, parent=parent)
-    if node.type == _CLOCK:
-        return Clock.from_node(node, source, parent=parent)
-    return Element.from_node(node, source, parent=parent)
+        element = Paragraph.from_node(node, source, parent=parent)
+    elif node.type in {_ORG_TABLE, _TABLEEL_TABLE}:
+        element = Table.from_node(node, source, parent=parent)
+    elif node.type == _CLOCK:
+        element = Clock.from_node(node, source, parent=parent)
+    elif node.type == _DRAWER:
+        element = Drawer.from_node(node, source, parent=parent)
+    elif node.type == _LOGBOOK_DRAWER:
+        element = Logbook.from_node(node, source, parent=parent)
+    elif node.type == _PROPERTY_DRAWER:
+        element = Properties.from_node(node, source, parent=parent)
+    else:
+        element = Element.from_node(node, source, parent=parent)
+    return element
 
 
 def _extract_planning(
