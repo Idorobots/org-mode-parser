@@ -5,6 +5,18 @@ from __future__ import annotations
 from collections.abc import Iterator, MutableMapping, Sequence
 from typing import TYPE_CHECKING
 
+from org_parser.element._block import (
+    CenterBlock,
+    CommentBlock,
+    DynamicBlock,
+    ExampleBlock,
+    ExportBlock,
+    FixedWidthBlock,
+    QuoteBlock,
+    SourceBlock,
+    SpecialBlock,
+    VerseBlock,
+)
 from org_parser.element._element import Element
 from org_parser.text._rich_text import RichText
 from org_parser.time import Clock
@@ -25,6 +37,16 @@ _DRAWER = "drawer"
 _LOGBOOK_DRAWER = "logbook_drawer"
 _PROPERTY_DRAWER = "property_drawer"
 _NODE_PROPERTY = "node_property"
+_CENTER_BLOCK = "center_block"
+_QUOTE_BLOCK = "quote_block"
+_SPECIAL_BLOCK = "special_block"
+_DYNAMIC_BLOCK = "dynamic_block"
+_COMMENT_BLOCK = "comment_block"
+_EXAMPLE_BLOCK = "example_block"
+_EXPORT_BLOCK = "export_block"
+_SRC_BLOCK = "src_block"
+_VERSE_BLOCK = "verse_block"
+_FIXED_WIDTH = "fixed_width"
 
 
 class Drawer(Element):
@@ -322,22 +344,29 @@ def _extract_drawer_body_element(node: tree_sitter.Node, source: bytes) -> Eleme
     from org_parser.element._paragraph import Paragraph
     from org_parser.element._table import Table
 
-    element: Element
-    if node.type == _PARAGRAPH:
-        element = Paragraph.from_node(node, source)
-    elif node.type in {_ORG_TABLE, _TABLEEL_TABLE}:
-        element = Table.from_node(node, source)
-    elif node.type == _CLOCK:
-        element = Clock.from_node(node, source)
-    elif node.type == _DRAWER:
-        element = Drawer.from_node(node, source)
-    elif node.type == _LOGBOOK_DRAWER:
-        element = Logbook.from_node(node, source)
-    elif node.type == _PROPERTY_DRAWER:
-        element = Properties.from_node(node, source)
-    else:
-        element = Element.from_node(node, source)
-    return element
+    dispatch = {
+        _PARAGRAPH: Paragraph.from_node,
+        _ORG_TABLE: Table.from_node,
+        _TABLEEL_TABLE: Table.from_node,
+        _CLOCK: Clock.from_node,
+        _DRAWER: Drawer.from_node,
+        _LOGBOOK_DRAWER: Logbook.from_node,
+        _PROPERTY_DRAWER: Properties.from_node,
+        _CENTER_BLOCK: CenterBlock.from_node,
+        _QUOTE_BLOCK: QuoteBlock.from_node,
+        _SPECIAL_BLOCK: SpecialBlock.from_node,
+        _DYNAMIC_BLOCK: DynamicBlock.from_node,
+        _COMMENT_BLOCK: CommentBlock.from_node,
+        _EXAMPLE_BLOCK: ExampleBlock.from_node,
+        _EXPORT_BLOCK: ExportBlock.from_node,
+        _SRC_BLOCK: SourceBlock.from_node,
+        _VERSE_BLOCK: VerseBlock.from_node,
+        _FIXED_WIDTH: FixedWidthBlock.from_node,
+    }
+    factory = dispatch.get(node.type)
+    if factory is None:
+        return Element.from_node(node, source)
+    return factory(node, source)
 
 
 def _ensure_trailing_newline(value: str) -> str:
