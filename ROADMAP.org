@@ -1803,7 +1803,10 @@ Update GitHub Actions workflow to also test the python portion of the project.
 Update AGENTS.md with instructions for the Python portion of the project.
 
 ** Semantic nodes
-*** TODO Env, Document, Heading
+*** DONE Env, Document, Heading
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 13:39]
+:END:
 Add the top-level semantic classes to the =org_parser.document= package:
 
 1. =Document=
@@ -1865,6 +1868,13 @@ Add the folowing functions to the Python wrapper library:
 - ~dump(document: Document, filename: str | None)~ - saves the Org-Mode file in the file named by =document.filename=,
 
 Add bsic tests for this functionality using the basic examples as test fixtures.
+
+*** DONE Source bytes only in document
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:35]
+:END:
+Do not cache the entire source file bytes in each heading. It suffices that the =Document= class caches the raw bytes and exposes them via the =source= property. Headings can use their =document= property to fetch the original source.
+The constructor for headings can take the document as a parameter.
 
 *** TODO Mutability
 Implement setters for all the properties on all the objects so far.

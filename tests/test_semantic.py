@@ -135,7 +135,7 @@ class TestHeadingManual:
 
     def test_minimum_construction(self) -> None:
         doc = Document(filename="t.org")
-        h = Heading(level=1, parent=doc)
+        h = Heading(level=1, document=doc, parent=doc)
         assert h.level == 1
         assert h.parent is doc
         assert h.todo is None
@@ -148,21 +148,21 @@ class TestHeadingManual:
 
     def test_document_property_direct_parent(self) -> None:
         doc = Document(filename="t.org")
-        h = Heading(level=1, parent=doc)
+        h = Heading(level=1, document=doc, parent=doc)
         assert h.document is doc
 
     def test_document_property_nested(self) -> None:
         doc = Document(filename="t.org")
-        h1 = Heading(level=1, parent=doc)
-        h2 = Heading(level=2, parent=h1)
-        h3 = Heading(level=3, parent=h2)
+        h1 = Heading(level=1, document=doc, parent=doc)
+        h2 = Heading(level=2, document=doc, parent=h1)
+        h3 = Heading(level=3, document=doc, parent=h2)
         assert h3.document is doc
 
     def test_siblings(self) -> None:
         doc = Document(filename="t.org")
-        h1 = Heading(level=1, parent=doc)
-        h2 = Heading(level=1, parent=doc)
-        h3 = Heading(level=1, parent=doc)
+        h1 = Heading(level=1, document=doc, parent=doc)
+        h2 = Heading(level=1, document=doc, parent=doc)
+        h3 = Heading(level=1, document=doc, parent=doc)
         doc.children.extend([h1, h2, h3])
 
         sibs = h2.siblings
@@ -173,13 +173,13 @@ class TestHeadingManual:
 
     def test_siblings_empty_when_only_child(self) -> None:
         doc = Document(filename="t.org")
-        h = Heading(level=1, parent=doc)
+        h = Heading(level=1, document=doc, parent=doc)
         doc.children.append(h)
         assert h.siblings == []
 
     def test_repr(self) -> None:
         doc = Document(filename="t.org")
-        h = Heading(level=2, parent=doc, title=RichText("My heading"))
+        h = Heading(level=2, document=doc, parent=doc, title=RichText("My heading"))
         r = repr(h)
         assert "**" in r
         assert "My heading" in r

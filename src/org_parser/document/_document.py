@@ -111,7 +111,12 @@ class Document:
         # --- build top-level headings ---------------------------------------
         for child in root.children:
             if child.type == _HEADING:
-                heading = Heading.from_node(child, parent=doc, source=source)
+                heading = Heading.from_node(
+                    child,
+                    document=doc,
+                    parent=doc,
+                    source=source,
+                )
                 doc._children.append(heading)
 
         return doc

@@ -29,6 +29,7 @@ class Heading:
 
     Args:
         level: The heading level (count of leading ``*`` characters).
+        document: The root :class:`Document` that contains this heading.
         parent: The parent :class:`Heading` or :class:`Document`.
         todo: The TODO keyword (e.g. ``"TODO"``, ``"DONE"``), or *None*.
         priority: The priority letter or number (e.g. ``"A"``, ``"1"``), or
@@ -45,6 +46,7 @@ class Heading:
         self,
         *,
         level: int,
+        document: Document,
         parent: Heading | Document,
         todo: str | None = None,
         priority: str | None = None,
@@ -55,6 +57,7 @@ class Heading:
         children: list[Heading] | None = None,
     ) -> None:
         self._level = level
+        self._document = document
         self._parent = parent
         self._todo = todo
         self._priority = priority
@@ -64,7 +67,6 @@ class Heading:
         self._body: list[Element] = body if body is not None else []
         self._children: list[Heading] = children if children is not None else []
         self._node: tree_sitter.Node | None = None
-        self._source: bytes = b""
 
     # -- factory method ------------------------------------------------------
 
@@ -73,6 +75,7 @@ class Heading:
         cls,
         node: tree_sitter.Node,
         *,
+        document: Document,
         parent: Heading | Document,
         source: bytes,
     ) -> Heading:
@@ -80,6 +83,7 @@ class Heading:
 
         Args:
             node: A tree-sitter node of type ``heading``.
+            document: The root document that contains this heading.
             parent: The parent :class:`Heading` or :class:`Document`.
             source: The full source bytes of the document.
 
@@ -98,6 +102,7 @@ class Heading:
 
         heading = cls(
             level=level,
+            document=document,
             parent=parent,
             todo=todo,
             priority=priority,
@@ -107,12 +112,16 @@ class Heading:
             body=body,
         )
         heading._node = node
-        heading._source = source
 
         # Recursively build sub-headings.
         for child in node.children:
             if child.type == _HEADING:
-                sub = cls.from_node(child, parent=heading, source=source)
+                sub = cls.from_node(
+                    child,
+                    document=document,
+                    parent=heading,
+                    source=source,
+                )
                 heading._children.append(sub)
 
         return heading
@@ -122,12 +131,7 @@ class Heading:
     @property
     def document(self) -> Document:
         """The :class:`Document` that ultimately contains this heading."""
-        cursor: Heading | Document = self._parent
-        while isinstance(cursor, Heading):
-            cursor = cursor._parent
-        # After the loop, *cursor* is necessarily a Document.
-        assert not isinstance(cursor, Heading)
-        return cursor
+        return self._document
 
     @property
     def level(self) -> int:
