@@ -67,6 +67,7 @@ class Heading:
         self._body: list[Element] = body if body is not None else []
         self._children: list[Heading] = children if children is not None else []
         self._node: tree_sitter.Node | None = None
+        self._dirty = False
 
     # -- factory method ------------------------------------------------------
 
@@ -133,50 +134,124 @@ class Heading:
         """The :class:`Document` that ultimately contains this heading."""
         return self._document
 
+    @document.setter
+    def document(self, value: Document) -> None:
+        """Set the owning document and mark this heading as dirty."""
+        self._document = value
+        self._mark_dirty()
+
     @property
     def level(self) -> int:
         """The heading level (count of leading ``*`` characters)."""
         return self._level
+
+    @level.setter
+    def level(self, value: int) -> None:
+        """Set the heading level and mark this heading as dirty."""
+        self._level = value
+        self._mark_dirty()
 
     @property
     def todo(self) -> str | None:
         """The TODO keyword, or *None* if absent."""
         return self._todo
 
+    @todo.setter
+    def todo(self, value: str | None) -> None:
+        """Set the TODO keyword and mark this heading as dirty."""
+        self._todo = value
+        self._mark_dirty()
+
     @property
     def priority(self) -> str | None:
         """The priority value (e.g. ``"A"``, ``"1"``), or *None*."""
         return self._priority
+
+    @priority.setter
+    def priority(self, value: str | None) -> None:
+        """Set the priority value and mark this heading as dirty."""
+        self._priority = value
+        self._mark_dirty()
 
     @property
     def title(self) -> RichText | None:
         """The heading title as :class:`RichText`, or *None*."""
         return self._title
 
+    @title.setter
+    def title(self, value: RichText | None) -> None:
+        """Set the heading title and mark this heading as dirty."""
+        self._title = value
+        self._mark_dirty()
+
     @property
     def counter(self) -> str | None:
         """The completion counter inner value (e.g. ``"1/3"``), or *None*."""
         return self._counter
+
+    @counter.setter
+    def counter(self, value: str | None) -> None:
+        """Set the completion counter and mark this heading as dirty."""
+        self._counter = value
+        self._mark_dirty()
 
     @property
     def tags(self) -> list[str]:
         """Tag strings in source order."""
         return self._tags
 
+    @tags.setter
+    def tags(self, value: list[str]) -> None:
+        """Set tag strings and mark this heading as dirty."""
+        self._tags = value
+        self._mark_dirty()
+
     @property
     def body(self) -> list[Element]:
         """Body elements (excludes sub-headings)."""
         return self._body
+
+    @body.setter
+    def body(self, value: list[Element]) -> None:
+        """Set body elements and mark this heading as dirty."""
+        self._body = value
+        self._mark_dirty()
 
     @property
     def parent(self) -> Heading | Document:
         """The parent :class:`Heading` or :class:`Document`."""
         return self._parent
 
+    @parent.setter
+    def parent(self, value: Heading | Document) -> None:
+        """Set the parent reference and mark this heading as dirty."""
+        self._parent = value
+        self._mark_dirty()
+
     @property
     def children(self) -> list[Heading]:
         """Direct sub-headings."""
         return self._children
+
+    @children.setter
+    def children(self, value: list[Heading]) -> None:
+        """Set direct sub-headings and mark this heading as dirty."""
+        self._children = value
+        self._mark_dirty()
+
+    @property
+    def dirty(self) -> bool:
+        """Whether this heading has been mutated after creation."""
+        return self._dirty
+
+    def _mark_dirty(self) -> None:
+        """Mark this heading and its document as dirty."""
+        self._dirty = True
+        self._document.mark_dirty()
+
+    def mark_dirty(self) -> None:
+        """Mark this heading and its document as dirty."""
+        self._mark_dirty()
 
     @property
     def siblings(self) -> list[Heading]:

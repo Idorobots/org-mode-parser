@@ -33,6 +33,7 @@ class Element:
         self._node_type = node_type
         self._source_text = source_text
         self._node: tree_sitter.Node | None = None
+        self._dirty = False
 
     # -- factory method ------------------------------------------------------
 
@@ -62,10 +63,35 @@ class Element:
         """The tree-sitter node type name."""
         return self._node_type
 
+    @node_type.setter
+    def node_type(self, value: str) -> None:
+        """Set the node type and mark the element as dirty."""
+        self._node_type = value
+        self._mark_dirty()
+
     @property
     def source_text(self) -> str:
         """The verbatim source text of the element."""
         return self._source_text
+
+    @source_text.setter
+    def source_text(self, value: str) -> None:
+        """Set source text and mark the element as dirty."""
+        self._source_text = value
+        self._mark_dirty()
+
+    @property
+    def dirty(self) -> bool:
+        """Whether this element has been mutated after creation."""
+        return self._dirty
+
+    def _mark_dirty(self) -> None:
+        """Mark this element as dirty."""
+        self._dirty = True
+
+    def mark_dirty(self) -> None:
+        """Mark this element as dirty."""
+        self._mark_dirty()
 
     # -- dunder protocols ----------------------------------------------------
 

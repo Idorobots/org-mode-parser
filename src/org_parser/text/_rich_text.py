@@ -31,6 +31,31 @@ class RichText:
     def __init__(self, text: str) -> None:
         self._text = text
         self._node: tree_sitter.Node | None = None
+        self._dirty = False
+
+    @property
+    def text(self) -> str:
+        """Raw text content."""
+        return self._text
+
+    @text.setter
+    def text(self, value: str) -> None:
+        """Set raw text content and mark rich text as dirty."""
+        self._text = value
+        self._mark_dirty()
+
+    @property
+    def dirty(self) -> bool:
+        """Whether this rich text has been mutated after creation."""
+        return self._dirty
+
+    def _mark_dirty(self) -> None:
+        """Mark this rich text as dirty."""
+        self._dirty = True
+
+    def mark_dirty(self) -> None:
+        """Mark this rich text as dirty."""
+        self._mark_dirty()
 
     # -- factory methods -----------------------------------------------------
 

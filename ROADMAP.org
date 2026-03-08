@@ -1876,7 +1876,10 @@ Add bsic tests for this functionality using the basic examples as test fixtures.
 Do not cache the entire source file bytes in each heading. It suffices that the =Document= class caches the raw bytes and exposes them via the =source= property. Headings can use their =document= property to fetch the original source.
 The constructor for headings can take the document as a parameter.
 
-*** TODO Mutability
+*** DONE Mutability
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:56]
+:END:
 Implement setters for all the properties on all the objects so far.
 
 Whenever, an object is mutated, it should be marked as dirty and it's representation should be built from scratch instead of re-using the raw parse tree.
@@ -1884,6 +1887,12 @@ You can assume for now that all objects will have a =__str__= property that can 
 
 We will implement the representation function next, so for the time being focus on the dirty flag and the setter logic.
 Add tests for the setters, but omit the representation tests, we will address that next.
+
+*** DONE mark_dirty()
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:58]
+:END:
+Add a public method for marking the nodes as dirty programatically.
 
 *** TODO __str__
 Implement the string representation function =__str__= for all objects. By default, when the object is not marked "dirty", it should re-use the raw input and the Tree-Sitter parse tree to produce a verbatim (as-in-source) representation. When an object is marked as dirty, the representation should be reconstructed from scratch.
@@ -1897,12 +1906,18 @@ The goal is to preserve the original whitespace until a mutation is made, so tha
 Don't worry about the =Element= and =RichText= stubs just yet, we will address that later.
 
 *** TODO raw()
-Add a method called =raw= that returns the raw Tree-Sitter parse tree nodes for each object that were used to construct them.
+Add a method called =raw= for each object that returns the raw Tree-Sitter parse tree nodes that were used to construct those objects.
 
-*** RichText
-=org_parser.text.*=
+*** TODO RichText
+Expand the abstraction of =RichText= in =org_parser.text.*= module to support the inline markup, links, footnotes, etc.
+It should support all the parse tree nodes that can appear under a heading title or within a paragraph.
 
-- PlainText, Bold, Italic, etc
+Please create abstarctions for all of these entities that can be a part of the =RichText=. =RichText= itself can be constucted by passing a list of these abstractions or with a class method taking a parse tree node.
+=RichText= should have a dirty flag and by default show the verbatim document source representation when stringified. =RichText= can be mutated by prepending, appending or inserting additional data in the middle. That should mark it as dirty and cause the string representation to be computed.
+
+All of the inline markup abstractions should cache the exact values they represent. No need to store the parse tree nodes or the document in them - we keept that at the =RichText= granularity.
+
+All of these abstractions should be publicly available via the =org_parser.text.*= module so that new =RichText= objects can be created programatically and attached to headings/document.
 
 *** Element, Section, Paragraph, Keywords, Drawer, Table, List, Block
 - supports any drawers, spacial treatment for logbook & properties
@@ -1910,9 +1925,6 @@ Add a method called =raw= that returns the raw Tree-Sitter parse tree nodes for 
 =org_parser.elements.*=
 
 *** Clock, Timestamp, Repeats
-
-*** mark_dirty()
-A method for marking the nodes as dirty programatically.
 
 *** iterator interface
 Document and Heading should support an iterator interface.

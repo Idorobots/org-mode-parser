@@ -65,6 +65,7 @@ class Document:
         self._children: list[Heading] = children if children is not None else []
         self._node: tree_sitter.Node | None = None
         self._source: bytes = b""
+        self._dirty = False
 
     # -- factory method ------------------------------------------------------
 
@@ -128,50 +129,127 @@ class Document:
         """The filename of the document file."""
         return self._filename
 
+    @filename.setter
+    def filename(self, value: str) -> None:
+        """Set the filename and mark the document as dirty."""
+        self._filename = value
+        self._mark_dirty()
+
     @property
     def title(self) -> RichText | None:
         """The ``#+TITLE:`` value, or *None*."""
         return self._title
+
+    @title.setter
+    def title(self, value: RichText | None) -> None:
+        """Set the ``#+TITLE:`` value and mark the document as dirty."""
+        self._title = value
+        self._mark_dirty()
 
     @property
     def author(self) -> RichText | None:
         """The ``#+AUTHOR:`` value, or *None*."""
         return self._author
 
+    @author.setter
+    def author(self, value: RichText | None) -> None:
+        """Set the ``#+AUTHOR:`` value and mark the document as dirty."""
+        self._author = value
+        self._mark_dirty()
+
     @property
     def category(self) -> RichText | None:
         """The ``#+CATEGORY:`` value, or *None*."""
         return self._category
+
+    @category.setter
+    def category(self, value: RichText | None) -> None:
+        """Set the ``#+CATEGORY:`` value and mark the document as dirty."""
+        self._category = value
+        self._mark_dirty()
 
     @property
     def description(self) -> RichText | None:
         """The ``#+DESCRIPTION:`` value, or *None*."""
         return self._description
 
+    @description.setter
+    def description(self, value: RichText | None) -> None:
+        """Set the ``#+DESCRIPTION:`` value and mark the document as dirty."""
+        self._description = value
+        self._mark_dirty()
+
     @property
     def todo(self) -> RichText | None:
         """The ``#+TODO:`` value, or *None*."""
         return self._todo
+
+    @todo.setter
+    def todo(self, value: RichText | None) -> None:
+        """Set the ``#+TODO:`` value and mark the document as dirty."""
+        self._todo = value
+        self._mark_dirty()
 
     @property
     def keywords(self) -> dict[str, RichText]:
         """Non-dedicated special keywords, keyed by upper-cased name."""
         return self._keywords
 
+    @keywords.setter
+    def keywords(self, value: dict[str, RichText]) -> None:
+        """Set non-dedicated keywords and mark the document as dirty."""
+        self._keywords = value
+        self._mark_dirty()
+
     @property
     def body(self) -> list[Element]:
         """Zeroth-section body elements (excludes keywords and headings)."""
         return self._body
+
+    @body.setter
+    def body(self, value: list[Element]) -> None:
+        """Set zeroth-section body elements and mark the document as dirty."""
+        self._body = value
+        self._mark_dirty()
 
     @property
     def children(self) -> list[Heading]:
         """Top-level headings."""
         return self._children
 
+    @children.setter
+    def children(self, value: list[Heading]) -> None:
+        """Set top-level headings and mark the document as dirty."""
+        self._children = value
+        self._mark_dirty()
+
     @property
     def source(self) -> bytes:
         """Original source bytes used to build this document."""
         return self._source
+
+    @source.setter
+    def source(self, value: bytes) -> None:
+        """Set source bytes and mark the document as dirty."""
+        self._source = value
+        self._mark_dirty()
+
+    @property
+    def dirty(self) -> bool:
+        """Whether this document has been mutated after creation."""
+        return self._dirty
+
+    def _mark_dirty(self) -> None:
+        """Mark this document as dirty."""
+        self._dirty = True
+
+    def mark_dirty(self) -> None:
+        """Mark this document as dirty.
+
+        This public helper is intended for nested objects that need to bubble
+        mutation state up to the owning document.
+        """
+        self._mark_dirty()
 
     # -- dunder protocols ----------------------------------------------------
 
