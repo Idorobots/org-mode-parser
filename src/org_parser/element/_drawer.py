@@ -18,7 +18,7 @@ from org_parser.element._block import (
     VerseBlock,
 )
 from org_parser.element._element import Element
-from org_parser.element._list import List
+from org_parser.element._list import List, ListItem, Repeat
 from org_parser.text._rich_text import RichText
 from org_parser.time import Clock
 
@@ -148,7 +148,7 @@ class Logbook(Drawer):
         *,
         body: list[Element] | None = None,
         clock_entries: list[Clock] | None = None,
-        repeats: list[Element] | None = None,
+        repeats: list[Repeat] | None = None,
         parent: Document | Heading | Element | None = None,
         source_text: str = "",
     ) -> None:
@@ -160,9 +160,8 @@ class Logbook(Drawer):
         )
         self._node_type = _LOGBOOK_DRAWER
         self._clock_entries = clock_entries if clock_entries is not None else []
-        self._repeats = repeats if repeats is not None else []
+        self._repeats: list[Repeat] = repeats if repeats is not None else []
         self._adopt_body(self._clock_entries)
-        self._adopt_body(self._repeats)
 
     @classmethod
     def from_node(
@@ -177,8 +176,8 @@ class Logbook(Drawer):
             _extract_drawer_body_element(child, source)
             for child in node.children_by_field_name("body")
         ]
+        repeats = _extract_logbook_repeats(body)
         clock_entries = [element for element in body if isinstance(element, Clock)]
-        repeats = [element for element in body if not isinstance(element, Clock)]
         logbook = cls(
             body=body,
             clock_entries=clock_entries,
@@ -193,8 +192,8 @@ class Logbook(Drawer):
     def from_drawer(cls, drawer: Drawer) -> Logbook:
         """Create a :class:`Logbook` from a generic drawer instance."""
         body = list(drawer.body)
+        repeats = _extract_logbook_repeats(body)
         clock_entries = [element for element in body if isinstance(element, Clock)]
-        repeats = [element for element in body if not isinstance(element, Clock)]
         return cls(body=body, clock_entries=clock_entries, repeats=repeats)
 
     @property
@@ -210,15 +209,15 @@ class Logbook(Drawer):
         self._mark_dirty()
 
     @property
-    def repeats(self) -> list[Element]:
-        """Non-clock logbook repeat entries as elements."""
+    def repeats(self) -> list[Repeat]:
+        """Repeated task entries extracted from list items in this logbook."""
         return self._repeats
 
     @repeats.setter
-    def repeats(self, value: list[Element]) -> None:
+    def repeats(self, value: list[Repeat]) -> None:
         """Set logbook repeat entries and mark the drawer as dirty."""
         self._repeats = value
-        self._adopt_body(self._repeats)
+        _sync_logbook_repeat_list(self, self._repeats)
         self._mark_dirty()
 
 
@@ -377,3 +376,48 @@ def _ensure_trailing_newline(value: str) -> str:
     if value == "" or value.endswith("\n"):
         return value
     return f"{value}\n"
+
+
+def _extract_logbook_repeats(body: list[Element]) -> list[Repeat]:
+    """Convert repeat-form list items in logbook lists into :class:`Repeat`."""
+    repeats: list[Repeat] = []
+    for element in body:
+        if not isinstance(element, List):
+            continue
+        updated_items: list[ListItem] = []
+        converted = False
+        for item in element.items:
+            if isinstance(item, Repeat):
+                updated_items.append(item)
+                repeats.append(item)
+                continue
+            repeat = Repeat.from_list_item(item)
+            if repeat is None:
+                updated_items.append(item)
+                continue
+            updated_items.append(repeat)
+            repeats.append(repeat)
+            converted = True
+        if converted:
+            element.set_items(updated_items, mark_dirty=False)
+    return repeats
+
+
+def _sync_logbook_repeat_list(logbook: Logbook, repeats: list[Repeat]) -> None:
+    """Synchronize explicit repeat entries into a concrete logbook list."""
+    target_list: List | None = None
+    for element in logbook.body:
+        if not isinstance(element, List):
+            continue
+        if any(isinstance(item, Repeat) for item in element.items):
+            target_list = element
+            break
+
+    if target_list is None:
+        if not repeats:
+            return
+        target_list = List(items=list(repeats), parent=logbook)
+        logbook.body = [*logbook.body, target_list]
+        return
+
+    target_list.items = list(repeats)

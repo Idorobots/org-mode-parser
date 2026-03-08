@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+import re
 from typing import TYPE_CHECKING
 
 from org_parser.element._element import Element
 from org_parser.text._rich_text import RichText
+from org_parser.time import Timestamp
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -15,7 +18,15 @@ if TYPE_CHECKING:
     from org_parser.document._document import Document
     from org_parser.document._heading import Heading
 
-__all__ = ["List", "ListItem", "ListItemContinuation"]
+__all__ = ["List", "ListItem", "ListItemContinuation", "Repeat"]
+
+
+_REPEAT_PATTERN = re.compile(
+    r'^State\s+"(?P<after>[^"]+)"\s+from\s+"(?P<before>[^"]+)"\s+'
+    r"(?P<timestamp><[^>\n]+>|\[[^\]\n]+\](?:--\[[^\]\n]+\])?)"
+    r"(?:\s*(?P<line_break>\\\\)?(?:\n(?P<note_line>.*))?)?$",
+    re.DOTALL,
+)
 
 
 class ListItemContinuation(Element):
@@ -284,6 +295,138 @@ class ListItem(Element):
         return "".join(parts)
 
 
+class Repeat(ListItem):
+    """Repeated-task logbook entry represented as a specialized list item."""
+
+    def __init__(
+        self,
+        *,
+        after: str,
+        before: str,
+        timestamp: Timestamp,
+        note: str | None = None,
+        note_indent: str | None = None,
+        indent: str | None = None,
+        bullet: str = "-",
+        ordered_counter: str | None = None,
+        counter_set: str | None = None,
+        checkbox: str | None = None,
+        parent: Document | Heading | Element | None = None,
+        source_text: str = "",
+    ) -> None:
+        super().__init__(
+            indent=indent,
+            bullet=bullet,
+            ordered_counter=ordered_counter,
+            counter_set=counter_set,
+            checkbox=checkbox,
+            item_tag=None,
+            first_line=None,
+            body=[],
+            parent=parent,
+            source_text=source_text,
+        )
+        self._node_type = "repeat"
+        self._after = after
+        self._before = before
+        self._timestamp = timestamp
+        self._note = _normalize_optional_text(note)
+        self._note_indent = (
+            note_indent if note_indent is not None else _default_note_indent(indent)
+        )
+
+    @classmethod
+    def from_list_item(cls, item: ListItem) -> Repeat | None:
+        """Build a :class:`Repeat` from one list item when pattern-matched."""
+        matched = _parse_repeat_source(item.source_text)
+        if matched is None:
+            return None
+        repeat = cls(
+            after=matched.after,
+            before=matched.before,
+            timestamp=matched.timestamp,
+            note=matched.note,
+            note_indent=matched.note_indent,
+            indent=item.indent,
+            bullet=item.bullet,
+            ordered_counter=item.ordered_counter,
+            counter_set=item.counter_set,
+            checkbox=item.checkbox,
+            parent=item.parent,
+            source_text=item.source_text,
+        )
+        repeat._node = item._node
+        return repeat
+
+    @property
+    def after(self) -> str:
+        """Task state after the repeat transition."""
+        return self._after
+
+    @after.setter
+    def after(self, value: str) -> None:
+        """Set the after-state and mark repeat entry dirty."""
+        self._after = value
+        self._mark_dirty()
+
+    @property
+    def before(self) -> str:
+        """Task state before the repeat transition."""
+        return self._before
+
+    @before.setter
+    def before(self, value: str) -> None:
+        """Set the before-state and mark repeat entry dirty."""
+        self._before = value
+        self._mark_dirty()
+
+    @property
+    def timestamp(self) -> Timestamp:
+        """Timestamp recorded for the repeat transition."""
+        return self._timestamp
+
+    @timestamp.setter
+    def timestamp(self, value: Timestamp) -> None:
+        """Set repeat timestamp and mark repeat entry dirty."""
+        self._timestamp = value
+        self._mark_dirty()
+
+    @property
+    def note(self) -> str | None:
+        """Optional short note from continuation line, if present."""
+        return self._note
+
+    @note.setter
+    def note(self, value: str | None) -> None:
+        """Set optional note text and mark repeat entry dirty."""
+        self._note = _normalize_optional_text(value)
+        self._mark_dirty()
+
+    def __str__(self) -> str:
+        """Render repeat entry preserving source text while clean."""
+        if not self.dirty and self._node is not None:
+            return self.source_text
+
+        parts: list[str] = []
+        if self._indent is not None:
+            parts.append(self._indent)
+        if self._ordered_counter is not None and self._bullet in {".", ")"}:
+            parts.append(f"{self._ordered_counter}{self._bullet} ")
+        else:
+            parts.append(f"{self._bullet} ")
+        if self._counter_set is not None:
+            parts.append(f"[@{self._counter_set}] ")
+        if self._checkbox is not None:
+            parts.append(f"[{self._checkbox}] ")
+        parts.append(f'State "{self._after}" from "{self._before}" {self._timestamp}')
+        if self._note is None:
+            parts.append("\n")
+            return "".join(parts)
+        parts.append(" \\\\\n")
+        parts.append(f"{self._note_indent}{self._note}\n")
+        return "".join(parts)
+
+
 class List(Element):
     """Plain list element containing mutable :class:`ListItem` instances."""
 
@@ -328,9 +471,14 @@ class List(Element):
     @items.setter
     def items(self, value: list[ListItem]) -> None:
         """Set list items and mark list dirty."""
+        self.set_items(value)
+
+    def set_items(self, value: list[ListItem], *, mark_dirty: bool = True) -> None:
+        """Set list items with optional dirty propagation."""
         self._items = value
         self._adopt_items(self._items)
-        self._mark_dirty()
+        if mark_dirty:
+            self._mark_dirty()
 
     def append_item(self, item: ListItem) -> None:
         """Append one list item and mark list dirty."""
@@ -465,3 +613,88 @@ def _ensure_trailing_newline(value: str) -> str:
     if value == "" or value.endswith("\n"):
         return value
     return f"{value}\n"
+
+
+@dataclass(slots=True)
+class _RepeatMatch:
+    """Parsed repeated-task fields extracted from one list item text."""
+
+    after: str
+    before: str
+    timestamp: Timestamp
+    note: str | None
+    note_indent: str
+
+
+def _parse_repeat_source(source_text: str) -> _RepeatMatch | None:
+    """Parse one repeated-task list item and return extracted fields."""
+    body = _strip_item_prefix(source_text.rstrip("\n"))
+    if body is None:
+        return None
+    body = body.replace("\\\\n", "\n")
+
+    matched = _REPEAT_PATTERN.match(body)
+    if matched is None:
+        return None
+
+    timestamp_text = matched.group("timestamp")
+    note_line = matched.group("note_line")
+    note_indent = _extract_leading_indent(note_line) if note_line is not None else ""
+    note = None if note_line is None else note_line.strip()
+
+    return _RepeatMatch(
+        after=matched.group("after"),
+        before=matched.group("before"),
+        timestamp=_parse_timestamp_text(timestamp_text),
+        note=_normalize_optional_text(note),
+        note_indent=note_indent,
+    )
+
+
+def _strip_item_prefix(source_text: str) -> str | None:
+    """Strip leading list marker prefix from one list-item source text."""
+    line, separator, rest = source_text.partition("\n")
+    prefix_match = re.match(r"^[ \t]*(?:[-+*]|[0-9]+[.)]|[a-z][.)])[ \t]+", line)
+    if prefix_match is None:
+        return None
+    remainder = line[prefix_match.end() :]
+    return remainder if separator == "" else f"{remainder}\n{rest}"
+
+
+def _parse_timestamp_text(raw: str) -> Timestamp:
+    """Parse one timestamp string into :class:`Timestamp`."""
+    from org_parser._lang import PARSER
+
+    source = f"{raw}\n".encode()
+    root = PARSER.parse(source).root_node
+    timestamp_node = _find_first_timestamp_node(root)
+    if timestamp_node is None:
+        raise ValueError(f"Could not parse repeat timestamp: {raw!r}")
+    return Timestamp.from_node(timestamp_node, source)
+
+
+def _find_first_timestamp_node(node: tree_sitter.Node) -> tree_sitter.Node | None:
+    """Return first ``timestamp`` descendant node in source order."""
+    if node.type == "timestamp":
+        return node
+    for child in node.named_children:
+        matched = _find_first_timestamp_node(child)
+        if matched is not None:
+            return matched
+    return None
+
+
+def _normalize_optional_text(value: str | None) -> str | None:
+    """Return stripped text value, or ``None`` when empty."""
+    if value is None:
+        return None
+    normalized = value.strip()
+    if normalized == "":
+        return None
+    return normalized
+
+
+def _default_note_indent(indent: str | None) -> str:
+    """Return default continuation indentation for repeat note lines."""
+    base = "" if indent is None else indent
+    return f"{base}  "

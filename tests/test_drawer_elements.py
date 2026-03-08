@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from org_parser import loads
-from org_parser.element import Drawer, Logbook, Properties
+from org_parser.element import Drawer, List, Logbook, Properties, Repeat
 from org_parser.text import RichText
 from org_parser.time import Clock
 
@@ -100,7 +100,10 @@ def test_logbook_drawer_extracts_clocks_and_repeats() -> None:
     assert len(logbook.clock_entries) == 2
     assert all(isinstance(entry, Clock) for entry in logbook.clock_entries)
     assert len(logbook.repeats) == 1
-    assert logbook.repeats[0].parent is logbook
+    assert isinstance(logbook.repeats[0], Repeat)
+    assert logbook.repeats[0].after == "DONE"
+    assert logbook.repeats[0].before == "TODO"
+    assert isinstance(logbook.repeats[0].parent, List)
     assert all(entry.parent is logbook for entry in logbook.clock_entries)
     assert document.children[0].body == []
 

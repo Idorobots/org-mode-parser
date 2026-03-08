@@ -2049,7 +2049,10 @@ Add a dedicated =Element= subclass for the =List='s. The class should represent 
 
 Add support for this new element when processing document/heading bodies that can contain lists. Do also add support for these in drawer bodies.
 
-*** TODO Repeated tasks
+*** DONE Repeated tasks
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-09 Mon 00:20]
+:END:
 Add a dedicated =Element= subclass for repeated tasks. A =Repeat= is a list item stored in the =LogbookDrawer= as one of the following forms:
 
 #+begin_example

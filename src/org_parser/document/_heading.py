@@ -16,6 +16,7 @@ from org_parser.element import (
     Logbook,
     Properties,
     QuoteBlock,
+    Repeat,
     SourceBlock,
     SpecialBlock,
     VerseBlock,
@@ -78,6 +79,7 @@ class Heading:
         title: The heading title as :class:`RichText`, or *None*.
         counter: Completion counter object (e.g. ``[1/3]``), or *None*.
         tags: A list of tag strings in source order.
+        repeated_tasks: Repeated task entries extracted from ``LOGBOOK``.
         body: Body elements of the heading (excludes sub-headings).
         children: Direct sub-headings of this heading.
     """
@@ -98,6 +100,7 @@ class Heading:
         deadline: Timestamp | None = None,
         properties: Properties | None = None,
         logbook: Logbook | None = None,
+        repeated_tasks: list[Repeat] | None = None,
         body: list[Element] | None = None,
         children: list[Heading] | None = None,
     ) -> None:
@@ -114,6 +117,11 @@ class Heading:
         self._deadline = deadline
         self._properties = properties
         self._logbook = logbook
+        self._repeated_tasks: list[Repeat] = (
+            repeated_tasks
+            if repeated_tasks is not None
+            else ([] if logbook is None else logbook.repeats)
+        )
         self._body: list[Element] = body if body is not None else []
         self._children: list[Heading] = children if children is not None else []
         self._node: tree_sitter.Node | None = None
@@ -124,6 +132,7 @@ class Heading:
 
         self._adopt_properties(self._properties)
         self._adopt_logbook(self._logbook)
+        self._sync_repeated_tasks_from_logbook()
         self._adopt_body_elements(self._body)
         self._adopt_children(self._children)
 
@@ -348,6 +357,30 @@ class Heading:
         """Set merged heading ``LOGBOOK`` drawer and mark dirty."""
         self._logbook = value
         self._adopt_logbook(self._logbook)
+        self._sync_repeated_tasks_from_logbook()
+        self._mark_dirty()
+
+    @property
+    def repeated_tasks(self) -> list[Repeat]:
+        """Repeated task entries extracted from this heading's logbook."""
+        if self._logbook is None:
+            self._ensure_logbook_for_repeats()
+            self._sync_repeated_tasks_from_logbook()
+        return self._repeated_tasks
+
+    @repeated_tasks.setter
+    def repeated_tasks(self, value: list[Repeat]) -> None:
+        """Set repeated tasks and synchronize them into the logbook drawer."""
+        self._repeated_tasks = value
+        logbook = self._ensure_logbook_for_repeats()
+        logbook.repeats = self._repeated_tasks
+        self._mark_dirty()
+
+    def add_repeated_task(self, repeat: Repeat) -> None:
+        """Append one repeated task and synchronize it into the logbook."""
+        self._repeated_tasks = [*self._repeated_tasks, repeat]
+        logbook = self._ensure_logbook_for_repeats()
+        logbook.repeats = self._repeated_tasks
         self._mark_dirty()
 
     @property
@@ -416,6 +449,20 @@ class Heading:
         if value is None:
             return
         value.set_parent(self, mark_dirty=False)
+
+    def _sync_repeated_tasks_from_logbook(self) -> None:
+        """Synchronize local repeated-task cache from the current logbook."""
+        if self._logbook is None:
+            self._repeated_tasks = []
+            return
+        self._repeated_tasks = self._logbook.repeats
+
+    def _ensure_logbook_for_repeats(self) -> Logbook:
+        """Return heading logbook, creating one when absent."""
+        if self._logbook is None:
+            self._logbook = Logbook(parent=self)
+            self._adopt_logbook(self._logbook)
+        return self._logbook
 
     def _adopt_children(self, children: list[Heading]) -> None:
         """Assign this heading as parent for direct sub-headings."""
@@ -597,7 +644,7 @@ def _merge_logbook_drawers(
         return None
     merged_body: list[Element] = []
     merged_clocks: list[Clock] = []
-    merged_repeats: list[Element] = []
+    merged_repeats: list[Repeat] = []
     for drawer in drawers:
         merged_body.extend(drawer.body)
         merged_clocks.extend(drawer.clock_entries)

@@ -16,6 +16,7 @@ from org_parser.element import (
     Logbook,
     Properties,
     QuoteBlock,
+    Repeat,
     SourceBlock,
     SpecialBlock,
     VerseBlock,
@@ -555,7 +556,7 @@ def _merge_logbook_drawers(
         return None
     merged_body: list[Element] = []
     merged_clocks: list[Clock] = []
-    merged_repeats: list[Element] = []
+    merged_repeats: list[Repeat] = []
     for drawer in drawers:
         merged_body.extend(drawer.body)
         merged_clocks.extend(drawer.clock_entries)
