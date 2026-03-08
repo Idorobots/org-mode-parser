@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from org_parser.document import Document, Heading, load_raw
-from org_parser.element import Element, Keyword
+from org_parser.element import Element, Keyword, Paragraph
 from org_parser.text import CompletionCounter, RichText
 
 if TYPE_CHECKING:
@@ -80,6 +80,22 @@ class TestElement:
         assert "short" in r
 
 
+class TestParagraph:
+    """Tests for the :class:`Paragraph` element."""
+
+    def test_construction_with_body(self) -> None:
+        paragraph = Paragraph(body=RichText("Hello world.\n"))
+        assert paragraph.node_type == "paragraph"
+        assert str(paragraph.body) == "Hello world.\n"
+
+    def test_body_setter_marks_dirty(self) -> None:
+        paragraph = Paragraph(body=RichText("Before\n"))
+        assert paragraph.dirty is False
+        paragraph.body = RichText("After\n")
+        assert paragraph.dirty is True
+        assert str(paragraph) == "After\n"
+
+
 # ===================================================================
 # Document — manual construction
 # ===================================================================
@@ -109,7 +125,7 @@ class TestDocumentManual:
             description=Keyword(key="DESCRIPTION", value=RichText("A description.")),
             todo=Keyword(key="TODO", value=RichText("TODO | DONE")),
             keywords={"LANGUAGE": Keyword(key="LANGUAGE", value=RichText("en"))},
-            body=[Element(node_type="paragraph", source_text="Hello.")],
+            body=[Paragraph(body=RichText("Hello.\n"))],
         )
         assert doc.title is not None
         assert str(doc.title.value) == "My Title"
@@ -263,6 +279,9 @@ class TestDocumentFromTreeKeywords:
         node_types = [e.node_type for e in doc.body]
         assert "paragraph" in node_types
         assert all(e.parent is doc for e in doc.body)
+        assert any(
+            isinstance(e, Paragraph) for e in doc.body if e.node_type == "paragraph"
+        )
 
 
 # ===================================================================
@@ -379,6 +398,9 @@ class TestHeadingFields:
         assert len(first.body) > 0
         assert any(e.node_type == "paragraph" for e in first.body)
         assert all(e.parent is first for e in first.body)
+        assert any(
+            isinstance(e, Paragraph) for e in first.body if e.node_type == "paragraph"
+        )
 
     def test_heading_body_excludes_subheadings(
         self, example_file: Callable[[str], Path]

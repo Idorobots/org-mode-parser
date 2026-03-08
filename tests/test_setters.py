@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from org_parser import load
 from org_parser.document import Document, Heading
-from org_parser.element import Element, Keyword
+from org_parser.element import Element, Keyword, Paragraph
 from org_parser.text import CompletionCounter, RichText
 from org_parser.time import Timestamp
 
@@ -72,7 +72,7 @@ def test_document_setters_mark_dirty() -> None:
     description = Keyword(key="DESCRIPTION", value=RichText("desc"))
     todo = Keyword(key="TODO", value=RichText("TODO | DONE"))
     keywords = {"LANG": Keyword(key="LANG", value=RichText("en"))}
-    body = [Element(node_type="paragraph", source_text="Body")]
+    body: list[Element] = [Paragraph(body=RichText("Body\n"))]
     child = Heading(level=1, document=document, parent=document)
 
     document.filename = "new.org"
@@ -160,7 +160,7 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
         start_hour=9,
         start_minute=0,
     )
-    heading.body = [Element(node_type="paragraph", source_text="Text")]
+    heading.body = [Paragraph(body=RichText("Text\n"))]
     heading.parent = document
     heading.children = []
 
@@ -199,6 +199,23 @@ def test_nested_heading_mutation_bubbles_to_root_document() -> None:
 
     assert child.dirty is True
     assert parent.dirty is True
+    assert document.dirty is True
+
+
+def test_paragraph_body_mutation_bubbles_to_owners() -> None:
+    """Mutating paragraph body bubbles dirty state up the ownership chain."""
+    document = Document(filename="doc.org")
+    heading = Heading(level=1, document=document, parent=document)
+    paragraph = Paragraph(body=RichText("Before\n"), parent=heading)
+
+    assert document.dirty is False
+    assert heading.dirty is False
+    assert paragraph.dirty is False
+
+    paragraph.body.text = "After\n"
+
+    assert paragraph.dirty is True
+    assert heading.dirty is True
     assert document.dirty is True
 
 

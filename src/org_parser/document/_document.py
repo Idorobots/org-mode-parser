@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from org_parser.element._element import Element
 from org_parser.element._keyword import Keyword
+from org_parser.element._paragraph import Paragraph
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -18,6 +19,7 @@ __all__ = ["Document"]
 _ZEROTH_SECTION = "zeroth_section"
 _HEADING = "heading"
 _SPECIAL_KEYWORD = "special_keyword"
+_PARAGRAPH = "paragraph"
 _TITLE = "TITLE"
 _AUTHOR = "AUTHOR"
 _CATEGORY = "CATEGORY"
@@ -411,7 +413,7 @@ def _parse_zeroth_section(
                     key, keyword = _extract_keyword(sc, source, parent=parent)
                     keywords[key] = keyword
                 else:
-                    body.append(Element.from_node(sc, source, parent=parent))
+                    body.append(_extract_body_element(sc, source, parent=parent))
             break  # only one zeroth section
 
     return keywords, body
@@ -429,6 +431,18 @@ def _extract_keyword(
     """
     keyword = Keyword.from_node(kw_node, source, parent=parent)
     return keyword.key, keyword
+
+
+def _extract_body_element(
+    node: tree_sitter.Node,
+    source: bytes,
+    *,
+    parent: Document,
+) -> Element:
+    """Build one body element instance from a tree-sitter node."""
+    if node.type == _PARAGRAPH:
+        return Paragraph.from_node(node, source, parent=parent)
+    return Element.from_node(node, source, parent=parent)
 
 
 def _find_first_child_by_type(

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from org_parser.element._element import Element
+from org_parser.element._paragraph import Paragraph
 from org_parser.text._inline import CompletionCounter
 from org_parser.text._rich_text import RichText
 from org_parser.time import Timestamp
@@ -23,6 +24,7 @@ _TAG = "tag"
 _PLANNING = "planning"
 _PLANNING_KEYWORD = "planning_keyword"
 _TIMESTAMP = "timestamp"
+_PARAGRAPH = "paragraph"
 
 
 class Heading:
@@ -449,9 +451,21 @@ def _extract_body(
     if section_node is None:
         return []
     return [
-        Element.from_node(child, source, parent=parent)
+        _extract_body_element(child, source, parent=parent)
         for child in section_node.named_children
     ]
+
+
+def _extract_body_element(
+    node: tree_sitter.Node,
+    source: bytes,
+    *,
+    parent: Heading | Document,
+) -> Element:
+    """Build one heading body element instance from a tree-sitter node."""
+    if node.type == _PARAGRAPH:
+        return Paragraph.from_node(node, source, parent=parent)
+    return Element.from_node(node, source, parent=parent)
 
 
 def _extract_planning(

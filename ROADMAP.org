@@ -1716,6 +1716,9 @@ Let's try something different, make the script only find the leaf errors and dis
 By leaf errors I mean errors that are as close to a leaf as possible, not the top level errors, not necessarily errors at the very leaf of the expression - just the final level at which an error occurs that does not have an error embedded in them.
 
 ** TODO Parser extensions
+*** TODO Special handling for LOGBOOK
+The =LOGBOOK= drawer should be treated in the same way as the =PROPERTIES= drawer, i.e. it should have a dedicated parse tree node associated with it. Other custom drawers can be left as-is.
+
 *** Support for Babel call syntax
 *** Support for Org entities
 *** Support for subscript/superscript
@@ -1771,9 +1774,6 @@ The value =IN-PROGRESS= doesn't parse as a todo state when configured, but shoul
 #+end_example
 
 Adjust the parse rules for todo states to allow for =-= and =_= in state names.
-
-*** TODO Special handling for LOGBOOK
-The =LOGBOOK= drawer should be treated in the same way as the =PROPERTIES= drawer, i.e. it should have a dedicated parse tree node associated with it. Other custom drawers can be left as-is.
 
 *** Better support for tableel tables
 * Semantic nodes implementation
@@ -1973,7 +1973,10 @@ Update the =Document= to extract and store these new =Keyword= objects instead o
 
 All keywords should be available in the =Document.keywords= map, including the ones with specialized properties.
 
-*** TODO Paragraph
+*** DONE Paragraph
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:01]
+:END:
 Add a dedicated =Element= subclass for the paragraph element - =Paragraph=. The class should store the values that are found in =paragraph= node of the parse tree. The paragraph body should be mutable.
 
 Add support for this new element type when processing document/heading bodies that can contain paragraphs.
