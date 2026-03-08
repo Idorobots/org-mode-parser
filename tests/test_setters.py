@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from org_parser import load
 from org_parser.document import Document, Heading
-from org_parser.element import Element
+from org_parser.element import Element, Keyword
 from org_parser.text import CompletionCounter, RichText
 from org_parser.time import Timestamp
 
@@ -66,22 +66,22 @@ def test_document_setters_mark_dirty() -> None:
     document = Document(filename="x.org")
     assert document.dirty is False
 
-    title = RichText("Title")
-    author = RichText("Author")
-    category = RichText("work")
-    description = RichText("desc")
-    todo = RichText("TODO | DONE")
-    keywords = {"LANG": RichText("en")}
+    title = Keyword(key="TITLE", value=RichText("Title"))
+    author = Keyword(key="AUTHOR", value=RichText("Author"))
+    category = Keyword(key="CATEGORY", value=RichText("work"))
+    description = Keyword(key="DESCRIPTION", value=RichText("desc"))
+    todo = Keyword(key="TODO", value=RichText("TODO | DONE"))
+    keywords = {"LANG": Keyword(key="LANG", value=RichText("en"))}
     body = [Element(node_type="paragraph", source_text="Body")]
     child = Heading(level=1, document=document, parent=document)
 
     document.filename = "new.org"
+    document.keywords = keywords
     document.title = title
     document.author = author
     document.category = category
     document.description = description
     document.todo = todo
-    document.keywords = keywords
     document.body = body
     document.children = [child]
     document.source = b"* Updated\n"
@@ -93,9 +93,30 @@ def test_document_setters_mark_dirty() -> None:
     assert document.description is description
     assert document.todo is todo
     assert document.keywords is keywords
+    assert document.keywords["TITLE"] is title
+    assert document.keywords["AUTHOR"] is author
+    assert document.keywords["CATEGORY"] is category
+    assert document.keywords["DESCRIPTION"] is description
+    assert document.keywords["TODO"] is todo
     assert document.body is body
     assert document.children == [child]
     assert document.source == b"* Updated\n"
+    assert document.dirty is True
+
+
+def test_keyword_value_mutation_bubbles_to_document() -> None:
+    """Mutating keyword value marks keyword and document dirty."""
+    document = Document(
+        filename="x.org",
+        title=Keyword(key="TITLE", value=RichText("Initial")),
+    )
+    assert document.title is not None
+    assert document.dirty is False
+    assert document.title.dirty is False
+
+    document.title.value.text = "Changed"
+
+    assert document.title.dirty is True
     assert document.dirty is True
 
 

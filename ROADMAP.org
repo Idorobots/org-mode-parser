@@ -1949,7 +1949,10 @@ Add the planning fields to the =Heading= class:
 
 These fields should be mutable. Update the representation for =Heading= to take them into account when the heading is marked as dirty.
 
-*** TODO Element
+*** DONE Element
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 16:36]
+:END:
 Expand the abstract =Element= class with an =parent= property. The parent can be either a =Document=, a =Heading= or another =Element=.
 
 Whenever an =Element= is mutated, the parent element must be marked as dirty in addition to marking the current element as dirty. The same is true for the =Heading=, a mutation at a nested level should mark all intermediate levels as dirty, all the way to the root element - the =Document=, unless an element along the chain is already marked as dirty. This way a mutation at a lower level will be reflected when stringifying the whole =Document=.
@@ -1959,18 +1962,23 @@ Both =RichText= and =Timestamp= can be made into full-fledged elements if that m
 **** COMMENT
 Codex decided that making rich text an element doesn't make sense.
 
-*** TODO Keywords
+*** DONE Keywords
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 16:55]
+:END:
 Add a dedicated =Element= subclass for the special keywords called =Keyword=.
 The class should represent a special keyword. The keyword value should be mutable.
 
 Update the =Document= to extract and store these new =Keyword= objects instead of =RichText= directly.
+
+All keywords should be available in the =Document.keywords= map, including the ones with specialized properties.
 
 *** TODO Paragraph
 Add a dedicated =Element= subclass for the paragraph element - =Paragraph=. The class should store the values that are found in =paragraph= node of the parse tree. The paragraph body should be mutable.
 
 Add support for this new element type when processing document/heading bodies that can contain paragraphs.
 
-*** Table
+*** TODO Table
 Add a dedicated =Element= subclass for the table element - =Table=. The class should represent an Org table or a Table.el table, with dedicated abstractions for table rows and table cells. Table cells and rows should be mutable, marking the whole table as dirty. Table cell values can remain =RichText= for now, but the parent element of these rich text elements should be the table.
 
 Tables should also support the table formula lines.
@@ -1979,16 +1987,36 @@ When the element is marked dirty, the table should be formatted according to the
 
 Add support for this new element type when processing document/heading bodies that can contain tables.
 
-*** Properties, Logbook, Drawer
-- supports any drawers, spacial treatment for logbook & properties
-- update document with properties and logbook (merge if multiple are defined)
-- update heading with properties and logbook  (merge if multiple are defined)
-- other drawes can stay in the body
-- all drawers should be mutable and marked dirty when mutated
+*** TODO Clock
+Add a dedicated =Element= subclass for the clock log line. This element should support the various forms a =CLOCK:= line can assume - including an active and inactive timestamp, a timerange and the duration.
+The element should be placed in the =org_parser.time.*= module and re-use the =Timestamp= class for the actual time component.
+Clocks should be mutable by setting the entire timestamp. The duration value should be recomputed after the timestamp is set with a duration (start and end populated).
+
+Add support for this new element type when processing document/heading bodies that can contain clock lines.
+
+*** TODO Properties, Logbook, Drawer
+Add a dedicated =Element= subclass for the drawer elements: =Properties=, =Logbook= and =Drawer=. These classes should represent the Org Mode drawers, including the key-value pairs stored within them (for properties) as well as the other types of objects that can be a part of a drawer (other drawer types).
+
+For =Properties= do extract the vlues from tree-sitter's =property_drawer=, specifically the key-value pairs for =node_property=.
+I would like the =Poperties= element to be mutable and dictionary-like, i.e. it should be possible to set the values of properties via ~properties["name"] = RichText("test")~ for instance. The values of the properties should be "owned" by the drawer element, so that mutation of any of those field values is immediately reflected in the output of the drawer stringification.
+
+For =Logbook= drawers, extract the list of logbook repeats and clock entries. For now, let's leave them as separate elements that are owned by the drawer. We will address the usability of the logbook drawer at some point.
+
+For the remaining drawer types, have a dedicated =Drawer= element that represents the drawer. It should have a name and a body. The body is owned by the drawer.
+
+All drawers should be mutable and marked dirty when mutated.
+
+*** TODO Heading/Document drawers
+Update the =Document= class with fields dedicated to properties and the logbook. These fields should be populated based on the properties & logbook drawers found on the parse tree. If there are multiple such drawers attached to a document's zeroth section merge their values into a single element dedicated to the given drawer type.
+
+Update =Heading= class with fields dedicated to properties and the logbook. These fields should be populated based on the properties & logbook drawers found on the parse tree. If there are multiple such drawers attached to the heading merge their values into a single element dedicated to the given drawer type.
+
+These extracted drawers should still be mutable and reflect their changes in the stringification output. For the dirty output, the properties drawer should come first, followed by the logbook drawer.
+
+Other drawers can stay in the bodies of their respective owning elements. No need to handle them specially.
 
 *** Block
 
-*** Clock
 *** List
 *** Repeat
 - Parse any logbook lists to extract the repeats
@@ -2015,7 +2043,7 @@ Document, Heading and RichText should support an iterator interface.
 
 ** Programatically create RichText from strings
 Invoke the tree sitter parser on text mutation.
-** Attach CAPTION to the following element
+** Attach CAPTION, TBLNAME, PLOT and RESULTS to the following element
 ** Recover list & element nesting
 - List nesting & item bodies should be adjusted to support the indent-level objects
 

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from org_parser import load
 from org_parser.document import load_raw
+from org_parser.element import Keyword
 from org_parser.text import RichText
 
 if TYPE_CHECKING:
@@ -69,9 +70,9 @@ def test_document_str_dirty_rebuilds_from_fields(
 ) -> None:
     """Dirty Document.__str__ is reconstructed from semantic fields."""
     document = load(str(example_file("nested-headings-basic.org")))
-    document.title = RichText("Mutated Title")
-    document.author = RichText("Mutated Author")
-    document.keywords = {"LANGUAGE": RichText("en")}
+    document.keywords = {"LANGUAGE": Keyword(key="LANGUAGE", value=RichText("en"))}
+    document.title = Keyword(key="TITLE", value=RichText("Mutated Title"))
+    document.author = Keyword(key="AUTHOR", value=RichText("Mutated Author"))
 
     rendered = str(document)
     assert rendered.startswith("#+TITLE: Mutated Title\n#+AUTHOR: Mutated Author\n")

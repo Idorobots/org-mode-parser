@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from org_parser.document import Document, Heading, load_raw
-from org_parser.element import Element
+from org_parser.element import Element, Keyword
 from org_parser.text import CompletionCounter, RichText
 
 if TYPE_CHECKING:
@@ -103,20 +103,30 @@ class TestDocumentManual:
     def test_full_construction(self) -> None:
         doc = Document(
             filename="full.org",
-            title=RichText("My Title"),
-            author=RichText("An Author"),
-            category=RichText("work"),
-            description=RichText("A description."),
-            todo=RichText("TODO | DONE"),
-            keywords={"LANGUAGE": RichText("en")},
+            title=Keyword(key="TITLE", value=RichText("My Title")),
+            author=Keyword(key="AUTHOR", value=RichText("An Author")),
+            category=Keyword(key="CATEGORY", value=RichText("work")),
+            description=Keyword(key="DESCRIPTION", value=RichText("A description.")),
+            todo=Keyword(key="TODO", value=RichText("TODO | DONE")),
+            keywords={"LANGUAGE": Keyword(key="LANGUAGE", value=RichText("en"))},
             body=[Element(node_type="paragraph", source_text="Hello.")],
         )
-        assert doc.title == "My Title"
-        assert doc.author == "An Author"
-        assert doc.category == "work"
-        assert doc.description == "A description."
-        assert doc.todo == "TODO | DONE"
-        assert doc.keywords["LANGUAGE"] == "en"
+        assert doc.title is not None
+        assert str(doc.title.value) == "My Title"
+        assert doc.author is not None
+        assert str(doc.author.value) == "An Author"
+        assert doc.category is not None
+        assert str(doc.category.value) == "work"
+        assert doc.description is not None
+        assert str(doc.description.value) == "A description."
+        assert doc.todo is not None
+        assert str(doc.todo.value) == "TODO | DONE"
+        assert str(doc.keywords["LANGUAGE"].value) == "en"
+        assert "TITLE" in doc.keywords
+        assert "AUTHOR" in doc.keywords
+        assert "CATEGORY" in doc.keywords
+        assert "DESCRIPTION" in doc.keywords
+        assert "TODO" in doc.keywords
         assert len(doc.body) == 1
 
     def test_repr(self) -> None:
@@ -201,23 +211,32 @@ class TestDocumentFromTreeKeywords:
         doc = _load_document(example_file("special-keywords-basic.org"))
 
         assert doc.title is not None
-        assert str(doc.title) == "Document Title"
+        assert isinstance(doc.title, Keyword)
+        assert str(doc.title.value) == "Document Title"
 
         assert doc.author is not None
-        assert str(doc.author) == "Qrux Bimble"
+        assert isinstance(doc.author, Keyword)
+        assert str(doc.author.value) == "Qrux Bimble"
 
         assert doc.category is not None
-        assert str(doc.category) == "test"
+        assert isinstance(doc.category, Keyword)
+        assert str(doc.category.value) == "test"
         assert doc.title.parent is doc
+        assert doc.title.value.parent is doc.title
         assert doc.author.parent is doc
+        assert doc.author.value.parent is doc.author
         assert doc.category.parent is doc
+        assert doc.category.value.parent is doc.category
+        assert "TITLE" in doc.keywords
+        assert "AUTHOR" in doc.keywords
+        assert "CATEGORY" in doc.keywords
 
     def test_todo_keyword(self, example_file: Callable[[str], Path]) -> None:
         """The #+TODO keyword is extracted as a dedicated property."""
         doc = _load_document(example_file("special-keywords-basic.org"))
         assert doc.todo is not None
-        assert "TODO" in str(doc.todo)
-        assert "DONE" in str(doc.todo)
+        assert "TODO" in str(doc.todo.value)
+        assert "DONE" in str(doc.todo.value)
 
     def test_non_dedicated_keywords_in_dict(
         self, example_file: Callable[[str], Path]
@@ -227,13 +246,14 @@ class TestDocumentFromTreeKeywords:
         # DATE and LANGUAGE are not dedicated properties
         assert "DATE" in doc.keywords
         assert "LANGUAGE" in doc.keywords
-        assert str(doc.keywords["LANGUAGE"]) == "en"
+        assert isinstance(doc.keywords["LANGUAGE"], Keyword)
+        assert str(doc.keywords["LANGUAGE"].value) == "en"
 
     def test_description_keyword(self, example_file: Callable[[str], Path]) -> None:
         """#+DESCRIPTION is extracted as a dedicated property."""
         doc = _load_document(example_file("zeroth-section.org"))
         assert doc.description is not None
-        assert "production tracking" in str(doc.description)
+        assert "production tracking" in str(doc.description.value)
 
     def test_zeroth_section_body(self, example_file: Callable[[str], Path]) -> None:
         """Non-keyword elements in the zeroth section appear in body."""

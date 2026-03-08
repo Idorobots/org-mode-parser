@@ -11,5 +11,6 @@ subsequent iterations.
 """
 
 from org_parser.element._element import Element
+from org_parser.element._keyword import Keyword
 
-__all__ = ["Element"]
+__all__ = ["Element", "Keyword"]
