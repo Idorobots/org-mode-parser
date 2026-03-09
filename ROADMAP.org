@@ -1725,7 +1725,7 @@ The =LOGBOOK= drawer should be treated in the same way as the =PROPERTIES= drawe
 *** Support for Babel call syntax
 *** Support for Org entities
 *** Support for subscript/superscript
-*** Bind indent in lesser/greater elements
+*** TODO Bind indent in lesser/greater elements
 Update the parser to bind indent level in elements such as drawers, blocks, paragraphs and all list items. Bind it even if the indent level is 0. It's sufficient to bind the indent of the beginning of the element.
 This will be used by semantic analysis to recover list nesting.
 
@@ -1783,7 +1783,10 @@ Adjust the parse rules for todo states to allow for =-= and =_= in state names.
 *** Better support for tableel tables
 Table.el tables are parsed weird right now - just the frame lines are parsed as tableel tables with the actual table data parsed as Org Tables.
 
-*** TODO Multiline paragraphs don't preserve newlines
+*** DONE Multiline paragraphs don't preserve newlines
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-09 Mon 18:50]
+:END:
 The following example ends up as three separate plaintext lines separated by newlines, but none of these newlines is captured.
 
 #+begin_example

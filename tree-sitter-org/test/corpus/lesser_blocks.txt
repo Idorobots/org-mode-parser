@@ -78,7 +78,9 @@ Violets are blue.
     (verse_block
       (paragraph
         (plain_text)
-        (plain_text)))))
+        (newline)
+        (plain_text)
+        (newline)))))
 
 ================
 Example block preserves indentation in body lines
@@ -167,17 +169,29 @@ Indented lesser blocks
 
 (document
   (zeroth_section
-    (comment_block)
+    (comment_block
+      (indent))
+    (blank_line)
     (example_block
+      (indent)
       (example_block_body
         (example_line)))
+    (blank_line)
     (export_block
+      (indent)
       (export_backend))
+    (blank_line)
     (src_block
+      (indent)
       (language)
       (src_block_body
         (src_line)))
+    (blank_line)
     (verse_block
+      (indent)
       (paragraph
         (plain_text)
-        (plain_text)))))
+        (newline)
+        (plain_text)
+        (newline))
+      (indent))))

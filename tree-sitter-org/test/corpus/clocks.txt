@@ -63,6 +63,7 @@ Clock inside drawer with indentation
     (section
       (logbook_drawer
         (clock
+          (indent)
           (ts_year)
           (ts_month)
           (ts_day)

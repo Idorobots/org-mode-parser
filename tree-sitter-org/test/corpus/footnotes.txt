@@ -11,7 +11,8 @@ See footnote [fn:1].
       (plain_text)
       (footnote_reference
         (fn_label))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Footnote definition
@@ -25,7 +26,8 @@ Footnote definition
     (paragraph
       (footnote_reference
         (fn_label))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Multiline inline footnote
@@ -40,6 +42,7 @@ written in the numerator position of the price fraction.] in formal contexts.
   (zeroth_section
     (paragraph
       (plain_text)
+      (newline)
       (plain_text)
       (footnote_reference
         (fn_label)
@@ -50,5 +53,7 @@ written in the numerator position of the price fraction.] in formal contexts.
         (italic
           (plain_text))
         (plain_text)
+        (newline)
         (plain_text))
-      (plain_text))))
+      (plain_text)
+      (newline))))

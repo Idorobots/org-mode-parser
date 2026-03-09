@@ -230,6 +230,7 @@ Inline plus in indented list under heading
     stars: (stars)
     title: (plain_text)
     body: (section
+      indent: (indent)
       (plain_list
         (item
           first_line: (plain_text))
@@ -325,7 +326,8 @@ Horizontal rule after list
   (zeroth_section
     (plain_list
       (item
-        first_line: (plain_text)))
+        first_line: (plain_text)
+        (blank_line)))
     (horizontal_rule)))
 
 ================
@@ -377,7 +379,9 @@ Indented drawer starts after list item
         first_line: (plain_text)))
     (drawer
       name: (drawer_name)
-      body: (drawer_kv_line))))
+      body: (drawer_kv_line
+        indent: (indent))
+      closing_indent: (indent))))
 
 ================
 Indented fixed-width starts after list item
@@ -415,7 +419,9 @@ Indented nested item drawer starts after list
         indent: (item_indent)
         first_line: (plain_text)))
     (logbook_drawer
-      body: (drawer_kv_line))
+      body: (drawer_kv_line
+        indent: (indent))
+      closing_indent: (indent))
     (plain_list
       (item
         first_line: (plain_text)))))
@@ -461,13 +467,18 @@ Indented quote block after list item
     stars: (stars)
     title: (plain_text)
     body: (section
+      (blank_line)
       (plain_list
         (item
           first_line: (plain_text)
           body: (quote_block
+            indent: (indent)
             body: (paragraph
               (plain_text)
-              (plain_text))))))))
+              (newline)
+              (plain_text)
+              (newline))
+            closing_indent: (indent)))))))
 
 ================
 Indented src block belongs to nested list item body
@@ -490,6 +501,7 @@ Indented src block belongs to nested list item body
         indent: (item_indent)
         first_line: (plain_text)
         body: (src_block
+          indent: (indent)
           language: (language)
           body: (src_block_body
             (src_line))))
@@ -670,7 +682,8 @@ Blank-line-separated list items
   (zeroth_section
     (plain_list
       (item
-        first_line: (plain_text))
+        first_line: (plain_text)
+        (blank_line))
       (item
         first_line: (plain_text)))))
 
@@ -689,8 +702,11 @@ Blank line before indented continuation paragraph
     (plain_list
       (item
         first_line: (plain_text)
+        body: (blank_line)
         body: (item_continuation_line
-          content: (plain_text)))
+          indent: (indent)
+          content: (plain_text)
+          (newline)))
       (item
         first_line: (plain_text)))))
 
@@ -710,11 +726,15 @@ Indented numeric continuation lines stay in list items
       (item
         first_line: (plain_text)
         body: (item_continuation_line
-          content: (plain_text)))
+          indent: (indent)
+          content: (plain_text)
+          (newline)))
       (item
         first_line: (plain_text)
         body: (item_continuation_line
-          content: (plain_text))))))
+          indent: (indent)
+          content: (plain_text)
+          (newline))))))
 
 ================
 List items with bullet-like continuation paragraphs
@@ -740,7 +760,9 @@ List items with bullet-like continuation paragraphs
         first_line: (plain_text)
         first_line: (line_break)
         body: (item_continuation_line
-          content: (plain_text)))
+          indent: (indent)
+          content: (plain_text)
+          (newline)))
       (item
         first_line: (plain_text)
         first_line: (timestamp
@@ -752,7 +774,9 @@ List items with bullet-like continuation paragraphs
         first_line: (plain_text)
         first_line: (line_break)
         body: (item_continuation_line
-          content: (plain_text))))))
+          indent: (indent)
+          content: (plain_text)
+          (newline))))))
 
 ================
 List continuation lines parse indented timestamps and links
@@ -769,16 +793,20 @@ List continuation lines parse indented timestamps and links
       (item
         first_line: (plain_text)
         body: (item_continuation_line
+          indent: (indent)
           content: (timestamp
             year: (ts_year)
             month: (ts_month)
             day: (ts_day)
             dayname: (ts_dayname)
-            time: (ts_time)))
+            time: (ts_time))
+          (newline))
         body: (item_continuation_line
+          indent: (indent)
           content: (regular_link
             path: (link_path)
-            description: (plain_text)))))))
+            description: (plain_text))
+          (newline))))))
 
 ================
 List items with completion counter variants

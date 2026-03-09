@@ -254,8 +254,8 @@ Table.el grid table
           (plain_text))
         (table_cell
           (plain_text))
-          (table_cell
-            (plain_text))))
+        (table_cell
+          (plain_text))))
     (tableel_table)
     (org_table
       (table_row
@@ -356,6 +356,7 @@ Affiliated keywords between tables
           (plain_text)))
       (table_row
         (table_rule)))
+    (blank_line)
     (caption_keyword
       (plain_text))
     (org_table
@@ -364,6 +365,7 @@ Affiliated keywords between tables
           (plain_text)))
       (table_row
         (table_rule)))
+    (blank_line)
     (tblname_keyword
       (plain_text))
     (org_table
@@ -372,6 +374,7 @@ Affiliated keywords between tables
           (plain_text)))
       (table_row
         (table_rule)))
+    (blank_line)
     (results_keyword)
     (org_table
       (table_row
@@ -379,6 +382,7 @@ Affiliated keywords between tables
           (plain_text)))
       (table_row
         (table_rule)))
+    (blank_line)
     (plot_keyword
       (plain_text))
     (org_table
@@ -439,6 +443,7 @@ Tables separated by blank line
           (plain_text))
         (table_cell
           (plain_text))))
+    (blank_line)
     (org_table
       (table_row
         (table_cell

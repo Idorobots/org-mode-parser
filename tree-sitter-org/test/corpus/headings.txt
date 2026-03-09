@@ -27,8 +27,10 @@ Heading and body lines keep double-dash switches as plain text
       (paragraph
         (plain_text)
         (plain_text)
+        (newline)
         (plain_text)
-        (plain_text)))))
+        (plain_text)
+        (newline)))))
 
 ================
 Heading with multiple regular links and plus in description
@@ -470,7 +472,8 @@ Some body text.
     (plain_text)
     (section
       (paragraph
-        (plain_text))))
+        (plain_text)
+        (newline))))
   (heading
     (stars)
     (plain_text)))

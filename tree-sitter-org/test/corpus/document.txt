@@ -16,7 +16,8 @@ Some text here.
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Single heading

@@ -12,7 +12,8 @@ Some notes here.
     (drawer
       (drawer_name)
       (paragraph
-        (plain_text)))))
+        (plain_text)
+        (newline)))))
 
 ================
 Property drawer
@@ -95,7 +96,8 @@ Property drawer with empty body
 
 (document
   (zeroth_section
-    properties: (property_drawer)))
+    properties: (property_drawer
+      (blank_line))))
 
 ================
 Property drawer with empty values
@@ -150,7 +152,9 @@ Indented drawer
 (document
   (zeroth_section
     (drawer
-      (drawer_name))))
+      (indent)
+      (drawer_name)
+      (indent))))
 
 ================
 Indented property drawer in heading
@@ -168,9 +172,12 @@ Indented property drawer in heading
     title: (plain_text)
     body: (section
       (property_drawer
+        indent: (indent)
         (node_property
+          indent: (indent)
           name: (property_name)
-          value: (property_value))))))
+          value: (property_value))
+        closing_indent: (indent)))))
 
 ================
 Property link with multiline description
@@ -249,6 +256,7 @@ Indented logbook then properties with multiline link
     title: (plain_text)
     body: (section
       (logbook_drawer
+        indent: (indent)
         body: (plain_list
           (item
             first_line: (plain_text)
@@ -259,14 +267,17 @@ Indented logbook then properties with multiline link
               dayname: (ts_dayname)
               time: (ts_time)))))
       (property_drawer
+        indent: (indent)
         (node_property
+          indent: (indent)
           name: (property_name)
           value: (regular_link
             path: (link_path)
             description: (plain_text)
             description: (plain_text)
             description: (plain_text)
-            description: (plain_text)))))))
+            description: (plain_text)))
+        closing_indent: (indent)))))
 
 ================
 Property drawer after logbook in heading body
@@ -326,18 +337,24 @@ Malformed property link value does not break next heading drawer
     title: (plain_text)
     body: (section
       (property_drawer
+        indent: (indent)
         (node_property
+          indent: (indent)
           name: (property_name)
           value: (regular_link
             path: (link_path)
-            description: (plain_text))))
+            description: (plain_text)))
+        closing_indent: (indent))
       (paragraph
-        (plain_text))))
+        (plain_text)
+        (newline))
+      (blank_line)))
   (heading
     stars: (stars)
     title: (plain_text)
     body: (section
       (logbook_drawer
+        indent: (indent)
         body: (plain_list
           (item
             first_line: (plain_text)
@@ -385,7 +402,8 @@ Custom drawer with double-colon text line
     (drawer
       name: (drawer_name)
       body: (paragraph
-        (plain_text)))))
+        (plain_text)
+        (newline)))))
 
 ================
 Custom drawer with indented timestamp line
@@ -400,12 +418,14 @@ Custom drawer with indented timestamp line
   (zeroth_section
     (drawer
       name: (drawer_name)
+      indent: (indent)
       body: (timestamp
         year: (ts_year)
         month: (ts_month)
         day: (ts_day)
         dayname: (ts_dayname))
-      body: (plain_text))))
+      body: (plain_text)
+      body: (newline))))
 
 ================
 LOGBOOK drawer with mis-aligned end in archive style
@@ -444,7 +464,9 @@ LOGBOOK drawer with mis-aligned end in archive style
           first_line: (plain_text)
           first_line: (line_break)
           body: (item_continuation_line
-            content: (plain_text)))
+            indent: (indent)
+            content: (plain_text)
+            (newline)))
         (item
           indent: (item_indent)
           first_line: (plain_text)
@@ -480,6 +502,8 @@ Indented LOGBOOK drawer in heading
     title: (plain_text)
     body: (section
       (logbook_drawer
+        indent: (indent)
+        indent: (indent)
         body: (plain_list
           (item
             first_line: (plain_text)
@@ -507,6 +531,8 @@ Indented LOGBOOK drawer with note line
     title: (plain_text)
     body: (section
       (logbook_drawer
+        indent: (indent)
+        indent: (indent)
         body: (plain_list
           (item
             first_line: (plain_text)
@@ -519,7 +545,9 @@ Indented LOGBOOK drawer with note line
             first_line: (plain_text)
             first_line: (line_break)
             body: (item_continuation_line
-              content: (plain_text))))))))
+              indent: (indent)
+              content: (plain_text)
+              (newline))))))))
 
 ================
 LOGBOOK drawer start line with inline text and unindented list
@@ -539,6 +567,7 @@ LOGBOOK drawer start line with inline text and unindented list
     title: (plain_text)
     body: (section
       (logbook_drawer
+        indent: (indent)
         body: (drawer_start_text)
         body: (plain_list
           (item
@@ -570,12 +599,15 @@ Indented property drawer with >>> in link description
 (document
   (zeroth_section
     properties: (property_drawer
+      indent: (indent)
       (node_property
+        indent: (indent)
         name: (property_name)
         value: (regular_link
           path: (link_path)
           description: (plain_text)
-          description: (plain_text))))))
+          description: (plain_text)))
+      closing_indent: (indent))))
 
 ================
 Non-indented property drawer with >>> in link description
@@ -615,10 +647,13 @@ Property link description ending with []] in archive-style heading
     title: (plain_text)
     body: (section
       (property_drawer
+        indent: (indent)
         (node_property
+          indent: (indent)
           name: (property_name)
           value: (property_value))
         (node_property
+          indent: (indent)
           name: (property_name)
           value: (timestamp
             year: (ts_year)
@@ -627,10 +662,12 @@ Property link description ending with []] in archive-style heading
             dayname: (ts_dayname)
             time: (ts_time)))
         (node_property
+          indent: (indent)
           name: (property_name)
           value: (regular_link
             path: (link_path)
-            description: (plain_text)))))))
+            description: (plain_text)))
+        closing_indent: (indent)))))
 
 ================
 Logbook before properties with []] link description tail
@@ -652,6 +689,7 @@ Logbook before properties with []] link description tail
     title: (plain_text)
     body: (section
       (logbook_drawer
+        indent: (indent)
         body: (plain_list
           (item
             first_line: (plain_text)
@@ -662,11 +700,14 @@ Logbook before properties with []] link description tail
               dayname: (ts_dayname)
               time: (ts_time)))))
       (property_drawer
+        indent: (indent)
         (node_property
+          indent: (indent)
           name: (property_name)
           value: (regular_link
             path: (link_path)
-            description: (plain_text)))))))
+            description: (plain_text)))
+        closing_indent: (indent)))))
 
 ================
 Property link description with bracket list and <<":">> fragment
@@ -680,13 +721,16 @@ Property link description with bracket list and <<":">> fragment
 (document
   (zeroth_section
     properties: (property_drawer
+      indent: (indent)
       (node_property
+        indent: (indent)
         name: (property_name)
         value: (regular_link
           path: (link_path)
           description: (plain_text)
           description: (plain_text)
-          description: (plain_text))))))
+          description: (plain_text)))
+      closing_indent: (indent))))
 
 ================
 Property link-like value with unmatched trailing brackets falls back to property_value
@@ -791,10 +835,14 @@ Fully indented custom drawer with timestamp line
 (document
   (zeroth_section
     (drawer
+      indent: (indent)
       name: (drawer_name)
+      indent: (indent)
       body: (timestamp
         year: (ts_year)
         month: (ts_month)
         day: (ts_day)
         dayname: (ts_dayname))
-      body: (plain_text))))
+      body: (plain_text)
+      body: (newline)
+      closing_indent: (indent))))

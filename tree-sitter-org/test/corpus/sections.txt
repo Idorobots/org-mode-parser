@@ -10,7 +10,9 @@ It has multiple lines.
   (zeroth_section
     (paragraph
       (plain_text)
-      (plain_text))))
+      (newline)
+      (plain_text)
+      (newline))))
 
 ================
 Heading with section body
@@ -26,7 +28,8 @@ Body text here.
     (plain_text)
     (section
       (paragraph
-        (plain_text)))))
+        (plain_text)
+        (newline)))))
 
 ================
 Multiple paragraphs in section
@@ -44,9 +47,12 @@ Second paragraph.
     (plain_text)
     (section
       (paragraph
-        (plain_text))
+        (plain_text)
+        (newline))
+      (blank_line)
       (paragraph
-        (plain_text)))))
+        (plain_text)
+        (newline)))))
 
 ================
 Hyphenated paragraph text stays coalesced
@@ -58,7 +64,8 @@ This is a Fixed-Width style phrase.
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Indented hash comment inside heading body
@@ -76,10 +83,13 @@ Indented hash comment inside heading body
     title: (plain_text)
     body: (section
       (paragraph
-        (plain_text))
-      (comment)
+        (plain_text)
+        (newline))
+      (comment
+        indent: (indent))
       (paragraph
-        (plain_text)))))
+        (plain_text)
+        (newline)))))
 
 ================
 Paragraph keeps colon-wrapped text plain
@@ -91,7 +101,8 @@ This doesn't work. :shrug:
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Paragraph keeps unicode text as plain text
@@ -106,8 +117,11 @@ O(n²)
   (zeroth_section
     (paragraph
       (plain_text)
+      (newline)
       (plain_text)
-      (plain_text))))
+      (newline)
+      (plain_text)
+      (newline))))
 
 ================
 Caption with leading markup in zeroth section
@@ -122,7 +136,8 @@ works
     (caption_keyword
       value: (plain_text))
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Caption with leading markup in heading section
@@ -141,7 +156,8 @@ doesn't work
       (caption_keyword
         value: (plain_text))
       (paragraph
-        (plain_text)))))
+        (plain_text)
+        (newline)))))
 
 ================
 Paragraph keeps at-sign in plain text
@@ -153,7 +169,8 @@ Report issues to mailto:bugs@example.org or via the issue tracker.
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Caption with markup characters parses as text
@@ -168,7 +185,8 @@ foo
     (caption_keyword
       value: (plain_text))
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Paragraph keeps standalone bracket and angle characters
@@ -184,9 +202,13 @@ Bar ] baz
   (zeroth_section
     (paragraph
       (plain_text)
+      (newline)
       (plain_text)
+      (newline)
       (plain_text)
-      (plain_text))))
+      (newline)
+      (plain_text)
+      (newline))))
 
 ================
 Paragraph line starting with number hyphen is text
@@ -201,8 +223,11 @@ leaving spaces for readers or scribes to add marks by hand. Gutenberg's
   (zeroth_section
     (paragraph
       (plain_text)
+      (newline)
       (plain_text)
-      (plain_text))))
+      (newline)
+      (plain_text)
+      (newline))))
 
 ================
 Paragraph keeps underscore and colon as plain text
@@ -214,7 +239,8 @@ Fixed_Width: Areas in paragraph.
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Paragraph keeps regex-like closing markers as plain text
@@ -226,7 +252,8 @@ Paragraph keeps regex-like closing markers as plain text
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Indented timestamp and link lines in heading section
@@ -242,15 +269,19 @@ Indented timestamp and link lines in heading section
     stars: (stars)
     title: (plain_text)
     body: (section
+      indent: (indent)
       (timestamp
         year: (ts_year)
         month: (ts_month)
         day: (ts_day)
         dayname: (ts_dayname)
         time: (ts_time))
+      (newline)
+      indent: (indent)
       (regular_link
         path: (link_path)
-        description: (plain_text)))))
+        description: (plain_text))
+      (newline))))
 
 ================
 Backslash text in paragraph body
@@ -270,10 +301,14 @@ next line
     body: (section
       (paragraph
         (plain_text)
+        (newline)
         (plain_text)
+        (newline)
         (plain_text)
         (line_break)
-        (plain_text)))))
+        (newline)
+        (plain_text)
+        (newline)))))
 
 ================
 Escaped closing bracket stays plain text
@@ -285,4 +320,5 @@ Escaped closing bracket stays plain text
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))

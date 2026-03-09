@@ -9,7 +9,8 @@ Regular link path only
   (zeroth_section
     (paragraph
       (regular_link
-        (link_path)))))
+        (link_path))
+      (newline))))
 
 ================
 Regular link with free-form description and trailing brackets
@@ -24,7 +25,8 @@ Regular link with free-form description and trailing brackets
       (regular_link
         (link_path)
         (plain_text))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Regular link description with search option and path fragment
@@ -38,7 +40,8 @@ Regular link description with search option and path fragment
     (paragraph
       (regular_link
         (link_path)
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Regular link description with bracket before close paren
@@ -52,7 +55,8 @@ Regular link description with bracket before close paren
     (paragraph
       (regular_link
         (link_path)
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Regular link with wildcard star text
@@ -66,7 +70,8 @@ Regular link with wildcard star text
     (paragraph
       (regular_link
         (link_path)
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Regular link description with doubled operators
@@ -80,7 +85,8 @@ Regular link description with doubled operators
     (paragraph
       (regular_link
         (link_path)
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Regular link with arbitrary search option payload
@@ -94,7 +100,8 @@ Regular link with arbitrary search option payload
     (paragraph
       (regular_link
         (link_path)
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Regular link description with literal square brackets
@@ -108,7 +115,8 @@ Regular link description with literal square brackets
     (paragraph
       (regular_link
         (link_path)
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Regular link description keeps unparsed radio target text
@@ -124,7 +132,8 @@ Regular link description keeps unparsed radio target text
         (link_path)
         (plain_text)
         (plain_text)
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Regular link with description
@@ -138,7 +147,8 @@ Regular link with description
     (paragraph
       (regular_link
         (link_path)
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Regular link description with slash characters
@@ -152,7 +162,8 @@ Regular link description with slash characters
     (paragraph
       (regular_link
         (link_path)
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Regular link description with curly braces
@@ -166,7 +177,8 @@ Regular link description with curly braces
     (paragraph
       (regular_link
         (link_path)
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Regular link description with curly braces and slash
@@ -180,7 +192,8 @@ Regular link description with curly braces and slash
     (paragraph
       (regular_link
         (link_path)
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Angle link
@@ -194,7 +207,8 @@ Angle link
     (paragraph
       (angle_link
         (link_type)
-        (link_path)))))
+        (link_path))
+      (newline))))
 
 ================
 Angle link bare email address
@@ -207,7 +221,8 @@ Angle link bare email address
   (zeroth_section
     (paragraph
       (angle_link
-        (link_path)))))
+        (link_path))
+      (newline))))
 
 ================
 Angle link mailto and bare email in text
@@ -224,11 +239,13 @@ Test <mailto:test@example.com>,
       (angle_link
         (link_path))
       (plain_text)
+      (newline)
       (plain_text)
       (angle_link
         (link_type)
         (link_path))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Quoted text with pipe before angle email
@@ -243,7 +260,8 @@ Quoted text with pipe before angle email
       (plain_text)
       (angle_link
         (link_path))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Plain URL with placeholders and ampersands
@@ -255,7 +273,8 @@ OTA updates: https://fota.pintracview.com/fota/T9/check_update.php?carrier=<CARR
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Multiline angle link
@@ -270,7 +289,8 @@ path/that/spans/multiple/lines/for/testing/purposes>
     (paragraph
       (angle_link
         (link_type)
-        (link_path)))))
+        (link_path))
+      (newline))))
 
 ================
 Regular link path with backslashes and braces
@@ -283,4 +303,5 @@ Regular link path with backslashes and braces
   (zeroth_section
     (paragraph
       (regular_link
-        (link_path)))))
+        (link_path))
+      (newline))))

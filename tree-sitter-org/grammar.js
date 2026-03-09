@@ -113,7 +113,7 @@ module.exports = grammar({
       $._NL,
       optional(field('planning', $.planning)),
       optional(field('properties', $.property_drawer)),
-      repeat($._blank_line),
+      repeat($.blank_line),
       optional(field('body', $.section)),
       repeat($.heading),
       optional($._HEADING_END),
@@ -152,19 +152,19 @@ module.exports = grammar({
     // §4 Sections
     zeroth_section: $ => choice(
       seq(
-        repeat(choice($.special_keyword, $.comment, $._blank_line)),
+        repeat(choice($.special_keyword, $.comment, $.blank_line)),
         field('properties', $.property_drawer),
-        repeat(choice($._zs_element, $._blank_line)),
+        repeat(choice($._zs_element, $.blank_line)),
       ),
       seq(
-        repeat(choice($.special_keyword, $.comment, $._blank_line)),
-        repeat1(choice($._zs_element, $._blank_line)),
+        repeat(choice($.special_keyword, $.comment, $.blank_line)),
+        repeat1(choice($._zs_element, $.blank_line)),
       ),
     ),
 
     section: $ => prec.left(repeat1(choice(
       $._section_element,
-      $._blank_line,
+      $.blank_line,
     ))),
 
     // §5 Element Dispatch
@@ -244,15 +244,15 @@ module.exports = grammar({
     ),
 
     _indented_plain_list: $ => seq(
-      $._INDENT,
+      field('indent', $.indent),
       $.plain_list,
     ),
 
     _indented_object_line: $ => seq(
-      $._INDENT,
+      field('indent', $.indent),
       choice($.timestamp, $.regular_link),
       repeat($._object),
-      $._NL,
+      $.newline,
     ),
 
     // §6 Greater Elements
@@ -265,37 +265,37 @@ module.exports = grammar({
     ),
 
     center_block: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(2, ci('#+begin_center'))),
       optional(field('parameters', $._block_params)),
       $._NL,
       field('body', optional($._gblock_body)),
-      optional($._INDENT),
+      optional(field('closing_indent', $.indent)),
       token(prec(2, ci('#+end_center'))),
       optional($._TRAILING),
       $._NL,
     ),
 
     quote_block: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(2, ci('#+begin_quote'))),
       optional(field('parameters', $._block_params)),
       $._NL,
       field('body', optional($._gblock_body)),
-      optional($._INDENT),
+      optional(field('closing_indent', $.indent)),
       token(prec(2, ci('#+end_quote'))),
       optional($._TRAILING),
       $._NL,
     ),
 
     special_block: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(1, ci('#+begin_'))),
       field('name', $._GBLOCK_NAME),
       optional(field('parameters', $._block_params)),
       $._NL,
       field('body', optional($._gblock_body)),
-      optional($._INDENT),
+      optional(field('closing_indent', $.indent)),
       token(prec(1, ci('#+end_'))),
       $._BLOCK_END_MATCH,
       optional($._TRAILING),
@@ -306,12 +306,12 @@ module.exports = grammar({
 
     _gblock_body: $ => repeat1(choice(
       $._section_element,
-      $._blank_line,
+      $.blank_line,
     )),
 
     // --- 6.2 Drawers ---
     drawer: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(2, ':')),
       field('name', alias($._DRAWER_NAME, $.drawer_name)),
       choice(
@@ -319,7 +319,7 @@ module.exports = grammar({
         seq(':', field('body', $.drawer_start_text), $._NL),
       ),
       field('body', optional($._drawer_body)),
-      optional($._INDENT),
+      optional(field('closing_indent', $.indent)),
       token(prec(2, ci(':end:'))),
       optional($._TRAILING),
       $._NL,
@@ -336,23 +336,23 @@ module.exports = grammar({
       $.drawer_kv_line,
       $.drawer_double_colon_line,
       $._drawer_element,
-      $._blank_line,
+      $.blank_line,
     )),
 
     _drawer_indented_list: $ => seq(
-      $._INDENT,
+      field('indent', $.indent),
       $.plain_list,
     ),
 
     _drawer_indented_timestamp_line: $ => prec(1, seq(
-      $._INDENT,
+      field('indent', $.indent),
       $.timestamp,
       repeat($._object),
-      $._NL,
+      $.newline,
     )),
 
     drawer_kv_line: $ => prec(1, seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       ':',
       /[^:\n]+/,
       ':',
@@ -373,21 +373,21 @@ module.exports = grammar({
     _DRAWER_KV_REST: _ => /[^\n\[][^\n]*/,
 
     drawer_double_colon_line: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       /[^:\n \t][^\n]*::[^\n]*/,
       $._NL,
     ),
 
     // --- 6.3 LOGBOOK Drawers ---
     logbook_drawer: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(3, ci(':logbook:'))),
       choice(
         $._NL,
         seq(field('body', $.drawer_start_text), $._NL),
       ),
       field('body', optional($._drawer_body)),
-      optional($._INDENT),
+      optional(field('closing_indent', $.indent)),
       token(prec(3, ci(':end:'))),
       optional($._TRAILING),
       $._NL,
@@ -395,14 +395,14 @@ module.exports = grammar({
 
     // --- 6.4 Dynamic Blocks ---
     dynamic_block: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(3, ci('#+begin:'))),
       $._S,
       field('name', alias($._DYNBLOCK_NAME, $.dynamic_block_name)),
       optional(field('parameters', seq($._S, $._REST_OF_LINE))),
       $._NL,
       field('body', optional($._dynblock_body)),
-      optional($._INDENT),
+      optional(field('closing_indent', $.indent)),
       token(prec(3, ci('#+end:'))),
       optional($._TRAILING),
       $._NL,
@@ -413,13 +413,14 @@ module.exports = grammar({
 
     _dynblock_body: $ => repeat1(choice(
       $._section_element,
-      $._blank_line,
+      $.blank_line,
     )),
 
     // --- 6.4 Footnote Definitions ---
     // Footnote definitions start at column 0 by construction (after NL).
     // Column-0 enforcement is a semantic check, not grammar-level.
     footnote_definition: $ => prec.right(seq(
+      optional(field('indent', $.indent)),
       '[fn:',
       field('label', alias($._FN_LABEL, $.fn_label)),
       ']',
@@ -433,7 +434,7 @@ module.exports = grammar({
 
     _fndef_body: $ => repeat1(choice(
       $._section_element,
-      $._blank_line,
+      $.blank_line,
     )),
 
     // --- 6.5 Plain Lists and Items ---
@@ -470,7 +471,7 @@ module.exports = grammar({
         seq(optional(field('first_line', $._item_first_line)), optional($._TRAILING), $._NL),
       ),
       repeat(field('body', $._item_body)),
-      repeat($._blank_line),
+      repeat($.blank_line),
     ),
 
     _item_body: $ => choice(
@@ -481,7 +482,7 @@ module.exports = grammar({
         $.item_continuation_line,
       ),
       seq(
-        repeat1($._blank_line),
+        repeat1($.blank_line),
         choice(
           alias($._item_drawer, $.drawer),
           $.fixed_width,
@@ -498,7 +499,7 @@ module.exports = grammar({
     ),
 
     _item_drawer: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(2, ':')),
       field('name', alias($._DRAWER_NAME_NO_END, $.drawer_name)),
       choice(
@@ -506,7 +507,7 @@ module.exports = grammar({
         seq(':', field('body', $.drawer_start_text), $._NL),
       ),
       field('body', optional($._drawer_body)),
-      optional($._INDENT),
+      optional(field('closing_indent', $.indent)),
       token(prec(2, ci(':end:'))),
       optional($._TRAILING),
       $._NL,
@@ -524,10 +525,10 @@ module.exports = grammar({
     _item_first_line: $ => repeat1($._object),
 
     item_continuation_line: $ => seq(
-      $._INDENT,
+      field('indent', $.indent),
       field('content', repeat1($._object)),
       optional($._TRAILING),
-      $._NL,
+      $.newline,
     ),
 
     _bullet: $ => choice(
@@ -580,19 +581,19 @@ module.exports = grammar({
 
     // --- 6.6 Property Drawers ---
     property_drawer: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(3, ci(':properties:'))),
       optional($._TRAILING),
       $._NL,
-      repeat(choice($.node_property, $._blank_line)),
-      optional($._INDENT),
+      repeat(choice($.node_property, $.blank_line)),
+      optional(field('closing_indent', $.indent)),
       token(prec(3, ci(':end:'))),
       optional($._TRAILING),
       $._NL,
     ),
 
     node_property: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       ':',
       field('name', alias($._PROP_NAME, $.property_name)),
       ':',
@@ -706,7 +707,7 @@ module.exports = grammar({
     ),
 
     comment_block: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(2, ci('#+begin_comment'))),
       optional($._TRAILING),
       $._NL,
@@ -717,7 +718,7 @@ module.exports = grammar({
     ),
 
     example_block: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(2, ci('#+begin_example'))),
       optional(field('parameters', $._block_params)),
       $._NL,
@@ -732,7 +733,7 @@ module.exports = grammar({
     example_line: _ => seq(/[^\n]*/, '\n'),
 
     export_block: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(2, ci('#+begin_export'))),
       $._S,
       field('backend', alias($._EXPORT_BACKEND, $.export_backend)),
@@ -747,7 +748,7 @@ module.exports = grammar({
     _EXPORT_BACKEND: _ => /[^ \t\n]+/,
 
     src_block: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(2, ci('#+begin_src'))),
       optional(seq(
         $._S,
@@ -768,12 +769,12 @@ module.exports = grammar({
     src_line: _ => seq(/[^\n]*/, '\n'),
 
     verse_block: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(2, ci('#+begin_verse'))),
       optional($._TRAILING),
       $._NL,
       field('body', optional($._gblock_body)),
-      optional($._INDENT),
+      optional(field('closing_indent', $.indent)),
       token(prec(2, ci('#+end_verse'))),
       optional($._TRAILING),
       $._NL,
@@ -787,12 +788,12 @@ module.exports = grammar({
 
     _verse_line: $ => seq(
       repeat($._object),
-      $._NL,
+      $.newline,
     ),
 
     // --- 7.2 Clock ---
     clock: $ => seq(
-      optional($._INDENT),
+      optional(field('indent', $.indent)),
       token(prec(2, ci('clock:'))),
       $._S,
       choice(
@@ -809,6 +810,7 @@ module.exports = grammar({
     // --- 7.3 Diary Sexp ---
     // Diary sexps start at column 0 by construction.
     diary_sexp: $ => seq(
+      optional(field('indent', $.indent)),
       '%%',
       field('value', $._diary_sexp_value),
       optional($._TRAILING),
@@ -822,14 +824,14 @@ module.exports = grammar({
 
     _planning_line: $ => choice(
       prec(1, seq(
-        optional($._INDENT),
+        optional(field('indent', $.indent)),
         $._planning_entry,
         repeat(seq($._S, $._planning_entry)),
         optional($._TRAILING),
         $._NL,
       )),
       prec(0, seq(
-        optional($._INDENT),
+        optional(field('indent', $.indent)),
         $._planning_entry_text,
         optional($._TRAILING),
         $._NL,
@@ -863,8 +865,8 @@ module.exports = grammar({
     comment: $ => prec(1, repeat1($._comment_line)),
 
     _comment_line: $ => choice(
-      seq(optional($._INDENT), '#', ' ', optional(field('value', /[^\n]*/)), $._NL),
-      seq(optional($._INDENT), '#', $._NL),
+      seq(optional(field('indent', $.indent)), '#', ' ', optional(field('value', /[^\n]*/)), $._NL),
+      seq(optional(field('indent', $.indent)), '#', $._NL),
     ),
 
     // --- 7.6 Fixed-Width Areas ---
@@ -966,7 +968,7 @@ module.exports = grammar({
 
     _paragraph_line: $ => seq(
       repeat1($._object),
-      $._NL,
+      $.newline,
     ),
 
     // §8 Objects
@@ -1012,7 +1014,7 @@ module.exports = grammar({
 
     _fn_ref_def: $ => repeat1(choice(
       $._object,
-      $._NL,
+      $.newline,
     )),
 
     // --- 8.3 Citations ---
@@ -1118,7 +1120,7 @@ module.exports = grammar({
 
     _link_path: _ => /([^\[\]]|\\.)*/,
 
-    _link_description: $ => repeat1(choice($._object_min, $._NL)),
+    _link_description: $ => repeat1(choice($._object_min, $.newline)),
 
     // radio_link — deferred to Python post-processing
     radio_link: $ => repeat1($._object_min),
@@ -1309,6 +1311,10 @@ module.exports = grammar({
       $.bold, $.italic, $.underline, $.strike_through,
       $.verbatim, $.code, $.plain_text,
     ),
+
+    newline: $ => $._NL,
+    indent: $ => $._INDENT,
+    blank_line: $ => $._blank_line,
 
     // §10 Lexical Primitives
     _S: _ => /[ \t]+/,

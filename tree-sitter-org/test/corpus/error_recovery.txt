@@ -8,7 +8,8 @@ This has *unclosed markup on one line.
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Standalone stars not heading (no space)
@@ -22,4 +23,5 @@ Standalone stars not heading (no space)
     (paragraph
       (bold
         (plain_text)
-        (MISSING _MARKUP_CLOSE_BOLD)))))
+        (MISSING _MARKUP_CLOSE_BOLD))
+      (newline))))

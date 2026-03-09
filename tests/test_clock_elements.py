@@ -44,7 +44,12 @@ def test_heading_body_uses_clock_elements() -> None:
     document = loads("* Work\n\nCLOCK: [2025-01-07 Tue 14:00]\n")
 
     assert len(document.children) == 1
-    assert isinstance(document.children[0].body[0], Clock)
+    body = [
+        element
+        for element in document.children[0].body
+        if getattr(element, "node_type", "") != "blank_line"
+    ]
+    assert isinstance(body[0], Clock)
 
 
 def test_clock_timestamp_setter_recomputes_duration() -> None:

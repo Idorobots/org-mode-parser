@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from org_parser import loads
 from org_parser.element import (
     CenterBlock,
@@ -18,6 +20,18 @@ from org_parser.element import (
     VerseBlock,
 )
 from org_parser.text import RichText
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+
+def _non_blank(elements: Sequence[object]) -> list[object]:
+    """Return elements excluding grammar-level blank-line separators."""
+    return [
+        element
+        for element in elements
+        if getattr(element, "node_type", "") != "blank_line"
+    ]
 
 
 def test_document_body_uses_dedicated_block_element_types() -> None:
@@ -53,16 +67,20 @@ def test_document_body_uses_dedicated_block_element_types() -> None:
         ": fixed\n"
     )
 
-    assert isinstance(document.body[0], QuoteBlock)
-    assert isinstance(document.body[1], ExampleBlock)
-    assert isinstance(document.body[2], SourceBlock)
-    assert isinstance(document.body[3], DynamicBlock)
-    assert isinstance(document.body[4], CenterBlock)
-    assert isinstance(document.body[5], SpecialBlock)
-    assert isinstance(document.body[6], CommentBlock)
-    assert isinstance(document.body[7], ExportBlock)
-    assert isinstance(document.body[8], VerseBlock)
-    assert isinstance(document.body[9], FixedWidthBlock)
+    assert any(
+        getattr(element, "node_type", "") == "blank_line" for element in document.body
+    )
+    body = _non_blank(document.body)
+    assert isinstance(body[0], QuoteBlock)
+    assert isinstance(body[1], ExampleBlock)
+    assert isinstance(body[2], SourceBlock)
+    assert isinstance(body[3], DynamicBlock)
+    assert isinstance(body[4], CenterBlock)
+    assert isinstance(body[5], SpecialBlock)
+    assert isinstance(body[6], CommentBlock)
+    assert isinstance(body[7], ExportBlock)
+    assert isinstance(body[8], VerseBlock)
+    assert isinstance(body[9], FixedWidthBlock)
 
 
 def test_heading_body_uses_dedicated_block_element_types() -> None:
@@ -78,8 +96,12 @@ def test_heading_body_uses_dedicated_block_element_types() -> None:
     )
 
     heading = document.children[0]
-    assert isinstance(heading.body[0], QuoteBlock)
-    assert isinstance(heading.body[1], SourceBlock)
+    assert any(
+        getattr(element, "node_type", "") == "blank_line" for element in heading.body
+    )
+    body = _non_blank(heading.body)
+    assert isinstance(body[0], QuoteBlock)
+    assert isinstance(body[1], SourceBlock)
 
 
 def test_text_block_contents_are_mutable_and_bubble_dirty() -> None:
@@ -146,25 +168,26 @@ def test_block_metadata_fields_are_exposed() -> None:
         "#+end:\n"
     )
 
-    assert isinstance(document.body[0], SourceBlock)
-    source_block = document.body[0]
+    body = _non_blank(document.body)
+    assert isinstance(body[0], SourceBlock)
+    source_block = body[0]
     assert source_block.language == "python"
     assert source_block.switches == "-n -r"
     assert source_block.contents == "print('x')\n"
 
-    assert isinstance(document.body[1], ExportBlock)
-    export_block = document.body[1]
+    assert isinstance(body[1], ExportBlock)
+    export_block = body[1]
     assert export_block.backend == "html"
     assert export_block.parameters == ":exports code"
     assert export_block.contents == "<p>x</p>\n"
 
-    assert isinstance(document.body[2], SpecialBlock)
-    special_block = document.body[2]
+    assert isinstance(body[2], SpecialBlock)
+    special_block = body[2]
     assert special_block.name == "warning"
     assert special_block.parameters == ":foo bar"
 
-    assert isinstance(document.body[3], DynamicBlock)
-    dynamic_block = document.body[3]
+    assert isinstance(body[3], DynamicBlock)
+    dynamic_block = body[3]
     assert dynamic_block.name == "clocktable"
     assert dynamic_block.parameters == ":scope subtree"
     assert len(dynamic_block.contents) == 1

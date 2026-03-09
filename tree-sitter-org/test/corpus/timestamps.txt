@@ -12,7 +12,8 @@ Active timestamp
         (ts_year)
         (ts_month)
         (ts_day)
-        (ts_dayname)))))
+        (ts_dayname))
+      (newline))))
 
 ================
 Inactive timestamp
@@ -28,7 +29,8 @@ Inactive timestamp
         (ts_year)
         (ts_month)
         (ts_day)
-        (ts_dayname)))))
+        (ts_dayname))
+      (newline))))
 
 ================
 Active timestamp with time
@@ -45,7 +47,8 @@ Active timestamp with time
         (ts_month)
         (ts_day)
         (ts_dayname)
-        (ts_time)))))
+        (ts_time))
+      (newline))))
 
 ================
 Inactive timestamp with time
@@ -62,7 +65,8 @@ Inactive timestamp with time
         (ts_month)
         (ts_day)
         (ts_dayname)
-        (ts_time)))))
+        (ts_time))
+      (newline))))
 
 ================
 Active same-day time range
@@ -80,7 +84,8 @@ Active same-day time range
         (ts_day)
         (ts_dayname)
         (ts_time)
-        (ts_time)))))
+        (ts_time))
+      (newline))))
 
 ================
 Inactive same-day time range
@@ -98,7 +103,8 @@ Inactive same-day time range
         (ts_day)
         (ts_dayname)
         (ts_time)
-        (ts_time)))))
+        (ts_time))
+      (newline))))
 
 ================
 Active same-day time range with repeater
@@ -118,7 +124,8 @@ Active same-day time range with repeater
         (ts_time)
         (ts_time)
         (repeater_mark)
-        (time_unit)))))
+        (time_unit))
+      (newline))))
 
 ================
 Timestamp range
@@ -138,4 +145,5 @@ Timestamp range
         (ts_year)
         (ts_month)
         (ts_day)
-        (ts_dayname)))))
+        (ts_dayname))
+      (newline))))
