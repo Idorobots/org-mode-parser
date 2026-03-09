@@ -1726,7 +1726,9 @@ The =LOGBOOK= drawer should be treated in the same way as the =PROPERTIES= drawe
 *** Support for Org entities
 *** Support for subscript/superscript
 *** Bind indent in lesser/greater elements
+Update the parser to bind indent level in elements such as drawers, blocks, paragraphs and all list items. Bind it even if the indent level is 0. It's sufficient to bind the indent of the beginning of the element.
 This will be used by semantic analysis to recover list nesting.
+
 *** CANCELLED Heading line abstraction
 :LOGBOOK:
 - State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\
@@ -1779,6 +1781,22 @@ The value =IN-PROGRESS= doesn't parse as a todo state when configured, but shoul
 Adjust the parse rules for todo states to allow for =-= and =_= in state names.
 
 *** Better support for tableel tables
+Table.el tables are parsed weird right now - just the frame lines are parsed as tableel tables with the actual table data parsed as Org Tables.
+
+*** TODO Multiline paragraphs don't preserve newlines
+The following example ends up as three separate plaintext lines separated by newlines, but none of these newlines is captured.
+
+#+begin_example
+This is some text:
+More text
+More text
+#+end_example
+
+Ideally, the paragraph would still span multiple lines, but would capture the newlines properly. The newline character can be a part of each line.
+**** COMMENT
+Initially, Opus blew through all the quota trying to figure out what could be done and produced an unsatisfactory plan.
+Then, Codex was able to reword the plan and begin execution, however, there were issues with API communication with OpenAI, so Codex couldn't finish implementing the plan. Sonnet continued the implementation, but decided to make newlines a separate plaintext item, which is fine. In the end, Sonnet reverted all changes and instead implemented a work-around in Python by checking for the missing newline characters.
+
 * Semantic nodes implementation
 ** DONE Python scaffold
 :LOGBOOK:
@@ -2087,8 +2105,20 @@ At the same time, whenever a parse tree error is encountered, please store that 
 Add a method called =raw= for each object that returns the raw Tree-Sitter parse tree nodes that were used to construct those objects.
 
 *** Convenience fields
-Add extra fields for convevience - latest_timestamp, earliest_timestamp, is_completed, is_root, is_terminal, 
+Add extra fields for convevience:
 
+1. =Document=
+   - is_root
+   - is_terminal
+
+2. =Heading=
+   - latest_timestamp
+   - earliest_timestamp
+   - is_completed
+   - is_root
+   - is_terminal
+
+*** Convenience constructors
 *** iterator interface
 Document, Heading and RichText should support an iterator interface.
 - Document iterates over all the headings contained within, including subheadings
@@ -2101,6 +2131,8 @@ Document, Heading and RichText should support an iterator interface.
 
 ** Programatically create RichText from strings
 Invoke the tree sitter parser on text mutation.
+
+** Programatically create timestamps from strings
 ** Attach CAPTION, TBLNAME, PLOT and RESULTS to the following element
 ** Recover list & element nesting
 - List nesting & item bodies should be adjusted to support the indent-level objects

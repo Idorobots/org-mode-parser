@@ -18,6 +18,7 @@ See [[file:examples/][examples directory]] to get an idea of the parser complete
 - Malformed objects are usually treated as plaintext (or recovered with generic
   parse-error nodes) instead of hard-failing the full parse.
 - Table.el tables parse as multiple Org-Mode tables intertwined with =tableel_table= elements.
+- Paragraph's constituents do not bind the newline character in the Tree-Sitter parser, it's deferred to the semantic nodes construction.
 
 * Explicitly Not Supported
 

@@ -146,6 +146,26 @@ def test_rich_text_mutation_marks_dirty_and_reconstructs(
     assert str(rich_text).endswith(" END")
 
 
+def test_paragraph_plain_text_children_keep_trailing_newlines(tmp_path: Path) -> None:
+    """RichText built from paragraphs preserves line newlines."""
+    content = "This is some text:\nMore text\nMore text\n"
+    path = tmp_path / "multiline-paragraph.org"
+    path.write_text(content, encoding="utf-8")
+
+    source = path.read_bytes()
+    tree = load_raw(path)
+    paragraph = _find_first_node_with_type(tree.root_node, "paragraph")
+    rich_text = RichText.from_node(paragraph, source)
+
+    assert str(rich_text) == content
+    newline_parts = [
+        part
+        for part in rich_text.parts
+        if isinstance(part, PlainText) and str(part) == "\n"
+    ]
+    assert len(newline_parts) == 3
+
+
 def test_programmatic_rich_text_construction_uses_public_objects() -> None:
     """Programmatic construction with public inline object classes works."""
     rich_text = RichText(

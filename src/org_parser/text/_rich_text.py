@@ -173,7 +173,7 @@ class RichText:
     def from_node(cls, node: tree_sitter.Node, source: bytes) -> RichText:
         """Create a :class:`RichText` from a single tree-sitter node."""
         if node.type == "paragraph":
-            parts = _parse_inline_nodes(node.named_children, source)
+            parts = _parse_paragraph_children(node, source)
         else:
             parts = _parse_inline_nodes([node], source)
         rt = cls(parts)
@@ -237,6 +237,34 @@ def _coerce_inline_object(part: InlineObject | str) -> InlineObject:
     if isinstance(part, str):
         return PlainText(part)
     return part
+
+
+def _parse_paragraph_children(
+    paragraph: tree_sitter.Node,
+    source: bytes,
+) -> list[InlineObject]:
+    r"""Parse a paragraph's inline children, filling byte-range gaps with PlainText.
+
+    Tree-sitter's ``_NL`` tokens carry the trailing ``\n`` of each paragraph
+    line but are invisible and therefore absent from ``node.named_children``.
+    This helper detects the byte-range gaps between consecutive named children
+    and fills them with :class:`PlainText` objects so that the resulting parts
+    list faithfully represents the source, including every line-ending newline.
+    """
+    parts: list[InlineObject] = []
+    prev_end = paragraph.start_byte
+    for child in paragraph.named_children:
+        if child.start_byte > prev_end:
+            gap = source[prev_end : child.start_byte].decode()
+            if gap:
+                parts.append(PlainText(gap))
+        parts.append(_parse_inline_node(child, source))
+        prev_end = child.end_byte
+    if paragraph.end_byte > prev_end:
+        gap = source[prev_end : paragraph.end_byte].decode()
+        if gap:
+            parts.append(PlainText(gap))
+    return parts
 
 
 def _parse_inline_nodes(
