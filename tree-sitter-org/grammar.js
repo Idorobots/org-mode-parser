@@ -579,6 +579,7 @@ module.exports = grammar({
     _table_cell_objects: $ => repeat1($._object_table),
 
     tblfm_line: $ => seq(
+      optional(field('indent', $.indent)),
       token(prec(2, ci('#+tblfm:'))),
       optional($._S),
       $._REST_OF_LINE,

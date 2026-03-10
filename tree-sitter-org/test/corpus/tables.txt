@@ -33,12 +33,12 @@ Table with TBLFM formula line
   (zeroth_section
     (org_table
       (table_row
-        (table_rule))
+        rule: (table_rule))
       (table_row
         (table_cell
           (plain_text)
           (bold
-            (plain_text))
+            body: (plain_text))
           (plain_text))
         (table_cell
           (plain_text))
@@ -55,6 +55,36 @@ Table with TBLFM formula line
         (table_cell
           (plain_text)))
       (tblfm_line))))
+
+================
+Table with indented TBLFM formula line
+================
+ |    *Total* |              |            |                 |                |              150 |
+ #+TBLFM: @>$6=vsum(@2$6..@>>$6)
+
+---
+
+(document
+  (zeroth_section
+    (org_table
+      (table_row
+        (table_cell
+          (plain_text)
+          (bold
+            body: (plain_text))
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text))
+        (table_cell
+          (plain_text)))
+      (tblfm_line
+        indent: (indent)))))
 
 ================
 Table with rule row
