@@ -812,6 +812,10 @@ static int scan_markup_open(
 
   int32_t next = lookahead(lexer);
 
+  if (marker == '+' && (next == ' ' || next == '\t' || next == '-')) {
+    return -1;
+  }
+
   // Treat '/' between two adjacent markup markers as plain text separator.
   // Example: ~INCR~/~INCRBYFLOAT~ should parse as code '/' code, not italic.
   if (marker == '/' && is_markup_marker(s->prev_char) && is_markup_marker(next) &&
@@ -1194,7 +1198,8 @@ static bool scan_item_tag_end(TSLexer *lexer) {
 //  -4  — whitespace + non-bullet line that may start another construct
 //         (e.g. '|', '#', or ':...'); caller should fall through to LIST_END.
 static int scan_listitem_indent(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
-  if (s->list_depth == 0) return 0;
+  (void)s;
+  (void)valid_symbols;
 
   if (lookahead(lexer) != ' ' && lookahead(lexer) != '\t') return 0;
 
@@ -1231,18 +1236,12 @@ static int scan_listitem_indent(Scanner *s, TSLexer *lexer, const bool *valid_sy
 
   // Indented non-bullet lines that clearly start other constructs should end
   // the current list instead of being treated as item continuation text.
-  if (ch == ':' && s->list_depth > 0) {
+  if (ch == ':') {
     (void)indent_col;
     return -4;
   }
 
-  if (ch == '#' && s->list_depth > 0) {
-    // Deeper-indented block/keyword/comment lines visually belong to the
-    // current item body. Same-indentation (or shallower) lines terminate the
-    // current list.
-    uint16_t current_indent = s->list_indents[s->list_depth - 1];
-    return (indent_col > current_indent) ? -1 : -4;
-  }
+  if (ch == '#') return -4;
 
   if (ch == '|') return -4;
 
@@ -1533,11 +1532,47 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   while (!eof(lexer) && lookahead(lexer) != '\n') {
     int32_t ch = lookahead(lexer);
 
+    if (!found_any && get_column(lexer) == 0 && is_ascii_digit(ch)) {
+      int32_t last = ch;
+      do {
+        last = lookahead(lexer);
+        advance(lexer);
+      } while (is_ascii_digit(lookahead(lexer)));
+
+      if (lookahead(lexer) == '.' || lookahead(lexer) == ')') {
+        last = lookahead(lexer);
+        advance(lexer);
+        if (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+          return false;
+        }
+      }
+
+      s->prev_char = last;
+      mark_end(lexer);
+      found_any = true;
+      continue;
+    }
+
     // Avoid starting a plain_text token at '-' in BOL contexts so grammar-level
     // constructs that begin with hyphen (table rule rows, list bullets, and
     // the plain '-' fallback token) can still match. Mid-line '-' should be
     // plain text, including after inline markup closers (e.g. "-_word_-").
     if (ch == '-' && !found_any) {
+      if (get_column(lexer) == 0) {
+        advance(lexer);
+        if (lookahead(lexer) == '-') {
+          advance(lexer);
+          int32_t next = lookahead(lexer);
+          if (next != ' ' && next != '\t' && next != '\n' && next != '-' && !eof(lexer)) {
+            s->prev_char = '-';
+            mark_end(lexer);
+            found_any = true;
+            continue;
+          }
+        }
+        return false;
+      }
+
       if (s->prev_char == '>') {
         if (!scan_single_inline_hyphen(lexer)) return false;
         s->prev_char = ch;
@@ -1592,6 +1627,13 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
         int32_t prev_before_marker = s->prev_char;
 
         advance(lexer);
+
+        if (ch == '+' && !found_any && marker_col == 0) {
+          if (lookahead(lexer) == ' ' || lookahead(lexer) == '\t' || lookahead(lexer) == '-') {
+            return false;
+          }
+        }
+
         if (s->prev_char != ' ' && s->prev_char != '\t' && s->prev_char != '\n' &&
             (eof(lexer) || is_markup_post_for_marker(ch, lookahead(lexer))) &&
             is_marker_open(s, ch)) {
@@ -2360,9 +2402,8 @@ static int scan_fixed_width_colon(Scanner *s, TSLexer *lexer, const bool *valid_
 
   } else {
     // Mid-line: only valid if no visible external text was consumed on this
-    // line. `prev_char` can be 0 (pure BOL path) or a synthesized space from
-    // line-transition normalization.
-    if (s->prev_char != 0 && s->prev_char != ' ') return 0;
+    // line (pure BOL path via grammar/internal tokens).
+    if (s->prev_char != 0) return 0;
   }
 
   if (lookahead(lexer) != ':') {
@@ -2445,6 +2486,7 @@ bool tree_sitter_org_external_scanner_scan(
     // open at the beginning of the list item text.
     s->prev_char = ' ';
     s->plain_lbracket_depth = 0;
+    s->in_heading_line = false;
   } else if (col > 0 && s->last_column == 0 && s->prev_char == 0) {
     // We left column 0 via grammar/internal tokens only (for example list
     // bullets/spaces or heading stars/space). No external scanner token has

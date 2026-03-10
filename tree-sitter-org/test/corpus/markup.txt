@@ -327,25 +327,26 @@ Invalid spaced markup markers stay plain text
 
 (document
   (zeroth_section
-    (plain_list
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text)))))
+    (list_item
+      first_line: (plain_text)
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (plain_text))
+    (ERROR
+      (repeater_mark))
+    (paragraph
+      (plain_text)
+      (newline))
+    (list_item
+      first_line: (plain_text)
+      first_line: (plain_text))))
 
 ================
 Nested markup openings in list items
@@ -362,43 +363,42 @@ Nested markup openings in list items
 
 (document
   (zeroth_section
-    (plain_list
-      (item
-        first_line: (bold
-          body: (italic
-            body: (plain_text))))
-      (item
-        first_line: (italic
-          body: (bold
-            body: (plain_text))))
-      (item
-        first_line: (bold
-          body: (plain_text)
-          body: (underline
-            body: (plain_text))
-          body: (plain_text)))
-      (item
-        first_line: (italic
-          body: (plain_text)
-          body: (underline
-            body: (plain_text))
-          body: (plain_text)))
-      (item
-        first_line: (plain_text)
-        first_line: (bold
-          body: (italic
-            body: (plain_text)))
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (italic
+    (list_item
+      first_line: (bold
+        body: (italic
+          body: (plain_text))))
+    (list_item
+      first_line: (italic
+        body: (bold
+          body: (plain_text))))
+    (list_item
+      first_line: (bold
+        body: (plain_text)
+        body: (underline
           body: (plain_text))
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (italic
+        body: (plain_text)))
+    (list_item
+      first_line: (italic
+        body: (plain_text)
+        body: (underline
           body: (plain_text))
-        first_line: (plain_text)))))
+        body: (plain_text)))
+    (list_item
+      first_line: (plain_text)
+      first_line: (bold
+        body: (italic
+          body: (plain_text)))
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (italic
+        body: (plain_text))
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (italic
+        body: (plain_text))
+      first_line: (plain_text))))
 
 ================
 Verbatim with inner equals before final close

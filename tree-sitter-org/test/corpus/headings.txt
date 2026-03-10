@@ -26,9 +26,7 @@ Heading and body lines keep double-dash switches as plain text
     (section
       (paragraph
         (plain_text)
-        (plain_text)
         (newline)
-        (plain_text)
         (plain_text)
         (newline)))))
 

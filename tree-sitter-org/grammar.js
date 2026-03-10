@@ -70,7 +70,7 @@ module.exports = grammar({
   conflicts: $ => [
     [$.zeroth_section],
     [$.zeroth_section, $._zs_element],
-    [$.item, $.item_tag],
+    [$.list_item, $.item_tag],
     [$.heading, $.section],
     [$.heading, $._section_element],
     [$._object, $._object_min],
@@ -205,8 +205,7 @@ module.exports = grammar({
       $.dynamic_block,
       $.footnote_definition,
       $._indented_object_line,
-      $._indented_plain_list,
-      $.plain_list,
+      $.list_item,
       $.org_table,
       $.tableel_table,
       $._lesser_block,
@@ -221,7 +220,7 @@ module.exports = grammar({
       $.dynamic_block,
       $.footnote_definition,
       $._indented_object_line,
-      $.plain_list,
+      $.list_item,
       $.org_table,
       $.tableel_table,
       $._lesser_block,
@@ -241,11 +240,6 @@ module.exports = grammar({
     _non_affiliatable: $ => choice(
       $.comment,
       $.clock,
-    ),
-
-    _indented_plain_list: $ => seq(
-      field('indent', $.indent),
-      $.plain_list,
     ),
 
     _indented_object_line: $ => seq(
@@ -330,19 +324,13 @@ module.exports = grammar({
     drawer_start_text: _ => /[^\n]+/,
 
     _drawer_body: $ => repeat1(choice(
-      $.plain_list,
-      $._drawer_indented_list,
+      $.list_item,
       $._drawer_indented_timestamp_line,
       $.drawer_kv_line,
       $.drawer_double_colon_line,
       $._drawer_element,
       $.blank_line,
     )),
-
-    _drawer_indented_list: $ => seq(
-      field('indent', $.indent),
-      $.plain_list,
-    ),
 
     _drawer_indented_timestamp_line: $ => prec(1, seq(
       field('indent', $.indent),
@@ -437,32 +425,12 @@ module.exports = grammar({
       $.blank_line,
     )),
 
-    // --- 6.5 Plain Lists and Items ---
+    // --- 6.5 List Items ---
     //
-    // Design: lists are parsed FLAT — all items (regardless of indentation) are
-    // siblings in one plain_list node.  Indented items carry a field('indent',
-    // _LISTITEM_INDENT) that records their leading whitespace so that a
-    // post-processing step can reconstruct the proper nested structure.
-    //
-    // Why flat?  Getting tree-sitter to correctly delimit nested plain_list nodes
-    // requires the external scanner to peek ahead across newlines, which causes
-    // lexer-position corruption between scanner calls in the same scan()
-    // invocation (because advances aren't reset until the *whole* scan() returns
-    // false).  The flat approach avoids all of that complexity.
-    //
-    // Blank lines between items are allowed (and hidden from the tree because
-    // _blank_line is anonymous).
-    plain_list: $ => seq(
-      $._LIST_START,
-      repeat1($.item),
-      $._LIST_END,
-    ),
-
-    // Items are a first bullet line plus optional continuation lines.
-    // Continuation lines must be indented and are attached to the same item.
-    // Indented bullet lines still parse as sibling items (flat list model).
-    item: $ => seq(
-      optional(field('indent', alias($._LISTITEM_INDENT, $.item_indent))),
+    // List items are parsed as standalone section elements. Nested list
+    // structure is recovered later in semantic construction from indent fields.
+    list_item: $ => prec.left(seq(
+      optional(field('indent', $.indent)),
       field('bullet', $._bullet),
       optional(field('counter_set', $.counter_set)),
       optional(field('checkbox', $.checkbox)),
@@ -470,76 +438,16 @@ module.exports = grammar({
         seq(field('tag', $.item_tag), $._NL),
         seq(optional(field('first_line', $._item_first_line)), optional($._TRAILING), $._NL),
       ),
-      repeat(field('body', $._item_body)),
-      repeat($.blank_line),
-    ),
-
-    _item_body: $ => choice(
-      choice(
-        alias($._item_drawer, $.drawer),
-        $.fixed_width,
-        $._item_block,
-        $.item_continuation_line,
-      ),
-      seq(
-        repeat1($.blank_line),
-        choice(
-          alias($._item_drawer, $.drawer),
-          $.fixed_width,
-          $._item_block,
-          $.item_continuation_line,
-        ),
-      ),
-    ),
-
-    _item_block: $ => choice(
-      $.dynamic_block,
-      $._greater_block,
-      $._lesser_block,
-    ),
-
-    _item_drawer: $ => seq(
-      optional(field('indent', $.indent)),
-      token(prec(2, ':')),
-      field('name', alias($._DRAWER_NAME_NO_END, $.drawer_name)),
-      choice(
-        seq(':', $._NL),
-        seq(':', field('body', $.drawer_start_text), $._NL),
-      ),
-      field('body', optional($._drawer_body)),
-      optional(field('closing_indent', $.indent)),
-      token(prec(2, ci(':end:'))),
-      optional($._TRAILING),
-      $._NL,
-    ),
-
-    _DRAWER_NAME_NO_END: _ => choice(
-      /[A-DF-Za-df-z0-9_\-][A-Za-z0-9_\-]*/,
-      /[Ee]/,
-      /[Ee][A-MO-Za-mo-z0-9_\-][A-Za-z0-9_\-]*/,
-      /[Ee][Nn]/,
-      /[Ee][Nn][A-CE-Za-ce-z0-9_\-][A-Za-z0-9_\-]*/,
-      /[Ee][Nn][Dd][A-Za-z0-9_\-]+/,
-    ),
+    )),
 
     _item_first_line: $ => repeat1($._object),
-
-    item_continuation_line: $ => seq(
-      field('indent', $.indent),
-      field('content', repeat1($._object)),
-      optional($._TRAILING),
-      $.newline,
-    ),
 
     _bullet: $ => choice(
       $._unordered_bullet,
       $._ordered_bullet,
     ),
 
-    _unordered_bullet: $ => seq(
-      choice('+', '-', '*'),
-      $._S,
-    ),
+    _unordered_bullet: _ => token(/[+*-][ \t]+/),
 
     _ordered_bullet: $ => seq(
       field('counter', alias($._COUNTER, $.counter)),

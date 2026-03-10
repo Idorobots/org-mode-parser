@@ -693,18 +693,19 @@ class FixedWidthBlock(Element):
 
 def _extract_container_contents(node: tree_sitter.Node, source: bytes) -> list[Element]:
     """Extract nested body elements for container-style blocks."""
-    return [
+    elements = [
         _extract_nested_element(child, source)
         for child in node.children_by_field_name("body")
         if child.is_named
     ]
+    return _coalesce_list_items(elements)
 
 
 def _extract_nested_element(node: tree_sitter.Node, source: bytes) -> Element:
     """Build one semantic element for nested block contents."""
     from org_parser.element._drawer import Drawer, Logbook, Properties
     from org_parser.element._keyword import Keyword
-    from org_parser.element._list import List
+    from org_parser.element._list import ListItem
     from org_parser.element._paragraph import Paragraph
     from org_parser.element._table import Table
     from org_parser.time import Clock
@@ -728,12 +729,19 @@ def _extract_nested_element(node: tree_sitter.Node, source: bytes) -> Element:
         "src_block": SourceBlock.from_node,
         "verse_block": VerseBlock.from_node,
         "fixed_width": FixedWidthBlock.from_node,
-        "plain_list": List.from_node,
+        "list_item": ListItem.from_node,
     }
     factory = dispatch.get(node.type)
     if factory is None:
         return Element.from_node(node, source)
     return factory(node, source)
+
+
+def _coalesce_list_items(elements: list[Element]) -> list[Element]:
+    """Recover semantic lists from flat nested block body elements."""
+    from org_parser.element._list_recovery import recover_lists
+
+    return recover_lists(elements, parent=None)
 
 
 def _extract_optional_field_text(

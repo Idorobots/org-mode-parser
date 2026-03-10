@@ -117,7 +117,7 @@ class ListItem(Element):
         parent: Document | Heading | Element | None = None,
         source_text: str = "",
     ) -> None:
-        super().__init__(node_type="item", source_text=source_text, parent=parent)
+        super().__init__(node_type="list_item", source_text=source_text, parent=parent)
         self._indent = indent
         self._bullet = bullet
         self._ordered_counter = ordered_counter
@@ -141,7 +141,7 @@ class ListItem(Element):
         *,
         parent: Document | Heading | Element | None = None,
     ) -> ListItem:
-        """Create one :class:`ListItem` from an ``item`` parse node."""
+        """Create one :class:`ListItem` from a ``list_item`` parse node."""
         source_text = source[node.start_byte : node.end_byte].decode()
         item = cls(
             indent=_extract_optional_field_text(node, source, "indent"),
@@ -254,11 +254,12 @@ class ListItem(Element):
         self._adopt_body(self._body)
         self._mark_dirty()
 
-    def append_body(self, element: Element) -> None:
-        """Append one body element and mark item dirty."""
+    def append_body(self, element: Element, *, mark_dirty: bool = True) -> None:
+        """Append one body element with optional dirty propagation."""
         element.set_parent(self, mark_dirty=False)
         self._body.append(element)
-        self._mark_dirty()
+        if mark_dirty:
+            self._mark_dirty()
 
     def _adopt_body(self, body: Sequence[Element]) -> None:
         """Assign this item as parent for all body elements."""
@@ -267,7 +268,7 @@ class ListItem(Element):
 
     def __str__(self) -> str:
         """Render list-item text from semantic fields when dirty."""
-        if not self.dirty and self._node is not None:
+        if not self.dirty and self._node is not None and not self._body:
             return self.source_text
 
         parts: list[str] = []
@@ -453,7 +454,7 @@ class List(Element):
         items = [
             ListItem.from_node(child, source)
             for child in node.named_children
-            if child.type == "item"
+            if child.type == "list_item"
         ]
         parsed = cls(
             items=items,
@@ -480,11 +481,12 @@ class List(Element):
         if mark_dirty:
             self._mark_dirty()
 
-    def append_item(self, item: ListItem) -> None:
-        """Append one list item and mark list dirty."""
+    def append_item(self, item: ListItem, *, mark_dirty: bool = True) -> None:
+        """Append one list item with optional dirty propagation."""
         item.set_parent(self, mark_dirty=False)
         self._items.append(item)
-        self._mark_dirty()
+        if mark_dirty:
+            self._mark_dirty()
 
     def insert_item(self, index: int, item: ListItem) -> None:
         """Insert one list item at *index* and mark list dirty."""

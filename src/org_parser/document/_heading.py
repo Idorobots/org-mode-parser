@@ -12,7 +12,7 @@ from org_parser.element import (
     ExampleBlock,
     ExportBlock,
     FixedWidthBlock,
-    List,
+    ListItem,
     Logbook,
     Properties,
     QuoteBlock,
@@ -22,6 +22,7 @@ from org_parser.element import (
     VerseBlock,
 )
 from org_parser.element._element import Element
+from org_parser.element._list_recovery import recover_lists
 from org_parser.element._paragraph import Paragraph
 from org_parser.element._table import Table
 from org_parser.text._inline import CompletionCounter
@@ -59,7 +60,7 @@ _EXPORT_BLOCK = "export_block"
 _SRC_BLOCK = "src_block"
 _VERSE_BLOCK = "verse_block"
 _FIXED_WIDTH = "fixed_width"
-_PLAIN_LIST = "plain_list"
+_LIST_ITEM = "list_item"
 
 
 class Heading:
@@ -613,7 +614,7 @@ def _extract_body(
     return (
         _merge_properties_drawers(properties_drawers, parent=parent),
         _merge_logbook_drawers(logbook_drawers, parent=parent),
-        body,
+        _coalesce_list_items(body, parent=parent),
     )
 
 
@@ -682,12 +683,21 @@ def _extract_body_element(
         _SRC_BLOCK: SourceBlock.from_node,
         _VERSE_BLOCK: VerseBlock.from_node,
         _FIXED_WIDTH: FixedWidthBlock.from_node,
-        _PLAIN_LIST: List.from_node,
+        _LIST_ITEM: ListItem.from_node,
     }
     factory = dispatch.get(node.type)
     if factory is None:
         return Element.from_node(node, source, parent=parent)
     return factory(node, source, parent=parent)
+
+
+def _coalesce_list_items(
+    elements: list[Element],
+    *,
+    parent: Heading | Document,
+) -> list[Element]:
+    """Recover semantic lists from flat heading body elements."""
+    return recover_lists(elements, parent=parent)
 
 
 def _extract_planning(

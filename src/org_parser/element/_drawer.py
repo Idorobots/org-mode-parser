@@ -19,6 +19,7 @@ from org_parser.element._block import (
 )
 from org_parser.element._element import Element
 from org_parser.element._list import List, ListItem, Repeat
+from org_parser.element._list_recovery import recover_lists
 from org_parser.text._rich_text import RichText
 from org_parser.time import Clock
 
@@ -48,7 +49,7 @@ _EXPORT_BLOCK = "export_block"
 _SRC_BLOCK = "src_block"
 _VERSE_BLOCK = "verse_block"
 _FIXED_WIDTH = "fixed_width"
-_PLAIN_LIST = "plain_list"
+_LIST_ITEM = "list_item"
 
 
 class Drawer(Element):
@@ -91,10 +92,13 @@ class Drawer(Element):
         )
         drawer = cls(
             name=name,
-            body=[
-                _extract_drawer_body_element(child, source)
-                for child in node.children_by_field_name("body")
-            ],
+            body=_coalesce_list_items(
+                [
+                    _extract_drawer_body_element(child, source)
+                    for child in node.children_by_field_name("body")
+                ],
+                parent=parent,
+            ),
             parent=parent,
             source_text=source[node.start_byte : node.end_byte].decode(),
         )
@@ -172,10 +176,13 @@ class Logbook(Drawer):
         parent: Document | Heading | Element | None = None,
     ) -> Logbook:
         """Create a :class:`Logbook` from ``logbook_drawer`` node."""
-        body = [
-            _extract_drawer_body_element(child, source)
-            for child in node.children_by_field_name("body")
-        ]
+        body = _coalesce_list_items(
+            [
+                _extract_drawer_body_element(child, source)
+                for child in node.children_by_field_name("body")
+            ],
+            parent=parent,
+        )
         repeats = _extract_logbook_repeats(body)
         clock_entries = [element for element in body if isinstance(element, Clock)]
         logbook = cls(
@@ -363,12 +370,21 @@ def _extract_drawer_body_element(node: tree_sitter.Node, source: bytes) -> Eleme
         _SRC_BLOCK: SourceBlock.from_node,
         _VERSE_BLOCK: VerseBlock.from_node,
         _FIXED_WIDTH: FixedWidthBlock.from_node,
-        _PLAIN_LIST: List.from_node,
+        _LIST_ITEM: ListItem.from_node,
     }
     factory = dispatch.get(node.type)
     if factory is None:
         return Element.from_node(node, source)
     return factory(node, source)
+
+
+def _coalesce_list_items(
+    elements: list[Element],
+    *,
+    parent: Document | Heading | Element | None,
+) -> list[Element]:
+    """Recover semantic lists from flat drawer body elements."""
+    return recover_lists(elements, parent=parent)
 
 
 def _ensure_trailing_newline(value: str) -> str:
