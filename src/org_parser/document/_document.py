@@ -21,7 +21,7 @@ from org_parser.element import (
     SpecialBlock,
     VerseBlock,
 )
-from org_parser.element._element import Element
+from org_parser.element._element import Element, reformat_value
 from org_parser.element._indent_block import IndentBlock
 from org_parser.element._keyword import Keyword
 from org_parser.element._list_recovery import recover_lists
@@ -389,6 +389,20 @@ class Document:
         mutation state up to the owning document.
         """
         self._mark_dirty()
+
+    def reformat(self) -> None:
+        """Recursively mark document descendants dirty, then self dirty."""
+        reformat_value(self._keywords)
+        reformat_value(self._title)
+        reformat_value(self._author)
+        reformat_value(self._category)
+        reformat_value(self._description)
+        reformat_value(self._todo)
+        reformat_value(self._properties)
+        reformat_value(self._logbook)
+        reformat_value(self._body)
+        reformat_value(self._children)
+        self.mark_dirty()
 
     def _adopt_keyword(self, value: Keyword | None) -> None:
         """Assign this document as parent for one keyword."""

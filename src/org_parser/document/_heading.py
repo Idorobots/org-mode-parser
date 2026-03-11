@@ -21,7 +21,7 @@ from org_parser.element import (
     SpecialBlock,
     VerseBlock,
 )
-from org_parser.element._element import Element
+from org_parser.element._element import Element, reformat_value
 from org_parser.element._indent_block import IndentBlock
 from org_parser.element._list_recovery import recover_lists
 from org_parser.element._paragraph import Paragraph
@@ -435,6 +435,20 @@ class Heading:
     def mark_dirty(self) -> None:
         """Mark this heading dirty and bubble to its parent chain."""
         self._mark_dirty()
+
+    def reformat(self) -> None:
+        """Recursively mark heading descendants dirty, then self dirty."""
+        reformat_value(self._title)
+        reformat_value(self._counter)
+        reformat_value(self._scheduled)
+        reformat_value(self._deadline)
+        reformat_value(self._closed)
+        reformat_value(self._properties)
+        reformat_value(self._logbook)
+        reformat_value(self._repeated_tasks)
+        reformat_value(self._body)
+        reformat_value(self._children)
+        self.mark_dirty()
 
     def _adopt_body_elements(self, body: list[Element]) -> None:
         """Assign this heading as parent for all body elements."""

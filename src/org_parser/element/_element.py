@@ -8,7 +8,7 @@ text; richer per-element semantics will be added in later iterations.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from org_parser.document._document import Document
     from org_parser.document._heading import Heading
 
-__all__ = ["Element"]
+__all__ = ["Element", "reformat_value"]
 
 
 def build_semantic_repr(class_name: str, /, **fields: object) -> str:
@@ -29,6 +29,33 @@ def build_semantic_repr(class_name: str, /, **fields: object) -> str:
     if not parts:
         return f"{class_name}()"
     return f"{class_name}({', '.join(parts)})"
+
+
+def reformat_value(value: object) -> None:
+    """Recursively mark semantic nodes dirty for scratch-built rendering."""
+    if value is None:
+        return
+
+    if isinstance(value, dict):
+        mapping = cast(dict[object, object], value)
+        for nested in mapping.values():
+            reformat_value(nested)
+        return
+
+    if isinstance(value, list | tuple | set):
+        sequence = cast(list[object] | tuple[object, ...] | set[object], value)
+        for nested in sequence:
+            reformat_value(nested)
+        return
+
+    reformat = getattr(value, "reformat", None)
+    if callable(reformat):
+        reformat()
+        return
+
+    mark_dirty = getattr(value, "mark_dirty", None)
+    if callable(mark_dirty):
+        mark_dirty()
 
 
 class Element:
@@ -146,6 +173,20 @@ class Element:
     def mark_dirty(self) -> None:
         """Mark this element as dirty."""
         self._mark_dirty()
+
+    def reformat(self) -> None:
+        """Recursively mark descendants dirty, then mark this element dirty."""
+        for key, value in vars(self).items():
+            if key in {
+                "_parent",
+                "_node",
+                "_dirty",
+                "_source_text",
+                "_node_type",
+            }:
+                continue
+            reformat_value(value)
+        self.mark_dirty()
 
     # -- dunder protocols ----------------------------------------------------
 

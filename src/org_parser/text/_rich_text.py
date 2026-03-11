@@ -152,6 +152,18 @@ class RichText:
         """Mark this rich text as dirty."""
         self._mark_dirty()
 
+    def reformat(self) -> None:
+        """Mark nested inline objects, then this rich text, as dirty."""
+        for part in self._parts:
+            reformat = getattr(part, "reformat", None)
+            if callable(reformat):
+                reformat()
+                continue
+            mark_dirty = getattr(part, "mark_dirty", None)
+            if callable(mark_dirty):
+                mark_dirty()
+        self.mark_dirty()
+
     def append(self, part: InlineObject | str) -> None:
         """Append content and mark rich text as dirty."""
         self._parts.append(_coerce_inline_object(part))

@@ -6,7 +6,7 @@ datetime-based convenience accessors.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -51,6 +51,7 @@ class Timestamp:
     end_dayname: str | None = None
     end_hour: int | None = None
     end_minute: int | None = None
+    _dirty: bool = field(default=False, init=False, repr=False, compare=False)
 
     @classmethod
     def from_node(cls, node: tree_sitter.Node, source: bytes) -> Timestamp:
@@ -144,6 +145,19 @@ class Timestamp:
     def __str__(self) -> str:
         """Render timestamp as original source text."""
         return self.raw
+
+    @property
+    def dirty(self) -> bool:
+        """Whether this timestamp has been marked for reformatting."""
+        return self._dirty
+
+    def mark_dirty(self) -> None:
+        """Mark this timestamp as dirty."""
+        object.__setattr__(self, "_dirty", True)
+
+    def reformat(self) -> None:
+        """Mark this timestamp as dirty for scratch-built rendering."""
+        self.mark_dirty()
 
 
 def _extract_raw_timestamp_text(node: tree_sitter.Node, source: bytes) -> str:
