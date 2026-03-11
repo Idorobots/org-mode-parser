@@ -1647,7 +1647,11 @@ Another regresion when there are two dashes in text:
 
 All the lines above should be text, even the heading title.
 
-*** TODO Other edge cases
+*** CANCELLED Other edge cases
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\
+  Documented, will be addressed in the future.
+:END:
 - Nested lists are parsed as items on the parent list, but include an indent
 - Malformed objects are usually treated as plaintext.
 
@@ -1712,35 +1716,434 @@ Let's try something different, make the script only find the leaf errors and dis
 By leaf errors I mean errors that are as close to a leaf as possible, not the top level errors, not necessarily errors at the very leaf of the expression - just the final level at which an error occurs that does not have an error embedded in them.
 
 ** TODO Parser extensions
-*** TODO Support for Babel call syntax
-*** TODO Support for Org entities
-*** TODO Support for subscript/superscript
-* Semantic nodes implementation
-- somewhat compatible with orgparse node layout (root node & env separate, rich data abstractions)
-- mutable by default
-- supports any drawers, spacial treatment for logbook & properties
-- env supporting special comments, files etc (title, category, todo, etc, tags)
-- nodes tags & inherited tags field (file-order lists not sets)
-- nodes category & inherited category field
-- extra fields for convevience - parent, children, siblings, latest_timestamp, earliest_timestamp, is_completed, is_root, is_terminal
-- env nodes property - returns all nodes in the env, file order
-- load, loads and dump, dumps
-- preserves original whitespace until a mutation is made
-- all text returning functions return a rich text by default, option to strip markup and turn that into a plain string
-** TODO Heading line abstraction
+*** DONE Special handling for LOGBOOK
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:50]
+:END:
+The =LOGBOOK= drawer should be treated in the same way as the =PROPERTIES= drawer, i.e. it should have a dedicated parse tree node associated with it. Other custom drawers can be left as-is.
+
+*** Support for Babel call syntax
+*** Support for Org entities
+*** Support for subscript/superscript
+*** TODO Bind indent in lesser/greater elements
+Update the parser to bind indent level in elements such as drawers, blocks, paragraphs and all list items. Bind it even if the indent level is 0. It's sufficient to bind the indent of the beginning of the element.
+This will be used by semantic analysis to recover list nesting.
+
+*** CANCELLED Heading line abstraction
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\
+  No need for that with the semantic nodes.
+:END:
 Add an abstraction over the heading line, so that the heading consists of a =heading_line= and a =body=.
 
-** TODO Python wrapper on tree-sitter
-Create a scaffold of a Python project using Poetry as the build tool. Include =mypy= for typings, =ruff= for linting and formatting and =pytest= for tests. The project will be a library that wraps the tree-sitter based parser, so include =py-tree-sitter= in the dependencies as well. For development, add =pyright= lang server.
+*** DONE Priority value abstraction in the parser
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 13:56]
+:END:
+Priority values are not bound in the parser, but should for easier extraction of the value:
 
+#+begin_example
+,* TODO [#A] Test
+#+end_example
+
+In the above example, it would be ideal if the parser extracted the value =A= and bound it as a subnode of the priority node under the name =value=.
+
+Please update the semantic nodes to use that extracted value instead.
+
+*** DONE Counter value abstraction in the parser
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:07]
+:END:
+Completion counter values are not bound in the parser, but should for easier extraction of the value:
+
+#+begin_example
+,* TODO Test [1/2]
+#+end_example
+
+In the above example, it would be ideal if the parser extracted the value =1/2= and bound it as a subnode of the counter node under the name =value=.
+
+Please update the semantic nodes to use that extracted value instead.
+
+** TODO Parser bugfixes
+*** DONE Dashes in #+TODO states
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 13:44]
+:END:
+The value =IN-PROGRESS= doesn't parse as a todo state when configured, but should.
+
+#+begin_example
+#+TODO: TODO IN-PROGRESS | DONE
+,* TODO Test
+,* DONE test
+,* IN-PROGRESS Test
+#+end_example
+
+Adjust the parse rules for todo states to allow for =-= and =_= in state names.
+
+*** Better support for tableel tables
+Table.el tables are parsed weird right now - just the frame lines are parsed as tableel tables with the actual table data parsed as Org Tables.
+
+*** DONE Multiline paragraphs don't preserve newlines
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-09 Mon 18:50]
+:END:
+The following example ends up as three separate plaintext lines separated by newlines, but none of these newlines is captured.
+
+#+begin_example
+This is some text:
+More text
+More text
+#+end_example
+
+Ideally, the paragraph would still span multiple lines, but would capture the newlines properly. The newline character can be a part of each line.
+**** COMMENT
+Initially, Opus blew through all the quota trying to figure out what could be done and produced an unsatisfactory plan.
+Then, Codex was able to reword the plan and begin execution, however, there were issues with API communication with OpenAI, so Codex couldn't finish implementing the plan. Sonnet continued the implementation, but decided to make newlines a separate plaintext item, which is fine. In the end, Sonnet reverted all changes and instead implemented a work-around in Python by checking for the missing newline characters.
+
+* Semantic nodes implementation
+** DONE Python scaffold
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-07 Sat 13:41]
+:END:
+Create a scaffold of a Python project using Poetry as the build tool. Include =mypy= for typings, =ruff= for linting and formatting and =pytest= for tests. The project will be a library that wraps the tree-sitter based parser, so include =py-tree-sitter= in the dependencies as well. For development, add =pyright= LSP server.
 Make sure that the setting for all of these tools are fairly strict, we want this project to be very well validated.
 
-The source code of the library should expose the tree-sitter parser with thin Python bindings. Don't worry about ease-of-use of the parser just yet, we will be addressing the user experience next.
+I'd like the layout of the library to be as follows:
 
-Create an extensive test suite that will run the parser against the test files.
+#+begin_example
+src - main Python source folder
+|-- org_parser - main module
+    |-- document - document-level objects
+    |-- element - lesser & greater elements
+    |-- text - rich text support
+tests - the test suite
+#+end_example
 
-Write the implementation plan down to docs/plans/python-wrapper-impl.md
+The source code of the library should expose the tree-sitter parser with thin Python bindings. Don't worry about ease-of-use of the parser just yet, we will be addressing the user experience next. It is enough to provide an =org_parser.document.load_raw()= function that reads an org file and returns th raw parse tree.
 
-** TODO Implement the Python wrapper
-Implement the plan from @docs/plans/python-wrapper-impl.md file.
+Create a test suite that will run the parser against some basic example files. We will be expanding the code soon, so there's no need to validate that it works too much.
 
+Before starting, write the implementation plan to docs/plans/ as a markdown file.
+
+** DONE Update the CI & AGENTS.md
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-07 Sat 13:41]
+:END:
+Update GitHub Actions workflow to also test the python portion of the project.
+
+Update AGENTS.md with instructions for the Python portion of the project.
+
+** Semantic nodes
+*** DONE Env, Document, Heading
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 13:39]
+:END:
+Add the top-level semantic classes to the =org_parser.document= package:
+
+1. =Document=
+
+Represents the full Org-Mode document structure, including the zeroth section and headings found within the document.
+
+It should expose the following public properties:
+
+- =filename: str= - the filename of the document file,
+- =title: RichText | None= - the value of the TITLE keyword
+- =author: RichText | None= - the value of the AUTHOR keyword
+- =category: RichText | None= - the value of the CATEGORY keyword
+- =body: list[Element]= - returns the zeroth section of the document, excluding any headings
+- =children: list[Heading]= - returns all the top-level headings of this document
+
+
+2. =Heading=
+
+Represents a heading or a subheading object. It should expose the following public properties:
+
+- =document: Document= - the document in which the heading is found
+- =level: int= - the count of stars on the heading
+- =todo: str | None= - the TODO state (if any) of the heading
+- =priority: str | None= - the priority of the heading
+- =title: RichText | None= - title text as rich text
+- =counter: str | None= - completion counter for the heading
+- =tags: list[str]= - a list of tags of the heading, text-order
+- =body: list[Element]= - returns the body section of the heading, excluding any subheadings.
+- =parent: Heading | Document= - heading or document that is a parent of this heading,
+- =children: list[Heading]= - list of subheadings of this heading
+- =siblings: list[Heading]= - list of siblings of this heading (not including this heading)
+
+
+Don't worry about the definition of the =Element= class, let's create a stub for that in =or_parser.elements.*= module.
+Don't worry about the definition of the =RichText= class, let's create a stub for that in =or_parser.text.*= module.
+
+All of these abstractions should be constructable using either the parse tree or by manually providing raw values.
+When using the parse tree a special care should be taken to preserve the original source representation of the different objects, i.e. the title text should be kept verbatim as in the Tree-Sitter parse tree. We will lax that requirement eventually by introducing mutability & representation function that builds the representation from the components.
+
+Please extract the =Heading.counter= completion counter from the title. The =counter= property should store only the inner value of the brackets or =None= if the counter is not present.
+
+For the =Document.body=, just include everything that isn't a heading or a special keyword. Headings will be available as the =children= property, while special keywords should be extracted to individual fields of the document. For now let's recognize just the =title=, =author=, =category=, =description= and =todo= as dedicated properties of the document with all other special keywords plased in a =keywords: dict[str, RichText]= dictionary.
+
+Use a factory class method for the construction of the objects from the parse tree nodes. The constructors should require only the bare minimum of arguments. We will add mutable setters at a later point. Do keep the parse tree node in the constructed object for later use (we will base the string representation of the objects on that parse tree node at a later point).
+
+The =parent= property should be mandatory when constructing an object while the =children= property can be an empty list by default that is later updated. The =siblings= property can be computed, it won't be used too much, so there's no need to cache the values.
+
+Please add some rudimentary tests for the functionality, but keep in mind that we will be expanding it.
+
+*** DONE load, loads and dump, dumps
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:23]
+:END:
+Add the folowing functions to the Python wrapper library:
+
+- =load(filename: str): Document= - loads an Org-Mode file from file,
+- ~loads(input: str, filename: str | None): Document~ - loads an Org-Mode data from a string with an optional ~filename~ assigned to the resulting document,
+- =dumps(document: Document): str= - returns a string representing the contents of the document in Org-Mode format,
+- ~dump(document: Document, filename: str | None)~ - saves the Org-Mode file in the file named by =document.filename=,
+
+Add bsic tests for this functionality using the basic examples as test fixtures.
+
+*** DONE Source bytes only in document
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:35]
+:END:
+Do not cache the entire source file bytes in each heading. It suffices that the =Document= class caches the raw bytes and exposes them via the =source= property. Headings can use their =document= property to fetch the original source.
+The constructor for headings can take the document as a parameter.
+
+*** DONE Mutability
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:56]
+:END:
+Implement setters for all the properties on all the objects so far.
+
+Whenever, an object is mutated, it should be marked as dirty and it's representation should be built from scratch instead of re-using the raw parse tree.
+You can assume for now that all objects will have a =__str__= property that can be used to turn the object to string. When an object is mutated, that property will instead build the representation from scratch.
+
+We will implement the representation function next, so for the time being focus on the dirty flag and the setter logic.
+Add tests for the setters, but omit the representation tests, we will address that next.
+
+*** DONE mark_dirty()
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:58]
+:END:
+Add a public method for marking the nodes as dirty programatically.
+
+*** DONE __str__
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 15:10]
+:END:
+Implement the string representation function =__str__= for all objects. By default, when the object is not marked "dirty", it should re-use the raw input and the Tree-Sitter parse tree to produce a verbatim (as-in-source) representation. When an object is marked as dirty, the representation should be reconstructed from scratch.
+
+The representation for the =Heading= should only include the heading line and the body, but omit any subheadings.
+
+The representation for the =Document= should only include the special keywords and the other elements of the zeroth section.
+
+The goal is to preserve the original whitespace until a mutation is made, so that loading an object from the parse tree and then showing its representation will result in the same representation as in the parse tree source file.
+
+Don't worry about the =Element= and =RichText= stubs just yet, we will address that later.
+
+*** DONE RichText
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 15:31]
+:END:
+Expand the abstraction of =RichText= in =org_parser.text.*= module to support the inline markup, links, footnotes, etc.
+It should support all the parse tree nodes that can appear under a heading title or within a paragraph.
+
+Please create abstarctions for all of these entities that can be a part of the =RichText=. =RichText= itself can be constucted by passing a list of these abstractions or with a class method taking a parse tree node.
+=RichText= should have a dirty flag and by default show the verbatim document source representation when stringified. =RichText= can be mutated by prepending, appending or inserting additional data in the middle. That should mark it as dirty and cause the string representation to be computed.
+
+All of the inline markup abstractions should cache the exact values they represent. No need to store the parse tree nodes or the document in them - we keept that at the =RichText= granularity.
+
+All of these abstractions should be publicly available via the =org_parser.text.*= module so that new =RichText= objects can be created programatically and attached to headings/document.
+
+Update the =Heading.counter= property to return a =CompletionCounter= instead of plain string.
+
+*** DONE Heading planing
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 16:15]
+:END:
+Expand the =Timestamp= class to store all the individual values of a timestamp, including the date, time, optionally a duration, active/inactive state etc.
+Ideally, =Timestamp= should be moved to a dedicated module =org_parser.time= as there will be more related abstractions there.
+
+Timestamps should have a =start= and =end= properties, with =end= being optional (only available if the timestamp has a duration). Timestamp should be convertible to a Python datetime (use the =start= property). There is no need to make the timestamp fields mutable.
+
+No need to reimplement the timestamp parsing in Python - use the tree sitter node properties directly.
+
+Add the planning fields to the =Heading= class:
+- =scheduled: Timestamp | None=
+- =closed: Timestamp | None=
+- =deadline: Timestamp | None=
+
+These fields should be mutable. Update the representation for =Heading= to take them into account when the heading is marked as dirty.
+
+*** DONE Element
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 16:36]
+:END:
+Expand the abstract =Element= class with an =parent= property. The parent can be either a =Document=, a =Heading= or another =Element=.
+
+Whenever an =Element= is mutated, the parent element must be marked as dirty in addition to marking the current element as dirty. The same is true for the =Heading=, a mutation at a nested level should mark all intermediate levels as dirty, all the way to the root element - the =Document=, unless an element along the chain is already marked as dirty. This way a mutation at a lower level will be reflected when stringifying the whole =Document=.
+
+Both =RichText= and =Timestamp= can be made into full-fledged elements if that makes sense.
+
+**** COMMENT
+Codex decided that making rich text an element doesn't make sense.
+
+*** DONE Keywords
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 16:55]
+:END:
+Add a dedicated =Element= subclass for the special keywords called =Keyword=.
+The class should represent a special keyword. The keyword value should be mutable.
+
+Update the =Document= to extract and store these new =Keyword= objects instead of =RichText= directly.
+
+All keywords should be available in the =Document.keywords= map, including the ones with specialized properties.
+
+*** DONE Paragraph
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:01]
+:END:
+Add a dedicated =Element= subclass for the paragraph element - =Paragraph=. The class should store the values that are found in =paragraph= node of the parse tree. The paragraph body should be mutable.
+
+Add support for this new element type when processing document/heading bodies that can contain paragraphs.
+
+*** DONE Table
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:12]
+:END:
+Add a dedicated =Element= subclass for the table element - =Table=. The class should represent an Org table or a Table.el table, with dedicated abstractions for table rows and table cells. Table cells and rows should be mutable, marking the whole table as dirty. Table cell values can remain =RichText= for now, but the parent element of these rich text elements should be the table.
+
+Tables should also support the table formula lines.
+
+When the element is marked dirty, the table should be formatted according to the Org Table rules, not Table.el. Make sure to align the table columns based on the size of the cell values. The resulting table should be "nicely" formatted and aligned.
+
+Add support for this new element type when processing document/heading bodies that can contain tables.
+
+*** DONE Clock
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:22]
+:END:
+Add a dedicated =Element= subclass for the clock log line. This element should support the various forms a =CLOCK:= line can assume - including an active and inactive timestamp, a timerange and the duration.
+The element should be placed in the =org_parser.time.*= module and re-use the =Timestamp= class for the actual time component.
+Clocks should be mutable by setting the entire timestamp. The duration value should be recomputed after the timestamp is set with a duration (start and end populated).
+
+Add support for this new element type when processing document/heading bodies that can contain clock lines.
+
+*** DONE Properties, Logbook, Drawer
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]
+:END:
+Add a dedicated =Element= subclass for the drawer elements: =Properties=, =Logbook= and =Drawer=. These classes should represent the Org Mode drawers, including the key-value pairs stored within them (for properties) as well as the other types of objects that can be a part of a drawer (other drawer types).
+
+For =Properties= do extract the vlues from tree-sitter's =property_drawer=, specifically the key-value pairs for =node_property=.
+I would like the =Poperties= element to be mutable and dictionary-like, i.e. it should be possible to set the values of properties via ~properties["name"] = RichText("test")~ for instance. The values of the properties should be "owned" by the drawer element, so that mutation of any of those field values is immediately reflected in the output of the drawer stringification.
+
+For =Logbook= drawers, extract the list of logbook repeats and clock entries. For now, let's leave them as separate elements that are owned by the drawer. We will address the usability of the logbook drawer at some point.
+
+For the remaining drawer types, have a dedicated =Drawer= element that represents the drawer. It should have a name and a body. The body is owned by the drawer.
+
+All drawers should be mutable and marked dirty when mutated.
+
+*** DONE Heading/Document drawers
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 22:02]
+:END:
+Update the =Document= class with fields dedicated to properties and the logbook. These fields should be populated based on the properties & logbook drawers found on the parse tree. If there are multiple such drawers attached to a document's zeroth section merge their values into a single element dedicated to the given drawer type.
+
+Update =Heading= class with fields dedicated to properties and the logbook. These fields should be populated based on the properties & logbook drawers found on the parse tree. If there are multiple such drawers attached to the heading merge their values into a single element dedicated to the given drawer type.
+
+These extracted drawers should still be mutable and reflect their changes in the stringification output. For the dirty output, the properties drawer should come first, followed by the logbook drawer.
+
+Other drawers can stay in the bodies of their respective owning elements. No need to handle them specially.
+
+*** DONE Block
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 22:49]
+:END:
+Add a dedicated =Element= subclass for the various blocks: =ExampleBlock=, =VerseBlock=, =SourceBlock=, =DynamicBlock=, =FixedWidthBlock=, etc. The classes should represent the different blocks of the Tree Sitter parse tree. Blocks should be mutable, with the contents of the blocks specifically being mutable. Mutation should be handled the same way as of the other elements.
+
+Add support for these new elements when processing document/heading bodies that can contain blocks.
+
+*** DONE List
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 23:15]
+:END:
+Add a dedicated =Element= subclass for the =List='s. The class should represent a list comprised of =ListItem='s. List items should support all the features of the list items, such as the completion counters, checkboxes, item tags, rich text first line, the continuation lines, etc. List items should be mutable, and so is the list itself - it should be possible to add extra line items to the list.
+
+Add support for this new element when processing document/heading bodies that can contain lists. Do also add support for these in drawer bodies.
+
+*** DONE Repeated tasks
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-09 Mon 00:20]
+:END:
+Add a dedicated =Element= subclass for repeated tasks. A =Repeat= is a list item stored in the =LogbookDrawer= as one of the following forms:
+
+#+begin_example
+- State "<after_state>" from "<before_state>" <timestamp>
+
+- State "<after_state>" from "<before_state>" <timestamp> \\
+  <state_change_note>
+#+end_example
+
+That is, it is a line item with a specific text content followed by a timestamp and an optional linebreak and optional continuation line containing a short note. The items and continuation lines can be arbitrarily indented. Here are some actual examples:
+
+#+begin_example
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]
+- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\
+  No need for that with the semantic nodes.
+#+end_example
+
+The line item content should be parsed to extract the =after= and =before= states as well as the =timestamp= and the optional =note=. The =Repeat= class should cache these values internally and allow their mutation (causing the containing list to become dirty).
+
+The =Repeat= class should specifically be used in the logbook drawer. No other lists should be parsed for the repeated task format.
+
+Add a new field to the =Heading= class called =repeated_tasks: list[Repeat]=. It should contain all the repeats from the logbook drawers of that heading. The filed should be mutable and allow adding extra repeats (effectively mutates the list found in the logbook).
+
+*** TODO Error parse fallback
+Add a semantic fallback whenever a parse error node is encountered - the invalid parse node should be treated as a =RichText= element.
+
+Add special handling of these error situations in extraction code, so that the resulting semantic node tree uses those =RichText= elements instead of throwing any errors or ignoring the error condition. The goal is to recover from the error condition and make the remained of the parse tree usable as is.
+
+At the same time, whenever a parse tree error is encountered, please store that error parse node in the root =Document= class under the =errors= list. This can be useful for determining if there are any errors present in the file (linting, etc).
+
+*** TODO raw()
+Add a method called =raw= for each object that returns the raw Tree-Sitter parse tree nodes that were used to construct those objects.
+
+*** Convenience fields
+Add extra fields for convevience:
+
+1. =Document=
+   - is_root
+   - is_terminal
+
+2. =Heading=
+   - latest_timestamp
+   - earliest_timestamp
+   - is_completed
+   - is_root
+   - is_terminal
+
+*** Convenience constructors
+*** iterator interface
+Document, Heading and RichText should support an iterator interface.
+- Document iterates over all the headings contained within, including subheadings
+- Heading iterates over the children
+- Table iterates over the rows, which iterate over the colums.
+- List iterates over the list items.
+- RichText iterates over constituent parts.
+
+=document[0][2].body[2][x][y]= - x,y table cell in a body of third child of the first heading in a document.
+
+** Programatically create RichText from strings
+Invoke the tree sitter parser on text mutation.
+
+** Programatically create timestamps from strings
+** Attach CAPTION, TBLNAME, PLOT and RESULTS to the following element
+** Recover list & element nesting
+- List nesting & item bodies should be adjusted to support the indent-level objects
+
+** Recover inherited tags
+- nodes tags & inherited tags field (file-order lists not sets)
+
+** Recover inherited categories
+- nodes category & inherited category field
+** Semantic node documentation
+** Document.format method for re-formatting the text

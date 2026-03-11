@@ -17,6 +17,7 @@
 
 ; --- Sections & Elements ---
 (property_drawer) @property
+(logbook_drawer) @property
 (node_property
   (property_name) @property
   (property_value) @string)
@@ -44,7 +45,7 @@
 (special_block) @markup.raw
 
 ; --- Lists ---
-(item) @markup.list
+(list_item) @markup.list
 (checkbox) @constant
 (counter_set) @constant
 

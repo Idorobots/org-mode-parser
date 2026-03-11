@@ -33,12 +33,12 @@ Table with TBLFM formula line
   (zeroth_section
     (org_table
       (table_row
-        (table_rule))
+        rule: (table_rule))
       (table_row
         (table_cell
           (plain_text)
           (bold
-            (plain_text))
+            body: (plain_text))
           (plain_text))
         (table_cell
           (plain_text))
@@ -55,6 +55,36 @@ Table with TBLFM formula line
         (table_cell
           (plain_text)))
       (tblfm_line))))
+
+================
+Table with indented TBLFM formula line
+================
+ |    *Total* |              |            |                 |                |              150 |
+ #+TBLFM: @>$6=vsum(@2$6..@>>$6)
+
+---
+
+(document
+  (zeroth_section
+    (block
+      indent: (indent)
+      body: (org_table
+        (table_row
+          (table_cell
+            (bold
+              body: (plain_text))
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))
+        (tblfm_line)))))
 
 ================
 Table with rule row
@@ -96,24 +126,26 @@ Indented table with caption
   (zeroth_section
     (caption_keyword
       (plain_text))
-    (org_table
-      (table_row
-        (table_cell
-          (plain_text))
-        (table_cell
-          (plain_text)))
-      (table_row
-        (table_rule))
-      (table_row
-        (table_cell
-          (plain_text))
-        (table_cell
-          (plain_text)))
-      (table_row
-        (table_cell
-          (plain_text))
-        (table_cell
-          (plain_text))))))
+    (block
+      (indent)
+      (org_table
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))
+        (table_row
+          (table_rule))
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))))))
 
 ================
 Indented single-column table with rule row
@@ -128,21 +160,23 @@ Indented single-column table with rule row
 
 (document
   (zeroth_section
-    (org_table
-      (table_row
-        (table_cell
-          (plain_text)))
-      (table_row
-        (table_rule))
-      (table_row
-        (table_cell
-          (plain_text)))
-      (table_row
-        (table_cell
-          (plain_text)))
-      (table_row
-        (table_cell
-          (plain_text))))))
+    (block
+      (indent)
+      (org_table
+        (table_row
+          (table_cell
+            (plain_text)))
+        (table_row
+          (table_rule))
+        (table_row
+          (table_cell
+            (plain_text)))
+        (table_row
+          (table_cell
+            (plain_text)))
+        (table_row
+          (table_cell
+            (plain_text)))))))
 
 ================
 Markup ending directly before table separator
@@ -254,8 +288,8 @@ Table.el grid table
           (plain_text))
         (table_cell
           (plain_text))
-          (table_cell
-            (plain_text))))
+        (table_cell
+          (plain_text))))
     (tableel_table)
     (org_table
       (table_row
@@ -356,6 +390,7 @@ Affiliated keywords between tables
           (plain_text)))
       (table_row
         (table_rule)))
+    (blank_line)
     (caption_keyword
       (plain_text))
     (org_table
@@ -364,6 +399,7 @@ Affiliated keywords between tables
           (plain_text)))
       (table_row
         (table_rule)))
+    (blank_line)
     (tblname_keyword
       (plain_text))
     (org_table
@@ -372,6 +408,7 @@ Affiliated keywords between tables
           (plain_text)))
       (table_row
         (table_rule)))
+    (blank_line)
     (results_keyword)
     (org_table
       (table_row
@@ -379,6 +416,7 @@ Affiliated keywords between tables
           (plain_text)))
       (table_row
         (table_rule)))
+    (blank_line)
     (plot_keyword
       (plain_text))
     (org_table
@@ -423,6 +461,78 @@ Affiliated keywords before table
           (plain_text))))))
 
 ================
+Indented plot keyword before table
+================
+    #+PLOT: ind:1 deps:(2 3 4)
+    |    10000 |     33634 |     53458 |     28740 |
+    |    20000 |     66908 |    106692 |     61941 |
+
+---
+
+(document
+  (zeroth_section
+    (block
+      (indent)
+      (plot_keyword
+        (plain_text))
+      (org_table
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))))))
+
+================
+Indented multiple plot keywords before table
+================
+    #+PLOT: ind:1 deps:(2 3)
+    #+PLOT: set:gnuplot term:png
+    | x | y | z |
+    |---+---+---|
+    | 1 | 2 | 3 |
+
+---
+
+(document
+  (zeroth_section
+    (block
+      (indent)
+      (plot_keyword
+        (plain_text))
+      (plot_keyword
+        (plain_text))
+      (org_table
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))
+        (table_row
+          (table_rule))
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))))))
+
+================
 Tables separated by blank line
 ================
 | Foo | Bar |
@@ -439,6 +549,7 @@ Tables separated by blank line
           (plain_text))
         (table_cell
           (plain_text))))
+    (blank_line)
     (org_table
       (table_row
         (table_cell
