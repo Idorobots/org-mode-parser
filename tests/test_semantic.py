@@ -87,6 +87,11 @@ class TestParagraph:
         paragraph = Paragraph(body=RichText("Hello world.\n"))
         assert paragraph.node_type == "paragraph"
         assert str(paragraph.body) == "Hello world.\n"
+        assert paragraph.indent is None
+
+    def test_construction_with_indent(self) -> None:
+        paragraph = Paragraph(body=RichText("Hello world.\n"), indent="  ")
+        assert paragraph.indent == "  "
 
     def test_body_setter_marks_dirty(self) -> None:
         paragraph = Paragraph(body=RichText("Before\n"))
@@ -94,6 +99,26 @@ class TestParagraph:
         paragraph.body = RichText("After\n")
         assert paragraph.dirty is True
         assert str(paragraph) == "After\n"
+
+    def test_indent_setter_marks_dirty(self) -> None:
+        paragraph = Paragraph(body=RichText("Before\n"))
+        assert paragraph.dirty is False
+        paragraph.indent = "    "
+        assert paragraph.dirty is True
+        assert paragraph.indent == "    "
+
+    def test_from_tree_recovers_indented_paragraph_indent(self, tmp_path: Path) -> None:
+        path = tmp_path / "indented-paragraph.org"
+        path.write_text("    continuation\n")
+        doc = _load_document(path)
+
+        paragraph = next(
+            (element for element in doc.body if isinstance(element, Paragraph)),
+            None,
+        )
+
+        assert paragraph is not None
+        assert paragraph.indent == "    "
 
 
 # ===================================================================

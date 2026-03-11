@@ -1531,6 +1531,16 @@ static bool probe_markup_close_in_rest_of_line(
 static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
   if (eof(lexer) || lookahead(lexer) == '\n') return false;
 
+  if (get_column(lexer) == 0 &&
+      (lookahead(lexer) == ' ' || lookahead(lexer) == '\t')) {
+    return false;
+  }
+
+  if ((s->prev_char == '\n' || s->prev_char == 0) &&
+      (lookahead(lexer) == ' ' || lookahead(lexer) == '\t')) {
+    return false;
+  }
+
   bool found_any = false;
   uint32_t plain_lbracket_depth = s->plain_lbracket_depth;
   bool saw_plain_lbracket = plain_lbracket_depth > 0;
@@ -2176,16 +2186,22 @@ static bool scan_plan_kw(Scanner *s, TSLexer *lexer, const bool *valid_symbols) 
 
 // _PARAGRAPH_CONTINUE
 static bool scan_paragraph_continue(TSLexer *lexer) {
-  if (get_column(lexer) != 0) return false;
+  if (lookahead(lexer) != ' ' && lookahead(lexer) != '\t') return false;
+
+  while (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+    advance(lexer);
+  }
+
+  mark_end(lexer);
 
   int32_t ch = lookahead(lexer);
 
-  // Element-starting patterns at BOL
+  // Reject obvious element starters so indented lines parse as dedicated
+  // constructs rather than paragraph continuations.
   if (ch == '*' || ch == '#' || ch == ':' || ch == '|' ||
       ch == '+' || ch == '-' || ch == '[' || ch == '%' ||
       ch == 'C' || ch == 'D' || ch == 'S' ||
-      ch == '\n' || (ch >= '0' && ch <= '9') ||
-      (ch >= 'a' && ch <= 'z') || eof(lexer)) {
+      ch == '\n' || (ch >= '0' && ch <= '9') || eof(lexer)) {
     return false;
   }
 

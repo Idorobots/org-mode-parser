@@ -68,6 +68,34 @@ This is a Fixed-Width style phrase.
       (newline))))
 
 ================
+Indented paragraphs under heading and list item
+================
+** Test
+  hurr
+
+- foo
+  durr
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (paragraph
+        indent: (indent)
+        (plain_text)
+        (newline))
+      (blank_line)
+      (list_item
+        first_line: (plain_text))
+      (paragraph
+        indent: (indent)
+        (plain_text)
+        (newline)))))
+
+================
 Indented hash comment inside heading body
 ================
 * Task

@@ -80,6 +80,7 @@ module.exports = grammar({
     [$.logbook_drawer, $._affiliatable_no_drawer],
     // footnote definition vs footnote reference (both start with [fn:LABEL])
     [$.footnote_definition, $._fn_ref_labeled],
+    [$._indented_object_line, $._object],
   ],
 
   inline: $ => [
@@ -873,7 +874,13 @@ module.exports = grammar({
     ),
 
     // --- 7.10 Paragraphs ---
-    paragraph: $ => prec(-1, repeat1($._paragraph_line)),
+    paragraph: $ => prec(-1, choice(
+      prec(1, seq(
+        field('indent', alias($._PARAGRAPH_CONTINUE, $.indent)),
+        repeat1($._paragraph_line),
+      )),
+      repeat1($._paragraph_line),
+    )),
 
     _paragraph_line: $ => seq(
       repeat1($._object),
