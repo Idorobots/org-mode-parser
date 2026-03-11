@@ -11,6 +11,19 @@ Level 1 heading
     (plain_text)))
 
 ================
+Heading title keeps at-sign text
+================
+* DELEGATED Fix Nexus @types resolving.
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (plain_text)))
+
+================
 Heading and body lines keep double-dash switches as plain text
 ================
 *** --watch & --serve switches

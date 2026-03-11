@@ -181,8 +181,8 @@ module.exports = grammar({
     ),
 
     _zs_element_no_block: $ => choice(
-      $._zs_element_affiliated,
       $.special_keyword,
+      $._affiliated_keyword,
       $._non_affiliatable,
       $._affiliatable_no_block,
     ),
@@ -200,8 +200,8 @@ module.exports = grammar({
     ),
 
     _section_element_no_block: $ => choice(
-      $._section_element_affiliated,
       $.special_keyword,
+      $._affiliated_keyword,
       $._non_affiliatable,
       $._affiliatable_no_block,
     ),
@@ -349,7 +349,10 @@ module.exports = grammar({
       ),
       field('body', optional($._drawer_body)),
       token(prec(2, /[ \t]*:end:/i)),
-      optional($._TRAILING),
+      optional(choice(
+        $._TRAILING,
+        field('end_text', alias($._REST_OF_LINE, $.plain_text)),
+      )),
       $._NL,
     ),
 
@@ -417,7 +420,10 @@ module.exports = grammar({
       ),
       field('body', optional($._drawer_body)),
       token(prec(3, /[ \t]*:end:/i)),
-      optional($._TRAILING),
+      optional(choice(
+        $._TRAILING,
+        field('end_text', alias($._REST_OF_LINE, $.plain_text)),
+      )),
       $._NL,
     ),
 
@@ -534,7 +540,10 @@ module.exports = grammar({
         seq(optional($._INDENT), $.node_property),
       )),
       token(prec(3, /[ \t]*:end:/i)),
-      optional($._TRAILING),
+      optional(choice(
+        $._TRAILING,
+        field('end_text', alias($._REST_OF_LINE, $.plain_text)),
+      )),
       $._NL,
     )),
 
@@ -545,7 +554,10 @@ module.exports = grammar({
       choice(
         seq($._S, field('value', choice(
           prec(1, alias($._PROP_MALFORMED_LINK_REST, $.property_value)),
-          alias($._PROP_REGULAR_LINK, $.regular_link),
+          seq(
+            alias($._PROP_REGULAR_LINK, $.regular_link),
+            optional(alias($._PROP_REST_OF_LINE, $.property_value)),
+          ),
           $.timestamp,
           prec(-1, alias($._PROP_REST_OF_LINE, $.property_value)),
         ))),
@@ -556,24 +568,31 @@ module.exports = grammar({
 
     _PROP_REST_OF_LINE: _ => /[^\n\[][^\n]*/,
 
-    _PROP_MALFORMED_LINK_REST: _ => /\[\[[^\n]*\]\]\][^\n]*/,
+    _PROP_MALFORMED_LINK_REST: _ => choice(
+      /\[\[[^\n]*\]\]\][^\n]*/,
+      /\[\[[^\n]*\[\[[^\n]*/,
+    ),
 
     _PROP_REGULAR_LINK: $ => prec(1, choice(
-      seq('[[', field('path', alias($._link_path, $.link_path)), ']]'),
+      seq('[[', field('path', alias($._PROP_LINK_PATH, $.link_path)), ']]'),
       seq(
         '[[',
-        field('path', alias($._link_path, $.link_path)),
+        field('path', alias($._PROP_LINK_PATH, $.link_path)),
         '][',
-        field('description', repeat1(choice(
-          alias($._PROP_LINK_TEXT, $.plain_text),
-          ']',
-          $._NL,
-        ))),
+        field('description', $._link_description),
         ']]',
       ),
     )),
 
-    _PROP_LINK_TEXT: _ => /[^\]\n]+/,
+    _PROP_LINK_PATH: $ => repeat1(choice(
+      alias($._PROP_LINK_PATH_TEXT, $.plain_text),
+      alias($._PROP_LINK_PATH_ESC, $.plain_text),
+      '[',
+      ']',
+    )),
+
+    _PROP_LINK_PATH_TEXT: _ => /[^\\\[\]\n]+/,
+    _PROP_LINK_PATH_ESC: _ => /\\./,
 
     _PROP_NAME: _ => /[^ \t\n:+]+\+?/,
 
@@ -1066,7 +1085,13 @@ module.exports = grammar({
 
     _link_path: _ => /([^\[\]]|\\.)*/,
 
-    _link_description: $ => repeat1(choice($._object_min, $.newline)),
+    _link_description: $ => repeat1(choice(
+      alias($._LINK_DESC_TEXT, $.plain_text),
+      ']',
+      $.newline,
+    )),
+
+    _LINK_DESC_TEXT: _ => /[^\]\n]+/,
 
     // radio_link — deferred to Python post-processing
     radio_link: $ => repeat1($._object_min),

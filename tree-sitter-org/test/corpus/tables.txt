@@ -461,6 +461,78 @@ Affiliated keywords before table
           (plain_text))))))
 
 ================
+Indented plot keyword before table
+================
+    #+PLOT: ind:1 deps:(2 3 4)
+    |    10000 |     33634 |     53458 |     28740 |
+    |    20000 |     66908 |    106692 |     61941 |
+
+---
+
+(document
+  (zeroth_section
+    (block
+      (indent)
+      (plot_keyword
+        (plain_text))
+      (org_table
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))))))
+
+================
+Indented multiple plot keywords before table
+================
+    #+PLOT: ind:1 deps:(2 3)
+    #+PLOT: set:gnuplot term:png
+    | x | y | z |
+    |---+---+---|
+    | 1 | 2 | 3 |
+
+---
+
+(document
+  (zeroth_section
+    (block
+      (indent)
+      (plot_keyword
+        (plain_text))
+      (plot_keyword
+        (plain_text))
+      (org_table
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))
+        (table_row
+          (table_rule))
+        (table_row
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text))
+          (table_cell
+            (plain_text)))))))
+
+================
 Tables separated by blank line
 ================
 | Foo | Bar |

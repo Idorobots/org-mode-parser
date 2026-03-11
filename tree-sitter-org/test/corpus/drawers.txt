@@ -196,10 +196,14 @@ Property link with multiline description
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text)
+          description: (newline)
           description: (plain_text)
+          description: (newline)
           description: (plain_text)
+          description: (newline)
           description: (plain_text))))))
 
 ================
@@ -220,7 +224,8 @@ Drawer transition after property link keeps logbook timestamp
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text))))
     (logbook_drawer
       body: (list_item
@@ -268,10 +273,14 @@ Indented logbook then properties with multiline link
           (node_property
             name: (property_name)
             value: (regular_link
-              path: (link_path)
+              path: (link_path
+                (plain_text))
               description: (plain_text)
+              description: (newline)
               description: (plain_text)
+              description: (newline)
               description: (plain_text)
+              description: (newline)
               description: (plain_text))))))))
 
 ================
@@ -305,7 +314,8 @@ Property drawer after logbook in heading body
         (node_property
           name: (property_name)
           value: (regular_link
-            path: (link_path)
+            path: (link_path
+              (plain_text))
             description: (plain_text)))))))
 
 ================
@@ -336,7 +346,8 @@ Malformed property link value does not break next heading drawer
           (node_property
             name: (property_name)
             value: (regular_link
-              path: (link_path)
+              path: (link_path
+                (plain_text))
               description: (plain_text))))
         body: (paragraph
           (plain_text)
@@ -477,6 +488,29 @@ LOGBOOK drawer with mis-aligned end in archive style
         (newline)))))
 
 ================
+Logbook drawer end with trailing angle text
+================
+:LOGBOOK:  <
+- State "DONE"       from "TODO"       [2017-03-17 Fri 20:42]
+:END:      <<<<<<<<<<<<<<<<
+
+---
+
+(document
+  (zeroth_section
+    (logbook_drawer
+      body: (drawer_start_text)
+      body: (list_item
+        first_line: (plain_text)
+        first_line: (timestamp
+          year: (ts_year)
+          month: (ts_month)
+          day: (ts_day)
+          dayname: (ts_dayname)
+          time: (ts_time)))
+      end_text: (plain_text))))
+
+================
 Indented LOGBOOK drawer in heading
 ================
 * H
@@ -575,6 +609,30 @@ LOGBOOK drawer start line with inline text and unindented list
               time: (ts_time))))))))
 
 ================
+Logbook escaped timestamp stays plain text
+================
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-04-16 nie 21:32]
+- State "DONE" from "TODO" \[2023-04-12 śro 00:36\]
+:END:
+
+---
+
+(document
+  (zeroth_section
+    (logbook_drawer
+      body: (list_item
+        first_line: (plain_text)
+        first_line: (timestamp
+          year: (ts_year)
+          month: (ts_month)
+          day: (ts_day)
+          dayname: (ts_dayname)
+          time: (ts_time)))
+      body: (list_item
+        first_line: (plain_text)))))
+
+================
 Indented property drawer with >>> in link description
 ================
  :PROPERTIES:
@@ -591,7 +649,8 @@ Indented property drawer with >>> in link description
         (node_property
           name: (property_name)
           value: (regular_link
-            path: (link_path)
+            path: (link_path
+              (plain_text))
             description: (plain_text)
             description: (plain_text)))))))
 
@@ -610,7 +669,8 @@ Non-indented property drawer with >>> in link description
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text)
           description: (plain_text))))))
 
@@ -649,7 +709,8 @@ Property link description ending with []] in archive-style heading
           (node_property
             name: (property_name)
             value: (regular_link
-              path: (link_path)
+              path: (link_path
+                (plain_text))
               description: (plain_text))))))))
 
 ================
@@ -686,7 +747,8 @@ Logbook before properties with []] link description tail
           (node_property
             name: (property_name)
             value: (regular_link
-              path: (link_path)
+              path: (link_path
+                (plain_text))
               description: (plain_text))))))))
 
 ================
@@ -706,7 +768,8 @@ Property link description with bracket list and <<":">> fragment
         (node_property
           name: (property_name)
           value: (regular_link
-            path: (link_path)
+            path: (link_path
+              (plain_text))
             description: (plain_text)
             description: (plain_text)
             description: (plain_text)))))))
@@ -742,7 +805,10 @@ Property link with C++ stream operators in description
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text)
+            (plain_text)
+            (plain_text))
           description: (plain_text))))))
 
 ================
@@ -760,7 +826,8 @@ Property link with Erlang tuple and records in description
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text)
           description: (plain_text))))))
 
@@ -779,7 +846,8 @@ Property link with templated command and bracketed key
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text)
           description: (plain_text))))))
 
@@ -798,9 +866,140 @@ Property link with templated filters and quoted headers
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text)
           description: (plain_text))))))
+
+================
+Property link with Scala signature in description
+================
+:properties:
+:context: [[file:/ServiceWorker.scala::private%20def%20groupsToDtos(groupedSynced:%20Seq%5BSet%5BSynced%5D%5D,%20getSyncMapper:%20GetSyncMapper):%20SyncWorkerM%5BRegroupDtos%5D%20%3D%20{][file:/ServiceWorker.scala::private def groupsToDtos(groupedSynced: Seq[Set[Synced]], getSyncMapper: GetSyncMapper): SyncWorkerM[RegroupDtos] = {]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path
+            (plain_text))
+          description: (plain_text))
+        value: (property_value)))))
+
+================
+Property link path with bracketed dispatch vector
+================
+:properties:
+:context: [[file:~/events.cljs::{:dispatch [:fetch-docs]}))]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path
+            (plain_text)
+            (plain_text)
+            (plain_text)))))))
+
+================
+Property link path with regex and trailing comment
+================
+:properties:
+:context: [[file:~/md.clj::p #"\n(?i)<!--\s*more\s*-->\n"] ;; FIXME Still needs contextual preview marker replacement.]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)))))))
+
+================
+Malformed property link with nested bracket payload falls back
+================
+:properties:
+:context: [[file:~/org/repeat.org::*Hangul romanization: [[jo/yo\][medial ㅛ]\]][Hangul romanization: medial ㅛ]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (property_value)))))
+
+================
+Property link with escaped nested bracket payload in path
+================
+:properties:
+:context: [[file:~/org/repeat.org::*\[\[Nobody can deny, that...\]\[Niemand kann leugnen, dass...\]\]][Niemand kann leugnen, dass...]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text))
+          description: (plain_text))))))
+
+================
+Property link path with Scala generic type brackets
+================
+:properties:
+:context: [[file:/StreamProvider.scala::textMessage.textStream.runFold("")(_ + _).map(_.parseJson.convertTo[StreamRequest])]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path
+            (plain_text)
+            (plain_text)
+            (plain_text)))))))
 
 ================
 Fully indented custom drawer with timestamp line

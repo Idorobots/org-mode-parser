@@ -68,6 +68,39 @@ This is a Fixed-Width style phrase.
       (newline))))
 
 ================
+Bitshift text with double angle stays plain text
+================
+`foo << 2 + bar << 4 + baz << 8` is not the same as `(foo << 2) + (bar << 4) + (baz << 8)`.
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (newline))))
+
+================
+Setext-like equals line stays plain text
+================
+Test
+=============
+Test
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (newline)
+      (plain_text)
+      (plain_text)
+      (newline)
+      (plain_text)
+      (newline))))
+
+================
 Indented paragraphs under heading and list item
 ================
 ** Test
@@ -240,6 +273,59 @@ Bar ] baz
       (newline)
       (plain_text)
       (newline))))
+
+================
+Bracket close before comma stays plain text
+================
+}],
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (newline))))
+
+================
+Three-dash line stays plain text
+================
+```yaml
+---
+name: Load average
+identifier: urn:example:load-average
+```
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (newline)
+      (plain_text)
+      (newline)
+      (plain_text)
+      (newline)
+      (plain_text)
+      (newline)
+      (plain_text)
+      (newline))))
+
+================
+Indented single dash line stays plain text
+================
+  -
+
+---
+
+(document
+  (zeroth_section
+    (block
+      indent: (indent)
+      body: (paragraph
+        (plain_text)
+        (newline)))))
 
 ================
 Paragraph line starting with number hyphen is text

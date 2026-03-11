@@ -838,6 +838,16 @@ static int scan_markup_open(
 
   int32_t next = lookahead(lexer);
 
+  // Doubled markers like "==", "//", "**" are plain text in Org.
+  if (next == marker) {
+    if (valid_symbols[TOKEN_PLAIN_TEXT]) {
+      lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      s->prev_char = marker;
+      return 1;
+    }
+    return -1;
+  }
+
   if (marker == '+' && (next == ' ' || next == '\t' || next == '-')) {
     if (!is_list_line_start_context(s, marker_col) && valid_symbols[TOKEN_PLAIN_TEXT]) {
       lexer->result_symbol = TOKEN_PLAIN_TEXT;
@@ -1294,7 +1304,13 @@ static bool probe_date_like_then_closing(TSLexer *lexer, int32_t closing) {
 }
 
 static bool probe_angle_construct_after_lt(TSLexer *lexer) {
-  if (lookahead(lexer) == '<') return true;  // target/radio_target opener
+  if (lookahead(lexer) == '<') {
+    // Treat bitshift-like text ("<< 2") as plain text, not a target opener.
+    advance(lexer);
+    int32_t next = lookahead(lexer);
+    if (next == ' ' || next == '\t' || next == '\n' || eof(lexer)) return false;
+    return true;  // target/radio_target opener
+  }
 
   if (is_ascii_digit(lookahead(lexer))) {
     return probe_date_like_then_closing(lexer, '>');
@@ -1543,18 +1559,26 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
     // plain text, including after inline markup closers (e.g. "-_word_-").
     if (ch == '-' && !found_any) {
       if (get_column(lexer) == 0) {
-        advance(lexer);
-        if (lookahead(lexer) == '-') {
+        uint32_t run = 0;
+        while (lookahead(lexer) == '-') {
           advance(lexer);
-          int32_t next = lookahead(lexer);
-          if (next != ' ' && next != '\t' && next != '\n' && next != '-' && !eof(lexer)) {
-            s->prev_char = '-';
-            mark_end(lexer);
-            found_any = true;
-            continue;
-          }
+          run++;
         }
-        return false;
+
+        int32_t next = lookahead(lexer);
+
+        if (run >= 5) {
+          return false;
+        }
+
+        if (run == 1 && (next == ' ' || next == '\t')) {
+          return false;
+        }
+
+        s->prev_char = '-';
+        mark_end(lexer);
+        found_any = true;
+        continue;
       }
 
       if (is_list_line_start_context(s, get_column(lexer))) {
@@ -1565,6 +1589,14 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
           found_any = true;
           continue;
         }
+
+        if (lookahead(lexer) == '\n' || eof(lexer)) {
+          s->prev_char = '-';
+          mark_end(lexer);
+          found_any = true;
+          continue;
+        }
+
         return false;
       }
 
@@ -1740,10 +1772,6 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
           break;
         }
 
-        if (!found_any) {
-          return false;
-        }
-
         s->prev_char = '@';
         mark_end(lexer);
         found_any = true;
@@ -1825,7 +1853,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
         bool trailing_after_bracket_close = (next == '\n' || eof(lexer)) &&
           (s->prev_char == ']' || s->prev_char == '}');
         bool bracket_ok = plain_lbracket_depth > 0 || saw_plain_lbracket || spaced_text || lone_bol_text ||
-          next == ')' || next == '}' || trailing_after_bracket_close;
+          next == ')' || next == '}' || next == ',' || trailing_after_bracket_close;
         if (!bracket_ok) {
           if (!found_any) return false;
           break;
@@ -1842,6 +1870,14 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
       }
 
       if (ch == '<' || ch == '[') {
+        if (ch == '[' && s->prev_char == '\\') {
+          s->prev_char = ch;
+          advance(lexer);
+          mark_end(lexer);
+          found_any = true;
+          continue;
+        }
+
         advance(lexer);
         bool starts_object = (ch == '<')
           ? probe_angle_construct_after_lt(lexer)
@@ -1980,7 +2016,12 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   if (ch == '@') {
     advance(lexer);
     if (lookahead(lexer) == '@') return false;
-    return false;
+
+    s->prev_char = '@';
+    mark_end(lexer);
+    lexer->result_symbol = TOKEN_PLAIN_TEXT;
+    s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
+    return true;
   }
 
   if (ch == '>') {
@@ -2049,7 +2090,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
     bool trailing_after_bracket_close = (next == '\n' || eof(lexer)) &&
       (s->prev_char == ']' || s->prev_char == '}');
     bool bracket_ok = plain_lbracket_depth > 0 || saw_plain_lbracket || spaced_text || lone_bol_text ||
-      next == ')' || next == '}' || trailing_after_bracket_close;
+      next == ')' || next == '}' || next == ',' || trailing_after_bracket_close;
     if (!bracket_ok) return false;
 
     if (plain_lbracket_depth > 0) {
@@ -2064,6 +2105,15 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   }
 
   if (ch == '<' || ch == '[') {
+    if (ch == '[' && s->prev_char == '\\') {
+      s->prev_char = ch;
+      advance(lexer);
+      mark_end(lexer);
+      lexer->result_symbol = TOKEN_PLAIN_TEXT;
+      s->plain_lbracket_depth = (uint16_t)plain_lbracket_depth;
+      return true;
+    }
+
     advance(lexer);
     bool starts_object = (ch == '<')
       ? probe_angle_construct_after_lt(lexer)
@@ -2285,6 +2335,10 @@ static int scan_block_end(Scanner *s, TSLexer *lexer, const bool *valid_symbols)
 // so this check fires in exactly the right contexts.
 static int scan_table_start(Scanner *s, TSLexer *lexer) {
   mark_end(lexer);  // zero-width token
+
+  while (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+    advance(lexer);
+  }
 
   int32_t ch = lookahead(lexer);
   if (ch != '|') {
