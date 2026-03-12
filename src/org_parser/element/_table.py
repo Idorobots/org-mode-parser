@@ -143,11 +143,12 @@ class Table(Element):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> Table:
         """Create a :class:`Table` from an ``org_table`` or ``tableel_table`` node."""
+        source = document.source if document is not None else b""
         source_text = source[node.start_byte : node.end_byte].decode()
         if node.type == "tableel_table":
             parsed_rows = _parse_tableel_rows(source_text)
@@ -175,7 +176,7 @@ class Table(Element):
         formulas: list[str] = []
         for child in node.named_children:
             if child.type == "table_row":
-                rows.append(_parse_org_table_row(child, source, table))
+                rows.append(_parse_org_table_row(child, source, table, document))
             elif child.type == "tblfm_line":
                 formulas.append(_extract_tblfm_formula(child, source))
 
@@ -238,7 +239,10 @@ class Table(Element):
 
 
 def _parse_org_table_row(
-    node: tree_sitter.Node, source: bytes, table: Table
+    node: tree_sitter.Node,
+    source: bytes,
+    table: Table,
+    document: Document | None = None,
 ) -> TableRow:
     """Parse one ``table_row`` node into :class:`TableRow`."""
     has_rule = any(child.type == "table_rule" for child in node.named_children)
@@ -249,7 +253,7 @@ def _parse_org_table_row(
     for child in node.named_children:
         if child.type != "table_cell":
             continue
-        value = RichText.from_nodes(child.named_children, source)
+        value = RichText.from_nodes(child.named_children, source, document=document)
         rich_text = RichText("") if value is None else RichText(str(value).strip())
         cells.append(TableCell(value=rich_text, table=table))
     return TableRow(cells=cells, is_rule=False, table=table)

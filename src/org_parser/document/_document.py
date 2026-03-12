@@ -2,69 +2,49 @@
 
 from __future__ import annotations
 
+import dataclasses
 from typing import TYPE_CHECKING
 
 from org_parser.element import (
-    CenterBlock,
-    CommentBlock,
     Drawer,
-    DynamicBlock,
-    ExampleBlock,
-    ExportBlock,
-    FixedWidthBlock,
-    ListItem,
     Logbook,
     Properties,
-    QuoteBlock,
-    Repeat,
-    SourceBlock,
-    SpecialBlock,
-    VerseBlock,
 )
 from org_parser.element._element import Element, reformat_value
-from org_parser.element._indent_block import IndentBlock
 from org_parser.element._keyword import Keyword
-from org_parser.element._list_recovery import recover_lists
-from org_parser.element._paragraph import Paragraph
-from org_parser.element._table import Table
-from org_parser.time import Clock
 
 if TYPE_CHECKING:
     import tree_sitter
 
     from org_parser.document._heading import Heading
-    from org_parser.text._rich_text import RichText
 
-__all__ = ["Document"]
+__all__ = ["Document", "ParseError"]
 
 # Node type names produced by the tree-sitter grammar.
 _ZEROTH_SECTION = "zeroth_section"
 _HEADING = "heading"
 _SPECIAL_KEYWORD = "special_keyword"
-_PARAGRAPH = "paragraph"
-_ORG_TABLE = "org_table"
-_TABLEEL_TABLE = "tableel_table"
-_CLOCK = "clock"
-_DRAWER = "drawer"
-_LOGBOOK_DRAWER = "logbook_drawer"
 _PROPERTY_DRAWER = "property_drawer"
-_CENTER_BLOCK = "center_block"
-_QUOTE_BLOCK = "quote_block"
-_SPECIAL_BLOCK = "special_block"
-_DYNAMIC_BLOCK = "dynamic_block"
-_COMMENT_BLOCK = "comment_block"
-_EXAMPLE_BLOCK = "example_block"
-_EXPORT_BLOCK = "export_block"
-_SRC_BLOCK = "src_block"
-_VERSE_BLOCK = "verse_block"
-_FIXED_WIDTH = "fixed_width"
-_LIST_ITEM = "list_item"
-_BLOCK = "block"
+_LOGBOOK_DRAWER = "logbook_drawer"
+_DRAWER = "drawer"
 _TITLE = "TITLE"
 _AUTHOR = "AUTHOR"
 _CATEGORY = "CATEGORY"
 _DESCRIPTION = "DESCRIPTION"
 _TODO = "TODO"
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class ParseError:
+    """A single parse error captured during semantic extraction.
+
+    Attributes:
+        node: The tree-sitter ``ERROR`` or missing node.
+        text: The verbatim source text span covered by the error node.
+    """
+
+    node: tree_sitter.Node
+    text: str
 
 
 class Document:
@@ -119,6 +99,7 @@ class Document:
         self._node: tree_sitter.Node | None = None
         self._source: bytes = b""
         self._dirty = False
+        self._errors: list[ParseError] = []
 
         self._sync_keywords_with_dedicated()
 
@@ -164,9 +145,7 @@ class Document:
         doc._source = source
 
         # --- extract zeroth-section data ------------------------------------
-        all_kw, properties, logbook, body = _parse_zeroth_section(
-            root, source, parent=doc
-        )
+        all_kw, properties, logbook, body = _parse_zeroth_section(root, parent=doc)
         doc._title = all_kw.get(_TITLE)
         doc._author = all_kw.get(_AUTHOR)
         doc._category = all_kw.get(_CATEGORY)
@@ -193,7 +172,6 @@ class Document:
                     child,
                     document=doc,
                     parent=doc,
-                    source=source,
                 )
                 doc._children.append(heading)
 
@@ -378,6 +356,27 @@ class Document:
         """Whether this document has been mutated after creation."""
         return self._dirty
 
+    @property
+    def errors(self) -> list[ParseError]:
+        """Parse errors captured during :meth:`from_tree` construction.
+
+        Returns an empty list for programmatically constructed documents.
+        The list is read-only: do not mutate it directly.
+        """
+        return self._errors
+
+    def report_error(self, node: tree_sitter.Node) -> None:
+        """Record a parse error for *node*.
+
+        Extracts the verbatim source text for the node and appends a
+        :class:`ParseError` to the internal errors list.
+
+        Args:
+            node: The tree-sitter ``ERROR`` or missing node to record.
+        """
+        text = self._source[node.start_byte : node.end_byte].decode()
+        self._errors.append(ParseError(node=node, text=text))
+
     def _mark_dirty(self) -> None:
         """Mark this document as dirty."""
         self._dirty = True
@@ -515,7 +514,6 @@ class Document:
 
 def _parse_zeroth_section(
     root: tree_sitter.Node,
-    source: bytes,
     *,
     parent: Document,
 ) -> tuple[dict[str, Keyword], Properties | None, Logbook | None, list[Element]]:
@@ -527,6 +525,13 @@ def _parse_zeroth_section(
         drawer values are merged across repeated drawers. *body* contains
         non-keyword, non-dedicated-drawer elements.
     """
+    from org_parser.document._body import (
+        coalesce_list_items,
+        extract_body_element,
+        merge_logbook_drawers,
+        merge_properties_drawers,
+    )
+
     keywords: dict[str, Keyword] = {}
     property_drawers: list[Properties] = []
     logbook_drawers: list[Logbook] = []
@@ -536,16 +541,16 @@ def _parse_zeroth_section(
         if child.type == _ZEROTH_SECTION:
             for sc in child.named_children:
                 if sc.type == _SPECIAL_KEYWORD:
-                    key, keyword = _extract_keyword(sc, source, parent=parent)
+                    key, keyword = _extract_keyword(sc, parent=parent)
                     keywords[key] = keyword
                 elif sc.type == _PROPERTY_DRAWER:
                     property_drawers.append(
-                        Properties.from_node(sc, source, parent=parent)
+                        Properties.from_node(sc, parent, parent=parent)
                     )
                 elif sc.type == _LOGBOOK_DRAWER:
-                    logbook_drawers.append(Logbook.from_node(sc, source, parent=parent))
+                    logbook_drawers.append(Logbook.from_node(sc, parent, parent=parent))
                 elif sc.type == _DRAWER:
-                    drawer = Drawer.from_node(sc, source, parent=parent)
+                    drawer = Drawer.from_node(sc, parent, parent=parent)
                     drawer_name = drawer.name.upper()
                     if drawer_name == "PROPERTIES":
                         property_drawers.append(Properties.from_drawer(drawer))
@@ -554,60 +559,21 @@ def _parse_zeroth_section(
                     else:
                         body.append(drawer)
                 else:
-                    body.append(_extract_body_element(sc, source, parent=parent))
+                    body.append(
+                        extract_body_element(sc, parent=parent, document=parent)
+                    )
             break  # only one zeroth section
 
     return (
         keywords,
-        _merge_properties_drawers(property_drawers, parent=parent),
-        _merge_logbook_drawers(logbook_drawers, parent=parent),
-        _coalesce_list_items(body, parent=parent),
-    )
-
-
-def _merge_properties_drawers(
-    drawers: list[Properties],
-    *,
-    parent: Document,
-) -> Properties | None:
-    """Merge repeated properties drawers into one object."""
-    if not drawers:
-        return None
-    merged_values: dict[str, RichText] = {}
-    for drawer in drawers:
-        for key, value in drawer.items():
-            if key in merged_values:
-                del merged_values[key]
-            merged_values[key] = value
-    return Properties(properties=merged_values, parent=parent)
-
-
-def _merge_logbook_drawers(
-    drawers: list[Logbook],
-    *,
-    parent: Document,
-) -> Logbook | None:
-    """Merge repeated logbook drawers into one object."""
-    if not drawers:
-        return None
-    merged_body: list[Element] = []
-    merged_clocks: list[Clock] = []
-    merged_repeats: list[Repeat] = []
-    for drawer in drawers:
-        merged_body.extend(drawer.body)
-        merged_clocks.extend(drawer.clock_entries)
-        merged_repeats.extend(drawer.repeats)
-    return Logbook(
-        body=merged_body,
-        clock_entries=merged_clocks,
-        repeats=merged_repeats,
-        parent=parent,
+        merge_properties_drawers(property_drawers, parent=parent),
+        merge_logbook_drawers(logbook_drawers, parent=parent),
+        coalesce_list_items(body, parent=parent),
     )
 
 
 def _extract_keyword(
     kw_node: tree_sitter.Node,
-    source: bytes,
     *,
     parent: Document,
 ) -> tuple[str, Keyword]:
@@ -615,69 +581,8 @@ def _extract_keyword(
 
     The key is upper-case normalised.
     """
-    keyword = Keyword.from_node(kw_node, source, parent=parent)
+    keyword = Keyword.from_node(kw_node, parent, parent=parent)
     return keyword.key, keyword
-
-
-def _extract_body_element(
-    node: tree_sitter.Node,
-    source: bytes,
-    *,
-    parent: Document,
-) -> Element:
-    """Build one body element instance from a tree-sitter node."""
-    dispatch = {
-        _PARAGRAPH: Paragraph.from_node,
-        _ORG_TABLE: Table.from_node,
-        _TABLEEL_TABLE: Table.from_node,
-        _CLOCK: Clock.from_node,
-        _DRAWER: Drawer.from_node,
-        _LOGBOOK_DRAWER: Logbook.from_node,
-        _PROPERTY_DRAWER: Properties.from_node,
-        _CENTER_BLOCK: CenterBlock.from_node,
-        _QUOTE_BLOCK: QuoteBlock.from_node,
-        _SPECIAL_BLOCK: SpecialBlock.from_node,
-        _DYNAMIC_BLOCK: DynamicBlock.from_node,
-        _COMMENT_BLOCK: CommentBlock.from_node,
-        _EXAMPLE_BLOCK: ExampleBlock.from_node,
-        _EXPORT_BLOCK: ExportBlock.from_node,
-        _SRC_BLOCK: SourceBlock.from_node,
-        _VERSE_BLOCK: VerseBlock.from_node,
-        _FIXED_WIDTH: FixedWidthBlock.from_node,
-        _LIST_ITEM: ListItem.from_node,
-        _BLOCK: _extract_indent_block,
-    }
-    factory = dispatch.get(node.type)
-    if factory is None:
-        return Element.from_node(node, source, parent=parent)
-    return factory(node, source, parent=parent)
-
-
-def _extract_indent_block(
-    node: tree_sitter.Node,
-    source: bytes,
-    *,
-    parent: Document,
-) -> IndentBlock:
-    """Build one :class:`IndentBlock` with recursively parsed body nodes."""
-    return IndentBlock(
-        body=[
-            _extract_body_element(child, source, parent=parent)
-            for child in node.children_by_field_name("body")
-            if child.is_named
-        ],
-        parent=parent,
-        source_text=source[node.start_byte : node.end_byte].decode(),
-    )
-
-
-def _coalesce_list_items(
-    elements: list[Element],
-    *,
-    parent: Document,
-) -> list[Element]:
-    """Recover semantic lists from flat body elements."""
-    return recover_lists(elements, parent=parent)
 
 
 def _find_first_child_by_type(

@@ -47,11 +47,19 @@ class Keyword(Element):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> Keyword:
-        """Create a :class:`Keyword` from a tree-sitter ``special_keyword`` node."""
+        """Create a :class:`Keyword` from a tree-sitter ``special_keyword`` node.
+
+        Args:
+            node: The ``special_keyword`` tree-sitter node.
+            document: The owning :class:`Document`, or *None* for programmatic
+                construction (source defaults to ``b""``).
+            parent: Optional parent owner object.
+        """
+        source = document.source if document is not None else b""
         key_node = node.child_by_field_name("key")
         key = (
             key_node.text.decode().upper()
@@ -61,7 +69,7 @@ class Keyword(Element):
 
         value_node = node.child_by_field_name("value")
         value = (
-            RichText.from_node(value_node, source)
+            RichText.from_node(value_node, source, document=document)
             if value_node is not None
             else RichText("")
         )

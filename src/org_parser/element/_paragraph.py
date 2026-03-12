@@ -43,13 +43,21 @@ class Paragraph(Element):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> Paragraph:
-        """Create a :class:`Paragraph` from a tree-sitter ``paragraph`` node."""
+        """Create a :class:`Paragraph` from a tree-sitter ``paragraph`` node.
+
+        Args:
+            node: The ``paragraph`` tree-sitter node.
+            document: The owning :class:`Document`, or *None* for programmatic
+                construction (source defaults to ``b""``).
+            parent: Optional parent owner object.
+        """
+        source = document.source if document is not None else b""
         paragraph = cls(
-            body=RichText.from_node(node, source),
+            body=RichText.from_node(node, source, document=document),
             indent=_extract_indent(node, source),
             parent=parent,
             source_text=source[node.start_byte : node.end_byte].decode(),

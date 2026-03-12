@@ -20,8 +20,8 @@ Example::
     print(doc.title)
 """
 
-from org_parser.document._document import Document
+from org_parser.document._document import Document, ParseError
 from org_parser.document._heading import Heading
 from org_parser.document._loader import load_raw
 
-__all__ = ["Document", "Heading", "load_raw"]
+__all__ = ["Document", "Heading", "ParseError", "load_raw"]

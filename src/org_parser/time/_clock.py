@@ -42,11 +42,12 @@ class Clock(Element):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> Clock:
         """Create a :class:`Clock` from a tree-sitter ``clock`` node."""
+        source = document.source if document is not None else b""
         source_text = source[node.start_byte : node.end_byte].decode()
         clock = cls(
             timestamp=_extract_clock_timestamp(node, source),

@@ -6,12 +6,17 @@ from dataclasses import dataclass
 import re
 from typing import TYPE_CHECKING
 
-from org_parser.element._element import Element, build_semantic_repr
+from org_parser.element._element import (
+    Element,
+    build_semantic_repr,
+    element_from_error_or_unknown,
+    ensure_trailing_newline,
+)
 from org_parser.text._rich_text import RichText
 from org_parser.time import Timestamp
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     import tree_sitter
 
@@ -53,14 +58,15 @@ class ListItemContinuation(Element):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> ListItemContinuation:
         """Create a continuation line from one ``item_continuation_line`` node."""
+        source = document.source if document is not None else b""
         source_text = source[node.start_byte : node.end_byte].decode()
         content_nodes = node.children_by_field_name("content")
-        parsed = RichText.from_nodes(content_nodes, source)
+        parsed = RichText.from_nodes(content_nodes, source, document=document)
         continuation = cls(
             content=RichText("") if parsed is None else parsed,
             line_prefix=_extract_leading_indent(source_text),
@@ -132,21 +138,22 @@ class ListItem(Element):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> ListItem:
         """Create one :class:`ListItem` from a ``list_item`` parse node."""
+        source = document.source if document is not None else b""
         source_text = source[node.start_byte : node.end_byte].decode()
         item = cls(
             bullet=_extract_bullet(node, source),
             ordered_counter=_extract_optional_field_text(node, source, "counter"),
             counter_set=_extract_counter_set(node, source),
             checkbox=_extract_checkbox(node, source),
-            item_tag=_extract_item_tag(node, source),
-            first_line=_extract_first_line(node, source),
+            item_tag=_extract_item_tag(node, source, document),
+            first_line=_extract_first_line(node, source, document),
             body=[
-                _extract_list_item_body_element(child, source)
+                _extract_list_item_body_element(child, document)
                 for child in node.children_by_field_name("body")
             ],
             parent=parent,
@@ -282,7 +289,7 @@ class ListItem(Element):
         parts.append("\n")
         body_prefix = (indent if indent is not None else "") + (" " * indent_step)
         for element in self._body:
-            rendered = _ensure_trailing_newline(str(element))
+            rendered = ensure_trailing_newline(str(element))
             if element.node_type == "plain_list":
                 parts.append(rendered)
                 continue
@@ -471,13 +478,14 @@ class List(Element):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> List:
         """Create a :class:`List` from a ``plain_list`` node."""
+        source = document.source if document is not None else b""
         items = [
-            ListItem.from_node(child, source)
+            ListItem.from_node(child, document)
             for child in node.named_children
             if child.type == "list_item"
         ]
@@ -560,7 +568,10 @@ class List(Element):
         return build_semantic_repr("List", items=self._items)
 
 
-def _extract_list_item_body_element(node: tree_sitter.Node, source: bytes) -> Element:
+def _extract_list_item_body_element(
+    node: tree_sitter.Node,
+    document: Document | None = None,
+) -> Element:
     """Build one semantic element for a list item's body child node."""
     from org_parser.element._block import (
         CenterBlock,
@@ -576,7 +587,7 @@ def _extract_list_item_body_element(node: tree_sitter.Node, source: bytes) -> El
     )
     from org_parser.element._drawer import Drawer, Logbook, Properties
 
-    dispatch = {
+    dispatch: dict[str, Callable[..., Element]] = {
         "item_continuation_line": ListItemContinuation.from_node,
         "drawer": Drawer.from_node,
         "logbook_drawer": Logbook.from_node,
@@ -594,8 +605,8 @@ def _extract_list_item_body_element(node: tree_sitter.Node, source: bytes) -> El
     }
     factory = dispatch.get(node.type)
     if factory is None:
-        return Element.from_node(node, source)
-    return factory(node, source)
+        return element_from_error_or_unknown(node, document)
+    return factory(node, document)
 
 
 def _extract_optional_field_text(
@@ -643,17 +654,27 @@ def _extract_checkbox(node: tree_sitter.Node, source: bytes) -> str | None:
     return source[status_node.start_byte : status_node.end_byte].decode()
 
 
-def _extract_item_tag(node: tree_sitter.Node, source: bytes) -> RichText | None:
+def _extract_item_tag(
+    node: tree_sitter.Node,
+    source: bytes,
+    document: Document | None = None,
+) -> RichText | None:
     """Return descriptive-list tag rich text, if present."""
     tag_node = node.child_by_field_name("tag")
     if tag_node is None:
         return None
-    return RichText.from_nodes(tag_node.named_children, source)
+    return RichText.from_nodes(tag_node.named_children, source, document=document)
 
 
-def _extract_first_line(node: tree_sitter.Node, source: bytes) -> RichText | None:
+def _extract_first_line(
+    node: tree_sitter.Node,
+    source: bytes,
+    document: Document | None = None,
+) -> RichText | None:
     """Return first-line rich text composed from all ``first_line`` objects."""
-    return RichText.from_nodes(node.children_by_field_name("first_line"), source)
+    return RichText.from_nodes(
+        node.children_by_field_name("first_line"), source, document=document
+    )
 
 
 def _extract_leading_indent(value: str) -> str:
@@ -662,13 +683,6 @@ def _extract_leading_indent(value: str) -> str:
     while indent_end < len(value) and value[indent_end] in {" ", "\t"}:
         indent_end += 1
     return value[:indent_end]
-
-
-def _ensure_trailing_newline(value: str) -> str:
-    """Return *value* with one trailing newline when non-empty."""
-    if value == "" or value.endswith("\n"):
-        return value
-    return f"{value}\n"
 
 
 def _indent_non_empty_lines(value: str, prefix: str) -> str:

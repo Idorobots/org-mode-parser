@@ -17,7 +17,12 @@ from org_parser.element._block import (
     SpecialBlock,
     VerseBlock,
 )
-from org_parser.element._element import Element, build_semantic_repr
+from org_parser.element._element import (
+    Element,
+    build_semantic_repr,
+    element_from_error_or_unknown,
+    ensure_trailing_newline,
+)
 from org_parser.element._indent_block import IndentBlock
 from org_parser.element._list import List, ListItem, Repeat
 from org_parser.element._list_recovery import recover_lists
@@ -25,6 +30,8 @@ from org_parser.text._rich_text import RichText
 from org_parser.time import Clock
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     import tree_sitter
 
     from org_parser.document._document import Document
@@ -81,11 +88,12 @@ class Drawer(Element):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> Drawer:
         """Create a :class:`Drawer` from a tree-sitter ``drawer`` node."""
+        source = document.source if document is not None else b""
         name_node = node.child_by_field_name("name")
         name = (
             source[name_node.start_byte : name_node.end_byte].decode()
@@ -96,7 +104,7 @@ class Drawer(Element):
             name=name,
             body=_coalesce_list_items(
                 [
-                    _extract_drawer_body_element(child, source)
+                    _extract_drawer_body_element(child, document)
                     for child in node.children_by_field_name("body")
                 ],
                 parent=parent,
@@ -141,7 +149,7 @@ class Drawer(Element):
             return self.source_text
 
         body_text = "".join(
-            _ensure_trailing_newline(str(element)) for element in self._body
+            ensure_trailing_newline(str(element)) for element in self._body
         )
         return f":{self._name}:\n{body_text}:END:\n"
 
@@ -177,14 +185,15 @@ class Logbook(Drawer):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> Logbook:
         """Create a :class:`Logbook` from ``logbook_drawer`` node."""
+        source = document.source if document is not None else b""
         body = _coalesce_list_items(
             [
-                _extract_drawer_body_element(child, source)
+                _extract_drawer_body_element(child, document)
                 for child in node.children_by_field_name("body")
             ],
             parent=parent,
@@ -267,11 +276,12 @@ class Properties(Element, MutableMapping[str, RichText]):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> Properties:
         """Create a :class:`Properties` from ``property_drawer`` node."""
+        source = document.source if document is not None else b""
         properties = cls(
             parent=parent,
             source_text=source[node.start_byte : node.end_byte].decode(),
@@ -285,7 +295,7 @@ class Properties(Element, MutableMapping[str, RichText]):
             key = source[name_node.start_byte : name_node.end_byte].decode()
             value_node = child.child_by_field_name("value")
             value = (
-                RichText.from_node(value_node, source)
+                RichText.from_node(value_node, source, document=document)
                 if value_node is not None
                 else RichText("")
             )
@@ -366,15 +376,18 @@ class Properties(Element, MutableMapping[str, RichText]):
         return build_semantic_repr("Properties", properties=self._properties)
 
 
-def _extract_drawer_body_element(node: tree_sitter.Node, source: bytes) -> Element:
+def _extract_drawer_body_element(
+    node: tree_sitter.Node,
+    document: Document | None = None,
+) -> Element:
     """Build one semantic element object for a drawer body child node."""
     from org_parser.element._paragraph import Paragraph
     from org_parser.element._table import Table
 
     if node.type == _BLOCK:
-        return _extract_indent_block(node, source)
+        return _extract_indent_block(node, document)
 
-    dispatch = {
+    dispatch: dict[str, Callable[..., Element]] = {
         _PARAGRAPH: Paragraph.from_node,
         _ORG_TABLE: Table.from_node,
         _TABLEEL_TABLE: Table.from_node,
@@ -396,15 +409,19 @@ def _extract_drawer_body_element(node: tree_sitter.Node, source: bytes) -> Eleme
     }
     factory = dispatch.get(node.type)
     if factory is None:
-        return Element.from_node(node, source)
-    return factory(node, source)
+        return element_from_error_or_unknown(node, document)
+    return factory(node, document)
 
 
-def _extract_indent_block(node: tree_sitter.Node, source: bytes) -> IndentBlock:
+def _extract_indent_block(
+    node: tree_sitter.Node,
+    document: Document | None = None,
+) -> IndentBlock:
     """Build one :class:`IndentBlock` for a drawer body ``block`` node."""
+    source = document.source if document is not None else b""
     return IndentBlock(
         body=[
-            _extract_drawer_body_element(child, source)
+            _extract_drawer_body_element(child, document)
             for child in node.children_by_field_name("body")
             if child.is_named
         ],
@@ -419,13 +436,6 @@ def _coalesce_list_items(
 ) -> list[Element]:
     """Recover semantic lists from flat drawer body elements."""
     return recover_lists(elements, parent=parent)
-
-
-def _ensure_trailing_newline(value: str) -> str:
-    """Return *value* with one trailing newline when non-empty."""
-    if value == "" or value.endswith("\n"):
-        return value
-    return f"{value}\n"
 
 
 def _extract_logbook_repeats(body: list[Element]) -> list[Repeat]:

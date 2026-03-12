@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 
 __all__ = ["Element", "reformat_value"]
 
+_ERROR_NODE_TYPE = "ERROR"
+
 
 def build_semantic_repr(class_name: str, /, **fields: object) -> str:
     """Build a compact repr omitting ``None`` and empty-list fields."""
@@ -85,7 +87,7 @@ class Element:
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> Element:
@@ -93,13 +95,15 @@ class Element:
 
         Args:
             node: The tree-sitter node to wrap.
-            source: The full source bytes of the document.
+            document: The owning :class:`Document`, or *None* for programmatic
+                construction (source defaults to ``b""``).
             parent: Optional parent object that owns this element.
 
         Returns:
             A new :class:`Element` preserving the node type and verbatim
             source text.
         """
+        source = document.source if document is not None else b""
         elem = cls(
             node_type=node.type,
             source_text=source[node.start_byte : node.end_byte].decode(),
@@ -201,3 +205,78 @@ class Element:
     def __repr__(self) -> str:
         """Return a developer-friendly representation."""
         return f"Element(node_type={self._node_type!r})"
+
+
+# ---------------------------------------------------------------------------
+# Shared node utilities
+# ---------------------------------------------------------------------------
+
+
+def _is_error_node(node: tree_sitter.Node) -> bool:
+    """Return *True* if *node* is a parse-error or missing token.
+
+    Args:
+        node: Any tree-sitter node to inspect.
+
+    Returns:
+        ``True`` for ``ERROR``-typed nodes and for nodes where
+        ``node.is_missing`` is set by the parser's error-recovery.
+    """
+    return node.type == _ERROR_NODE_TYPE or node.is_missing
+
+
+def element_from_error_or_unknown(
+    node: tree_sitter.Node,
+    document: Document | None = None,
+    *,
+    parent: Document | Heading | Element | None = None,
+) -> Element:
+    """Return a semantic element for an unrecognised or error parse node.
+
+    Error and missing nodes are recovered as a
+    :class:`~org_parser.element._paragraph.Paragraph` whose ``body`` is a
+    :class:`~org_parser.text._rich_text.RichText` of the verbatim source
+    text.  The owning :class:`~org_parser.document._document.Document`'s
+    :meth:`~org_parser.document._document.Document.report_error` method is
+    invoked so the document can record the error.
+
+    Unknown but syntactically valid nodes fall back to the generic
+    :class:`Element` stub (preserving the existing behaviour).
+
+    Args:
+        node: The unrecognised tree-sitter node.
+        document: The owning :class:`Document`, or *None* for programmatic
+            construction (source defaults to ``b""``).
+        parent: Optional owner object.
+
+    Returns:
+        A :class:`~org_parser.element._paragraph.Paragraph` for error nodes,
+        or a plain :class:`Element` for unknown valid nodes.
+    """
+    if _is_error_node(node):
+        if document is not None:
+            document.report_error(node)
+        # Lazy imports avoid the circular dependency
+        # (_paragraph imports Element; _rich_text imports time/).
+        from org_parser.element._paragraph import Paragraph
+        from org_parser.text._rich_text import RichText
+
+        source = document.source if document is not None else b""
+        text = source[node.start_byte : node.end_byte].decode()
+        return Paragraph(body=RichText(text), source_text=text, parent=parent)
+    return Element.from_node(node, document, parent=parent)
+
+
+def ensure_trailing_newline(value: str) -> str:
+    r"""Return *value* with exactly one trailing newline when non-empty.
+
+    Args:
+        value: Any string, possibly without a trailing newline.
+
+    Returns:
+        The original string unchanged if empty or already newline-terminated;
+        otherwise the string with one ``\n`` appended.
+    """
+    if value == "" or value.endswith("\n"):
+        return value
+    return f"{value}\n"

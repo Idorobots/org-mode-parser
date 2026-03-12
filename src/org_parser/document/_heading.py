@@ -4,31 +4,22 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from org_parser.document._body import (
+    coalesce_list_items,
+    extract_body_element,
+    merge_logbook_drawers,
+    merge_properties_drawers,
+)
 from org_parser.element import (
-    CenterBlock,
-    CommentBlock,
     Drawer,
-    DynamicBlock,
-    ExampleBlock,
-    ExportBlock,
-    FixedWidthBlock,
-    ListItem,
     Logbook,
     Properties,
-    QuoteBlock,
     Repeat,
-    SourceBlock,
-    SpecialBlock,
-    VerseBlock,
 )
 from org_parser.element._element import Element, reformat_value
-from org_parser.element._indent_block import IndentBlock
-from org_parser.element._list_recovery import recover_lists
-from org_parser.element._paragraph import Paragraph
-from org_parser.element._table import Table
 from org_parser.text._inline import CompletionCounter
 from org_parser.text._rich_text import RichText
-from org_parser.time import Clock, Timestamp
+from org_parser.time import Timestamp
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -44,25 +35,9 @@ _TAG = "tag"
 _PLANNING = "planning"
 _PLANNING_KEYWORD = "planning_keyword"
 _TIMESTAMP = "timestamp"
-_PARAGRAPH = "paragraph"
-_ORG_TABLE = "org_table"
-_TABLEEL_TABLE = "tableel_table"
-_CLOCK = "clock"
 _DRAWER = "drawer"
 _LOGBOOK_DRAWER = "logbook_drawer"
 _PROPERTY_DRAWER = "property_drawer"
-_CENTER_BLOCK = "center_block"
-_QUOTE_BLOCK = "quote_block"
-_SPECIAL_BLOCK = "special_block"
-_DYNAMIC_BLOCK = "dynamic_block"
-_COMMENT_BLOCK = "comment_block"
-_EXAMPLE_BLOCK = "example_block"
-_EXPORT_BLOCK = "export_block"
-_SRC_BLOCK = "src_block"
-_VERSE_BLOCK = "verse_block"
-_FIXED_WIDTH = "fixed_width"
-_LIST_ITEM = "list_item"
-_BLOCK = "block"
 
 
 class Heading:
@@ -148,7 +123,6 @@ class Heading:
         *,
         document: Document,
         parent: Heading | Document,
-        source: bytes,
     ) -> Heading:
         """Build a :class:`Heading` (and its sub-tree) from a tree-sitter node.
 
@@ -156,12 +130,12 @@ class Heading:
             node: A tree-sitter node of type ``heading``.
             document: The root document that contains this heading.
             parent: The parent :class:`Heading` or :class:`Document`.
-            source: The full source bytes of the document.
 
         Returns:
             A fully populated :class:`Heading` with recursively built
             children.
         """
+        source = document.source
         level = _extract_level(node)
         todo = _extract_todo(node)
         priority = _extract_priority(node)
@@ -170,7 +144,9 @@ class Heading:
         counter = _extract_counter(title_nodes)
         tags = _extract_tags(node)
         scheduled, deadline, closed = _extract_planning(node, source)
-        properties, logbook, body = _extract_body(node, source, parent=parent)
+        properties, logbook, body = _extract_body(
+            node, parent=parent, document=document
+        )
 
         heading = cls(
             level=level,
@@ -202,7 +178,6 @@ class Heading:
                     child,
                     document=document,
                     parent=heading,
-                    source=source,
                 )
                 heading._children.append(sub)
 
@@ -607,9 +582,9 @@ def _extract_tags(node: tree_sitter.Node) -> list[str]:
 
 def _extract_body(
     node: tree_sitter.Node,
-    source: bytes,
     *,
     parent: Heading | Document,
+    document: Document | None = None,
 ) -> tuple[Properties | None, Logbook | None, list[Element]]:
     """Return merged drawers and body elements for heading section content."""
     properties_drawers: list[Properties] = []
@@ -618,26 +593,26 @@ def _extract_body(
     properties_node = node.child_by_field_name("properties")
     if properties_node is not None:
         properties_drawers.append(
-            Properties.from_node(properties_node, source, parent=parent)
+            Properties.from_node(properties_node, document, parent=parent)
         )
 
     section_node = node.child_by_field_name("body")
     if section_node is None:
         return (
-            _merge_properties_drawers(properties_drawers, parent=parent),
-            _merge_logbook_drawers(logbook_drawers, parent=parent),
+            merge_properties_drawers(properties_drawers, parent=parent),
+            merge_logbook_drawers(logbook_drawers, parent=parent),
             body,
         )
 
     for child in section_node.named_children:
         if child.type == _PROPERTY_DRAWER:
             properties_drawers.append(
-                Properties.from_node(child, source, parent=parent)
+                Properties.from_node(child, document, parent=parent)
             )
         elif child.type == _LOGBOOK_DRAWER:
-            logbook_drawers.append(Logbook.from_node(child, source, parent=parent))
+            logbook_drawers.append(Logbook.from_node(child, document, parent=parent))
         elif child.type == _DRAWER:
-            drawer = Drawer.from_node(child, source, parent=parent)
+            drawer = Drawer.from_node(child, document, parent=parent)
             drawer_name = drawer.name.upper()
             if drawer_name == "PROPERTIES":
                 properties_drawers.append(Properties.from_drawer(drawer))
@@ -646,114 +621,13 @@ def _extract_body(
             else:
                 body.append(drawer)
         else:
-            body.append(_extract_body_element(child, source, parent=parent))
+            body.append(extract_body_element(child, parent=parent, document=document))
 
     return (
-        _merge_properties_drawers(properties_drawers, parent=parent),
-        _merge_logbook_drawers(logbook_drawers, parent=parent),
-        _coalesce_list_items(body, parent=parent),
+        merge_properties_drawers(properties_drawers, parent=parent),
+        merge_logbook_drawers(logbook_drawers, parent=parent),
+        coalesce_list_items(body, parent=parent),
     )
-
-
-def _merge_properties_drawers(
-    drawers: list[Properties],
-    *,
-    parent: Heading | Document,
-) -> Properties | None:
-    """Merge repeated heading properties drawers into one object."""
-    if not drawers:
-        return None
-    merged_values: dict[str, RichText] = {}
-    for drawer in drawers:
-        for key, value in drawer.items():
-            if key in merged_values:
-                del merged_values[key]
-            merged_values[key] = value
-    return Properties(properties=merged_values, parent=parent)
-
-
-def _merge_logbook_drawers(
-    drawers: list[Logbook],
-    *,
-    parent: Heading | Document,
-) -> Logbook | None:
-    """Merge repeated heading logbook drawers into one object."""
-    if not drawers:
-        return None
-    merged_body: list[Element] = []
-    merged_clocks: list[Clock] = []
-    merged_repeats: list[Repeat] = []
-    for drawer in drawers:
-        merged_body.extend(drawer.body)
-        merged_clocks.extend(drawer.clock_entries)
-        merged_repeats.extend(drawer.repeats)
-    return Logbook(
-        body=merged_body,
-        clock_entries=merged_clocks,
-        repeats=merged_repeats,
-        parent=parent,
-    )
-
-
-def _extract_body_element(
-    node: tree_sitter.Node,
-    source: bytes,
-    *,
-    parent: Heading | Document,
-) -> Element:
-    """Build one heading body element instance from a tree-sitter node."""
-    dispatch = {
-        _PARAGRAPH: Paragraph.from_node,
-        _ORG_TABLE: Table.from_node,
-        _TABLEEL_TABLE: Table.from_node,
-        _CLOCK: Clock.from_node,
-        _DRAWER: Drawer.from_node,
-        _LOGBOOK_DRAWER: Logbook.from_node,
-        _PROPERTY_DRAWER: Properties.from_node,
-        _CENTER_BLOCK: CenterBlock.from_node,
-        _QUOTE_BLOCK: QuoteBlock.from_node,
-        _SPECIAL_BLOCK: SpecialBlock.from_node,
-        _DYNAMIC_BLOCK: DynamicBlock.from_node,
-        _COMMENT_BLOCK: CommentBlock.from_node,
-        _EXAMPLE_BLOCK: ExampleBlock.from_node,
-        _EXPORT_BLOCK: ExportBlock.from_node,
-        _SRC_BLOCK: SourceBlock.from_node,
-        _VERSE_BLOCK: VerseBlock.from_node,
-        _FIXED_WIDTH: FixedWidthBlock.from_node,
-        _LIST_ITEM: ListItem.from_node,
-        _BLOCK: _extract_indent_block,
-    }
-    factory = dispatch.get(node.type)
-    if factory is None:
-        return Element.from_node(node, source, parent=parent)
-    return factory(node, source, parent=parent)
-
-
-def _extract_indent_block(
-    node: tree_sitter.Node,
-    source: bytes,
-    *,
-    parent: Heading | Document,
-) -> IndentBlock:
-    """Build one :class:`IndentBlock` with recursively parsed body nodes."""
-    return IndentBlock(
-        body=[
-            _extract_body_element(child, source, parent=parent)
-            for child in node.children_by_field_name("body")
-            if child.is_named
-        ],
-        parent=parent,
-        source_text=source[node.start_byte : node.end_byte].decode(),
-    )
-
-
-def _coalesce_list_items(
-    elements: list[Element],
-    *,
-    parent: Heading | Document,
-) -> list[Element]:
-    """Recover semantic lists from flat heading body elements."""
-    return recover_lists(elements, parent=parent)
 
 
 def _extract_planning(

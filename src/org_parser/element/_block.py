@@ -4,11 +4,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from org_parser.element._element import Element, build_semantic_repr
+from org_parser.element._element import (
+    Element,
+    build_semantic_repr,
+    element_from_error_or_unknown,
+    ensure_trailing_newline,
+)
 from org_parser.element._indent_block import IndentBlock
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     import tree_sitter
 
@@ -68,7 +73,7 @@ class _ContainerBlock(Element):
     def _render_contents(self) -> str:
         """Render nested contents ensuring one trailing newline per child."""
         return "".join(
-            _ensure_trailing_newline(str(element)) for element in self._contents
+            ensure_trailing_newline(str(element)) for element in self._contents
         )
 
     def __str__(self) -> str:
@@ -156,16 +161,17 @@ class CenterBlock(_ContainerBlock):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> CenterBlock:
         """Create a :class:`CenterBlock` from a ``center_block`` node."""
+        source = document.source if document is not None else b""
         source_text = _node_text(node, source)
         block = cls(
             parameters=_extract_optional_field_text(node, source, "parameters")
             or _extract_begin_parameters(source_text, "#+begin_center"),
-            contents=_extract_container_contents(node, source),
+            contents=_extract_container_contents(node, document),
             parent=parent,
             source_text=source_text,
         )
@@ -210,16 +216,17 @@ class QuoteBlock(_ContainerBlock):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> QuoteBlock:
         """Create a :class:`QuoteBlock` from a ``quote_block`` node."""
+        source = document.source if document is not None else b""
         source_text = _node_text(node, source)
         block = cls(
             parameters=_extract_optional_field_text(node, source, "parameters")
             or _extract_begin_parameters(source_text, "#+begin_quote"),
-            contents=_extract_container_contents(node, source),
+            contents=_extract_container_contents(node, document),
             parent=parent,
             source_text=source_text,
         )
@@ -266,11 +273,12 @@ class SpecialBlock(_ContainerBlock):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> SpecialBlock:
         """Create a :class:`SpecialBlock` from a ``special_block`` node."""
+        source = document.source if document is not None else b""
         source_text = _node_text(node, source)
         name = _extract_optional_field_text(node, source, "name")
         parsed_name, parsed_parameters = _extract_special_begin_data(source_text)
@@ -278,7 +286,7 @@ class SpecialBlock(_ContainerBlock):
             name=parsed_name if name is None else name,
             parameters=_extract_optional_field_text(node, source, "parameters")
             or parsed_parameters,
-            contents=_extract_container_contents(node, source),
+            contents=_extract_container_contents(node, document),
             parent=parent,
             source_text=source_text,
         )
@@ -338,11 +346,12 @@ class DynamicBlock(_ContainerBlock):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> DynamicBlock:
         """Create a :class:`DynamicBlock` from a ``dynamic_block`` node."""
+        source = document.source if document is not None else b""
         source_text = _node_text(node, source)
         name = _extract_optional_field_text(node, source, "name")
         parsed_name, parsed_parameters = _extract_dynamic_begin_data(source_text)
@@ -350,7 +359,7 @@ class DynamicBlock(_ContainerBlock):
             name=parsed_name if name is None else name,
             parameters=_extract_optional_field_text(node, source, "parameters")
             or parsed_parameters,
-            contents=_extract_container_contents(node, source),
+            contents=_extract_container_contents(node, document),
             parent=parent,
             source_text=source_text,
         )
@@ -405,13 +414,14 @@ class VerseBlock(_ContainerBlock):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> VerseBlock:
         """Create a :class:`VerseBlock` from a ``verse_block`` node."""
+        source = document.source if document is not None else b""
         block = cls(
-            contents=_extract_container_contents(node, source),
+            contents=_extract_container_contents(node, document),
             parent=parent,
             source_text=_node_text(node, source),
         )
@@ -442,11 +452,12 @@ class CommentBlock(_TextBlock):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> CommentBlock:
         """Create a :class:`CommentBlock` from a ``comment_block`` node."""
+        source = document.source if document is not None else b""
         block = cls(
             contents=_extract_block_body_text(_node_text(node, source)),
             parent=parent,
@@ -481,11 +492,12 @@ class ExampleBlock(_TextBlock):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> ExampleBlock:
         """Create a :class:`ExampleBlock` from an ``example_block`` node."""
+        source = document.source if document is not None else b""
         source_text = _node_text(node, source)
         block = cls(
             parameters=_extract_optional_field_text(node, source, "parameters")
@@ -537,11 +549,12 @@ class ExportBlock(_TextBlock):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> ExportBlock:
         """Create a :class:`ExportBlock` from an ``export_block`` node."""
+        source = document.source if document is not None else b""
         source_text = _node_text(node, source)
         backend = _extract_optional_field_text(node, source, "backend")
         parsed_backend, parsed_parameters = _extract_export_begin_data(source_text)
@@ -608,11 +621,12 @@ class SourceBlock(_TextBlock):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> SourceBlock:
         """Create a :class:`SourceBlock` from a ``src_block`` node."""
+        source = document.source if document is not None else b""
         source_text = _node_text(node, source)
         parsed_language, parsed_switches = _extract_source_begin_data(source_text)
         block = cls(
@@ -671,11 +685,12 @@ class FixedWidthBlock(Element):
     def from_node(
         cls,
         node: tree_sitter.Node,
-        source: bytes,
+        document: Document | None = None,
         *,
         parent: Document | Heading | Element | None = None,
     ) -> FixedWidthBlock:
         """Create a :class:`FixedWidthBlock` from a ``fixed_width`` node."""
+        source = document.source if document is not None else b""
         source_text = _node_text(node, source)
         block = cls(
             contents=_extract_fixed_width_contents(source_text),
@@ -712,17 +727,23 @@ class FixedWidthBlock(Element):
         return build_semantic_repr("FixedWidthBlock", contents=self._contents)
 
 
-def _extract_container_contents(node: tree_sitter.Node, source: bytes) -> list[Element]:
+def _extract_container_contents(
+    node: tree_sitter.Node,
+    document: Document | None = None,
+) -> list[Element]:
     """Extract nested body elements for container-style blocks."""
     elements = [
-        _extract_nested_element(child, source)
+        _extract_nested_element(child, document)
         for child in node.children_by_field_name("body")
         if child.is_named
     ]
     return _coalesce_list_items(elements)
 
 
-def _extract_nested_element(node: tree_sitter.Node, source: bytes) -> Element:
+def _extract_nested_element(
+    node: tree_sitter.Node,
+    document: Document | None = None,
+) -> Element:
     """Build one semantic element for nested block contents."""
     from org_parser.element._drawer import Drawer, Logbook, Properties
     from org_parser.element._keyword import Keyword
@@ -732,9 +753,9 @@ def _extract_nested_element(node: tree_sitter.Node, source: bytes) -> Element:
     from org_parser.time import Clock
 
     if node.type == "block":
-        return _extract_indent_block(node, source)
+        return _extract_indent_block(node, document)
 
-    dispatch = {
+    dispatch: dict[str, Callable[..., Element]] = {
         "paragraph": Paragraph.from_node,
         "org_table": Table.from_node,
         "tableel_table": Table.from_node,
@@ -757,15 +778,19 @@ def _extract_nested_element(node: tree_sitter.Node, source: bytes) -> Element:
     }
     factory = dispatch.get(node.type)
     if factory is None:
-        return Element.from_node(node, source)
-    return factory(node, source)
+        return element_from_error_or_unknown(node, document)
+    return factory(node, document)
 
 
-def _extract_indent_block(node: tree_sitter.Node, source: bytes) -> IndentBlock:
+def _extract_indent_block(
+    node: tree_sitter.Node,
+    document: Document | None = None,
+) -> IndentBlock:
     """Build one nested :class:`IndentBlock` from a ``block`` node."""
+    source = document.source if document is not None else b""
     return IndentBlock(
         body=[
-            _extract_nested_element(child, source)
+            _extract_nested_element(child, document)
             for child in node.children_by_field_name("body")
             if child.is_named
         ],
@@ -930,13 +955,6 @@ def _normalize_optional_text(value: str | None) -> str | None:
     if normalized == "":
         return None
     return normalized
-
-
-def _ensure_trailing_newline(value: str) -> str:
-    """Return *value* with one trailing newline when non-empty."""
-    if value == "" or value.endswith("\n"):
-        return value
-    return f"{value}\n"
 
 
 def _ensure_single_trailing_newline(value: str) -> str:
