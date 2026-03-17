@@ -16,7 +16,11 @@ from org_parser.element import (
     Properties,
     Repeat,
 )
-from org_parser.element._element import Element, reformat_value
+from org_parser.element._element import (
+    Element,
+    element_from_error_or_unknown,
+    reformat_value,
+)
 from org_parser.text._inline import CompletionCounter
 from org_parser.text._rich_text import RichText
 from org_parser.time import Timestamp
@@ -140,7 +144,7 @@ class Heading:
         todo = _extract_todo(node)
         priority = _extract_priority(node)
         title_nodes = node.children_by_field_name("title")
-        title = RichText.from_nodes(title_nodes, source)
+        title = RichText.from_nodes(title_nodes, source, document=document)
         counter = _extract_counter(title_nodes)
         tags = _extract_tags(node)
         scheduled, deadline, closed = _extract_planning(node, source)
@@ -180,6 +184,9 @@ class Heading:
                     parent=heading,
                 )
                 heading._children.append(sub)
+            elif child.type == "ERROR" or child.is_missing:
+                elem = element_from_error_or_unknown(child, document, parent=heading)
+                heading._body.append(elem)
 
         return heading
 

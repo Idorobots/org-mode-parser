@@ -55,6 +55,8 @@ def _make_fake_error_node(text: str = "ERROR text") -> MagicMock:
     encoded = text.encode()
     node.start_byte = 0
     node.end_byte = len(encoded)
+    node.start_point = (0, 0)
+    node.end_point = (0, len(encoded))
     return node
 
 
@@ -66,6 +68,8 @@ def _make_fake_missing_node(text: str = "MISSING text") -> MagicMock:
     encoded = text.encode()
     node.start_byte = 0
     node.end_byte = len(encoded)
+    node.start_point = (0, 0)
+    node.end_point = (0, len(encoded))
     return node
 
 
@@ -88,14 +92,25 @@ def _make_fake_valid_node(node_type: str = "unknown_node") -> MagicMock:
 # ---------------------------------------------------------------------------
 
 
+def _make_parse_error(text: str = "ERROR text") -> ParseError:
+    """Construct a :class:`ParseError` from a fake error node."""
+    node = _make_fake_error_node(text)
+    return ParseError(
+        start_point=node.start_point,
+        end_point=node.end_point,
+        text=text,
+        _node=node,
+    )
+
+
 class TestParseError:
     """Tests for the :class:`ParseError` frozen dataclass."""
 
     def test_fields_accessible(self) -> None:
-        """ParseError.node and ParseError.text are readable."""
-        fake_node = _make_fake_error_node("bad text")
-        err = ParseError(node=fake_node, text="bad text")
-        assert err.node is fake_node
+        """ParseError.start_point, end_point, and text are readable."""
+        err = _make_parse_error("bad text")
+        assert err.start_point == (0, 0)
+        assert err.end_point == (0, len(b"bad text"))
         assert err.text == "bad text"
 
     def test_frozen(self) -> None:
@@ -104,8 +119,7 @@ class TestParseError:
 
         import pytest
 
-        fake_node = _make_fake_error_node()
-        err = ParseError(node=fake_node, text="x")
+        err = _make_parse_error()
         assert dataclasses.is_dataclass(err)
         with pytest.raises(dataclasses.FrozenInstanceError):
             err.text = "y"  # type: ignore[misc]
@@ -113,8 +127,18 @@ class TestParseError:
     def test_equality(self) -> None:
         """Two ParseError instances with the same values are equal."""
         fake_node = _make_fake_error_node()
-        err1 = ParseError(node=fake_node, text="abc")
-        err2 = ParseError(node=fake_node, text="abc")
+        err1 = ParseError(
+            start_point=fake_node.start_point,
+            end_point=fake_node.end_point,
+            text="abc",
+            _node=fake_node,
+        )
+        err2 = ParseError(
+            start_point=fake_node.start_point,
+            end_point=fake_node.end_point,
+            text="abc",
+            _node=fake_node,
+        )
         assert err1 == err2
 
 
@@ -191,7 +215,8 @@ class TestElementFromErrorOrUnknown:
         node = _make_fake_error_node("ERROR text")
         element_from_error_or_unknown(node, doc)
         assert len(doc.errors) == 1
-        assert doc.errors[0].node is node
+        assert doc.errors[0].text == "ERROR text"
+        assert doc.errors[0].start_point == (0, 0)
 
     def test_missing_node_returns_paragraph(self) -> None:
         """A missing node is recovered as a Paragraph."""
@@ -206,7 +231,8 @@ class TestElementFromErrorOrUnknown:
         node = _make_fake_missing_node("MISSING text")
         element_from_error_or_unknown(node, doc)
         assert len(doc.errors) == 1
-        assert doc.errors[0].node is node
+        assert doc.errors[0].text == "MISSING text"
+        assert doc.errors[0].start_point == (0, 0)
 
     def test_unknown_valid_node_returns_element(self) -> None:
         """An unknown but syntactically valid node returns a plain Element."""
@@ -234,3 +260,73 @@ class TestElementFromErrorOrUnknown:
         result = element_from_error_or_unknown(node, parent=fake_parent)
         assert isinstance(result, Paragraph)
         assert result.parent is fake_parent
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 — Document-level and Heading-level ERROR recovery
+# ---------------------------------------------------------------------------
+
+
+class TestDocumentRootErrorRecovery:
+    """ERROR nodes that are direct children of the document root node."""
+
+    def test_bare_properties_drawer_syntax_produces_error(self) -> None:
+        """':properties:\\n' parses as an ERROR at the document root."""
+        doc = _parse_source(":properties:\n")
+        assert len(doc.errors) == 1
+
+    def test_bare_properties_drawer_error_recovered_in_body(self) -> None:
+        """The recovered element from a root ERROR is added to doc.body."""
+        doc = _parse_source(":properties:\n")
+        assert len(doc.body) == 1
+        assert isinstance(doc.body[0], Paragraph)
+
+    def test_bare_properties_drawer_error_text(self) -> None:
+        """The recovered Paragraph str() matches the verbatim error text."""
+        src = ":properties:\n"
+        doc = _parse_source(src)
+        assert str(doc.body[0]) == src
+
+    def test_root_error_before_heading_both_recorded(self) -> None:
+        """Root ERROR before a valid heading: error recorded, heading kept."""
+        doc = _parse_source("<<target\n* heading\n")
+        assert len(doc.errors) >= 1
+        assert len(doc.children) == 1
+
+    def test_clean_source_still_has_no_errors(self) -> None:
+        """A valid source string continues to produce zero errors."""
+        doc = _parse_source("* heading\n\nsome text\n")
+        assert doc.errors == []
+
+
+class TestHeadingChildErrorRecovery:
+    """ERROR nodes that are direct children of a heading node."""
+
+    def test_incomplete_properties_under_heading_produces_error(self) -> None:
+        """'* test\\n:properties:\\n' records an error on the document."""
+        doc = _parse_source("* test\n:properties:\n")
+        assert len(doc.errors) == 1
+
+    def test_incomplete_properties_under_heading_error_text(self) -> None:
+        """The error text matches the verbatim ERROR node source span."""
+        doc = _parse_source("* test\n:properties:\n")
+        assert doc.errors[0].text == ":properties:\n"
+
+    def test_incomplete_properties_under_heading_recovered_in_body(self) -> None:
+        """The recovered element is appended to the heading's body."""
+        doc = _parse_source("* test\n:properties:\n")
+        heading = doc.children[0]
+        assert len(heading.body) >= 1
+        assert any(isinstance(e, Paragraph) for e in heading.body)
+
+    def test_incomplete_properties_heading_still_parsed(self) -> None:
+        """The heading itself is still built with correct title."""
+        doc = _parse_source("* test\n:properties:\n")
+        assert len(doc.children) == 1
+        heading = doc.children[0]
+        assert str(heading.title) == "test"
+
+    def test_heading_with_valid_body_has_no_errors(self) -> None:
+        """A heading with a valid properties drawer records no errors."""
+        doc = _parse_source("* test\n:PROPERTIES:\n:key: value\n:END:\n")
+        assert doc.errors == []

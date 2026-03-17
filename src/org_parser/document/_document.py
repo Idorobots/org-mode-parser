@@ -10,7 +10,11 @@ from org_parser.element import (
     Logbook,
     Properties,
 )
-from org_parser.element._element import Element, reformat_value
+from org_parser.element._element import (
+    Element,
+    element_from_error_or_unknown,
+    reformat_value,
+)
 from org_parser.element._keyword import Keyword
 
 if TYPE_CHECKING:
@@ -39,12 +43,16 @@ class ParseError:
     """A single parse error captured during semantic extraction.
 
     Attributes:
-        node: The tree-sitter ``ERROR`` or missing node.
+        start_point: ``(row, column)`` of the error node's start position.
+        end_point: ``(row, column)`` of the error node's end position.
         text: The verbatim source text span covered by the error node.
+        _node: The raw tree-sitter node (private; not part of public API).
     """
 
-    node: tree_sitter.Node
+    start_point: tuple[int, int]
+    end_point: tuple[int, int]
     text: str
+    _node: tree_sitter.Node = dataclasses.field(repr=False, compare=False)
 
 
 class Document:
@@ -174,6 +182,9 @@ class Document:
                     parent=doc,
                 )
                 doc._children.append(heading)
+            elif child.type == "ERROR" or child.is_missing:
+                elem = element_from_error_or_unknown(child, doc, parent=doc)
+                doc._body.append(elem)
 
         return doc
 
@@ -375,7 +386,14 @@ class Document:
             node: The tree-sitter ``ERROR`` or missing node to record.
         """
         text = self._source[node.start_byte : node.end_byte].decode()
-        self._errors.append(ParseError(node=node, text=text))
+        self._errors.append(
+            ParseError(
+                start_point=node.start_point,
+                end_point=node.end_point,
+                text=text,
+                _node=node,
+            )
+        )
 
     def _mark_dirty(self) -> None:
         """Mark this document as dirty."""
