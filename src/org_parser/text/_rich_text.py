@@ -9,6 +9,29 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from org_parser._node import node_text
+from org_parser._nodes import (
+    ANGLE_LINK,
+    BOLD,
+    CITATION,
+    CODE,
+    COMPLETION_COUNTER,
+    EXPORT_SNIPPET,
+    FOOTNOTE_REFERENCE,
+    INLINE_HEADERS,
+    INLINE_SOURCE_BLOCK,
+    ITALIC,
+    LINE_BREAK,
+    PARAGRAPH,
+    PLAIN_LINK,
+    PLAIN_TEXT,
+    RADIO_TARGET,
+    REGULAR_LINK,
+    STRIKE_THROUGH,
+    TARGET,
+    TIMESTAMP,
+    UNDERLINE,
+    VERBATIM,
+)
 from org_parser.text._inline import (
     AngleLink,
     Bold,
@@ -42,27 +65,6 @@ if TYPE_CHECKING:
     from org_parser.element._element import Element
 
 __all__ = ["RichText"]
-
-
-_BOLD = "bold"
-_ITALIC = "italic"
-_UNDERLINE = "underline"
-_STRIKE = "strike_through"
-_VERBATIM = "verbatim"
-_CODE = "code"
-_PLAIN_TEXT = "plain_text"
-_LINE_BREAK = "line_break"
-_EXPORT_SNIPPET = "export_snippet"
-_FOOTNOTE_REFERENCE = "footnote_reference"
-_CITATION = "citation"
-_INLINE_SOURCE_BLOCK = "inline_source_block"
-_PLAIN_LINK = "plain_link"
-_ANGLE_LINK = "angle_link"
-_REGULAR_LINK = "regular_link"
-_TARGET = "target"
-_RADIO_TARGET = "radio_target"
-_TIMESTAMP = "timestamp"
-_COMPLETION_COUNTER = "completion_counter"
 
 
 class RichText:
@@ -185,7 +187,7 @@ class RichText:
             document: The owning :class:`Document`, or *None*. Used for
                 error reporting on error/missing inline nodes.
         """
-        if node.type == "paragraph":
+        if node.type == PARAGRAPH:
             parts = _parse_inline_nodes(node.named_children, source, document)
         else:
             parts = _parse_inline_nodes([node], source, document)
@@ -293,60 +295,60 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
     node_type = node.type
     text = node_text(node, source)
 
-    if node_type == _PLAIN_TEXT:
+    if node_type == PLAIN_TEXT:
         return PlainText(text)
 
-    if node_type == _LINE_BREAK:
+    if node_type == LINE_BREAK:
         trailing = text[2:] if text.startswith("\\\\") else ""
         return LineBreak(trailing=trailing)
 
-    if node_type == _COMPLETION_COUNTER:
+    if node_type == COMPLETION_COUNTER:
         value_node = node.child_by_field_name("value")
         return CompletionCounter(node_text(value_node, source))
 
-    if node_type == _BOLD:
+    if node_type == BOLD:
         return Bold(
             body=_parse_inline_nodes(
                 node.children_by_field_name("body"), source, document
             )
         )
 
-    if node_type == _ITALIC:
+    if node_type == ITALIC:
         return Italic(
             body=_parse_inline_nodes(
                 node.children_by_field_name("body"), source, document
             ),
         )
 
-    if node_type == _UNDERLINE:
+    if node_type == UNDERLINE:
         return Underline(
             body=_parse_inline_nodes(
                 node.children_by_field_name("body"), source, document
             ),
         )
 
-    if node_type == _STRIKE:
+    if node_type == STRIKE_THROUGH:
         return StrikeThrough(
             body=_parse_inline_nodes(
                 node.children_by_field_name("body"), source, document
             ),
         )
 
-    if node_type == _VERBATIM:
+    if node_type == VERBATIM:
         body_node = node.child_by_field_name("body")
         return Verbatim(body=node_text(body_node, source))
 
-    if node_type == _CODE:
+    if node_type == CODE:
         body_node = node.child_by_field_name("body")
         return Code(body=node_text(body_node, source))
 
-    if node_type == _EXPORT_SNIPPET:
+    if node_type == EXPORT_SNIPPET:
         backend_node = node.child_by_field_name("backend")
         value_node = node.child_by_field_name("value")
         value = node_text(value_node, source) if value_node is not None else None
         return ExportSnippet(backend=node_text(backend_node, source), value=value)
 
-    if node_type == _FOOTNOTE_REFERENCE:
+    if node_type == FOOTNOTE_REFERENCE:
         label_node = node.child_by_field_name("label")
         definition_nodes = node.children_by_field_name("definition")
         definition = (
@@ -357,18 +359,18 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
         label = node_text(label_node, source) if label_node is not None else None
         return FootnoteReference(label=label, definition=definition)
 
-    if node_type == _CITATION:
+    if node_type == CITATION:
         style = _extract_citation_style(text)
         body_node = node.child_by_field_name("body")
         body = node_text(body_node, source) if body_node is not None else None
         return Citation(body=body, style=style)
 
-    if node_type == _INLINE_SOURCE_BLOCK:
+    if node_type == INLINE_SOURCE_BLOCK:
         language_node = node.child_by_field_name("language")
         headers_nodes = node.children_by_field_name("headers")
         headers = None
         for candidate in headers_nodes:
-            if candidate.type == "inline_headers":
+            if candidate.type == INLINE_HEADERS:
                 headers = node_text(candidate, source)
                 break
         body_node = node.child_by_field_name("body")
@@ -379,7 +381,7 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
             body=body,
         )
 
-    if node_type == _PLAIN_LINK:
+    if node_type == PLAIN_LINK:
         link_type_node = node.child_by_field_name("type")
         path_node = node.child_by_field_name("path")
         return PlainLink(
@@ -387,13 +389,13 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
             path=node_text(path_node, source),
         )
 
-    if node_type == _ANGLE_LINK:
+    if node_type == ANGLE_LINK:
         link_type_node = node.child_by_field_name("type")
         path_node = node.child_by_field_name("path")
         link_type = node_text(link_type_node, source) if link_type_node else None
         return AngleLink(path=node_text(path_node, source), link_type=link_type)
 
-    if node_type == _REGULAR_LINK:
+    if node_type == REGULAR_LINK:
         path_node = node.child_by_field_name("path")
         description_nodes = node.children_by_field_name("description")
         description = (
@@ -403,15 +405,15 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
         )
         return RegularLink(path=node_text(path_node, source), description=description)
 
-    if node_type == _TARGET:
+    if node_type == TARGET:
         value_node = node.child_by_field_name("value")
         return Target(value=node_text(value_node, source))
 
-    if node_type == _RADIO_TARGET:
+    if node_type == RADIO_TARGET:
         body_nodes = node.children_by_field_name("body")
         return RadioTarget(body=_parse_inline_nodes(body_nodes, source, document))
 
-    if node_type == _TIMESTAMP:
+    if node_type == TIMESTAMP:
         return Timestamp.from_node(node, source)
 
     # Any remaining node that the grammar could not parse cleanly falls back to

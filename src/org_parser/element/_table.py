@@ -9,6 +9,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from org_parser._node import node_source
+from org_parser._nodes import (
+    TABLE_CELL,
+    TABLE_ROW,
+    TABLE_RULE,
+    TABLEEL_TABLE,
+    TBLFM_LINE,
+)
 from org_parser.element._element import Element, build_semantic_repr
 from org_parser.text._rich_text import RichText
 
@@ -148,7 +155,7 @@ class Table(Element):
         """Create a :class:`Table` from an ``org_table`` or ``tableel_table`` node."""
         source = document.source if document is not None else b""
         source_text = source[node.start_byte : node.end_byte].decode()
-        if node.type == "tableel_table":
+        if node.type == TABLEEL_TABLE:
             parsed_rows = _parse_tableel_rows(source_text)
             table = cls(
                 rows=parsed_rows,
@@ -173,9 +180,9 @@ class Table(Element):
         rows: list[TableRow] = []
         formulas: list[str] = []
         for child in node.named_children:
-            if child.type == "table_row":
+            if child.type == TABLE_ROW:
                 rows.append(_parse_org_table_row(child, source, table, document))
-            elif child.type == "tblfm_line":
+            elif child.type == TBLFM_LINE:
                 formulas.append(_extract_tblfm_formula(child, source))
 
         table._rows = rows
@@ -243,13 +250,13 @@ def _parse_org_table_row(
     document: Document | None = None,
 ) -> TableRow:
     """Parse one ``table_row`` node into :class:`TableRow`."""
-    has_rule = any(child.type == "table_rule" for child in node.named_children)
+    has_rule = any(child.type == TABLE_RULE for child in node.named_children)
     if has_rule:
         return TableRow(cells=[], is_rule=True, table=table)
 
     cells: list[TableCell] = []
     for child in node.named_children:
-        if child.type != "table_cell":
+        if child.type != TABLE_CELL:
             continue
         value = RichText.from_nodes(child.named_children, source, document=document)
         rich_text = RichText("") if value is None else RichText(str(value).strip())

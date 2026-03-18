@@ -8,6 +8,27 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from org_parser._nodes import (
+    BLOCK,
+    CENTER_BLOCK,
+    CLOCK,
+    COMMENT_BLOCK,
+    DRAWER,
+    DYNAMIC_BLOCK,
+    EXAMPLE_BLOCK,
+    EXPORT_BLOCK,
+    FIXED_WIDTH,
+    LIST_ITEM,
+    LOGBOOK_DRAWER,
+    ORG_TABLE,
+    PARAGRAPH,
+    PROPERTY_DRAWER,
+    QUOTE_BLOCK,
+    SPECIAL_BLOCK,
+    SRC_BLOCK,
+    TABLEEL_TABLE,
+    VERSE_BLOCK,
+)
 from org_parser.element import (
     CenterBlock,
     CommentBlock,
@@ -48,27 +69,6 @@ __all__ = [
     "merge_logbook_drawers",
     "merge_properties_drawers",
 ]
-
-# Node type constants — kept local to avoid re-exporting grammar internals.
-_PARAGRAPH = "paragraph"
-_ORG_TABLE = "org_table"
-_TABLEEL_TABLE = "tableel_table"
-_CLOCK = "clock"
-_DRAWER = "drawer"
-_LOGBOOK_DRAWER = "logbook_drawer"
-_PROPERTY_DRAWER = "property_drawer"
-_CENTER_BLOCK = "center_block"
-_QUOTE_BLOCK = "quote_block"
-_SPECIAL_BLOCK = "special_block"
-_DYNAMIC_BLOCK = "dynamic_block"
-_COMMENT_BLOCK = "comment_block"
-_EXAMPLE_BLOCK = "example_block"
-_EXPORT_BLOCK = "export_block"
-_SRC_BLOCK = "src_block"
-_VERSE_BLOCK = "verse_block"
-_FIXED_WIDTH = "fixed_width"
-_LIST_ITEM = "list_item"
-_BLOCK = "block"
 
 
 def merge_properties_drawers(
@@ -148,25 +148,25 @@ def extract_body_element(
         error nodes.
     """
     dispatch: dict[str, Callable[..., Element]] = {
-        _PARAGRAPH: Paragraph.from_node,
-        _ORG_TABLE: Table.from_node,
-        _TABLEEL_TABLE: Table.from_node,
-        _CLOCK: Clock.from_node,
-        _DRAWER: Drawer.from_node,
-        _LOGBOOK_DRAWER: Logbook.from_node,
-        _PROPERTY_DRAWER: Properties.from_node,
-        _CENTER_BLOCK: CenterBlock.from_node,
-        _QUOTE_BLOCK: QuoteBlock.from_node,
-        _SPECIAL_BLOCK: SpecialBlock.from_node,
-        _DYNAMIC_BLOCK: DynamicBlock.from_node,
-        _COMMENT_BLOCK: CommentBlock.from_node,
-        _EXAMPLE_BLOCK: ExampleBlock.from_node,
-        _EXPORT_BLOCK: ExportBlock.from_node,
-        _SRC_BLOCK: SourceBlock.from_node,
-        _VERSE_BLOCK: VerseBlock.from_node,
-        _FIXED_WIDTH: FixedWidthBlock.from_node,
-        _LIST_ITEM: ListItem.from_node,
-        _BLOCK: extract_indent_block,
+        PARAGRAPH: Paragraph.from_node,
+        ORG_TABLE: Table.from_node,
+        TABLEEL_TABLE: Table.from_node,
+        CLOCK: Clock.from_node,
+        DRAWER: Drawer.from_node,
+        LOGBOOK_DRAWER: Logbook.from_node,
+        PROPERTY_DRAWER: Properties.from_node,
+        CENTER_BLOCK: CenterBlock.from_node,
+        QUOTE_BLOCK: QuoteBlock.from_node,
+        SPECIAL_BLOCK: SpecialBlock.from_node,
+        DYNAMIC_BLOCK: DynamicBlock.from_node,
+        COMMENT_BLOCK: CommentBlock.from_node,
+        EXAMPLE_BLOCK: ExampleBlock.from_node,
+        EXPORT_BLOCK: ExportBlock.from_node,
+        SRC_BLOCK: SourceBlock.from_node,
+        VERSE_BLOCK: VerseBlock.from_node,
+        FIXED_WIDTH: FixedWidthBlock.from_node,
+        LIST_ITEM: ListItem.from_node,
+        BLOCK: extract_indent_block,
     }
     factory = dispatch.get(node.type)
     if factory is None:

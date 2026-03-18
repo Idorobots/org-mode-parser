@@ -4,6 +4,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from org_parser._nodes import (
+    CLOSED,
+    COMPLETION_COUNTER,
+    DEADLINE,
+    DRAWER,
+    HEADING,
+    LOGBOOK_DRAWER,
+    PLANNING,
+    PLANNING_KEYWORD,
+    PROPERTY_DRAWER,
+    SCHEDULED,
+    TAG,
+    TIMESTAMP,
+)
 from org_parser.document._body import (
     extract_body_element,
     merge_logbook_drawers,
@@ -33,20 +47,6 @@ if TYPE_CHECKING:
     from org_parser.document._document import Document
 
 __all__ = ["Heading"]
-
-# Node type names produced by the tree-sitter grammar.
-_HEADING = "heading"
-_COMPLETION_COUNTER = "completion_counter"
-_TAG = "tag"
-_PLANNING = "planning"
-_PLANNING_KEYWORD = "planning_keyword"
-_TIMESTAMP = "timestamp"
-_SCHEDULED = "SCHEDULED"
-_DEADLINE = "DEADLINE"
-_CLOSED = "CLOSED"
-_DRAWER = "drawer"
-_LOGBOOK_DRAWER = "logbook_drawer"
-_PROPERTY_DRAWER = "property_drawer"
 
 
 class Heading:
@@ -183,7 +183,7 @@ class Heading:
 
         # Recursively build sub-headings.
         for child in node.children:
-            if child.type == _HEADING:
+            if child.type == HEADING:
                 sub = cls.from_node(
                     child,
                     document=document,
@@ -286,7 +286,7 @@ class Heading:
     @scheduled.setter
     def scheduled(self, value: Timestamp | None) -> None:
         """Set the ``SCHEDULED`` planning timestamp and mark dirty."""
-        self._set_planning_timestamp(_SCHEDULED, value)
+        self._set_planning_timestamp(SCHEDULED, value)
 
     @property
     def closed(self) -> Timestamp | None:
@@ -296,7 +296,7 @@ class Heading:
     @closed.setter
     def closed(self, value: Timestamp | None) -> None:
         """Set the ``CLOSED`` planning timestamp and mark dirty."""
-        self._set_planning_timestamp(_CLOSED, value)
+        self._set_planning_timestamp(CLOSED, value)
 
     @property
     def deadline(self) -> Timestamp | None:
@@ -306,7 +306,7 @@ class Heading:
     @deadline.setter
     def deadline(self, value: Timestamp | None) -> None:
         """Set the ``DEADLINE`` planning timestamp and mark dirty."""
-        self._set_planning_timestamp(_DEADLINE, value)
+        self._set_planning_timestamp(DEADLINE, value)
 
     @property
     def body(self) -> list[Element]:
@@ -457,11 +457,11 @@ class Heading:
         value: Timestamp | None,
     ) -> None:
         """Set one planning timestamp field and mark this heading as dirty."""
-        if planning_keyword == _SCHEDULED:
+        if planning_keyword == SCHEDULED:
             self._scheduled = value
-        elif planning_keyword == _DEADLINE:
+        elif planning_keyword == DEADLINE:
             self._deadline = value
-        elif planning_keyword == _CLOSED:
+        elif planning_keyword == CLOSED:
             self._closed = value
         else:
             raise ValueError(f"Unknown planning keyword: {planning_keyword!r}")
@@ -563,7 +563,7 @@ def _extract_counter(
     The completion counter node stores its value in the ``value`` field.
     """
     for n in title_nodes:
-        if n.type == _COMPLETION_COUNTER:
+        if n.type == COMPLETION_COUNTER:
             value_node = n.child_by_field_name("value")
             if value_node is None or value_node.text is None:
                 continue  # pragma: no cover - defensive
@@ -582,7 +582,7 @@ def _extract_tags(node: tree_sitter.Node) -> list[str]:
     return [
         child.text.decode()
         for child in tags_node.named_children
-        if child.type == _TAG and child.text is not None
+        if child.type == TAG and child.text is not None
     ]
 
 
@@ -611,13 +611,13 @@ def _extract_body(
         )
 
     for child in section_node.named_children:
-        if child.type == _PROPERTY_DRAWER:
+        if child.type == PROPERTY_DRAWER:
             properties_drawers.append(
                 Properties.from_node(child, document, parent=parent)
             )
-        elif child.type == _LOGBOOK_DRAWER:
+        elif child.type == LOGBOOK_DRAWER:
             logbook_drawers.append(Logbook.from_node(child, document, parent=parent))
-        elif child.type == _DRAWER:
+        elif child.type == DRAWER:
             drawer = Drawer.from_node(child, document, parent=parent)
             drawer_name = drawer.name.upper()
             if drawer_name == "PROPERTIES":
@@ -642,7 +642,7 @@ def _extract_planning(
 ) -> tuple[Timestamp | None, Timestamp | None, Timestamp | None]:
     """Return ``(scheduled, deadline, closed)`` planning timestamps."""
     planning_node = node.child_by_field_name("planning")
-    if planning_node is None or planning_node.type != _PLANNING:
+    if planning_node is None or planning_node.type != PLANNING:
         return None, None, None
 
     scheduled: Timestamp | None = None
@@ -651,18 +651,18 @@ def _extract_planning(
     current_keyword: str | None = None
 
     for child in planning_node.named_children:
-        if child.type == _PLANNING_KEYWORD:
+        if child.type == PLANNING_KEYWORD:
             current_keyword = source[child.start_byte : child.end_byte].decode().upper()
             continue
-        if child.type != _TIMESTAMP or current_keyword is None:
+        if child.type != TIMESTAMP or current_keyword is None:
             continue
 
         timestamp = Timestamp.from_node(child, source)
-        if current_keyword == _SCHEDULED:
+        if current_keyword == SCHEDULED:
             scheduled = timestamp
-        elif current_keyword == _DEADLINE:
+        elif current_keyword == DEADLINE:
             deadline = timestamp
-        elif current_keyword == _CLOSED:
+        elif current_keyword == CLOSED:
             closed = timestamp
 
     return scheduled, deadline, closed
@@ -671,7 +671,7 @@ def _extract_planning(
 def _find_first_subheading(node: tree_sitter.Node) -> tree_sitter.Node | None:
     """Return the first direct sub-heading node, if present."""
     for child in node.children:
-        if child.type == _HEADING:
+        if child.type == HEADING:
             return child
     return None
 

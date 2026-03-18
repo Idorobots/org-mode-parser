@@ -7,6 +7,10 @@ import re
 from typing import TYPE_CHECKING
 
 from org_parser._node import node_source, node_text
+from org_parser._nodes import (
+    LIST_ITEM,
+    TIMESTAMP,
+)
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
@@ -420,7 +424,7 @@ class List(Element):
         items = [
             ListItem.from_node(child, document)
             for child in node.named_children
-            if child.type == "list_item"
+            if child.type == LIST_ITEM
         ]
         parsed = cls(items=items, parent=parent)
         parsed._node = node
@@ -652,7 +656,7 @@ def _parse_timestamp_text(raw: str) -> Timestamp:
 
 def _find_first_timestamp_node(node: tree_sitter.Node) -> tree_sitter.Node | None:
     """Return first ``timestamp`` descendant node in source order."""
-    if node.type == "timestamp":
+    if node.type == TIMESTAMP:
         return node
     for child in node.named_children:
         matched = _find_first_timestamp_node(child)

@@ -5,6 +5,28 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from org_parser._node import node_source, node_text
+from org_parser._nodes import (
+    BLOCK,
+    CENTER_BLOCK,
+    CLOCK,
+    COMMENT_BLOCK,
+    DRAWER,
+    DYNAMIC_BLOCK,
+    EXAMPLE_BLOCK,
+    EXPORT_BLOCK,
+    FIXED_WIDTH,
+    LIST_ITEM,
+    LOGBOOK_DRAWER,
+    ORG_TABLE,
+    PARAGRAPH,
+    PROPERTY_DRAWER,
+    QUOTE_BLOCK,
+    SPECIAL_BLOCK,
+    SPECIAL_KEYWORD,
+    SRC_BLOCK,
+    TABLEEL_TABLE,
+    VERSE_BLOCK,
+)
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
@@ -719,29 +741,29 @@ def _extract_nested_element(
     from org_parser.element._table import Table
     from org_parser.time import Clock
 
-    if node.type == "block":
+    if node.type == BLOCK:
         return _extract_indent_block(node, document)
 
     dispatch: dict[str, Callable[..., Element]] = {
-        "paragraph": Paragraph.from_node,
-        "org_table": Table.from_node,
-        "tableel_table": Table.from_node,
-        "clock": Clock.from_node,
-        "drawer": Drawer.from_node,
-        "logbook_drawer": Logbook.from_node,
-        "property_drawer": Properties.from_node,
-        "special_keyword": Keyword.from_node,
-        "center_block": CenterBlock.from_node,
-        "quote_block": QuoteBlock.from_node,
-        "special_block": SpecialBlock.from_node,
-        "dynamic_block": DynamicBlock.from_node,
-        "comment_block": CommentBlock.from_node,
-        "example_block": ExampleBlock.from_node,
-        "export_block": ExportBlock.from_node,
-        "src_block": SourceBlock.from_node,
-        "verse_block": VerseBlock.from_node,
-        "fixed_width": FixedWidthBlock.from_node,
-        "list_item": ListItem.from_node,
+        PARAGRAPH: Paragraph.from_node,
+        ORG_TABLE: Table.from_node,
+        TABLEEL_TABLE: Table.from_node,
+        CLOCK: Clock.from_node,
+        DRAWER: Drawer.from_node,
+        LOGBOOK_DRAWER: Logbook.from_node,
+        PROPERTY_DRAWER: Properties.from_node,
+        SPECIAL_KEYWORD: Keyword.from_node,
+        CENTER_BLOCK: CenterBlock.from_node,
+        QUOTE_BLOCK: QuoteBlock.from_node,
+        SPECIAL_BLOCK: SpecialBlock.from_node,
+        DYNAMIC_BLOCK: DynamicBlock.from_node,
+        COMMENT_BLOCK: CommentBlock.from_node,
+        EXAMPLE_BLOCK: ExampleBlock.from_node,
+        EXPORT_BLOCK: ExportBlock.from_node,
+        SRC_BLOCK: SourceBlock.from_node,
+        VERSE_BLOCK: VerseBlock.from_node,
+        FIXED_WIDTH: FixedWidthBlock.from_node,
+        LIST_ITEM: ListItem.from_node,
     }
     factory = dispatch.get(node.type)
     if factory is None:

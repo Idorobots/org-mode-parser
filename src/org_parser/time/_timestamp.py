@@ -11,6 +11,14 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from org_parser._node import node_text
+from org_parser._nodes import (
+    TIMESTAMP,
+    TS_DAY,
+    TS_DAYNAME,
+    TS_MONTH,
+    TS_TIME,
+    TS_YEAR,
+)
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -61,11 +69,11 @@ class Timestamp:
         raw = _extract_raw_timestamp_text(node, source)
         is_active = raw.startswith("<")
 
-        year_nodes = list(_descendants_by_type(node, "ts_year"))
-        month_nodes = list(_descendants_by_type(node, "ts_month"))
-        day_nodes = list(_descendants_by_type(node, "ts_day"))
-        dayname_nodes = list(_descendants_by_type(node, "ts_dayname"))
-        time_nodes = list(_descendants_by_type(node, "ts_time"))
+        year_nodes = list(_descendants_by_type(node, TS_YEAR))
+        month_nodes = list(_descendants_by_type(node, TS_MONTH))
+        day_nodes = list(_descendants_by_type(node, TS_DAY))
+        dayname_nodes = list(_descendants_by_type(node, TS_DAYNAME))
+        time_nodes = list(_descendants_by_type(node, TS_TIME))
 
         start_year = int(node_text(year_nodes[0], source))
         start_month = int(node_text(month_nodes[0], source))
@@ -166,7 +174,7 @@ class Timestamp:
 
 def _extract_raw_timestamp_text(node: tree_sitter.Node, source: bytes) -> str:
     """Return timestamp text slice for one timestamp-like parser node."""
-    if node.type == "timestamp":
+    if node.type == TIMESTAMP:
         return source[node.start_byte : node.end_byte].decode()
 
     value_nodes = node.children_by_field_name("value")

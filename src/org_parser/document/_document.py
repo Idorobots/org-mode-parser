@@ -5,6 +5,19 @@ from __future__ import annotations
 import dataclasses
 from typing import TYPE_CHECKING
 
+from org_parser._nodes import (
+    AUTHOR,
+    CATEGORY,
+    DESCRIPTION,
+    DRAWER,
+    HEADING,
+    LOGBOOK_DRAWER,
+    PROPERTY_DRAWER,
+    SPECIAL_KEYWORD,
+    TITLE,
+    TODO,
+    ZEROTH_SECTION,
+)
 from org_parser.element import (
     Drawer,
     Logbook,
@@ -25,19 +38,6 @@ if TYPE_CHECKING:
     from org_parser.document._heading import Heading
 
 __all__ = ["Document", "ParseError"]
-
-# Node type names produced by the tree-sitter grammar.
-_ZEROTH_SECTION = "zeroth_section"
-_HEADING = "heading"
-_SPECIAL_KEYWORD = "special_keyword"
-_PROPERTY_DRAWER = "property_drawer"
-_LOGBOOK_DRAWER = "logbook_drawer"
-_DRAWER = "drawer"
-_TITLE = "TITLE"
-_AUTHOR = "AUTHOR"
-_CATEGORY = "CATEGORY"
-_DESCRIPTION = "DESCRIPTION"
-_TODO = "TODO"
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -152,11 +152,11 @@ class Document:
 
         # --- extract zeroth-section data ------------------------------------
         all_kw, properties, logbook, body = _parse_zeroth_section(root, parent=doc)
-        doc._title = all_kw.get(_TITLE)
-        doc._author = all_kw.get(_AUTHOR)
-        doc._category = all_kw.get(_CATEGORY)
-        doc._description = all_kw.get(_DESCRIPTION)
-        doc._todo = all_kw.get(_TODO)
+        doc._title = all_kw.get(TITLE)
+        doc._author = all_kw.get(AUTHOR)
+        doc._category = all_kw.get(CATEGORY)
+        doc._description = all_kw.get(DESCRIPTION)
+        doc._todo = all_kw.get(TODO)
         doc._keywords = all_kw
         doc._properties = properties
         doc._logbook = logbook
@@ -169,7 +169,7 @@ class Document:
 
         # --- build top-level headings ---------------------------------------
         for child in root.children:
-            if child.type == _HEADING:
+            if child.type == HEADING:
                 heading = Heading.from_node(
                     child,
                     document=doc,
@@ -204,7 +204,7 @@ class Document:
     def title(self, value: Keyword | None) -> None:
         """Set the ``#+TITLE:`` value and mark the document as dirty."""
         self._title = value
-        self._update_dedicated_keyword_entry(_TITLE, value)
+        self._update_dedicated_keyword_entry(TITLE, value)
 
     @property
     def author(self) -> Keyword | None:
@@ -215,7 +215,7 @@ class Document:
     def author(self, value: Keyword | None) -> None:
         """Set the ``#+AUTHOR:`` value and mark the document as dirty."""
         self._author = value
-        self._update_dedicated_keyword_entry(_AUTHOR, value)
+        self._update_dedicated_keyword_entry(AUTHOR, value)
 
     @property
     def category(self) -> Keyword | None:
@@ -226,7 +226,7 @@ class Document:
     def category(self, value: Keyword | None) -> None:
         """Set the ``#+CATEGORY:`` value and mark the document as dirty."""
         self._category = value
-        self._update_dedicated_keyword_entry(_CATEGORY, value)
+        self._update_dedicated_keyword_entry(CATEGORY, value)
 
     @property
     def description(self) -> Keyword | None:
@@ -237,7 +237,7 @@ class Document:
     def description(self, value: Keyword | None) -> None:
         """Set the ``#+DESCRIPTION:`` value and mark the document as dirty."""
         self._description = value
-        self._update_dedicated_keyword_entry(_DESCRIPTION, value)
+        self._update_dedicated_keyword_entry(DESCRIPTION, value)
 
     @property
     def todo(self) -> Keyword | None:
@@ -248,7 +248,7 @@ class Document:
     def todo(self, value: Keyword | None) -> None:
         """Set the ``#+TODO:`` value and mark the document as dirty."""
         self._todo = value
-        self._update_dedicated_keyword_entry(_TODO, value)
+        self._update_dedicated_keyword_entry(TODO, value)
 
     @property
     def keywords(self) -> dict[str, Keyword]:
@@ -259,11 +259,11 @@ class Document:
     def keywords(self, value: dict[str, Keyword]) -> None:
         """Set non-dedicated keywords and mark the document as dirty."""
         self._keywords = value
-        self._title = self._keywords.get(_TITLE)
-        self._author = self._keywords.get(_AUTHOR)
-        self._category = self._keywords.get(_CATEGORY)
-        self._description = self._keywords.get(_DESCRIPTION)
-        self._todo = self._keywords.get(_TODO)
+        self._title = self._keywords.get(TITLE)
+        self._author = self._keywords.get(AUTHOR)
+        self._category = self._keywords.get(CATEGORY)
+        self._description = self._keywords.get(DESCRIPTION)
+        self._todo = self._keywords.get(TODO)
         self._adopt_dedicated_keywords()
         self._adopt_keywords(self._keywords)
         self._mark_dirty()
@@ -429,29 +429,29 @@ class Document:
     def _sync_keywords_with_dedicated(self) -> None:
         """Ensure dedicated keyword properties and map stay aligned."""
         if self._title is None:
-            self._title = self._keywords.get(_TITLE)
+            self._title = self._keywords.get(TITLE)
         else:
-            self._keywords[_TITLE] = self._title
+            self._keywords[TITLE] = self._title
 
         if self._author is None:
-            self._author = self._keywords.get(_AUTHOR)
+            self._author = self._keywords.get(AUTHOR)
         else:
-            self._keywords[_AUTHOR] = self._author
+            self._keywords[AUTHOR] = self._author
 
         if self._category is None:
-            self._category = self._keywords.get(_CATEGORY)
+            self._category = self._keywords.get(CATEGORY)
         else:
-            self._keywords[_CATEGORY] = self._category
+            self._keywords[CATEGORY] = self._category
 
         if self._description is None:
-            self._description = self._keywords.get(_DESCRIPTION)
+            self._description = self._keywords.get(DESCRIPTION)
         else:
-            self._keywords[_DESCRIPTION] = self._description
+            self._keywords[DESCRIPTION] = self._description
 
         if self._todo is None:
-            self._todo = self._keywords.get(_TODO)
+            self._todo = self._keywords.get(TODO)
         else:
-            self._keywords[_TODO] = self._todo
+            self._keywords[TODO] = self._todo
 
     def _adopt_elements(
         self,
@@ -472,7 +472,7 @@ class Document:
         falls back to a reconstructed representation from semantic fields.
         """
         if not self._dirty and self._node is not None:
-            zeroth = _find_first_child_by_type(self._node, _ZEROTH_SECTION)
+            zeroth = _find_first_child_by_type(self._node, ZEROTH_SECTION)
             if zeroth is None:
                 return ""
             return self._source[zeroth.start_byte : zeroth.end_byte].decode()
@@ -536,18 +536,18 @@ def _parse_zeroth_section(
     body: list[Element] = []
 
     for child in root.children:
-        if child.type == _ZEROTH_SECTION:
+        if child.type == ZEROTH_SECTION:
             for sc in child.named_children:
-                if sc.type == _SPECIAL_KEYWORD:
+                if sc.type == SPECIAL_KEYWORD:
                     key, keyword = _extract_keyword(sc, parent=parent)
                     keywords[key] = keyword
-                elif sc.type == _PROPERTY_DRAWER:
+                elif sc.type == PROPERTY_DRAWER:
                     property_drawers.append(
                         Properties.from_node(sc, parent, parent=parent)
                     )
-                elif sc.type == _LOGBOOK_DRAWER:
+                elif sc.type == LOGBOOK_DRAWER:
                     logbook_drawers.append(Logbook.from_node(sc, parent, parent=parent))
-                elif sc.type == _DRAWER:
+                elif sc.type == DRAWER:
                     drawer = Drawer.from_node(sc, parent, parent=parent)
                     drawer_name = drawer.name.upper()
                     if drawer_name == "PROPERTIES":
@@ -610,7 +610,7 @@ def _render_document_dirty(document: Document) -> str:
     parts.extend(
         str(keyword)
         for key, keyword in document.keywords.items()
-        if key not in {_TITLE, _AUTHOR, _CATEGORY, _DESCRIPTION, _TODO}
+        if key not in {TITLE, AUTHOR, CATEGORY, DESCRIPTION, TODO}
     )
 
     if document.properties is not None:
