@@ -10,21 +10,20 @@ from org_parser._node import node_source, node_text
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
-    element_from_error_or_unknown,
     ensure_trailing_newline,
 )
 from org_parser.text._rich_text import RichText
 from org_parser.time import Timestamp
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Sequence
 
     import tree_sitter
 
     from org_parser.document._document import Document
     from org_parser.document._heading import Heading
 
-__all__ = ["List", "ListItem", "ListItemContinuation", "Repeat"]
+__all__ = ["List", "ListItem", "Repeat"]
 
 
 _REPEAT_PATTERN = re.compile(
@@ -33,69 +32,6 @@ _REPEAT_PATTERN = re.compile(
     r"(?:\s*(?P<line_break>\\\\)?(?:\n(?P<note_line>.*))?)?$",
     re.DOTALL,
 )
-
-
-class ListItemContinuation(Element):
-    """Indented continuation line that belongs to one list item."""
-
-    def __init__(
-        self,
-        *,
-        content: RichText,
-        line_prefix: str = "",
-        parent: Document | Heading | Element | None = None,
-    ) -> None:
-        super().__init__(parent=parent)
-        self._line_prefix = line_prefix
-        self._content = content
-        self._content.set_parent(self, mark_dirty=False)
-
-    @classmethod
-    def from_node(
-        cls,
-        node: tree_sitter.Node,
-        document: Document | None = None,
-        *,
-        parent: Document | Heading | Element | None = None,
-    ) -> ListItemContinuation:
-        """Create a continuation line from one ``item_continuation_line`` node."""
-        source = document.source if document is not None else b""
-        source_text = node_source(node, document)
-        content_nodes = node.children_by_field_name("content")
-        parsed = RichText.from_nodes(content_nodes, source, document=document)
-        continuation = cls(
-            content=RichText("") if parsed is None else parsed,
-            line_prefix=_extract_leading_indent(source_text),
-            parent=parent,
-        )
-        continuation._node = node
-        continuation._document = document
-        return continuation
-
-    @property
-    def content(self) -> RichText:
-        """Mutable continuation rich-text content."""
-        return self._content
-
-    @content.setter
-    def content(self, value: RichText) -> None:
-        """Set continuation content and mark continuation as dirty."""
-        self._content = value
-        self._content.set_parent(self, mark_dirty=False)
-        self._mark_dirty()
-
-    def __str__(self) -> str:
-        """Render continuation line text."""
-        if not self.dirty and self._node is not None and self._document is not None:
-            return node_source(self._node, self._document)
-        return f"{self._line_prefix}{self._content}\n"
-
-    def __repr__(self) -> str:
-        """Return a tree-oriented representation for debugging."""
-        return build_semantic_repr(
-            "ListItemContinuation",
-            content=self._content,
-        )
 
 
 class ListItem(Element):
@@ -148,10 +84,7 @@ class ListItem(Element):
             checkbox=_extract_checkbox(node, source),
             item_tag=_extract_item_tag(node, source, document),
             first_line=_extract_first_line(node, source, document),
-            body=[
-                _extract_list_item_body_element(child, document)
-                for child in node.children_by_field_name("body")
-            ],
+            body=[],
             line_prefix=_extract_leading_indent(source_text),
             parent=parent,
         )
@@ -563,47 +496,6 @@ class List(Element):
     def __repr__(self) -> str:
         """Return a tree-oriented representation for debugging."""
         return build_semantic_repr("List", items=self._items)
-
-
-def _extract_list_item_body_element(
-    node: tree_sitter.Node,
-    document: Document | None = None,
-) -> Element:
-    """Build one semantic element for a list item's body child node."""
-    from org_parser.element._block import (
-        CenterBlock,
-        CommentBlock,
-        DynamicBlock,
-        ExampleBlock,
-        ExportBlock,
-        FixedWidthBlock,
-        QuoteBlock,
-        SourceBlock,
-        SpecialBlock,
-        VerseBlock,
-    )
-    from org_parser.element._drawer import Drawer, Logbook, Properties
-
-    dispatch: dict[str, Callable[..., Element]] = {
-        "item_continuation_line": ListItemContinuation.from_node,
-        "drawer": Drawer.from_node,
-        "logbook_drawer": Logbook.from_node,
-        "property_drawer": Properties.from_node,
-        "fixed_width": FixedWidthBlock.from_node,
-        "center_block": CenterBlock.from_node,
-        "quote_block": QuoteBlock.from_node,
-        "special_block": SpecialBlock.from_node,
-        "dynamic_block": DynamicBlock.from_node,
-        "comment_block": CommentBlock.from_node,
-        "example_block": ExampleBlock.from_node,
-        "export_block": ExportBlock.from_node,
-        "src_block": SourceBlock.from_node,
-        "verse_block": VerseBlock.from_node,
-    }
-    factory = dispatch.get(node.type)
-    if factory is None:
-        return element_from_error_or_unknown(node, document)
-    return factory(node, document)
 
 
 def _extract_optional_field_text(

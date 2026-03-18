@@ -5,9 +5,9 @@ corresponding to Org Mode *elements* — the structural building blocks of an
 org document such as paragraphs, plain lists, source blocks, drawers, and
 planning entries.
 
-The primary public type is :class:`Element`, a stub that preserves the node
-type and verbatim source text.  Per-element semantics will be added in
-subsequent iterations.
+The primary base type is :class:`Element`.  Concrete subclasses cover all
+known Org element node types; unknown or error nodes fall back to the bare
+:class:`Element`.
 """
 
 from org_parser.element._block import (
@@ -25,7 +25,7 @@ from org_parser.element._block import (
 from org_parser.element._drawer import Drawer, Logbook, Properties
 from org_parser.element._element import Element
 from org_parser.element._keyword import Keyword
-from org_parser.element._list import List, ListItem, ListItemContinuation, Repeat
+from org_parser.element._list import List, ListItem, Repeat
 from org_parser.element._paragraph import Paragraph
 from org_parser.element._table import Table, TableCell, TableRow
 
@@ -41,7 +41,6 @@ __all__ = [
     "Keyword",
     "List",
     "ListItem",
-    "ListItemContinuation",
     "Logbook",
     "Paragraph",
     "Properties",
