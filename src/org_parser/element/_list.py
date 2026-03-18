@@ -472,8 +472,7 @@ class List(Element):
         parent = self._parent
         if parent is None:
             return
-        if not parent.dirty:
-            parent.mark_dirty()
+        parent.mark_dirty()
 
     def __str__(self) -> str:
         """Render list text preserving source while clean and parse-backed."""

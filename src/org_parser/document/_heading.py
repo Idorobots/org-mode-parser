@@ -202,10 +202,8 @@ class Heading:
         """Set the owning document and mark this heading as dirty."""
         self._document = value
         self._dirty = True
-        if not self._parent.dirty:
-            self._parent.mark_dirty()
-        if not value.dirty:
-            value.mark_dirty()
+        self._parent.mark_dirty()
+        value.mark_dirty()
 
     @property
     def level(self) -> int:
@@ -400,8 +398,7 @@ class Heading:
         if self._dirty:
             return
         self._dirty = True
-        if not self._parent.dirty:
-            self._parent.mark_dirty()
+        self._parent.mark_dirty()
 
     def mark_dirty(self) -> None:
         """Mark this heading dirty and bubble to its parent chain."""

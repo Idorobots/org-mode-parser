@@ -155,6 +155,8 @@ class Timestamp:
 
     def mark_dirty(self) -> None:
         """Mark this timestamp as dirty."""
+        if self._dirty:
+            return
         object.__setattr__(self, "_dirty", True)
 
     def reformat(self) -> None:

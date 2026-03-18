@@ -397,6 +397,8 @@ class Document:
 
     def _mark_dirty(self) -> None:
         """Mark this document as dirty."""
+        if self._dirty:
+            return
         self._dirty = True
 
     def mark_dirty(self) -> None:

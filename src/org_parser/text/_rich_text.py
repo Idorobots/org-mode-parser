@@ -134,9 +134,7 @@ class RichText:
         parent = self._parent
         if parent is None:
             return
-        dirty_parent = parent
-        if not dirty_parent.dirty:
-            dirty_parent.mark_dirty()
+        parent.mark_dirty()
 
     def mark_dirty(self) -> None:
         """Mark this rich text as dirty."""
