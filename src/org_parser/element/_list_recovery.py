@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from org_parser._node import node_source
 from org_parser.element._element import Element
 from org_parser.element._indent_block import IndentBlock
 from org_parser.element._list import List, ListItem
@@ -156,11 +157,7 @@ def _elem_source_text(element: Element) -> str:
     Returns an empty string for programmatically constructed elements that
     have no backing node or document.
     """
-    node = element._node
-    doc = element._document
-    if node is None or doc is None:
-        return ""
-    return doc.source[node.start_byte : node.end_byte].decode()
+    return node_source(element._node, element._document)
 
 
 def _indent_width(indent: str | None) -> int:

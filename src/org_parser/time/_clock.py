@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from org_parser._node import node_source
 from org_parser.element._element import Element
 from org_parser.time._timestamp import Timestamp
 
@@ -86,9 +87,7 @@ class Clock(Element):
         Dirty instances are rendered from semantic fields.
         """
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
 
         if self._timestamp is not None and self._duration is not None:
             return f"CLOCK: {self._timestamp} =>  {self._duration}\n"

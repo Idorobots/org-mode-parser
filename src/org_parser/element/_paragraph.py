@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from org_parser.element._element import Element, build_semantic_repr
+from org_parser.element._element import Element, build_semantic_repr, node_source
 from org_parser.text._rich_text import RichText
 
 if TYPE_CHECKING:
@@ -93,9 +93,7 @@ class Paragraph(Element):
         Dirty instances are rendered from semantic body text.
         """
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
         return str(self._body)
 
     def __repr__(self) -> str:

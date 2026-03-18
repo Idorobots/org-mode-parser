@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from org_parser._node import node_text
+
 if TYPE_CHECKING:
     import tree_sitter
 
@@ -65,17 +67,17 @@ class Timestamp:
         dayname_nodes = list(_descendants_by_type(node, "ts_dayname"))
         time_nodes = list(_descendants_by_type(node, "ts_time"))
 
-        start_year = int(_node_text(year_nodes[0], source))
-        start_month = int(_node_text(month_nodes[0], source))
-        start_day = int(_node_text(day_nodes[0], source))
+        start_year = int(node_text(year_nodes[0], source))
+        start_month = int(node_text(month_nodes[0], source))
+        start_day = int(node_text(day_nodes[0], source))
         start_dayname = (
-            _node_text(dayname_nodes[0], source) if len(dayname_nodes) >= 1 else None
+            node_text(dayname_nodes[0], source) if len(dayname_nodes) >= 1 else None
         )
 
         start_hour, start_minute = (None, None)
         if len(time_nodes) >= 1:
             start_hour, start_minute = _parse_time_components(
-                _node_text(time_nodes[0], source)
+                node_text(time_nodes[0], source)
             )
 
         end_year: int | None = None
@@ -89,11 +91,11 @@ class Timestamp:
         is_same_day_time_range = "--" not in raw and len(time_nodes) >= 2
 
         if is_explicit_range:
-            end_year = int(_node_text(year_nodes[1], source))
-            end_month = int(_node_text(month_nodes[1], source))
-            end_day = int(_node_text(day_nodes[1], source))
+            end_year = int(node_text(year_nodes[1], source))
+            end_month = int(node_text(month_nodes[1], source))
+            end_day = int(node_text(day_nodes[1], source))
             if len(dayname_nodes) >= 2:
-                end_dayname = _node_text(dayname_nodes[1], source)
+                end_dayname = node_text(dayname_nodes[1], source)
         elif is_same_day_time_range:
             end_year = start_year
             end_month = start_month
@@ -102,7 +104,7 @@ class Timestamp:
 
         if end_year is not None and len(time_nodes) >= 2:
             end_hour, end_minute = _parse_time_components(
-                _node_text(time_nodes[1], source)
+                node_text(time_nodes[1], source)
             )
 
         return cls(
@@ -184,11 +186,6 @@ def _descendants_by_type(
             matches.append(current)
         stack.extend(reversed(current.named_children))
     return matches
-
-
-def _node_text(node: tree_sitter.Node, source: bytes) -> str:
-    """Return source text covered by one node."""
-    return source[node.start_byte : node.end_byte].decode()
 
 
 def _parse_time_components(value: str) -> tuple[int, int]:

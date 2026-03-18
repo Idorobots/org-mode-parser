@@ -8,6 +8,7 @@ from org_parser.element._element import (
     Element,
     build_semantic_repr,
     ensure_trailing_newline,
+    node_source,
 )
 
 if TYPE_CHECKING:
@@ -59,9 +60,7 @@ class IndentBlock(Element):
         Dirty instances join their body elements.
         """
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
         return "".join(ensure_trailing_newline(str(element)) for element in self._body)
 
     def __repr__(self) -> str:

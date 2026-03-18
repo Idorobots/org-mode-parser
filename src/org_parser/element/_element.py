@@ -10,13 +10,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from org_parser._node import node_source
+
 if TYPE_CHECKING:
     import tree_sitter
 
     from org_parser.document._document import Document
     from org_parser.document._heading import Heading
 
-__all__ = ["Element", "reformat_value"]
+__all__ = ["Element", "node_source", "reformat_value"]
 
 _ERROR_NODE_TYPE = "ERROR"
 
@@ -215,8 +217,7 @@ def element_from_error_or_unknown(
         from org_parser.element._paragraph import Paragraph
         from org_parser.text._rich_text import RichText
 
-        source = document.source if document is not None else b""
-        text = source[node.start_byte : node.end_byte].decode()
+        text = node_source(node, document)
         paragraph = Paragraph(body=RichText(text), parent=parent)
         paragraph.attach_backing(node, document)
         return paragraph

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from org_parser._node import node_source, node_text
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
@@ -77,9 +78,7 @@ class _ContainerBlock(Element):
     def __str__(self) -> str:
         """Render block text preserving source while parse-backed and clean."""
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
         return f"{self._begin_line}\n{self._render_contents()}{self._end_line}\n"
 
     def __repr__(self) -> str:
@@ -121,9 +120,7 @@ class _TextBlock(Element):
     def __str__(self) -> str:
         """Render block text preserving source while parse-backed and clean."""
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
         content = _ensure_single_trailing_newline(self._contents)
         return f"{self._begin_line}\n{content}{self._end_line}\n"
 
@@ -164,7 +161,7 @@ class CenterBlock(_ContainerBlock):
     ) -> CenterBlock:
         """Create a :class:`CenterBlock` from a ``center_block`` node."""
         source = document.source if document is not None else b""
-        source_text = _node_text(node, source)
+        source_text = node_source(node, document)
         block = cls(
             parameters=_extract_optional_field_text(node, source, "parameters")
             or _extract_begin_parameters(source_text, "#+begin_center"),
@@ -216,7 +213,7 @@ class QuoteBlock(_ContainerBlock):
     ) -> QuoteBlock:
         """Create a :class:`QuoteBlock` from a ``quote_block`` node."""
         source = document.source if document is not None else b""
-        source_text = _node_text(node, source)
+        source_text = node_source(node, document)
         block = cls(
             parameters=_extract_optional_field_text(node, source, "parameters")
             or _extract_begin_parameters(source_text, "#+begin_quote"),
@@ -270,7 +267,7 @@ class SpecialBlock(_ContainerBlock):
     ) -> SpecialBlock:
         """Create a :class:`SpecialBlock` from a ``special_block`` node."""
         source = document.source if document is not None else b""
-        source_text = _node_text(node, source)
+        source_text = node_source(node, document)
         name = _extract_optional_field_text(node, source, "name")
         parsed_name, parsed_parameters = _extract_special_begin_data(source_text)
         block = cls(
@@ -340,7 +337,7 @@ class DynamicBlock(_ContainerBlock):
     ) -> DynamicBlock:
         """Create a :class:`DynamicBlock` from a ``dynamic_block`` node."""
         source = document.source if document is not None else b""
-        source_text = _node_text(node, source)
+        source_text = node_source(node, document)
         name = _extract_optional_field_text(node, source, "name")
         parsed_name, parsed_parameters = _extract_dynamic_begin_data(source_text)
         block = cls(
@@ -438,8 +435,7 @@ class CommentBlock(_TextBlock):
         parent: Document | Heading | Element | None = None,
     ) -> CommentBlock:
         """Create a :class:`CommentBlock` from a ``comment_block`` node."""
-        source = document.source if document is not None else b""
-        source_text = _node_text(node, source)
+        source_text = node_source(node, document)
         block = cls(
             contents=_extract_block_body_text(source_text),
             parent=parent,
@@ -477,7 +473,7 @@ class ExampleBlock(_TextBlock):
     ) -> ExampleBlock:
         """Create a :class:`ExampleBlock` from an ``example_block`` node."""
         source = document.source if document is not None else b""
-        source_text = _node_text(node, source)
+        source_text = node_source(node, document)
         block = cls(
             parameters=_extract_optional_field_text(node, source, "parameters")
             or _extract_begin_parameters(source_text, "#+begin_example"),
@@ -531,7 +527,7 @@ class ExportBlock(_TextBlock):
     ) -> ExportBlock:
         """Create a :class:`ExportBlock` from an ``export_block`` node."""
         source = document.source if document is not None else b""
-        source_text = _node_text(node, source)
+        source_text = node_source(node, document)
         backend = _extract_optional_field_text(node, source, "backend")
         parsed_backend, parsed_parameters = _extract_export_begin_data(source_text)
         block = cls(
@@ -600,7 +596,7 @@ class SourceBlock(_TextBlock):
     ) -> SourceBlock:
         """Create a :class:`SourceBlock` from a ``src_block`` node."""
         source = document.source if document is not None else b""
-        source_text = _node_text(node, source)
+        source_text = node_source(node, document)
         parsed_language, parsed_switches = _extract_source_begin_data(source_text)
         block = cls(
             language=_extract_optional_field_text(node, source, "language")
@@ -660,8 +656,7 @@ class FixedWidthBlock(Element):
         parent: Document | Heading | Element | None = None,
     ) -> FixedWidthBlock:
         """Create a :class:`FixedWidthBlock` from a ``fixed_width`` node."""
-        source = document.source if document is not None else b""
-        source_text = _node_text(node, source)
+        source_text = node_source(node, document)
         block = cls(
             contents=_extract_fixed_width_contents(source_text),
             parent=parent,
@@ -684,9 +679,7 @@ class FixedWidthBlock(Element):
     def __str__(self) -> str:
         """Render fixed-width line preserving source while parse-backed and clean."""
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
 
         lines = self._contents.splitlines()
         if not lines:
@@ -784,9 +777,7 @@ def _extract_optional_field_text(
 ) -> str | None:
     """Return text for one optional field node, if present."""
     field_node = node.child_by_field_name(field_name)
-    if field_node is None:
-        return None
-    value = _node_text(field_node, source)
+    value = node_text(field_node, source)
     return value if value != "" else None
 
 
@@ -912,11 +903,6 @@ def _render_source_begin_line(language: str | None, switches: str | None) -> str
     if switches is None:
         return f"#+begin_src {language}"
     return f"#+begin_src {language} {switches}"
-
-
-def _node_text(node: tree_sitter.Node, source: bytes) -> str:
-    """Return source text for one node."""
-    return source[node.start_byte : node.end_byte].decode()
 
 
 def _normalize_optional_text(value: str | None) -> str | None:

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from org_parser._node import node_source
 from org_parser.element._element import Element, build_semantic_repr
 from org_parser.text._rich_text import RichText
 
@@ -222,9 +223,7 @@ class Table(Element):
         are always rendered as aligned Org tables.
         """
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
         return _render_org_table(self._rows, self._formulas)
 
     def __repr__(self) -> str:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from org_parser.element._element import Element
+from org_parser.element._element import Element, node_source
 from org_parser.text._rich_text import RichText
 
 if TYPE_CHECKING:
@@ -103,9 +103,7 @@ class Keyword(Element):
         Dirty instances are rendered from semantic fields.
         """
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
         rendered_value = str(self._value)
         if rendered_value == "":
             return f"#+{self._key}:\n"

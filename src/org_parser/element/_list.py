@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import re
 from typing import TYPE_CHECKING
 
+from org_parser._node import node_source, node_text
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
@@ -59,7 +60,7 @@ class ListItemContinuation(Element):
     ) -> ListItemContinuation:
         """Create a continuation line from one ``item_continuation_line`` node."""
         source = document.source if document is not None else b""
-        source_text = source[node.start_byte : node.end_byte].decode()
+        source_text = node_source(node, document)
         content_nodes = node.children_by_field_name("content")
         parsed = RichText.from_nodes(content_nodes, source, document=document)
         continuation = cls(
@@ -86,9 +87,7 @@ class ListItemContinuation(Element):
     def __str__(self) -> str:
         """Render continuation line text."""
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
         return f"{self._line_prefix}{self._content}\n"
 
     def __repr__(self) -> str:
@@ -141,7 +140,7 @@ class ListItem(Element):
     ) -> ListItem:
         """Create one :class:`ListItem` from a ``list_item`` parse node."""
         source = document.source if document is not None else b""
-        source_text = source[node.start_byte : node.end_byte].decode()
+        source_text = node_source(node, document)
         item = cls(
             bullet=_extract_bullet(node, source),
             ordered_counter=_extract_optional_field_text(node, source, "counter"),
@@ -262,9 +261,7 @@ class ListItem(Element):
             and self._document is not None
             and not self._body
         ):
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
 
         default_indent = self._line_prefix if self._line_prefix != "" else None
         return self.render_with_indent(default_indent)
@@ -357,13 +354,7 @@ class Repeat(ListItem):
     @classmethod
     def from_list_item(cls, item: ListItem) -> Repeat | None:
         """Build a :class:`Repeat` from one list item when pattern-matched."""
-        node = item._node
-        doc = item._document
-        item_source = (
-            doc.source[node.start_byte : node.end_byte].decode()
-            if node is not None and doc is not None
-            else ""
-        )
+        item_source = node_source(item._node, item._document)
         matched = _parse_repeat_source(item_source)
         if matched is None:
             return None
@@ -431,9 +422,7 @@ class Repeat(ListItem):
     def __str__(self) -> str:
         """Render repeat entry preserving source text while clean."""
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
 
         default_indent = self._line_prefix if self._line_prefix != "" else None
         return self.render_with_indent(default_indent)
@@ -556,9 +545,7 @@ class List(Element):
     def __str__(self) -> str:
         """Render list text preserving source while clean and parse-backed."""
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
         depth = _list_depth(self)
         indent = " " * (depth * self.default_indent_step)
         return "".join(
@@ -626,9 +613,7 @@ def _extract_optional_field_text(
 ) -> str | None:
     """Return one optional field's text, or ``None`` when absent."""
     field_node = node.child_by_field_name(field_name)
-    if field_node is None:
-        return None
-    value = source[field_node.start_byte : field_node.end_byte].decode()
+    value = node_text(field_node, source)
     return value if value != "" else None
 
 
@@ -638,7 +623,7 @@ def _extract_bullet(node: tree_sitter.Node, source: bytes) -> str:
     if not bullet_nodes:
         return "-"
     bullet_node = bullet_nodes[-1]
-    return source[bullet_node.start_byte : bullet_node.end_byte].decode()
+    return node_text(bullet_node, source)
 
 
 def _extract_counter_set(node: tree_sitter.Node, source: bytes) -> str | None:
@@ -659,9 +644,7 @@ def _extract_checkbox(node: tree_sitter.Node, source: bytes) -> str | None:
     if checkbox_node is None:
         return None
     status_node = checkbox_node.child_by_field_name("status")
-    if status_node is None:
-        return None
-    return source[status_node.start_byte : status_node.end_byte].decode()
+    return node_text(status_node, source) or None
 
 
 def _extract_item_tag(

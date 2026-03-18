@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from org_parser._node import node_text
 from org_parser.text._inline import (
     AngleLink,
     Bold,
@@ -303,7 +304,7 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
             reporting when this node is an error or missing node.
     """
     node_type = node.type
-    text = _node_text(node, source)
+    text = node_text(node, source)
 
     if node_type == _PLAIN_TEXT:
         return PlainText(text)
@@ -314,7 +315,7 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
 
     if node_type == _COMPLETION_COUNTER:
         value_node = node.child_by_field_name("value")
-        return CompletionCounter(_safe_node_text(value_node, source))
+        return CompletionCounter(node_text(value_node, source))
 
     if node_type == _BOLD:
         return Bold(
@@ -346,17 +347,17 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
 
     if node_type == _VERBATIM:
         body_node = node.child_by_field_name("body")
-        return Verbatim(body=_safe_node_text(body_node, source))
+        return Verbatim(body=node_text(body_node, source))
 
     if node_type == _CODE:
         body_node = node.child_by_field_name("body")
-        return Code(body=_safe_node_text(body_node, source))
+        return Code(body=node_text(body_node, source))
 
     if node_type == _EXPORT_SNIPPET:
         backend_node = node.child_by_field_name("backend")
         value_node = node.child_by_field_name("value")
-        value = _safe_node_text(value_node, source) if value_node is not None else None
-        return ExportSnippet(backend=_safe_node_text(backend_node, source), value=value)
+        value = node_text(value_node, source) if value_node is not None else None
+        return ExportSnippet(backend=node_text(backend_node, source), value=value)
 
     if node_type == _FOOTNOTE_REFERENCE:
         label_node = node.child_by_field_name("label")
@@ -366,13 +367,13 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
             if definition_nodes
             else None
         )
-        label = _safe_node_text(label_node, source) if label_node is not None else None
+        label = node_text(label_node, source) if label_node is not None else None
         return FootnoteReference(label=label, definition=definition)
 
     if node_type == _CITATION:
         style = _extract_citation_style(text)
         body_node = node.child_by_field_name("body")
-        body = _safe_node_text(body_node, source) if body_node is not None else None
+        body = node_text(body_node, source) if body_node is not None else None
         return Citation(body=body, style=style)
 
     if node_type == _INLINE_SOURCE_BLOCK:
@@ -381,12 +382,12 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
         headers = None
         for candidate in headers_nodes:
             if candidate.type == "inline_headers":
-                headers = _node_text(candidate, source)
+                headers = node_text(candidate, source)
                 break
         body_node = node.child_by_field_name("body")
-        body = _safe_node_text(body_node, source) if body_node is not None else None
+        body = node_text(body_node, source) if body_node is not None else None
         return InlineSourceBlock(
-            language=_safe_node_text(language_node, source),
+            language=node_text(language_node, source),
             headers=headers,
             body=body,
         )
@@ -395,15 +396,15 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
         link_type_node = node.child_by_field_name("type")
         path_node = node.child_by_field_name("path")
         return PlainLink(
-            link_type=_safe_node_text(link_type_node, source),
-            path=_safe_node_text(path_node, source),
+            link_type=node_text(link_type_node, source),
+            path=node_text(path_node, source),
         )
 
     if node_type == _ANGLE_LINK:
         link_type_node = node.child_by_field_name("type")
         path_node = node.child_by_field_name("path")
-        link_type = _safe_node_text(link_type_node, source) if link_type_node else None
-        return AngleLink(path=_safe_node_text(path_node, source), link_type=link_type)
+        link_type = node_text(link_type_node, source) if link_type_node else None
+        return AngleLink(path=node_text(path_node, source), link_type=link_type)
 
     if node_type == _REGULAR_LINK:
         path_node = node.child_by_field_name("path")
@@ -413,13 +414,11 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
             if description_nodes
             else None
         )
-        return RegularLink(
-            path=_safe_node_text(path_node, source), description=description
-        )
+        return RegularLink(path=node_text(path_node, source), description=description)
 
     if node_type == _TARGET:
         value_node = node.child_by_field_name("value")
-        return Target(value=_safe_node_text(value_node, source))
+        return Target(value=node_text(value_node, source))
 
     if node_type == _RADIO_TARGET:
         body_nodes = node.children_by_field_name("body")
@@ -444,15 +443,3 @@ def _extract_citation_style(text: str) -> str | None:
     if not prefix.startswith("[cite/"):
         return None
     return prefix[len("[cite/") :]
-
-
-def _safe_node_text(node: tree_sitter.Node | None, source: bytes) -> str:
-    """Return node text or an empty string for missing nodes."""
-    if node is None:
-        return ""
-    return _node_text(node, source)
-
-
-def _node_text(node: tree_sitter.Node, source: bytes) -> str:
-    """Return source text covered by one node."""
-    return source[node.start_byte : node.end_byte].decode()

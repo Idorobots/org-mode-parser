@@ -22,6 +22,7 @@ from org_parser.element._element import (
     build_semantic_repr,
     element_from_error_or_unknown,
     ensure_trailing_newline,
+    node_source,
 )
 from org_parser.element._indent_block import IndentBlock
 from org_parser.element._list import List, ListItem, Repeat
@@ -144,9 +145,7 @@ class Drawer(Element):
     def __str__(self) -> str:
         """Render drawer text preserving source text while clean."""
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
 
         body_text = "".join(
             ensure_trailing_newline(str(element)) for element in self._body
@@ -297,14 +296,7 @@ class Properties(Element, MutableMapping[str, RichText]):
         """Create a :class:`Properties` value from a generic drawer body."""
         properties = cls()
         for element in drawer.body:
-            node = element._node
-            doc = element._document
-            raw = (
-                doc.source[node.start_byte : node.end_byte].decode()
-                if node is not None and doc is not None
-                else ""
-            )
-            line = raw.rstrip("\n")
+            line = node_source(element._node, element._document).rstrip("\n")
             if not line.startswith(":"):
                 continue
             rest = line[1:]
@@ -355,9 +347,7 @@ class Properties(Element, MutableMapping[str, RichText]):
     def __str__(self) -> str:
         """Render property drawer preserving source text while clean."""
         if not self.dirty and self._node is not None and self._document is not None:
-            return self._document.source[
-                self._node.start_byte : self._node.end_byte
-            ].decode()
+            return node_source(self._node, self._document)
 
         lines = [":PROPERTIES:\n"]
         for key, value in self._properties.items():
