@@ -5,47 +5,8 @@ from __future__ import annotations
 from collections.abc import Iterator, MutableMapping, Sequence
 from typing import TYPE_CHECKING
 
-from org_parser._nodes import (
-    BLANK_LINE,
-    BLOCK,
-    CAPTION_KEYWORD,
-    CENTER_BLOCK,
-    CLOCK,
-    COMMENT,
-    COMMENT_BLOCK,
-    DRAWER,
-    DYNAMIC_BLOCK,
-    EXAMPLE_BLOCK,
-    EXPORT_BLOCK,
-    FIXED_WIDTH,
-    HORIZONTAL_RULE,
-    LIST_ITEM,
-    LOGBOOK_DRAWER,
-    NODE_PROPERTY,
-    ORG_TABLE,
-    PARAGRAPH,
-    PLOT_KEYWORD,
-    PROPERTY_DRAWER,
-    QUOTE_BLOCK,
-    RESULTS_KEYWORD,
-    SPECIAL_BLOCK,
-    SRC_BLOCK,
-    TABLEEL_TABLE,
-    TBLNAME_KEYWORD,
-    VERSE_BLOCK,
-)
-from org_parser.element._block import (
-    CenterBlock,
-    CommentBlock,
-    DynamicBlock,
-    ExampleBlock,
-    ExportBlock,
-    FixedWidthBlock,
-    QuoteBlock,
-    SourceBlock,
-    SpecialBlock,
-    VerseBlock,
-)
+from org_parser._nodes import BLOCK, NODE_PROPERTY
+from org_parser.element._dispatch import body_element_factories
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
@@ -397,63 +358,30 @@ class Properties(Element, MutableMapping[str, RichText]):
 def _extract_drawer_body_element(
     node: tree_sitter.Node,
     document: Document | None = None,
+    *,
+    parent: Document | Heading | Element | None = None,
 ) -> Element:
     """Build one semantic element object for a drawer body child node."""
-    from org_parser.element._paragraph import Paragraph
-    from org_parser.element._table import Table
-
     if node.type == BLOCK:
-        return _extract_indent_block(node, document)
+        return _extract_indent_block(node, document, parent=parent)
 
-    from org_parser.element._keyword import (
-        CaptionKeyword,
-        PlotKeyword,
-        ResultsKeyword,
-        TblnameKeyword,
-    )
-    from org_parser.element._structure import BlankLine, Comment, HorizontalRule
-
-    dispatch: dict[str, Callable[..., Element]] = {
-        PARAGRAPH: Paragraph.from_node,
-        ORG_TABLE: Table.from_node,
-        TABLEEL_TABLE: Table.from_node,
-        CLOCK: Clock.from_node,
-        DRAWER: Drawer.from_node,
-        LOGBOOK_DRAWER: Logbook.from_node,
-        PROPERTY_DRAWER: Properties.from_node,
-        CENTER_BLOCK: CenterBlock.from_node,
-        QUOTE_BLOCK: QuoteBlock.from_node,
-        SPECIAL_BLOCK: SpecialBlock.from_node,
-        DYNAMIC_BLOCK: DynamicBlock.from_node,
-        COMMENT_BLOCK: CommentBlock.from_node,
-        EXAMPLE_BLOCK: ExampleBlock.from_node,
-        EXPORT_BLOCK: ExportBlock.from_node,
-        SRC_BLOCK: SourceBlock.from_node,
-        VERSE_BLOCK: VerseBlock.from_node,
-        FIXED_WIDTH: FixedWidthBlock.from_node,
-        LIST_ITEM: ListItem.from_node,
-        BLANK_LINE: BlankLine.from_node,
-        CAPTION_KEYWORD: CaptionKeyword.from_node,
-        COMMENT: Comment.from_node,
-        HORIZONTAL_RULE: HorizontalRule.from_node,
-        PLOT_KEYWORD: PlotKeyword.from_node,
-        RESULTS_KEYWORD: ResultsKeyword.from_node,
-        TBLNAME_KEYWORD: TblnameKeyword.from_node,
-    }
+    dispatch: dict[str, Callable[..., Element]] = body_element_factories()
     factory = dispatch.get(node.type)
     if factory is None:
-        return element_from_error_or_unknown(node, document)
-    return factory(node, document)
+        return element_from_error_or_unknown(node, document, parent=parent)
+    return factory(node, document, parent=parent)
 
 
 def _extract_indent_block(
     node: tree_sitter.Node,
     document: Document | None = None,
+    *,
+    parent: Document | Heading | Element | None = None,
 ) -> IndentBlock:
     """Build one :class:`IndentBlock` for a drawer body ``block`` node."""
     block = IndentBlock(
         body=[
-            _extract_drawer_body_element(child, document)
+            _extract_drawer_body_element(child, document, parent=parent)
             for child in node.children_by_field_name("body")
             if child.is_named
         ],

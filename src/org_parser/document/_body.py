@@ -8,63 +8,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from org_parser._nodes import (
-    BLANK_LINE,
-    BLOCK,
-    CAPTION_KEYWORD,
-    CENTER_BLOCK,
-    CLOCK,
-    COMMENT,
-    COMMENT_BLOCK,
-    DRAWER,
-    DYNAMIC_BLOCK,
-    EXAMPLE_BLOCK,
-    EXPORT_BLOCK,
-    FIXED_WIDTH,
-    HORIZONTAL_RULE,
-    LIST_ITEM,
-    LOGBOOK_DRAWER,
-    ORG_TABLE,
-    PARAGRAPH,
-    PLOT_KEYWORD,
-    PROPERTY_DRAWER,
-    QUOTE_BLOCK,
-    RESULTS_KEYWORD,
-    SPECIAL_BLOCK,
-    SRC_BLOCK,
-    TABLEEL_TABLE,
-    TBLNAME_KEYWORD,
-    VERSE_BLOCK,
-)
-from org_parser.element import (
-    BlankLine,
-    CaptionKeyword,
-    CenterBlock,
-    Comment,
-    CommentBlock,
-    Drawer,
-    DynamicBlock,
-    ExampleBlock,
-    ExportBlock,
-    FixedWidthBlock,
-    HorizontalRule,
-    ListItem,
-    Logbook,
-    PlotKeyword,
-    Properties,
-    QuoteBlock,
-    Repeat,
-    ResultsKeyword,
-    SourceBlock,
-    SpecialBlock,
-    TblnameKeyword,
-    VerseBlock,
-)
+from org_parser._nodes import BLOCK
+from org_parser.element import Logbook, Properties, Repeat
+from org_parser.element._dispatch import body_element_factories
 from org_parser.element._element import Element, element_from_error_or_unknown
-from org_parser.element._paragraph import Paragraph
 from org_parser.element._structure import IndentBlock
-from org_parser.element._table import Table
-from org_parser.time import Clock
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -74,6 +22,7 @@ if TYPE_CHECKING:
     from org_parser.document._document import Document
     from org_parser.document._heading import Heading
     from org_parser.text._rich_text import RichText
+    from org_parser.time import Clock
 
 # NOTE: Callable is kept in TYPE_CHECKING for the dispatch dict type annotations.
 
@@ -162,32 +111,8 @@ def extract_body_element(
         error nodes.
     """
     dispatch: dict[str, Callable[..., Element]] = {
-        PARAGRAPH: Paragraph.from_node,
-        ORG_TABLE: Table.from_node,
-        TABLEEL_TABLE: Table.from_node,
-        CLOCK: Clock.from_node,
-        DRAWER: Drawer.from_node,
-        LOGBOOK_DRAWER: Logbook.from_node,
-        PROPERTY_DRAWER: Properties.from_node,
-        CENTER_BLOCK: CenterBlock.from_node,
-        QUOTE_BLOCK: QuoteBlock.from_node,
-        SPECIAL_BLOCK: SpecialBlock.from_node,
-        DYNAMIC_BLOCK: DynamicBlock.from_node,
-        COMMENT_BLOCK: CommentBlock.from_node,
-        EXAMPLE_BLOCK: ExampleBlock.from_node,
-        EXPORT_BLOCK: ExportBlock.from_node,
-        SRC_BLOCK: SourceBlock.from_node,
-        VERSE_BLOCK: VerseBlock.from_node,
-        FIXED_WIDTH: FixedWidthBlock.from_node,
-        LIST_ITEM: ListItem.from_node,
+        **body_element_factories(),
         BLOCK: extract_indent_block,
-        BLANK_LINE: BlankLine.from_node,
-        CAPTION_KEYWORD: CaptionKeyword.from_node,
-        COMMENT: Comment.from_node,
-        HORIZONTAL_RULE: HorizontalRule.from_node,
-        PLOT_KEYWORD: PlotKeyword.from_node,
-        RESULTS_KEYWORD: ResultsKeyword.from_node,
-        TBLNAME_KEYWORD: TblnameKeyword.from_node,
     }
     factory = dispatch.get(node.type)
     if factory is None:
