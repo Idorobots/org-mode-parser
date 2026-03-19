@@ -185,6 +185,16 @@ class ListItem(Element):
         if mark_dirty:
             self._mark_dirty()
 
+    def reformat(self) -> None:
+        """Mark all child content and this item dirty."""
+        if self._item_tag is not None:
+            self._item_tag.reformat()
+        if self._first_line is not None:
+            self._first_line.reformat()
+        for element in self._body:
+            element.reformat()
+        self.mark_dirty()
+
     def _adopt_body(self, body: Sequence[Element]) -> None:
         """Assign this item as parent for all body elements."""
         for element in body:
@@ -356,6 +366,17 @@ class Repeat(ListItem):
         self._note = _normalize_optional_text(value)
         self._mark_dirty()
 
+    def reformat(self) -> None:
+        """Mark timestamp, any child content, and this entry dirty."""
+        self._timestamp.reformat()
+        if self._item_tag is not None:
+            self._item_tag.reformat()
+        if self._first_line is not None:
+            self._first_line.reformat()
+        for element in self._body:
+            element.reformat()
+        self.mark_dirty()
+
     def __str__(self) -> str:
         """Render repeat entry preserving source text while clean."""
         if not self.dirty and self._node is not None and self._document is not None:
@@ -460,6 +481,12 @@ class List(Element):
         item.parent = self
         self._items.insert(index, item)
         self._mark_dirty()
+
+    def reformat(self) -> None:
+        """Mark all items and this list dirty."""
+        for item in self._items:
+            item.reformat()
+        self.mark_dirty()
 
     def _adopt_items(self, items: Sequence[ListItem]) -> None:
         """Assign this list as parent for all items."""

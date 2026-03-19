@@ -143,6 +143,12 @@ class Drawer(Element):
         for element in body:
             element.parent = self
 
+    def reformat(self) -> None:
+        """Mark body and this drawer dirty for scratch-built rendering."""
+        for element in self._body:
+            element.reformat()
+        self.mark_dirty()
+
     def __str__(self) -> str:
         """Render drawer text preserving source text while clean."""
         if not self.dirty and self._node is not None and self._document is not None:
@@ -237,6 +243,16 @@ class Logbook(Drawer):
         self._repeats = value
         _sync_logbook_repeat_list(self, self._repeats)
         self._mark_dirty()
+
+    def reformat(self) -> None:
+        """Mark all logbook children and this drawer dirty."""
+        for element in self._body:
+            element.reformat()
+        for clock in self._clock_entries:
+            clock.reformat()
+        for repeat in self._repeats:
+            repeat.reformat()
+        self.mark_dirty()
 
     def __repr__(self) -> str:
         """Return a tree-oriented representation for debugging."""
@@ -344,6 +360,12 @@ class Properties(Element, MutableMapping[str, RichText]):
     def __len__(self) -> int:
         """Return number of stored properties."""
         return len(self._properties)
+
+    def reformat(self) -> None:
+        """Mark all property values and this drawer dirty."""
+        for value in self._properties.values():
+            value.reformat()
+        self.mark_dirty()
 
     def __str__(self) -> str:
         """Render property drawer preserving source text while clean."""

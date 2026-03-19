@@ -53,6 +53,12 @@ class IndentBlock(Element):
         for element in body:
             element.parent = self
 
+    def reformat(self) -> None:
+        """Mark body and this block dirty for scratch-built rendering."""
+        for element in self._body:
+            element.reformat()
+        self.mark_dirty()
+
     def __str__(self) -> str:
         """Render indentation block text.
 

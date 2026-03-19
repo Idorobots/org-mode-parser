@@ -86,6 +86,12 @@ class _ContainerBlock(Element):
         self._adopt_contents(self._contents)
         self._mark_dirty()
 
+    def reformat(self) -> None:
+        """Mark contents and this block dirty for scratch-built rendering."""
+        for element in self._contents:
+            element.reformat()
+        self.mark_dirty()
+
     def _adopt_contents(self, contents: Sequence[Element]) -> None:
         """Assign this block as parent for each nested element."""
         for element in contents:

@@ -42,6 +42,23 @@ class InlineObject(Protocol):
         """Render this inline object to Org text."""
         ...
 
+    def reformat(self) -> None:
+        """Mark this inline object dirty for scratch-built rendering."""
+        ...
+
+
+class _InlineBase:
+    """Concrete base supplying a no-op :meth:`reformat` for frozen inline types.
+
+    All frozen dataclass inline types inherit from this class.  :class:`Timestamp`
+    overrides :meth:`reformat` with a real implementation.
+    """
+
+    __slots__ = ()
+
+    def reformat(self) -> None:
+        """No-op reformat for immutable inline objects."""
+
 
 def _render_parts(parts: list[InlineObject]) -> str:
     """Render a sequence of inline objects to text."""
@@ -49,7 +66,7 @@ def _render_parts(parts: list[InlineObject]) -> str:
 
 
 @dataclass(frozen=True, slots=True)
-class PlainText:
+class PlainText(_InlineBase):
     """Plain text object."""
 
     text: str
@@ -60,7 +77,7 @@ class PlainText:
 
 
 @dataclass(frozen=True, slots=True)
-class LineBreak:
+class LineBreak(_InlineBase):
     """Hard line break object."""
 
     trailing: str = ""
@@ -71,7 +88,7 @@ class LineBreak:
 
 
 @dataclass(frozen=True, slots=True)
-class CompletionCounter:
+class CompletionCounter(_InlineBase):
     """Completion counter object, e.g. ``[1/3]`` or ``[50%]``."""
 
     value: str
@@ -82,7 +99,7 @@ class CompletionCounter:
 
 
 @dataclass(frozen=True, slots=True)
-class Bold:
+class Bold(_InlineBase):
     """Bold inline markup object."""
 
     body: list[InlineObject]
@@ -93,7 +110,7 @@ class Bold:
 
 
 @dataclass(frozen=True, slots=True)
-class Italic:
+class Italic(_InlineBase):
     """Italic inline markup object."""
 
     body: list[InlineObject]
@@ -104,7 +121,7 @@ class Italic:
 
 
 @dataclass(frozen=True, slots=True)
-class Underline:
+class Underline(_InlineBase):
     """Underline inline markup object."""
 
     body: list[InlineObject]
@@ -115,7 +132,7 @@ class Underline:
 
 
 @dataclass(frozen=True, slots=True)
-class StrikeThrough:
+class StrikeThrough(_InlineBase):
     """Strike-through inline markup object."""
 
     body: list[InlineObject]
@@ -126,7 +143,7 @@ class StrikeThrough:
 
 
 @dataclass(frozen=True, slots=True)
-class Verbatim:
+class Verbatim(_InlineBase):
     """Verbatim inline markup object."""
 
     body: str
@@ -137,7 +154,7 @@ class Verbatim:
 
 
 @dataclass(frozen=True, slots=True)
-class Code:
+class Code(_InlineBase):
     """Inline code markup object."""
 
     body: str
@@ -148,7 +165,7 @@ class Code:
 
 
 @dataclass(frozen=True, slots=True)
-class ExportSnippet:
+class ExportSnippet(_InlineBase):
     """Export snippet object, e.g. ``@@html:<em>@@``."""
 
     backend: str
@@ -161,7 +178,7 @@ class ExportSnippet:
 
 
 @dataclass(frozen=True, slots=True)
-class FootnoteReference:
+class FootnoteReference(_InlineBase):
     """Footnote reference object."""
 
     label: str | None = None
@@ -180,7 +197,7 @@ class FootnoteReference:
 
 
 @dataclass(frozen=True, slots=True)
-class Citation:
+class Citation(_InlineBase):
     """Citation object."""
 
     body: str | None = None
@@ -194,7 +211,7 @@ class Citation:
 
 
 @dataclass(frozen=True, slots=True)
-class InlineSourceBlock:
+class InlineSourceBlock(_InlineBase):
     """Inline source block object."""
 
     language: str
@@ -209,7 +226,7 @@ class InlineSourceBlock:
 
 
 @dataclass(frozen=True, slots=True)
-class PlainLink:
+class PlainLink(_InlineBase):
     """Plain link object."""
 
     link_type: str
@@ -221,7 +238,7 @@ class PlainLink:
 
 
 @dataclass(frozen=True, slots=True)
-class AngleLink:
+class AngleLink(_InlineBase):
     """Angle link object."""
 
     path: str
@@ -235,7 +252,7 @@ class AngleLink:
 
 
 @dataclass(frozen=True, slots=True)
-class RegularLink:
+class RegularLink(_InlineBase):
     """Regular bracket link object."""
 
     path: str
@@ -249,7 +266,7 @@ class RegularLink:
 
 
 @dataclass(frozen=True, slots=True)
-class Target:
+class Target(_InlineBase):
     """Target object, e.g. ``<<name>>``."""
 
     value: str
@@ -260,7 +277,7 @@ class Target:
 
 
 @dataclass(frozen=True, slots=True)
-class RadioTarget:
+class RadioTarget(_InlineBase):
     """Radio target object, e.g. ``<<<phrase>>>``."""
 
     body: list[InlineObject]

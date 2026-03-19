@@ -96,6 +96,11 @@ class Keyword(Element):
         self._value.parent = self
         self._mark_dirty()
 
+    def reformat(self) -> None:
+        """Mark value and this keyword dirty for scratch-built rendering."""
+        self._value.reformat()
+        self.mark_dirty()
+
     def __str__(self) -> str:
         """Render keyword line.
 

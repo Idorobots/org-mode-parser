@@ -80,6 +80,12 @@ class Clock(Element):
         self._duration = _normalize_duration(value)
         self._mark_dirty()
 
+    def reformat(self) -> None:
+        """Mark timestamp and this clock dirty for scratch-built rendering."""
+        if self._timestamp is not None:
+            self._timestamp.reformat()
+        self.mark_dirty()
+
     def __str__(self) -> str:
         """Render clock line.
 

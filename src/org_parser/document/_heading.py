@@ -32,7 +32,6 @@ from org_parser.element import (
 from org_parser.element._element import (
     Element,
     element_from_error_or_unknown,
-    reformat_value,
 )
 from org_parser.element._list_recovery import recover_lists
 from org_parser.text._inline import CompletionCounter
@@ -405,16 +404,26 @@ class Heading:
 
     def reformat(self) -> None:
         """Recursively mark heading descendants dirty, then self dirty."""
-        reformat_value(self._title)
-        reformat_value(self._counter)
-        reformat_value(self._scheduled)
-        reformat_value(self._deadline)
-        reformat_value(self._closed)
-        reformat_value(self._properties)
-        reformat_value(self._logbook)
-        reformat_value(self._repeated_tasks)
-        reformat_value(self._body)
-        reformat_value(self._children)
+        if self._title is not None:
+            self._title.reformat()
+        if self._counter is not None:
+            self._counter.reformat()
+        if self._scheduled is not None:
+            self._scheduled.reformat()
+        if self._deadline is not None:
+            self._deadline.reformat()
+        if self._closed is not None:
+            self._closed.reformat()
+        if self._properties is not None:
+            self._properties.reformat()
+        if self._logbook is not None:
+            self._logbook.reformat()
+        for repeat in self._repeated_tasks:
+            repeat.reformat()
+        for element in self._body:
+            element.reformat()
+        for child in self._children:
+            child.reformat()
         self.mark_dirty()
 
     def _adopt_element(

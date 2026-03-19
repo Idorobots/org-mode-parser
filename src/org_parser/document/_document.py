@@ -26,7 +26,6 @@ from org_parser.element import (
 from org_parser.element._element import (
     Element,
     element_from_error_or_unknown,
-    reformat_value,
 )
 from org_parser.element._keyword import Keyword
 
@@ -376,16 +375,16 @@ class Document:
 
     def reformat(self) -> None:
         """Recursively mark document descendants dirty, then self dirty."""
-        reformat_value(self._keywords)
-        reformat_value(self._title)
-        reformat_value(self._author)
-        reformat_value(self._category)
-        reformat_value(self._description)
-        reformat_value(self._todo)
-        reformat_value(self._properties)
-        reformat_value(self._logbook)
-        reformat_value(self._body)
-        reformat_value(self._children)
+        for keyword in self._keywords.values():
+            keyword.reformat()
+        if self._properties is not None:
+            self._properties.reformat()
+        if self._logbook is not None:
+            self._logbook.reformat()
+        for element in self._body:
+            element.reformat()
+        for child in self._children:
+            child.reformat()
         self.mark_dirty()
 
     def _adopt_element(

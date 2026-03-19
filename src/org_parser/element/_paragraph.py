@@ -86,6 +86,11 @@ class Paragraph(Element):
         self._body.parent = self
         self._mark_dirty()
 
+    def reformat(self) -> None:
+        """Mark body and this paragraph dirty for scratch-built rendering."""
+        self._body.reformat()
+        self.mark_dirty()
+
     def __str__(self) -> str:
         """Render paragraph text.
 
