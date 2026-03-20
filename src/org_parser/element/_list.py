@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import textwrap
 from typing import TYPE_CHECKING
 
 from org_parser._node import node_source
@@ -13,7 +12,7 @@ from org_parser.element._element import (
     build_semantic_repr,
     ensure_trailing_newline,
 )
-from org_parser.text._inline import PlainText
+from org_parser.text._inline import LineBreak, PlainText
 from org_parser.text._rich_text import RichText
 from org_parser.time import Timestamp
 
@@ -257,6 +256,8 @@ class Repeat(ListItem):
         bullet: str = "-",
         ordered_counter: str | None = None,
         counter_set: str | None = None,
+        item_tag: RichText | None = None,
+        first_line: RichText | None = None,
         checkbox: str | None = None,
         parent: Document | Heading | Element | None = None,
     ) -> None:
@@ -265,8 +266,8 @@ class Repeat(ListItem):
             ordered_counter=ordered_counter,
             counter_set=counter_set,
             checkbox=checkbox,
-            item_tag=None,
-            first_line=None,
+            item_tag=item_tag,
+            first_line=first_line,
             body=body,
             parent=parent,
         )
@@ -275,7 +276,7 @@ class Repeat(ListItem):
         self._timestamp = timestamp
 
     @classmethod
-    def from_list_item(cls, item: ListItem) -> Repeat | None:
+    def from_list_item(cls, item: ListItem, document: Document) -> Repeat | None:
         """Build a :class:`Repeat` from one list item when pattern-matched."""
         if (
             item.item_tag is not None
@@ -289,17 +290,15 @@ class Repeat(ListItem):
         parsed = _parse_repeat_first_line(item.first_line)
         if parsed is None:
             return None
-        after, before, timestamp, has_line_break, note_text = parsed
+        after, before, timestamp, has_remainder = parsed
+
+        if has_remainder:
+            if item._node is not None:
+                # NOTE These are considered malformed.
+                document.report_error(item._node)
+            return None
 
         body = list(item.body)
-        if note_text is not None:
-            from org_parser.element._paragraph import Paragraph
-
-            body = [Paragraph(body=RichText(note_text)), *body]
-
-        has_body = bool(body)
-        if has_line_break != has_body:
-            return None
 
         repeat = cls(
             after=after,
@@ -307,6 +306,8 @@ class Repeat(ListItem):
             timestamp=timestamp,
             body=body,
             bullet=item.bullet,
+            item_tag=item.item_tag,
+            first_line=item.first_line,
             ordered_counter=item.ordered_counter,
             counter_set=item.counter_set,
             checkbox=item.checkbox,
@@ -362,9 +363,8 @@ class Repeat(ListItem):
 
     def __str__(self) -> str:
         """Render repeat entry preserving source text while clean."""
-        if not self.dirty and self._node is not None and self._document is not None:
-            return node_source(self._node, self._document)
-
+        if not self.dirty:
+            return super().__str__()
         return self._render_dirty()
 
     def _render_dirty(self, *, indent_step: int = 2) -> str:
@@ -384,14 +384,14 @@ class Repeat(ListItem):
             f"State {after:<{self.state_alignment_space}}"
             f" from {before:<{self.state_alignment_space}} {self._timestamp}"
         )
-        if not self._body:
+        if self._body:
+            parts.append(" \\\\\n")
+            body_prefix = " " * indent_step
+            for element in self._body:
+                rendered = ensure_trailing_newline(str(element))
+                parts.append(_indent_non_empty_lines(rendered, body_prefix))
+        else:
             parts.append("\n")
-            return "".join(parts)
-        parts.append(" \\\\\n")
-        body_prefix = " " * indent_step
-        for element in self._body:
-            rendered = ensure_trailing_newline(str(element))
-            parts.append(_indent_non_empty_lines(rendered, body_prefix))
         return "".join(parts)
 
     def __repr__(self) -> str:
@@ -582,11 +582,11 @@ def _indent_non_empty_lines(value: str, prefix: str) -> str:
 
 def _parse_repeat_first_line(
     first_line: RichText,
-) -> tuple[str, str, Timestamp, bool, str | None] | None:
+) -> tuple[str, str, Timestamp, bool] | None:
     """Parse one repeat header from a list item's first-line text.
 
     Returns:
-        A tuple of ``(after, before, timestamp, has_line_break, note_text)``
+        A tuple of ``(after, before, timestamp, has_remainder)``
         when the line matches repeat syntax, otherwise ``None``.
     """
     if len(first_line.parts) < 2:
@@ -594,32 +594,25 @@ def _parse_repeat_first_line(
 
     prefix_part = first_line.parts[0]
     timestamp_part = first_line.parts[1]
+
     if not isinstance(prefix_part, PlainText) or not isinstance(
         timestamp_part, Timestamp
     ):
-        return None
-
-    remainder = "".join(str(part) for part in first_line.parts[2:])
-    has_line_break = "\\\\" in remainder
-    note_text: str | None = None
-    trailing = remainder
-    if has_line_break:
-        trailing, raw_note_text = remainder.split("\\\\", maxsplit=1)
-        normalized_note = textwrap.dedent(raw_note_text)
-        note_text = _normalize_optional_text(normalized_note)
-    elif trailing.strip() != "":
         return None
 
     matched = _REPEAT_HEADER_PREFIX_PATTERN.match(prefix_part.text)
     if matched is None:
         return None
 
+    has_remainder = False
+    if len(first_line.parts) > 2 and not isinstance(first_line.parts[-1], LineBreak):
+        has_remainder = True
+
     return (
         matched.group("after"),
         matched.group("before"),
         timestamp_part,
-        has_line_break,
-        note_text,
+        has_remainder,
     )
 
 

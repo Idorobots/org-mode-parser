@@ -28,23 +28,18 @@ def test_repeat_parses_logbook_item_without_note() -> None:
     assert repeat.body == []
 
 
-def test_repeat_parses_logbook_item_with_note_line() -> None:
-    """Repeated-task entries with escaped line break expose note text."""
+def test_invalid_repeat_with_trailing_chars() -> None:
+    """Repeated-task entries with trailing report errors."""
     document = loads(
         "* H\n"
         ":LOGBOOK:\n"
-        '- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\\\n'
+        '- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\\\ foo bar\n'
         "  No need for that with the semantic nodes.\n"
         ":END:\n"
     )
 
-    repeat = document.children[0].repeated_tasks[0]
-    assert repeat.after == "CANCELLED"
-    assert repeat.before == "TODO"
-    assert str(repeat.timestamp) == "[2026-03-08 Sun 13:18]"
-    assert len(repeat.body) == 1
-    assert isinstance(repeat.body[0], Paragraph)
-    assert "No need for that with the semantic nodes." in str(repeat.body[0])
+    assert len(document.children[0].repeated_tasks) == 0
+    assert len(document.errors) == 1
 
 
 def test_repeat_uses_entire_item_body_as_note_payload() -> None:
@@ -52,8 +47,8 @@ def test_repeat_uses_entire_item_body_as_note_payload() -> None:
     document = loads(
         "* H\n"
         ":LOGBOOK:\n"
-        '- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\\\ '
-        "One note paragraph.\n"
+        '- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\\\\n'
+        "  One note paragraph.\n"
         ":END:\n"
     )
 

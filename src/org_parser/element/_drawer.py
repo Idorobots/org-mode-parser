@@ -163,7 +163,7 @@ class Logbook(Drawer):
             ],
             parent=parent,
         )
-        repeats = _extract_logbook_repeats(body)
+        repeats = _extract_logbook_repeats(body, document)
         clock_entries = [element for element in body if isinstance(element, Clock)]
         logbook = cls(
             body=body,
@@ -363,7 +363,7 @@ def _extract_indent_block(
     return block
 
 
-def _extract_logbook_repeats(body: list[Element]) -> list[Repeat]:
+def _extract_logbook_repeats(body: list[Element], document: Document) -> list[Repeat]:
     """Convert repeat-form list items in logbook lists into :class:`Repeat`.
 
     This runs after list recovery so each candidate item already owns its
@@ -380,7 +380,7 @@ def _extract_logbook_repeats(body: list[Element]) -> list[Repeat]:
                 updated_items.append(item)
                 repeats.append(item)
                 continue
-            repeat = Repeat.from_list_item(item)
+            repeat = Repeat.from_list_item(item, document)
             if repeat is None:
                 updated_items.append(item)
                 continue
