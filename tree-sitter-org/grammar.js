@@ -916,10 +916,17 @@ module.exports = grammar({
 
     _paragraph_line: $ => seq(
       choice(
+        $._timestamp_paragraph_line,
         repeat1($._object),
         $._indented_object_line,
       ),
       $.newline,
+    ),
+
+    _timestamp_paragraph_line: $ => seq(
+      $.timestamp,
+      $._S,
+      repeat1($._object),
     ),
 
     // §8 Objects

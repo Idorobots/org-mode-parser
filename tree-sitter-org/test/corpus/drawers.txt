@@ -1063,3 +1063,45 @@ Fully indented custom drawer with timestamp line
             dayname: (ts_dayname))
           (plain_text)
           (newline))))))
+
+================
+Indented custom drawer with consecutive timestamp paragraphs
+================
+  :FEEDING_LOG:
+  [2025-01-04 Sat] Fed 1:1:1 (starter:flour:water). Rose 3x in 4 hours.
+  [2025-01-05 Sun] Fed 1:2:2. Peak at 6 hours - slightly slower.
+  [2025-01-06 Mon] Fed 1:5:5. Testing for long cold ferment.
+  :END:
+
+---
+
+(document
+  (zeroth_section
+    (block
+      indent: (indent)
+      body: (drawer
+        name: (drawer_name)
+        body: (paragraph
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (plain_text)
+          (newline))
+        body: (paragraph
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (plain_text)
+          (newline))
+        body: (paragraph
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (plain_text)
+          (newline))))))
