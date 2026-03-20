@@ -9,7 +9,8 @@ Simple citation
   (zeroth_section
     (paragraph
       (citation
-        (citation_body)))))
+        (citation_body))
+      (newline))))
 
 ================
 Citation with style
@@ -23,7 +24,8 @@ Citation with style
     (paragraph
       (citation
         (cite_style_name)
-        (citation_body)))))
+        (citation_body))
+      (newline))))
 
 ================
 Citation edge cases in prose/list/table and affixes
@@ -53,13 +55,15 @@ In prose: the foundational theory of information [cite:@shannon1948] was
       (plain_text)
       (citation
         body: (citation_body))
-      (plain_text))
-    (plain_list
-      (item
-        first_line: (plain_text)
-        first_line: (citation
-          body: (citation_body))
-        first_line: (plain_text)))
+      (plain_text)
+      (newline))
+    (blank_line)
+    (list_item
+      first_line: (plain_text)
+      first_line: (citation
+        body: (citation_body))
+      first_line: (plain_text))
+    (blank_line)
     (org_table
       (table_row
         (table_cell
@@ -73,27 +77,38 @@ In prose: the foundational theory of information [cite:@shannon1948] was
           (plain_text))
         (table_cell
           (plain_text))))
+    (blank_line)
     (paragraph
       (citation
         style: (cite_style_name)
         body: (citation_body))
+      (newline)
       (citation
         style: (cite_style_name)
         variant: (cite_variant)
-        body: (citation_body)))
+        body: (citation_body))
+      (newline))
+    (blank_line)
     (paragraph
       (citation
         body: (citation_body))
+      (newline)
       (citation
         body: (citation_body))
+      (newline)
       (citation
-        body: (citation_body)))
+        body: (citation_body))
+      (newline))
+    (blank_line)
     (paragraph
       (citation
-        body: (citation_body)))
+        body: (citation_body))
+      (newline))
+    (blank_line)
     (paragraph
       (citation
-        body: (citation_body)))))
+        body: (citation_body))
+      (newline))))
 
 ================
 Multiline citation
@@ -108,7 +123,9 @@ see also recent work on;@bhattamishra2020;@hahn2020; for transformer-specific re
   (zeroth_section
     (paragraph
       (plain_text)
+      (newline)
       (plain_text)
       (citation
         body: (citation_body))
-      (plain_text))))
+      (plain_text)
+      (newline))))

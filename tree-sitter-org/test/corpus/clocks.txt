@@ -61,16 +61,17 @@ Clock inside drawer with indentation
     (stars)
     (plain_text)
     (section
-      (drawer
-        (drawer_name)
-        (clock
-          (ts_year)
-          (ts_month)
-          (ts_day)
-          (ts_dayname)
-          (ts_time)
-          (ts_year)
-          (ts_month)
-          (ts_day)
-          (ts_dayname)
-          (ts_time))))))
+      (logbook_drawer
+        (block
+          (indent)
+          (clock
+            (ts_year)
+            (ts_month)
+            (ts_day)
+            (ts_dayname)
+            (ts_time)
+            (ts_year)
+            (ts_month)
+            (ts_day)
+            (ts_dayname)
+            (ts_time)))))))

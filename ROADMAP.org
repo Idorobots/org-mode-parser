@@ -1,6 +1,10 @@
 #+TITLE: A parser for Org Mode nodes
+#+ARCHIVE: ./docs/plans/ROADMAP_ARCHIVE.org::
 
-* Repo
+* DONE Repo setup
+:LOGBOOK:
+- State "DONE"       from              [2026-03-19 Thu 20:20]
+:END:
 ** DONE README.org
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-03-06 Fri 19:40]
@@ -35,7 +39,10 @@ Any failures should be detected and rejected.
 - State "DONE"       from "TODO"       [2026-03-06 Fri 19:45]
 :END:
 Add a LICENSE file. Use a MIT license with copyright for "Kajetan Rzepecki <k@spartan.works>".
-* Formal-ish specification
+* DONE Formal-ish specification
+:LOGBOOK:
+- State "DONE"       from              [2026-03-19 Thu 20:20]
+:END:
 ** DONE Official docs analysis
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-02-26 Thu 23:02]
@@ -81,7 +88,10 @@ Create at least one file that contains more than a 100 nodes of various nestings
 
 Use your creativity for the node contents, such as headings, tags, properties and bodies.
 
-* Grammar
+* DONE Grammar & parser implementation
+:LOGBOOK:
+- State "DONE"       from              [2026-03-19 Thu 20:20]
+:END:
 ** DONE Formal grammar
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-02-27 Fri 13:09]
@@ -1647,7 +1657,11 @@ Another regresion when there are two dashes in text:
 
 All the lines above should be text, even the heading title.
 
-*** TODO Other edge cases
+*** CANCELLED Other edge cases
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\
+  Documented, will be addressed in the future.
+:END:
 - Nested lists are parsed as items on the parent list, but include an indent
 - Malformed objects are usually treated as plaintext.
 
@@ -1711,36 +1725,2668 @@ Let's try something different, make the script only find the leaf errors and dis
 
 By leaf errors I mean errors that are as close to a leaf as possible, not the top level errors, not necessarily errors at the very leaf of the expression - just the final level at which an error occurs that does not have an error embedded in them.
 
-** TODO Parser extensions
-*** TODO Support for Babel call syntax
-*** TODO Support for Org entities
-*** TODO Support for subscript/superscript
-* Semantic nodes implementation
-- somewhat compatible with orgparse node layout (root node & env separate, rich data abstractions)
-- mutable by default
-- supports any drawers, spacial treatment for logbook & properties
-- env supporting special comments, files etc (title, category, todo, etc, tags)
-- nodes tags & inherited tags field (file-order lists not sets)
-- nodes category & inherited category field
-- extra fields for convevience - parent, children, siblings, latest_timestamp, earliest_timestamp, is_completed, is_root, is_terminal
-- env nodes property - returns all nodes in the env, file order
-- load, loads and dump, dumps
-- preserves original whitespace until a mutation is made
-- all text returning functions return a rich text by default, option to strip markup and turn that into a plain string
-** TODO Heading line abstraction
+* TODO Parser fidelity
+** DONE Special handling for LOGBOOK
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:50]
+:END:
+The =LOGBOOK= drawer should be treated in the same way as the =PROPERTIES= drawer, i.e. it should have a dedicated parse tree node associated with it. Other custom drawers can be left as-is.
+
+** DONE Bind indent in lesser/greater elements
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-09 Mon 22:01]
+:END:
+Update the parser to bind indent level in elements such as drawers, blocks, paragraphs and all list items. Bind it even if the indent level is 0. It's sufficient to bind the indent of the beginning of the element.
+This will be used by semantic analysis to recover list nesting.
+
+*** COMMENT
+The indent is still not added to the beginning of an object such as a drawer when it is following a list item.
+
+** CANCELLED Heading line abstraction
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\
+  No need for that with the semantic nodes.
+:END:
 Add an abstraction over the heading line, so that the heading consists of a =heading_line= and a =body=.
 
-** TODO Python wrapper on tree-sitter
-Create a scaffold of a Python project using Poetry as the build tool. Include =mypy= for typings, =ruff= for linting and formatting and =pytest= for tests. The project will be a library that wraps the tree-sitter based parser, so include =py-tree-sitter= in the dependencies as well. For development, add =pyright= lang server.
+** DONE Priority value abstraction in the parser
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 13:56]
+:END:
+Priority values are not bound in the parser, but should for easier extraction of the value:
 
+#+begin_example
+,* TODO [#A] Test
+#+end_example
+
+In the above example, it would be ideal if the parser extracted the value =A= and bound it as a subnode of the priority node under the name =value=.
+
+Please update the semantic nodes to use that extracted value instead.
+
+** DONE Counter value abstraction in the parser
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:07]
+:END:
+Completion counter values are not bound in the parser, but should for easier extraction of the value:
+
+#+begin_example
+,* TODO Test [1/2]
+#+end_example
+
+In the above example, it would be ideal if the parser extracted the value =1/2= and bound it as a subnode of the counter node under the name =value=.
+
+Please update the semantic nodes to use that extracted value instead.
+
+** DONE Dashes in #+TODO states
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 13:44]
+:END:
+The value =IN-PROGRESS= doesn't parse as a todo state when configured, but should.
+
+#+begin_example
+#+TODO: TODO IN-PROGRESS | DONE
+,* TODO Test
+,* DONE test
+,* IN-PROGRESS Test
+#+end_example
+
+Adjust the parse rules for todo states to allow for =-= and =_= in state names.
+
+** DONE Multiline paragraphs don't preserve newlines
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-09 Mon 18:50]
+:END:
+The following example ends up as three separate plaintext lines separated by newlines, but none of these newlines is captured.
+
+#+begin_example
+This is some text:
+More text
+More text
+#+end_example
+
+Ideally, the paragraph would still span multiple lines, but would capture the newlines properly. The newline character can be a part of each line.
+*** COMMENT
+Initially, Opus blew through all the quota trying to figure out what could be done and produced an unsatisfactory plan.
+Then, Codex was able to reword the plan and begin execution, however, there were issues with API communication with OpenAI, so Codex couldn't finish implementing the plan. Sonnet continued the implementation, but decided to make newlines a separate plaintext item, which is fine. In the end, Sonnet reverted all changes and instead implemented a work-around in Python by checking for the missing newline characters.
+
+** DONE List vs List item indent problems
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-10 Tue 10:15]
+:END:
+We recently introduced blanks and indentation to the parse tree.
+With those values we could optimize the flat list representation in the parse tree to not impose a structure of a =plain_list= with embedded =items=. Instead, each item should become a =list_item= that lives separately and has an indent associated with it.
+
+The rules for parsing these items remain the same. The rules for =plain_list= should be removed. Pay special attention to attach the indent to the elements following a =list_item= - =list_item= should end at a newline boundary when followed by a non-text element such as a drawer or a block. If that following element is indented, the indent should be attached to that element.
+
+There's a regression when parsing a list that is following a heading and a drawer:
+#+begin_example
+,** Unreleased
+:PROPERTIES:
+:CUSTOM_ID: unreleased
+:END:
+
+- IN-PROGRESS Add ~OBJECT FREQ~ command for LFU policy introspection. :feature:
+- TODO Implement ~LMPOP~ and ~ZMPOP~ for multi-key blocking pops. :feature:
+- TODO Structured JSON logging via =tracing-subscriber= JSON formatter. :observability:
+#+end_example
+
+Please make sure to fix the issue.
+
+Another regression:
+#+begin_example
+- [X] Javadoc documentation
+- [X] Logging:
+  + [X] Competitor
+  + [X] Shooting range
+- [X] UML diagrams:
+#+end_example
+
+Looks like lists do not recognize the bullets correctly. Please make sure that all the bullets are recognized correctly for unordered and ordered lists. Make sure that =list_item= bindgs the bullet used for the list.
+
+Make sure to add corpus tests for all of these regressions.
+
+*** COMMENT
+Somehow, fixing the bullet issue was really hard for Codex, it attempted two "solutions" breaking more tests in the process and it reverted the code twice calling the second attempt as "fixed".
+
+Another session also failed to fix the issue and instead removed the test case from the corpus.
+
+Finally, the third time I decided to get rid of the item continuation lines altogether, which allowed the AI to actually make something working, except that now it parses =+= as =repeat_marker=. Still to do:
+
+- List reconstruction doesn't properly add bodies that start with an indent.
+- =- + foo= in lists is causing an error (markup.txt test file was updated to get that in)
+- some of the archive files don't parse now
+- parser doesn't bind the bullet used for the list
+
+** DONE Indent on table formula
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-10 Tue 10:30]
+:END:
+Here's a new edge case that popped up:
+#+begin_example
+ |    *Total* |              |            |                 |                |              150 |
+ #+TBLFM: @>$6=vsum(@2$6..@>>$6)
+#+end_example
+The TBLFM line is indented and the indentation causes an error. Please add a test case for this and fix the issue.
+
+** DONE =+= in list/headings
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-10 Tue 10:43]
+:END:
+I found some more edge cases all related to the =+= character and lists:
+
+#+begin_example
+,*** TODO + in list/headings
+#+end_example
+Here the initial =+= character of the heading line causes an issue - it should be interpreted as a plaintext character.
+
+#+begin_example
+,*** CLJS & Reframe vs Elm vs React + Redux
+ - React + Redux quickly turns into spaghetti code
+#+end_example
+Here the =+= in the title causes a parse failure but should instead be interpreted as plaintext.
+
+#+begin_example
+,** SUSPENDED The suspended state causes an issue Foo + Bar
+#+end_example
+In this one there is a similar failure, however, it parses fine when the =SUSPENDED= state is either a recognizable state or missing.
+
+#+begin_example
+- State "CANCELLED"  from "TODO"       [2014-06-06 pią 08:26] \\
+  -1 - this is not working right.
+- State "CANCELLED"  from "TODO"       [2014-06-05 czw 15:31]
+#+end_example
+In this one there's no =+= character, but the =-1= is mistaken for a potential list item. It sholud be interpreted as a plaintext item (no space after the =-= character).
+
+Please add test cases for all of these edge cases and fix them.
+
+** CANCELLED Explicit indent in paragraphs
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-11 Wed 18:59] \\
+  See comment.
+:END:
+Paragraph text now includes its indentation level. I'd like the indent to be explicitly parsed and added as the =indent= field of a paragraph node so that it's easier to recover the document structure at a later point.
+
+The =indent= field should be explicitly bound in the paragraph. Corpus tests should be updated to support that field.
+
+Add an additional corpus test that checks for paragraph indent parsing:
+
+#+begin_example
+,** Test
+  hurr
+
+- foo
+  durr
+#+end_example
+
+Both =hurr= and =durr= containing paragraphs should have an indent.
+
+*** COMMENT
+The AI made some attempts but it proved to hard to do without confusing the indented paragraph for other elements. I proposed an alternative approach: having the indent as en explicit wrapper on all indent-sensitive elements, but Codex didn't like the idea.
+
+** DONE Explicit indent blocks in sections
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-11 Wed 19:07]
+:END:
+Are you certain that having a dedicated syntactic node for the indent wouldn't work? We could handle the current indent level in the scanner and just ignore the leading whitespace on the line when considering elements. Then the whole parse would be wrapped in a dedicated block effectively providing nesting.
+
+Could the indent-block logic apply just to the sections? Zeroth section and heading sections.
+
+I'd like to proceed with this idea, replace all indent handling in all elements with section-based indent-block handling. Each line's indent should be considered by the scanner to keep track of the current indent level. Elements should be parsed according to their usual rules, except without consideration for the indent (the scanner is taking care for that). The result should be a section content with explicit indent blocks that wrap the elements that share those indents. For elements, the initial indent at the element start should be the determining one (i.e. drawers can span a dedent).
+
+The AST node for the indent should be called =block= and have an explicit field called =indent= that represents its indent level.
+Blocks can be nested and they can nest other elements within them.
+
+Execute the plan from @docs/plans/section-indent-block-plan.md The goal is 100% corpus test passing, do not omit the currently failing test.
+
+I think your problems are stemming from the fact that blocks do not nest. Here's an example:
+
+#+begin_example
+- Foo
+  Baz
+  + hurr
+    - derp
+  + durr
+- Bar
+#+end_example
+
+Following the =- Foo= line, there should be an indent-block of depth 2, following =+ hurr= there should be a single-line indent-block of depth 4.
+There's no need to handle list nesting. Only blocks should nest. List's are no longer a thing. Only list items that are individual items that do not have a body even.
+
+Indent blocks should be the only indent-bearing nodes in the AST. All other nodes shouldn't have anything to do with identation.
+The per-element indent captures can be removed. Table row should also be handled without relying on the indent in the rule.
+Blank line can remain an exception that consumes the whitespace.
+
+Heading planning can consume its own whitespace (it's not part of a section or zeroth-section, so no need to handle that with indent blocks).
+
+*** COMMENT
+The brainstorming resulted in a plan stored for posterity in docs/plans. The AI extremely reluctant to implement any of it, stopping at every oportunity, explaining that this is a large refactor and that almost all tests would have to change.
+
+A lot churning later it still couldn't do it. Took a good dozen extra encouragement prompts to get this somewhat working, but it was very hand-holdy.
+
+** DONE Numeric priority values
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-11 Wed 19:07]
+:END:
+Parser was updated not to recognize numeric priority values. Numeric values should be supported.
+
+** DONE Post-refactor edge cases
+I found some edge cases that don't seem to work now after the refactor:
+
+#+begin_example
+:properties:
+:context: [[file:/ServiceWorker.scala::private%20def%20groupsToDtos(groupedSynced:%20Seq%5BSet%5BSynced%5D%5D,%20getSyncMapper:%20GetSyncMapper):%20SyncWorkerM%5BRegroupDtos%5D%20%3D%20{][file:/ServiceWorker.scala::private def groupsToDtos(groupedSynced: Seq[Set[Synced]], getSyncMapper: GetSyncMapper): SyncWorkerM[RegroupDtos] = {]]
+:end:
+#+end_example
+Here, the link description fails to parse when in a drawer, however it parses fine outside of it.
+
+#+begin_example
+    #+PLOT: ind:1 deps:(2 3 4)
+    |    10000 |     33634 |     53458 |     28740 |
+    |    20000 |     66908 |    106692 |     61941 |
+#+end_example
+Indented keywords preceeding Org Tables seem to cause an issue in the parser. Mulitple PLOT lines complicate the issue even further. All of the above lines should be a parte of an indent block and parse as a single keyword line and an two-row Org table.
+
+#+begin_example
+,* DELEGATED Fix Nexus @types resolving.
+#+end_example
+The =@= character in the title stopped working. It should be treated as a regular plain text.
+
+#+begin_example
+Test
+=============
+Test
+#+end_example
+Here all lines should be treated as plain-text.
+
+#+begin_example
+:properties:
+:context: [[file:~/events.cljs::{:dispatch [:fetch-docs]}))]]
+:end:
+#+end_example
+Here's another link issue - the =:= causes a parse error. This is a valid link (I think).
+
+#+begin_example
+:properties:
+:context: [[file:~/md.clj::p #"\n(?i)<!--\s*more\s*-->\n"] ;; FIXME Still needs contextual preview marker replacement.]]
+:end:
+#+end_example
+Here's another issue - the link is malformed - it lacks an opening bracket on the link description. In such a case it would be ideal if the entire property value were parsed as plaintext.
+
+#+begin_example
+:properties:
+:context: [[file:~/org/repeat.org::*Hangul romanization: [[jo/yo\][medial ㅛ]\]][Hangul romanization: medial ㅛ]]
+:end:
+#+end_example
+This one uses a search term with brackets and escape sequence. It should fall back to a plaintext value.
+
+#+begin_example
+:properties:
+:context: [[file:/StreamProvider.scala::textMessage.textStream.runFold("")(_ + _).map(_.parseJson.convertTo[StreamRequest])]]
+:end:
+#+end_example
+Another scala link that doesn't parse well. The search term looks valid, it fails to parse as it uses brackets.
+
+#+begin_example
+```yaml
+---
+name: Load average
+identifier: urn:example:load-average
+```
+#+end_example
+Here the =---= line is reporting an error - that should be parsed as a text line.
+
+#+begin_example
+:properties:
+:context: [[file:~/org/repeat.org::*\[\[Nobody can deny, that...\]\[Niemand kann leugnen, dass...\]\]][Niemand kann leugnen, dass...]]
+:end:
+#+end_example
+Here the backslash character presents an issue in the search path.
+
+#+begin_example
+:LOGBOOK:  <
+- State "DONE"       from "TODO"       [2017-03-17 Fri 20:42]
+:END:      <<<<<<<<<<<<<<<<
+#+end_example
+This one is weird - the drawer start text parses fine, but then drawer parsing failse because of the additional angle brackets followig the =:end:=. I think the text following the =:end:= marker should be parsed as plaintext.
+
+#+begin_example
+```json
+{
+  "nodes": [{
+    "parameters": [{
+    }],
+    "returnTypes": ["MONITOR_HEALTH_STATES"],
+    "script": "...",
+  }],
+  "timestamp": "2022-01-17T16:17:55.707Z[Etc/UTC]"
+}
+```
+#+end_example
+Here's one more case that's failing. It's raw JSON in the body of the task. Specifically the =}],= is tripping up the parser. It should be treated as a plaintext in this case.
+
+#+begin_example
+  -
+#+end_example
+Here an issue stems from a single dash on a line - it's not a proper list item, so it should be treated as a plain text character.
+
+#+begin_example
+:properties:
+:context: [[file:~/org/refile.org::DONE Add mDNS support to the SSM scala agent. :Scala:Networking:
+:end:
+#+end_example
+Here, the end of the link syntaxt never appears, so the parser fails. As a fallback, this should be treated as a plaintext value.
+
+#+begin_example
+:LOGBOOK:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-11 Wed 21:11]
+:END:
+- State "DONE"       from "TODO"       [2023-04-16 nie 21:32]
+- State "DONE" from "TODO" \[2023-04-12 śro 00:36\]
+:END:
+#+end_example
+The second line should consist of plaintext - the incorrect timestamp should fail parsing and fallback to text.
+
+#+begin_example
+`foo << 2 + bar << 4 + baz << 8` is not the same as `(foo << 2) + (bar << 4) + (baz << 8)`.
+#+end_example
+Here, the text fails to parse as a target and should fallback to plaintext.
+
+** DONE Logbook contents should recognize indent blocks
+#+begin_example
+:LOGBOOK:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 21:50]
+:END:
+- State "CANCELLED"  from "TODO"       [2025-07-28 pon 18:41] \\
+  No need to.
+- State "DONE"       from "TODO"       [2025-07-28 pon 18:33]
+- State "DONE"       from "TODO"       [2025-07-26 sob 22:18]
+- State "DONE"       from "TODO"       [2025-06-29 nie 20:54]
+- State "DONE"       from "TODO"       [2025-06-26 czw 22:39]
+- State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
+  Missed it.
+- State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
+  Note
+:END:
+#+end_example
+
+None of the indented lines are in a block, but they should be so that we can recover the list structure within a drawer element.
+When this same list is outside of the drawer, it correctly parses with indent blocks.
+
+There is one failing Python wrapper test that should pass after this is fixed on the grammar level.
+
+** DONE Custom drawer text contents should always be wrapped in a paragraph
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 22:13]
+:END:
+#+begin_example
+  :test:
+  [2026-01-01 Wto 10:00] This is not wrapped in a paragraph, unless dedented.
+  :end:
+#+end_example
+
+The above fragment doesn't parse correctly - the contents are not wrapped in a paragraph when the entire drawer is indented. It parses correctly when the drawer itself is dedented.
+Please make sure these indented drawers still parse correctly with a paragraph inside.
+
+** DONE Indented timestamp issue
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 22:13]
+:END:
+Here are some corner cases:
+
+#+begin_example
+:PROGRESS:
+  [2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
+:END:
+
+  [2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
+
+[2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
+#+end_example
+
+Both of the indented lines that start with a timestamp are failing to parse. The last line parses fine when there is no indent present. All lines parse fine if the indented lines have anything else than a timestamp at the very start (even if there's a timestamp following the prefix).
+
+All of the above lines containing timestamps should parse as a paragraph of text that begins with a timestamp and is followed by some plain text.
+
+Update the corpus tests that currently expect an ERROR node to be produced for these cases.
+
+** DONE Multiple indentend timestamps
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 22:53]
+:END:
+I found one more edge case:
+#+begin_example
+  :FEEDING_LOG:
+  [2025-01-04 Sat] Fed 1:1:1 (starter:flour:water). Rose 3× in 4 hours.
+  [2025-01-05 Sun] Fed 1:2:2. Peak at 6 hours — slightly slower.
+  [2025-01-06 Mon] Fed 1:5:5. Testing for long cold ferment.
+  :END:
+#+end_example
+All three lines should parse as paragraphs.
+
+** DONE Another multi-line link edge case
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-21 Sat 00:09]
+:END:
+#+begin_example
+:PROPERTIES:
+:context: [[file:src/org_parser/text/_rich_text.py::@classmethod
+ def from_node(
+ cls,
+ node: tree_sitter.Node,
+ *,
+ document: Document,
+ ) -> RichText:
+ """Create a :class:`RichText` from a single tree-sitter node.]]
+:END:
+#+end_example
+
+The above fails to parse correctly, the link should be a valid multi-line link.
+
+** DONE Lone end marker breaks the parser
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 23:59]
+:END:
+#+begin_example
+,* TODO Heading
+  - State "DONE"       from "TODO"       [2014-08-15 pią 23:25]
+  :END:
+#+end_example
+
+The above example is technically malformed, but it should parse as a heading with one list item followed by a indented plaintext item.
+
+The recent fix causes the END marker to not be a part of the indent block. Can this be fixed?
+
+** TODO List bullet
+Bind the list_item bullet in the parse tree - currently the unordered and ordered list items are indistinguishable since they don't expose the list bullet in the parse tree.
+
+** Support for Babel call syntax
+** Support for Org entities
+** Support for subscript/superscript
+** Better support for tableel tables
+Table.el tables are parsed weird right now - just the frame lines are parsed as tableel tables with the actual table data parsed as Org Tables.
+
+* DONE Semantic nodes implementation
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-21 Sat 00:47]
+:END:
+** DONE Python scaffold
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-07 Sat 13:41]
+:END:
+Create a scaffold of a Python project using Poetry as the build tool. Include =mypy= for typings, =ruff= for linting and formatting and =pytest= for tests. The project will be a library that wraps the tree-sitter based parser, so include =py-tree-sitter= in the dependencies as well. For development, add =pyright= LSP server.
 Make sure that the setting for all of these tools are fairly strict, we want this project to be very well validated.
 
-The source code of the library should expose the tree-sitter parser with thin Python bindings. Don't worry about ease-of-use of the parser just yet, we will be addressing the user experience next.
+I'd like the layout of the library to be as follows:
 
-Create an extensive test suite that will run the parser against the test files.
+#+begin_example
+src - main Python source folder
+|-- org_parser - main module
+    |-- document - document-level objects
+    |-- element - lesser & greater elements
+    |-- text - rich text support
+tests - the test suite
+#+end_example
 
-Write the implementation plan down to docs/plans/python-wrapper-impl.md
+The source code of the library should expose the tree-sitter parser with thin Python bindings. Don't worry about ease-of-use of the parser just yet, we will be addressing the user experience next. It is enough to provide an =org_parser.document.load_raw()= function that reads an org file and returns th raw parse tree.
 
-** TODO Implement the Python wrapper
-Implement the plan from @docs/plans/python-wrapper-impl.md file.
+Create a test suite that will run the parser against some basic example files. We will be expanding the code soon, so there's no need to validate that it works too much.
 
+Before starting, write the implementation plan to docs/plans/ as a markdown file.
+
+** DONE Update the CI & AGENTS.md
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-07 Sat 13:41]
+:END:
+Update GitHub Actions workflow to also test the python portion of the project.
+
+Update AGENTS.md with instructions for the Python portion of the project.
+
+** DONE Semantic nodes
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 01:08]
+:END:
+*** DONE Env, Document, Heading
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 13:39]
+:END:
+Add the top-level semantic classes to the =org_parser.document= package:
+
+1. =Document=
+
+Represents the full Org-Mode document structure, including the zeroth section and headings found within the document.
+
+It should expose the following public properties:
+
+- =filename: str= - the filename of the document file,
+- =title: RichText | None= - the value of the TITLE keyword
+- =author: RichText | None= - the value of the AUTHOR keyword
+- =category: RichText | None= - the value of the CATEGORY keyword
+- =body: list[Element]= - returns the zeroth section of the document, excluding any headings
+- =children: list[Heading]= - returns all the top-level headings of this document
+
+
+2. =Heading=
+
+Represents a heading or a subheading object. It should expose the following public properties:
+
+- =document: Document= - the document in which the heading is found
+- =level: int= - the count of stars on the heading
+- =todo: str | None= - the TODO state (if any) of the heading
+- =priority: str | None= - the priority of the heading
+- =title: RichText | None= - title text as rich text
+- =counter: str | None= - completion counter for the heading
+- =tags: list[str]= - a list of tags of the heading, text-order
+- =body: list[Element]= - returns the body section of the heading, excluding any subheadings.
+- =parent: Heading | Document= - heading or document that is a parent of this heading,
+- =children: list[Heading]= - list of subheadings of this heading
+- =siblings: list[Heading]= - list of siblings of this heading (not including this heading)
+
+
+Don't worry about the definition of the =Element= class, let's create a stub for that in =or_parser.elements.*= module.
+Don't worry about the definition of the =RichText= class, let's create a stub for that in =or_parser.text.*= module.
+
+All of these abstractions should be constructable using either the parse tree or by manually providing raw values.
+When using the parse tree a special care should be taken to preserve the original source representation of the different objects, i.e. the title text should be kept verbatim as in the Tree-Sitter parse tree. We will lax that requirement eventually by introducing mutability & representation function that builds the representation from the components.
+
+Please extract the =Heading.counter= completion counter from the title. The =counter= property should store only the inner value of the brackets or =None= if the counter is not present.
+
+For the =Document.body=, just include everything that isn't a heading or a special keyword. Headings will be available as the =children= property, while special keywords should be extracted to individual fields of the document. For now let's recognize just the =title=, =author=, =category=, =description= and =todo= as dedicated properties of the document with all other special keywords plased in a =keywords: dict[str, RichText]= dictionary.
+
+Use a factory class method for the construction of the objects from the parse tree nodes. The constructors should require only the bare minimum of arguments. We will add mutable setters at a later point. Do keep the parse tree node in the constructed object for later use (we will base the string representation of the objects on that parse tree node at a later point).
+
+The =parent= property should be mandatory when constructing an object while the =children= property can be an empty list by default that is later updated. The =siblings= property can be computed, it won't be used too much, so there's no need to cache the values.
+
+Please add some rudimentary tests for the functionality, but keep in mind that we will be expanding it.
+
+*** DONE load, loads and dump, dumps
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:23]
+:END:
+Add the folowing functions to the Python wrapper library:
+
+- =load(filename: str): Document= - loads an Org-Mode file from file,
+- ~loads(input: str, filename: str | None): Document~ - loads an Org-Mode data from a string with an optional ~filename~ assigned to the resulting document,
+- =dumps(document: Document): str= - returns a string representing the contents of the document in Org-Mode format,
+- ~dump(document: Document, filename: str | None)~ - saves the Org-Mode file in the file named by =document.filename=,
+
+Add bsic tests for this functionality using the basic examples as test fixtures.
+
+*** DONE Source bytes only in document
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:35]
+:END:
+Do not cache the entire source file bytes in each heading. It suffices that the =Document= class caches the raw bytes and exposes them via the =source= property. Headings can use their =document= property to fetch the original source.
+The constructor for headings can take the document as a parameter.
+
+*** DONE Mutability
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:56]
+:END:
+Implement setters for all the properties on all the objects so far.
+
+Whenever, an object is mutated, it should be marked as dirty and it's representation should be built from scratch instead of re-using the raw parse tree.
+You can assume for now that all objects will have a =__str__= property that can be used to turn the object to string. When an object is mutated, that property will instead build the representation from scratch.
+
+We will implement the representation function next, so for the time being focus on the dirty flag and the setter logic.
+Add tests for the setters, but omit the representation tests, we will address that next.
+
+*** DONE mark_dirty()
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:58]
+:END:
+Add a public method for marking the nodes as dirty programatically.
+
+*** DONE __str__
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 15:10]
+:END:
+Implement the string representation function =__str__= for all objects. By default, when the object is not marked "dirty", it should re-use the raw input and the Tree-Sitter parse tree to produce a verbatim (as-in-source) representation. When an object is marked as dirty, the representation should be reconstructed from scratch.
+
+The representation for the =Heading= should only include the heading line and the body, but omit any subheadings.
+
+The representation for the =Document= should only include the special keywords and the other elements of the zeroth section.
+
+The goal is to preserve the original whitespace until a mutation is made, so that loading an object from the parse tree and then showing its representation will result in the same representation as in the parse tree source file.
+
+Don't worry about the =Element= and =RichText= stubs just yet, we will address that later.
+
+*** DONE RichText
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 15:31]
+:END:
+Expand the abstraction of =RichText= in =org_parser.text.*= module to support the inline markup, links, footnotes, etc.
+It should support all the parse tree nodes that can appear under a heading title or within a paragraph.
+
+Please create abstarctions for all of these entities that can be a part of the =RichText=. =RichText= itself can be constucted by passing a list of these abstractions or with a class method taking a parse tree node.
+=RichText= should have a dirty flag and by default show the verbatim document source representation when stringified. =RichText= can be mutated by prepending, appending or inserting additional data in the middle. That should mark it as dirty and cause the string representation to be computed.
+
+All of the inline markup abstractions should cache the exact values they represent. No need to store the parse tree nodes or the document in them - we keept that at the =RichText= granularity.
+
+All of these abstractions should be publicly available via the =org_parser.text.*= module so that new =RichText= objects can be created programatically and attached to headings/document.
+
+Update the =Heading.counter= property to return a =CompletionCounter= instead of plain string.
+
+*** DONE Heading planing
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 16:15]
+:END:
+Expand the =Timestamp= class to store all the individual values of a timestamp, including the date, time, optionally a duration, active/inactive state etc.
+Ideally, =Timestamp= should be moved to a dedicated module =org_parser.time= as there will be more related abstractions there.
+
+Timestamps should have a =start= and =end= properties, with =end= being optional (only available if the timestamp has a duration). Timestamp should be convertible to a Python datetime (use the =start= property). There is no need to make the timestamp fields mutable.
+
+No need to reimplement the timestamp parsing in Python - use the tree sitter node properties directly.
+
+Add the planning fields to the =Heading= class:
+- =scheduled: Timestamp | None=
+- =closed: Timestamp | None=
+- =deadline: Timestamp | None=
+
+These fields should be mutable. Update the representation for =Heading= to take them into account when the heading is marked as dirty.
+
+*** DONE Element
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 16:36]
+:END:
+Expand the abstract =Element= class with an =parent= property. The parent can be either a =Document=, a =Heading= or another =Element=.
+
+Whenever an =Element= is mutated, the parent element must be marked as dirty in addition to marking the current element as dirty. The same is true for the =Heading=, a mutation at a nested level should mark all intermediate levels as dirty, all the way to the root element - the =Document=, unless an element along the chain is already marked as dirty. This way a mutation at a lower level will be reflected when stringifying the whole =Document=.
+
+Both =RichText= and =Timestamp= can be made into full-fledged elements if that makes sense.
+
+**** COMMENT
+Codex decided that making rich text an element doesn't make sense.
+
+*** DONE Keywords
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 16:55]
+:END:
+Add a dedicated =Element= subclass for the special keywords called =Keyword=.
+The class should represent a special keyword. The keyword value should be mutable.
+
+Update the =Document= to extract and store these new =Keyword= objects instead of =RichText= directly.
+
+All keywords should be available in the =Document.keywords= map, including the ones with specialized properties.
+
+*** DONE Paragraph
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:01]
+:END:
+Add a dedicated =Element= subclass for the paragraph element - =Paragraph=. The class should store the values that are found in =paragraph= node of the parse tree. The paragraph body should be mutable.
+
+Add support for this new element type when processing document/heading bodies that can contain paragraphs.
+
+*** DONE Table
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:12]
+:END:
+Add a dedicated =Element= subclass for the table element - =Table=. The class should represent an Org table or a Table.el table, with dedicated abstractions for table rows and table cells. Table cells and rows should be mutable, marking the whole table as dirty. Table cell values can remain =RichText= for now, but the parent element of these rich text elements should be the table.
+
+Tables should also support the table formula lines.
+
+When the element is marked dirty, the table should be formatted according to the Org Table rules, not Table.el. Make sure to align the table columns based on the size of the cell values. The resulting table should be "nicely" formatted and aligned.
+
+Add support for this new element type when processing document/heading bodies that can contain tables.
+
+*** DONE Clock
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:22]
+:END:
+Add a dedicated =Element= subclass for the clock log line. This element should support the various forms a =CLOCK:= line can assume - including an active and inactive timestamp, a timerange and the duration.
+The element should be placed in the =org_parser.time.*= module and re-use the =Timestamp= class for the actual time component.
+Clocks should be mutable by setting the entire timestamp. The duration value should be recomputed after the timestamp is set with a duration (start and end populated).
+
+Add support for this new element type when processing document/heading bodies that can contain clock lines.
+
+*** DONE Properties, Logbook, Drawer
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]
+:END:
+Add a dedicated =Element= subclass for the drawer elements: =Properties=, =Logbook= and =Drawer=. These classes should represent the Org Mode drawers, including the key-value pairs stored within them (for properties) as well as the other types of objects that can be a part of a drawer (other drawer types).
+
+For =Properties= do extract the vlues from tree-sitter's =property_drawer=, specifically the key-value pairs for =node_property=.
+I would like the =Poperties= element to be mutable and dictionary-like, i.e. it should be possible to set the values of properties via ~properties["name"] = RichText("test")~ for instance. The values of the properties should be "owned" by the drawer element, so that mutation of any of those field values is immediately reflected in the output of the drawer stringification.
+
+For =Logbook= drawers, extract the list of logbook repeats and clock entries. For now, let's leave them as separate elements that are owned by the drawer. We will address the usability of the logbook drawer at some point.
+
+For the remaining drawer types, have a dedicated =Drawer= element that represents the drawer. It should have a name and a body. The body is owned by the drawer.
+
+All drawers should be mutable and marked dirty when mutated.
+
+*** DONE Heading/Document drawers
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 22:02]
+:END:
+Update the =Document= class with fields dedicated to properties and the logbook. These fields should be populated based on the properties & logbook drawers found on the parse tree. If there are multiple such drawers attached to a document's zeroth section merge their values into a single element dedicated to the given drawer type.
+
+Update =Heading= class with fields dedicated to properties and the logbook. These fields should be populated based on the properties & logbook drawers found on the parse tree. If there are multiple such drawers attached to the heading merge their values into a single element dedicated to the given drawer type.
+
+These extracted drawers should still be mutable and reflect their changes in the stringification output. For the dirty output, the properties drawer should come first, followed by the logbook drawer.
+
+Other drawers can stay in the bodies of their respective owning elements. No need to handle them specially.
+
+*** DONE Block
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 22:49]
+:END:
+Add a dedicated =Element= subclass for the various blocks: =ExampleBlock=, =VerseBlock=, =SourceBlock=, =DynamicBlock=, =FixedWidthBlock=, etc. The classes should represent the different blocks of the Tree Sitter parse tree. Blocks should be mutable, with the contents of the blocks specifically being mutable. Mutation should be handled the same way as of the other elements.
+
+Add support for these new elements when processing document/heading bodies that can contain blocks.
+
+*** DONE List
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 23:15]
+:END:
+Add a dedicated =Element= subclass for the =List='s. The class should represent a list comprised of =ListItem='s. List items should support all the features of the list items, such as the completion counters, checkboxes, item tags, rich text first line, the continuation lines, etc. List items should be mutable, and so is the list itself - it should be possible to add extra line items to the list.
+
+Add support for this new element when processing document/heading bodies that can contain lists. Do also add support for these in drawer bodies.
+
+*** DONE Repeated tasks
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-09 Mon 00:20]
+:END:
+Add a dedicated =Element= subclass for repeated tasks. A =Repeat= is a list item stored in the =LogbookDrawer= as one of the following forms:
+
+#+begin_example
+- State "<after_state>" from "<before_state>" <timestamp>
+
+- State "<after_state>" from "<before_state>" <timestamp> \\
+  <state_change_note>
+#+end_example
+
+That is, it is a line item with a specific text content followed by a timestamp and an optional linebreak and optional continuation line containing a short note. The items and continuation lines can be arbitrarily indented. Here are some actual examples:
+
+#+begin_example
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]
+- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\
+  No need for that with the semantic nodes.
+#+end_example
+
+The line item content should be parsed to extract the =after= and =before= states as well as the =timestamp= and the optional =note=. The =Repeat= class should cache these values internally and allow their mutation (causing the containing list to become dirty).
+
+The =Repeat= class should specifically be used in the logbook drawer. No other lists should be parsed for the repeated task format.
+
+Add a new field to the =Heading= class called =repeated_tasks: list[Repeat]=. It should contain all the repeats from the logbook drawers of that heading. The filed should be mutable and allow adding extra repeats (effectively mutates the list found in the logbook).
+
+*** DONE Error parse fallback
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 18:42]
+:END:
+Add a semantic fallback whenever a parse error node is encountered - the invalid parse node should be treated as a =RichText= element.
+
+Add special handling of these error situations in extraction code, so that the resulting semantic node tree uses those =RichText= elements instead of throwing any errors or ignoring the error condition. If a textual value absolutely cannot be used, then prefer to treat the "enclosing" object as text instead of throwing. The goal is to recover from the error condition and make the remained of the parse tree usable as is.
+
+At the same time, whenever a parse tree error is encountered, please store that error parse node in the root =Document= class under the =errors= list. This can be useful for determining if there are any errors present in the file (linting, etc).
+
+The =report_error= callback should instead be a method of the =Document= class. All elements & functions that receive the =Document= can just use that method to report any encountered parse errors. It makes sense to pass the =Document= that owns each element to those elements instead of the raw =source= and the extra =report_error=. I expect elements to receive the parse tree node that they represent, the =Document= for the environment in which the parse tree node is valid, and the other arguments an element might need.
+
+=Document= and =Heading= should also recognize the parse errors that can occur in the zeroth section (for =Document=) or the various constituents of the =Heading= - a parse error can be encountered at any parse node and these should be handled by attaching them to the owning document and treating the error as text for the semantic node creation.
+
+Here's a string input that should produce an error in the document but doesn't: ~"* test\n:properties:\n"~.
+
+For =ParseError= please only expose the start & end points and the text, no need to expose the parse tree node via instance attributes. A method called =ParseError.raw= should be added to return the raw parse tree node.
+
+*** CANCELLED raw()
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-11 Wed 21:48] \\
+  Decided not to do that.
+:END:
+Add a method called =raw= for each object that returns the raw Tree-Sitter parse tree nodes that were used to construct those objects.
+
+*** DONE More convenient element __repr__
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-11 Wed 22:21]
+:END:
+Please add =__repr__= methods to all element classes that show the contents in a convenient way - instead of showing the verbatim source text it should be showing the embedded elements. Only show the populated fields, no =None='s.
+
+Also update the representation of =Document= and =Heading=.
+
+The goal is to be able to quickly see the semantic tree structure at a glance.
+
+** DONE Recover semantic structure
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-11 Wed 21:48]
+:END:
+Attempt to recover the nesting structure using the indent blocks and specifically the =indent= field of the =block= node.
+
+Each block should be considered separately, when two consecutive blocks are of the same indent level, they still should be considered separately.
+
+Within a block's body:
+
+- Multiple consecutive paragraphs should be combined into a single paragraph object preserving the source contents & whitespace. Example:
+
+  #+begin_example
+  (block
+    (paragraph
+      (plain_text))
+    (paragraph
+       (plain_text)))
+  ;; Becomes:
+  (paragraph
+    (plain_text)
+    (plain_text))
+  #+end_example
+
+- Multiple consecutive list items should be combined into a single =List= object preserving the original source whitespace. Each parse tree item becomes an item on the list object. Here's an example:
+
+  #+begin_example
+  (block
+    (list_item)
+    (list_item)
+    (list_item))
+  ;; Becomes:
+  (list
+    (list_item)
+    (list_item)
+    (list_item))
+  #+end_example
+
+- When a nested block is following a list item, it should be considered for structure recovery recursively and then its results should be added as a body of the preceeding list item. Example:
+
+  #+begin_example
+  (block
+    (list_item)
+    (block
+      (list_item)
+      (list_item))
+    (list_item))
+  ;; Becomes:
+  (list
+    (list_item
+      (list
+        (list_item)
+        (list_item)))
+    (list_item))
+  #+end_example
+
+- Blank lines and other non-list-item elements should break up the lists/paragraphs in a block. A single block can contain multiple recoverable lists/paragraphs. Here's an example:
+
+  #+begin_example
+  (block
+    (list_item)
+    (paragraph)
+    (list_item))
+  ;; Becomes:
+  (list
+    (list_item))
+  (paragraph)
+  (list
+    (list_item))
+  #+end_example
+
+The resulting objects should have the proper as-in-source string representation, including the nodes that were "semantically attached" to them.
+
+After the recovery process, the semantic tree should not have any indent blocks present.
+
+When stringifying a dirty list, please take into account the indentation - each level should use 2 spaces for indentation (but please keep that somewhat configurable).
+
+** DONE Indent recovery
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-11 Wed 22:35]
+:END:
+When stringifying a dirty list, please take into account the indentation - each level should use 2 spaces for indentation (but please keep that somewhat configurable). This pertains to all elements of the body of a dirty list - marking a list dirty should mark all of its items as dirty.
+
+** DONE reformat method for re-formatting the text
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-11 Wed 22:51]
+:END:
+Add a =reformat= method to =Document=, =Heading= and =Element= subclasses that will cause all subnodes of those nodes to be marked as dirty (i.e. call =reformat= on all descendant nodes and then mark self as dirty).
+
+The goal is to be able to induce the scratch-built representation to be used instead of the source-verbatim one. This method will be used to selectively reformat a portion of an Org file.
+** DONE Ensure that list recovery does result in the body of the list being shown when not dirty.
+:PROPERTIES:
+:capture_time: [2026-03-20 Fri 20:21]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_list.py]]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 22:10]
+:END:
+** DONE Code review comments
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 22:10]
+:END:
+*** DONE Element source & node type
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 21:18]
+:END:
+Please refactor the =Element= class and its subclasses to not store the =source_text= directly and instead have =document= stored internally for the source needs. The =Element= class should also omit the =node_type= as it isn't needed. You can also omit its default =__str__= implementation, as that sholud never be called - the =Element= class is a subclass for the actual elements and should not be instantiated directly. You can also remove the =Element.from_node= method as elements should not be instantiated this way.
+
+Do not define read only properties for `node_type` or `source_text`. Node type should be removed altogether as it serves no purpose. All places that use the source text should extract the underlying `document` and use its `source` attribute.
+
+*** DONE Common __str__ helper
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 22:27]
+:END:
+There's some duplication when getting the node source:
+
+#+begin_example
++            return self._document.source[
++                self._node.start_byte : self._node.end_byte
++            ].decode()
+#+end_example
+
+Or...
+#+begin_example
++            node = element._node
++            doc = element._document
++            raw = (
++                doc.source[node.start_byte : node.end_byte].decode()
++                if node is not None and doc is not None
++                else ""
++            )
++            line = raw.rstrip("\n")
+#+end_example
+
+Some modules define helperfs for this purpose:
+
+#+begin_example
++def _node_text(node: tree_sitter.Node, source: bytes) -> str:
++    """Return source text covered by one node."""
++    return source[node.start_byte : node.end_byte].decode()
+#+end_example
+
+Or...
+
+#+begin_example
++def _safe_node_text(node: tree_sitter.Node | None, source: bytes) -> str:
++    """Return node text or an empty string for missing nodes."""
++    if node is None:
++        return ""
++    return _node_text(node, source)
++
++
++def _node_text(node: tree_sitter.Node, source: bytes) -> str:
++    """Return source text covered by one node."""
++    return source[node.start_byte : node.end_byte].decode()
+#+end_example
+
+I'd like to introduce a generic helper in a common module that will address this accross the board - it should take the
+=Document= and a tree sitter =Node= and return the source. It should handle the case wen either is not available.
+
+*** DONE Reuse =recover_lists=
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 22:48]
+:END:
+A lot of the modules define local wrappers over =recover_lists=, usually called =coalesce_list_items= or similar:
+
+In file src/org_parser/element/_drawer.py around line 439, near the ~new file   src/org_parser/element/_drawer.py~
+
+#+begin_example
++def _coalesce_list_items(
++    elements: list[Element],
++    *,
++    parent: Document | Heading | Element | None,
++) -> list[Element]:
++    """Recover semantic lists from flat drawer body elements."""
++    return recover_lists(elements, parent=parent)
+#+end_example
+
+In file src/org_parser/document/_body.py around line 207, near the ~new file   src/org_parser/document/_body.py~
+
+#+begin_example
++def coalesce_list_items(
++    elements: list[Element],
++    *,
++    parent: Heading | Document,
++) -> list[Element]:
++    """Recover semantic lists from flat body elements.
++
++    Args:
++        elements: Body elements that may include raw ``list_item`` stubs.
++        parent: Owner heading or document.
++
++    Returns:
++        A new list where adjacent list items are grouped into
++        :class:`~org_parser.element._list.List` objects.
++    """
++    return recover_lists(elements, parent=parent)
+#+end_example
+
+In file src/org_parser/element/_block.py around line 800, near the ~new file   src/org_parser/element/_block.py~
+
+#+begin_example
++def _coalesce_list_items(elements: list[Element]) -> list[Element]:
++    """Recover semantic lists from flat nested block body elements."""
++    from org_parser.element._list_recovery import recover_lists
++
++    return recover_lists(elements, parent=None)
+#+end_example
+
+There's likely more. Please replace all of these with straight calls to =recover_lists=.
+
+*** DONE src/org_parser/__init__.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 19:39]
+:END:
+
+In file src/org_parser/__init__.py around line 57, near the ~new file   src/org_parser/__init__.py~
+#+begin_example
++    return document.source.decode()
+#+end_example
+
+This only works when the source is available, it should use the representation function and iterate over the nodes. or the representation should include the children automatically.
+*** CANCELLED src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-19 Thu 18:06] \\
+  Decided against it for easier iteration at a later point.
+:END:
+
+In file src/org_parser/document/_heading.py around line 476, near the ~new file   src/org_parser/document/_heading.py~
+
+#+begin_example
++    # -- dunder protocols ----------------------------------------------------
++
++    def __str__(self) -> str:
++        """Return a textual representation of this heading and its body.
++
++        When the heading is clean and still backed by a parse tree, this
++        returns the exact source slice that spans the heading line and body
++        section only, excluding any sub-headings. Once dirty, this is rebuilt
++        from semantic fields.
++        """
++        if not self._dirty and self._node is not None:
++            end_byte = self._node.end_byte
++            first_subheading = _find_first_subheading(self._node)
++            if first_subheading is not None:
++                end_byte = first_subheading.start_byte
++            return self.document.source[self._node.start_byte : end_byte].decode()
++
++        return _render_heading_dirty(self)
+
+#+end_example
+
+This should include the children. Also, consider making =Heading= an =Element= so that we can just iterate over the body.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 22:39]
+:END:
+
+In file src/org_parser/document/_document.py around line 108, near the ~new file   src/org_parser/document/_document.py~
+
+#+begin_example
++        self._source: bytes = b""
+#+end_example
+
+Ideally, it would be =None= when not available.
+*** DONE src/org_parser/document/_body.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 21:18]
+:END:
+
+In file src/org_parser/document/_body.py around line 203, near the ~new file   src/org_parser/document/_body.py~
+#+begin_example
++        source_text=source[node.start_byte : node.end_byte].decode(),
+
+#+end_example
+
+Should be the document instead, if source is missing it'll fail.
+*** CANCELLED src/org_parser/document/_body.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-18 Wed 21:33] \\
+  There are more concerning things in the code.
+:END:
+
+In file src/org_parser/document/_body.py around line 35, near the ~new file   src/org_parser/document/_body.py~
+
+#+begin_example
++if TYPE_CHECKING:
+
+#+end_example
+
+I don't like this pattern, please don't use it.
+*** DONE src/org_parser/document/_body.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 22:34]
+:END:
+
+In file src/org_parser/document/_body.py around line 207, near the ~new file   src/org_parser/document/_body.py~
+
+#+begin_example
++def coalesce_list_items(
++    elements: list[Element],
++    *,
++    parent: Heading | Document,
++) -> list[Element]:
++    """Recover semantic lists from flat body elements.
++
++    Args:
++        elements: Body elements that may include raw ``list_item`` stubs.
++        parent: Owner heading or document.
++
++    Returns:
++        A new list where adjacent list items are grouped into
++        :class:`~org_parser.element._list.List` objects.
++    """
++    return recover_lists(elements, parent=parent)
+
+#+end_example
+
+This looks like a wrapper that isn't needed. It literally just forwards the arguments to =recover_lists=.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 00:06]
+:END:
+
+In file src/org_parser/document/_document.py around line 209, near the ~new file   src/org_parser/document/_document.py~
+
+#+begin_example
++    @title.setter
++    def title(self, value: Keyword | None) -> None:
++        """Set the ``#+TITLE:`` value and mark the document as dirty."""
++        self._title = value
++        if value is None:
++            self._keywords.pop(_TITLE, None)
++        else:
++            self._keywords[_TITLE] = value
++        self._adopt_keyword(self._title)
++        self._mark_dirty()
+#+end_example
+
+All of these keyword setters are duplicated with very few changes between them. They could be extracted into a helper method.
+Please check the other classes for similar low-hanging fruit refactorings.
+
+You can also define =adopt_elements= that accepts a list and use that instead of the various versions of =adopt_*= that extract parts of the object.
+
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 00:08]
+:END:
+
+In file src/org_parser/document/_document.py around line 114, near the ~new file   src/org_parser/document/_document.py~
+#+begin_example
++        self._adopt_keyword(self._title)
++        self._adopt_keyword(self._author)
++        self._adopt_keyword(self._category)
++        self._adopt_keyword(self._description)
++        self._adopt_keyword(self._todo)
++
+#+end_example
+
+It's duplicated with the following =_adopt_keywords= call.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 01:08]
+:END:
+
+In file src/org_parser/document/_document.py around line 412, near the ~new file   src/org_parser/document/_document.py~
+
+#+begin_example
++        reformat_value(self._title)
++        reformat_value(self._author)
++        reformat_value(self._category)
++        reformat_value(self._description)
++        reformat_value(self._todo)
+#+end_example
+
+It's duplicated with the reformat call on =keywords=.
+*** DONE src/org_parser/element/_element.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 01:08]
+:END:
+
+In file src/org_parser/element/_element.py around line 35, near the ~new file   src/org_parser/element/_element.py~
+
+#+begin_example
++def reformat_value(value: object) -> None:
++    """Recursively mark semantic nodes dirty for scratch-built rendering."""
++    if value is None:
++        return
++
++    if isinstance(value, dict):
++        mapping = cast(dict[object, object], value)
++        for nested in mapping.values():
++            reformat_value(nested)
++        return
++
++    if isinstance(value, list | tuple | set):
++        sequence = cast(list[object] | tuple[object, ...] | set[object], value)
++        for nested in sequence:
++            reformat_value(nested)
++        return
++
++    reformat = getattr(value, "reformat", None)
++    if callable(reformat):
++        reformat()
++        return
++
++    mark_dirty = getattr(value, "mark_dirty", None)
++    if callable(mark_dirty):
++        mark_dirty()
+#+end_example
+
+I don't like this approach very much, I'd like it to resemble the =mark_dirty= or =adopt= patterns more closely - each =reformat= method should mark self as dirty and call =reformat= on any sub elements.
+
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 00:07]
+:END:
+
+In file src/org_parser/document/_document.py around line 424, near the ~new file   src/org_parser/document/_document.py~
+
+#+begin_example
+    def _adopt_keyword(self, value: Keyword | None) -> None:
++        """Assign this document as parent for one keyword."""
++        if value is None:
++            return
++        value.set_parent(self, mark_dirty=False)
++
+#+end_example
+
+All of these are quite duplicated, instead these could be more generic functions accepting elements or collections of elemenths.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 00:08]
+:END:
+
+
+In file src/org_parser/document/_document.py around line 166, near the ~new file   src/org_parser/document/_document.py~
+
+#+begin_example
++        doc._adopt_keyword(doc._title)
++        doc._adopt_keyword(doc._author)
++        doc._adopt_keyword(doc._category)
++        doc._adopt_keyword(doc._description)
++        doc._adopt_keyword(doc._todo)
++        doc._adopt_keywords(doc._keywords)
+
+#+end_example
+
+These are redundant as well.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 19:53]
+:END:
+
+In file src/org_parser/document/_document.py around line 580, near the ~new file   src/org_parser/document/_document.py~
+
+#+begin_example
+                else:
++                    body.append(
++                        extract_body_element(sc, parent=parent, document=parent)
++                    )
+#+end_example
+
+Needs to be checked for potential =ERROR= leak.
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 20:00]
+:END:
+
+In file src/org_parser/document/_heading.py around line 601, near the ~new file   src/org_parser/document/_heading.py~
+
+#+begin_example
++    properties_node = node.child_by_field_name("properties")
+#+end_example
+
+Check if this can be multiple instances.
+*** CANCELLED src/org_parser/element/_indent_block.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-19 Thu 13:54] \\
+  We do need it.
+:END:
+
+In file src/org_parser/element/_indent_block.py around line 19, near the ~new file   src/org_parser/element/_indent_block.py~
+
+#+begin_example
++class IndentBlock(Element):
+
+#+end_example
+
+Not sure that we need an abstraction for this, as all of these blocks should be removed from the semantic tree once list recovery runs.
+
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 00:13]
+:END:
+
+In file src/org_parser/document/_heading.py around line 177, near the ~new file   src/org_parser/document/_heading.py~
+
+#+begin_example
++        # Re-home body elements to this heading instance (not its parent).
++        heading._adopt_properties(heading._properties)
++        heading._adopt_logbook(heading._logbook)
++        heading._adopt_body_elements(heading._body)
+#+end_example
+
+I wonder if this could be done by passing the heading as a =parent= to =_extract_body=.
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 23:17]
+:END:
+
+In file src/org_parser/document/_heading.py around line 207, near the ~new file   src/org_parser/document/_heading.py~
+
+#+begin_example
++        if not self._parent.dirty:
++            self._parent.mark_dirty()
+#+end_example
+
+I'd rather the =mark_dirty= method checked the dirty flag instead of doing it in call sites. Please update all such invocations to instead rely on =mark_dirty= to check the flag and only set it if unset. Make sure that all implementations of =mark_dirty= short-circuit to avoid loops.
+
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 23:17]
+:END:
+
+In file src/org_parser/document/_heading.py around line 209, near the ~new file   src/org_parser/document/_heading.py~
+
+#+begin_example
++        if not value.dirty:
++            value.mark_dirty()
+
+#+end_example
+
+This seems weird. The dirty chain marking should do that anyway so no need to do this explicitly.
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 00:40]
+:END:
+
+In file src/org_parser/document/_heading.py around line 350, near the ~new file   src/org_parser/document/_heading.py~
+
+#+begin_example
++        """Repeated task entries extracted from this heading's logbook."""
++        if self._logbook is None:
++            self._ensure_logbook_for_repeats()
++            self._sync_repeated_tasks_from_logbook()
++        return self._repeated_tasks
+#+end_example
+
+This should only be done on creation time, not on fetch time. Please ensure that the repeated tasks state is always synced on modification and can be returned directly.
+
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 23:17]
+:END:
+
+In file src/org_parser/document/_heading.py around line 413, near the ~new file   src/org_parser/document/_heading.py~
+
+#+begin_example
++        self._dirty = True
++        if not self._parent.dirty:
+
+#+end_example
+
+This should just do =self._parent.mark_dirty()=.
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 23:04]
+:END:
+
+In file src/org_parser/document/_heading.py around line 391, near the ~new file   src/org_parser/document/_heading.py~
+
+#+begin_example
++    def set_parent(
++        self,
++        value: Heading | Document,
++        *,
++        mark_dirty: bool = True,
++    ) -> None:
++        """Set parent object with optional dirty propagation."""
++        self._parent = value
++        if mark_dirty:
++            self._mark_dirty()
+
+#+end_example
+
+I don't like that this exists. Most of the call sites set the =mark_dirty= flag to =False=. Instead, the =parent= attribute should be used instead.
+
+I'd like you to remove all instances of `set_parent`. All places that use it should now use the `parent` setter. Settnig a parent should not make an object dirty (parent does not participate in an objects representation). Setting children of an object should make it dirty.
+
+*** DONE src/org_parser/element/__init__.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 22:50]
+:END:
+
+In file src/org_parser/element/__init__.py around line 45, near the ~new file   src/org_parser/element/__init__.py~
+
+#+begin_example
++    "ListItemContinuation",
+
+#+end_example
+
+I'm pretty sure this isn't used anymore in the tree-sitter parser. Remove the whole =ListItemContinuation= class altogether.
+*** DONE src/org_parser/element/_block.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 21:19]
+:END:
+
+In file src/org_parser/element/_block.py around line 49, near the ~new file   src/org_parser/element/_block.py~
+
+#+begin_example
++        source_text: str = "",
+
+#+end_example
+
+This should be the owning =Document= insetad.
+*** DONE src/org_parser/element/_block.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 01:16]
+:END:
+
+In file src/org_parser/element/_block.py around line 60, near the ~new file   src/org_parser/element/_block.py~
+
+#+begin_example
++    def contents(self) -> list[Element]:
++        """Mutable block contents as semantic elements."""
++        return self._contents
+#+end_example
+
+This should be called =body= instead, to keep to the convention.
+*** DONE src/org_parser/element/_element.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 14:54]
+:END:
+
+In file src/org_parser/element/_element.py around line 126, near the ~class Element:~
+
+#+begin_example
++    def attach_backing(
+#+end_example
+
+The name is not great. Please rename to =attach_source=.
+*** DONE src/org_parser/element/_block.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 21:19]
+:END:
+
+In file src/org_parser/element/_block.py around line 153, near the ~new file   src/org_parser/element/_block.py~
+
+#+begin_example
++            node_type="center_block",
+
+#+end_example
+
+I don't like that all subclasses of =Element= pass it a node type. There's no need for that.
+*** DONE src/org_parser/element/_block.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 22:34]
+:END:
+
+In file src/org_parser/element/_block.py around line 800, near the ~new file   src/org_parser/element/_block.py~
+
+#+begin_example
++def _coalesce_list_items(elements: list[Element]) -> list[Element]:
++    """Recover semantic lists from flat nested block body elements."""
++    from org_parser.element._list_recovery import recover_lists
++
++    return recover_lists(elements, parent=None)
+#+end_example
+
+Looks like we don't need the wrapper method and could call the =recover_lists= function directly. Also, this sets the =List= objects parent to =None=.
+*** DONE tests/test_block_elements.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 12:51]
+:END:
+
+In file tests/test_block_elements.py around line 42, near the ~if TYPE_CHECKING:~
+
+#+begin_example
++    Blank-line nodes are wrapped as plain :class:`Element` instances (the base
++    class, not any concrete subclass), so an exact type check identifies them.
++    """
++    return [element for element in elements if type(element) is not Element]
+
+#+end_example
+
+A semantic node should be introduced for these.
+
+*** DONE src/org_parser/element/_element.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 12:51]
+:END:
+
+In file src/org_parser/element/_element.py around line 157, near the ~def element_from_error_or_unknown(~
+
+#+begin_example
++        paragraph = Paragraph(body=RichText(text), parent=parent)
++        paragraph.attach_backing(node, document)
++        return paragraph
++
++    elem = Element(parent=parent)
++    elem.attach_backing(node, document)
++    return elem
+#+end_example
+
+This should return a =RichText= element, not =Element= directly, even if the element is valid. This sholud be reported as an error in the document.
+Please introduce a new semantic object for each of the valid nodes that appear in the parse tree and would otherwise result in a generic =Element=. Specifically, do that for the blank lines, etc.
+
+*** DONE src/org_parser/element/_element.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 01:22]
+:END:
+
+In file src/org_parser/element/_element.py around line 214, near the ~new file   src/org_parser/element/_element.py~
+
+#+begin_example
+
++def _is_error_node(node: tree_sitter.Node) -> bool:
++    """Return *True* if *node* is a parse-error or missing token.
++
++    Args:
++        node: Any tree-sitter node to inspect.
++
++    Returns:
++        ``True`` for ``ERROR``-typed nodes and for nodes where
++        ``node.is_missing`` is set by the parser's error-recovery.
++    """
++    return node.type == _ERROR_NODE_TYPE or node.is_missing
++
+#+end_example
+
+This looks useful enough, please extract it to common module and re-use wherever a check for the error node is made.
+*** DONE src/org_parser/element/_drawer.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 00:31]
+:END:
+
+In file src/org_parser/element/_drawer.py around line 41, near the ~new file   src/org_parser/element/_drawer.py~
+
+#+begin_example
++
++_PARAGRAPH = "paragraph"
++_ORG_TABLE = "org_table"
++_TABLEEL_TABLE = "tableel_table"
++_CLOCK = "clock"
++_DRAWER = "drawer"
++_LOGBOOK_DRAWER = "logbook_drawer"
++_PROPERTY_DRAWER = "property_drawer"
++_NODE_PROPERTY = "node_property"
++_CENTER_BLOCK = "center_block"
++_QUOTE_BLOCK = "quote_block"
++_SPECIAL_BLOCK = "special_block"
++_DYNAMIC_BLOCK = "dynamic_block"
++_COMMENT_BLOCK = "comment_block"
++_EXAMPLE_BLOCK = "example_block"
++_EXPORT_BLOCK = "export_block"
++_SRC_BLOCK = "src_block"
++_VERSE_BLOCK = "verse_block"
++_FIXED_WIDTH = "fixed_width"
++_LIST_ITEM = "list_item"
++_BLOCK = "block"
+#+end_example
+
+These seem to be duplicated all over the place. Instead these should be defined once and imported. A good place for these definitions would be the nodes module.
+
+Please also move the planning keywords constants there.
+
+When importing these constants, please avoid renaming the import - it makes sense to just import these and use as-is.
+*** DONE src/org_parser/element/_drawer.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 21:19]
+:END:
+
+In file src/org_parser/element/_drawer.py around line 81, near the ~new file   src/org_parser/element/_drawer.py~
+
+#+begin_example
++        source_text: str = "",
+
+#+end_example
+
+Again, use =Document= instead of passing =source_text= around.
+*** DONE src/org_parser/text/_rich_text.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 20:14]
+:END:
+
+In file src/org_parser/text/_rich_text.py around line 189, near the ~new file   src/org_parser/text/_rich_text.py~
+
+#+begin_example
+        source: bytes,
++
+#+end_example
+
+Should use the =document.source= instead of =source: bytes=.
+*** DONE src/org_parser/element/_drawer.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 22:34]
+:END:
+
+In file src/org_parser/element/_drawer.py around line 439, near the ~new file   src/org_parser/element/_drawer.py~
+
+#+begin_example
++def _coalesce_list_items(
++    elements: list[Element],
++    *,
++    parent: Document | Heading | Element | None,
++) -> list[Element]:
++    """Recover semantic lists from flat drawer body elements."""
++    return recover_lists(elements, parent=parent)
+#+end_example
+
+No need for the wrapper, use the =recover_lists= directly.
+*** DONE src/org_parser/element/_table.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 17:57]
+:END:
+
+In file src/org_parser/element/_table.py around line 247, near the ~new file   src/org_parser/element/_table.py~
+
+#+begin_example
++    """Parse one ``table_row`` node into :class:`TableRow`."""
++    has_rule = any(child.type == "table_rule" for child in node.named_children)
++    if has_rule:
++        return TableRow(cells=[], is_rule=True, table=table)
+
+#+end_example
+
+Kinda makes sense to store the contents of the rule too. Please introduce a dedicated =TableRuleRow= class that stores the entire rule. It should replace the current =is_rule= flag on the row.
+
+*** DONE src/org_parser/element/_element.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 21:19]
+:END:
+
+In file src/org_parser/element/_element.py around line 76, near the ~new file   src/org_parser/element/_element.py~
+
+#+begin_example
+        node_type: str = "",
++        source_text: str = "",
++
+#+end_example
+
+No need for the =node_type=, just accept the =document= as the owner and use that for the default representation.
+*** CANCELLED src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-19 Thu 17:39] \\
+  Will be done at a later point.
+:END:
+
+In file src/org_parser/element/_list.py around line 626, near the ~new file   src/org_parser/element/_list.py~
+
+#+begin_example
++    """Return bullet marker text from one list item node."""
++    bullet_nodes = node.children_by_field_name("bullet")
++    if not bullet_nodes:
++        return "-"
+
+#+end_example
+
+Not currently on the tree-sitter parser, but will be added.
+*** DONE src/org_parser/element/_element.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 21:19]
+:END:
+
+In file src/org_parser/element/_element.py around line 94, near the ~new file   src/org_parser/element/_element.py~
+
+#+begin_example
+    @classmethod
++    def from_node(
++        cls,
++        node: tree_sitter.Node,
++        document: Document | None = None,
++        *,
++        parent: Document | Heading | Element | None = None,
++    ) -> Element:
++
+#+end_example
+
+This shouldn't ever be used. This class should just be a base class for all the other elements.
+*** DONE src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 22:51]
+:END:
+
+In file src/org_parser/element/_list.py around line 38, near the ~new file   src/org_parser/element/_list.py~
+
+#+begin_example
++class ListItemContinuation(Element):
+
+#+end_example
+
+This doesn't happen in the tree-sitter parser anymore.
+*** DONE Repeat note
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 15:40]
+:END:
+Please refactor the =Repeat= parsing to use the =first_line= from a =ListItem= for structure (assuming there's no =item_tag= or =counter_set= or =checkbox= etc). Use the =body= for the repeat note.
+
+The =Repeat= parsing should be done *after* the list reconstruction, so that we can make sure that the note is a part of the list item.
+
+*** DONE src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 15:40]
+:END:
+
+In file src/org_parser/element/_list.py around line 358, near the ~class Repeat(ListItem):~
+
+#+begin_example
+     def from_list_item(cls, item: ListItem) -> Repeat | None:
+         """Build a :class:`Repeat` from one list item when pattern-matched."""
+-        matched = _parse_repeat_source(item.source_text)
++        node = item._node
++        doc = item._document
++        item_source = (
++            doc.source[node.start_byte : node.end_byte].decode()
++            if node is not None and doc is not None
++            else ""
++        )
++        matched = _parse_repeat_source(item_source)
+#+end_example
+
+I would rather this used the =item.first_line= instead of using the source directly.
+*** DONE src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 15:40]
+:END:
+
+In file src/org_parser/element/_list.py around line 722, near the ~new file   src/org_parser/element/_list.py~
+
+#+begin_example
++@dataclass(slots=True)
++class _RepeatMatch:
++    """Parsed repeated-task fields extracted from one list item text."""
++
++    after: str
++    before: str
++    timestamp: Timestamp
++    note: str | None
++    note_indent: str
+#+end_example
+
+Check if this would be more natural in tree-sitter instead.
+*** DONE Indent recovery refactor
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 16:21]
+:END:
+=ListItem= and =Repeat= should not have a =line_prefix=. They should dirty-stringify their bodies to align them to the line text start, i.e a space "after" the bullet column:
+
+#+begin_example
+- List item line
+  body is aligned to the line text
+#+end_example
+
+Remove the indentation handling from =List= - since =ListItem= already handles indentation of its body it should be possible to just stringify each item of a list and len them handle any nested lists.
+
+Similarily, after structure recovery the =Paragraphs= should already be well-formed and embedded in structured lists, so there is no need for any extra indent handling.
+
+*** DONE src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 16:19]
+:END:
+
+In file src/org_parser/element/_list.py around line 294, near the ~new file   src/org_parser/element/_list.py~
+
+#+begin_example
++        indent = _extract_leading_indent(source_text)
++        normalized_indent = indent if indent != "" else None
++        self._note_indent = (
++            note_indent
++            if note_indent is not None
++            else _default_note_indent(normalized_indent)
++        )
+#+end_example
+
+This should instead be handled by the indent block logic.
+*** DONE src/org_parser/element/_list_recovery.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 17:32]
+:END:
+
+In file src/org_parser/element/_list_recovery.py around line 125, near the ~new file   src/org_parser/element/_list_recovery.py~
+
+#+begin_example
++    item_indent = base_indent + _source_indent_width(item.source_text)
++    block_indent = _source_indent_width(block.source_text)
+#+end_example
+
+This should be based on the =IndentBlock=, however I see that the =IndentBlock= currently doesn't have an =indent= attribute that is set on the parse tree. Please update that class to have an indent that then can be used for comparison in list recovery.
+
+The tree sitter parser ensures that indent blocks are nested - we can assume that all elements within the same block are at the same indent level. Whenever running the structure recovery, check for paragraph/indent block levels and coalesce conecutive blocks/paragraphs that match the indent level. If recovering list structure, attach any blocks/paragraphs that are more indented that the current list item to that item as a body element.
+
+*** DONE src/org_parser/document/_body.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 17:32]
+:END:
+
+In file src/org_parser/document/_body.py around line 146, near the ~def extract_indent_block(~
+
+#+begin_example
++    indent = (
++        source[indent_node.start_byte : indent_node.end_byte].decode()
++        if indent_node is not None
++        else None
++    )
+#+end_example
+
+This should use the =node_source= helper function.
+
+*** DONE src/org_parser/element/_paragraph.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 17:38]
+:END:
+
+In file src/org_parser/element/_paragraph.py around line 121, near the ~new file   src/org_parser/element/_paragraph.py~
+
+#+begin_example
++def _extract_indent(node: tree_sitter.Node, source: bytes) -> str | None:
++    """Return paragraph first-line indentation, if available."""
++    field_node = node.child_by_field_name("indent")
++    if field_node is not None:
++        value = source[field_node.start_byte : field_node.end_byte].decode()
++        return value if value != "" else None
++
++    paragraph_text = source[node.start_byte : node.end_byte].decode()
++    first_line, _, _ = paragraph_text.partition("\n")
++    indent_end = 0
++    while indent_end < len(first_line) and first_line[indent_end] in {" ", "\t"}:
++        indent_end += 1
++    if indent_end == 0:
++        return None
++    return first_line[:indent_end]
+#+end_example
+
+Any indented paragraph will have an indent field, however, when the indent is not avaialble, thre is no indent, o the latter half of the function will likely extract nothing.
+
+*** DONE src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 16:19]
+:END:
+
+In file src/org_parser/element/_list.py around line 338, near the ~class ListItem(Element):~
+
+#+begin_example
+         default_indent = self._line_prefix if self._line_prefix != "" else None
+         return self.render_with_indent(default_indent)
+#+end_example
+
+This is not needed, when building a new representation, just use the default indent.
+*** DONE Code review comment
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 16:28]
+:END:
+
+Filename: 
+
+#+begin_example
+    def render_with_indent(self, indent: str | None, *, indent_step: int = 2) -> str:
+        """Render list-item text with one explicit indentation prefix."""
+        parts: list[str] = []
+        if indent is not None:
+            parts.append(indent)
+
+        if self._ordered_counter is not None and self._bullet in {".", ")"}:
+            parts.append(f"{self._ordered_counter}{self._bullet} ")
+        else:
+            parts.append(f"{self._bullet} ")
+
+        if self._counter_set is not None:
+            parts.append(f"[@{self._counter_set}] ")
+
+        if self._checkbox is not None:
+            parts.append(f"[{self._checkbox}] ")
+
+        if self._item_tag is not None:
+            parts.append(f"{self._item_tag} ::")
+        elif self._first_line is not None:
+            parts.append(str(self._first_line))
+
+        parts.append("\n")
+        body_prefix = (indent if indent is not None else "") + (" " * indent_step)
+        for element in self._body:
+            rendered = ensure_trailing_newline(str(element))
+            if element.node_type == "plain_list":
+                parts.append(rendered)
+                continue
+            parts.append(_indent_non_empty_lines(rendered, body_prefix))
+        return "".join(parts)
+
+#+end_example
+
+This should be recursive and ensure the well-formedness of the nested elements. I.e. =str(el)= and then apply indent to all the output lines.
+*** CANCELLED src/org_parser/text/_rich_text.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-18 Wed 23:10] \\
+  It is used in places.
+:END:
+
+In file src/org_parser/text/_rich_text.py around line 112, near the ~new file   src/org_parser/text/_rich_text.py~
+
+#+begin_example
+
++    @property
++    def dirty(self) -> bool:
++        """Whether this rich text has been mutated after creation."""
++        return self._dirty
++
+#+end_example
+
+Doesn't sound like it's needed.
+*** DONE src/org_parser/text/_rich_text.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 22:26]
+:END:
+
+In file src/org_parser/text/_rich_text.py around line 459, near the ~new file   src/org_parser/text/_rich_text.py~
+
+#+begin_example
+def _safe_node_text(node: tree_sitter.Node | None, source: bytes) -> str:
++    """Return node text or an empty string for missing nodes."""
++    if node is None:
++        return ""
++    return _node_text(node, source)
++
++
++def _node_text(node: tree_sitter.Node, source: bytes) -> str:
++    """Return source text covered by one node."""
++    return source[node.start_byte : node.end_byte].decode()
+
+#+end_example
+
+Not great that these two exist side-by-side.
+*** CANCELLED src/org_parser/text/_rich_text.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-19 Thu 17:58] \\
+  These are reasonable.
+:END:
+
+In file src/org_parser/text/_rich_text.py around line 291, near the ~new file   src/org_parser/text/_rich_text.py~
+
+#+begin_example
++def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
+#+end_example
+
+Check all the linter exclusions.
+*** DONE src/org_parser/time/_timestamp.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 22:31]
+:END:
+
+In file src/org_parser/time/_timestamp.py around line 192, near the ~new file   src/org_parser/time/_timestamp.py~
+
+#+begin_example
++def _node_text(node: tree_sitter.Node, source: bytes) -> str:
++    """Return source text covered by one node."""
++    return source[node.start_byte : node.end_byte].decode()
+
+#+end_example
+
+This is another candidate for a generic helper function.
+*** CANCELLED src/org_parser/document/_body.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-18 Wed 21:22] \\
+  It's fine.
+:END:
+
+In file src/org_parser/document/_body.py around line 207, near the ~def extract_indent_block(~
+
+#+begin_example
++    block.attach_backing(node, document)
+
+#+end_example
+
+This is wack, no need for a dedicated function for that.
+*** DONE src/org_parser/element/_block.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 22:26]
+:END:
+
+In file src/org_parser/element/_block.py around line 692, near the ~class FixedWidthBlock(Element):~
+
+#+begin_example
++            return self._document.source[
++                self._node.start_byte : self._node.end_byte
++            ].decode()
+
+#+end_example
+
+There's some duplication when fetching source.
+*** CANCELLED src/org_parser/element/_block.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-19 Thu 17:59] \\
+  w/e
+:END:
+
+In file src/org_parser/element/_block.py around line 936, near the ~def _ensure_single_trailing_newline(value: str) -> str:~
+
+#+begin_example
+-    return f"{value.rstrip('\n')}\n"
++    return f"{value.rstrip(chr(10))}\n"
+
+#+end_example
+
+???
+*** DONE src/org_parser/element/_drawer.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-18 Wed 22:26]
+:END:
+
+In file src/org_parser/element/_drawer.py around line 301, near the ~class Properties(Element, MutableMapping[str, RichText]):~
+
+#+begin_example
++            node = element._node
++            doc = element._document
++            raw = (
++                doc.source[node.start_byte : node.end_byte].decode()
++                if node is not None and doc is not None
++                else ""
++            )
++            line = raw.rstrip("\n")
+
+#+end_example
+
+This whole function is weird, need to check if that is required.
+*** DONE src/org_parser/time/_timestamp.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 00:51]
+:END:
+
+In file src/org_parser/time/_timestamp.py around line 161, near the ~class Timestamp:~
+
+#+begin_example
+         object.__setattr__(self, "_dirty", True)
+#+end_example
+
+This is weird. I would rather that the Timestamp were made mutable and supported setters.
+
+*** DONE src/org_parser/element/_block.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 13:50]
+:END:
+
+In file src/org_parser/element/_block.py around line 779, near the ~def _extract_nested_element(~
+
+#+begin_example
+         VERSE_BLOCK: VerseBlock.from_node,
+         FIXED_WIDTH: FixedWidthBlock.from_node,
+         LIST_ITEM: ListItem.from_node,
++        BLANK_LINE: BlankLine.from_node,
++        CAPTION_KEYWORD: CaptionKeyword.from_node,
++        COMMENT: Comment.from_node,
++        HORIZONTAL_RULE: HorizontalRule.from_node,
+     }
+     factory = dispatch.get(node.type)
+#+end_example
+
+Sounds like these dispatch tables could be extracted to a helper function as they appear to be the same.
+*** DONE src/org_parser/element/_misc.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-19 Thu 13:18]
+:END:
+
+In file src/org_parser/element/_misc.py around line 179, near the ~new file   src/org_parser/element/_misc.py~
+
+#+begin_example
++
++class CaptionKeyword(Element):
++    """A ``#+CAPTION:`` affiliated keyword line.
+#+end_example
+
+Check if the other body keywords are handled as well: RESULTS, TABLENAME, PLOT, etc.
+*** DONE src/org_parser/element/_drawer.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 00:44]
+:END:
+
+In file src/org_parser/element/_drawer.py around line 66, near the ~class Drawer(Element):~
+
+#+begin_example
++        source: bytes = (document.source or b"") if document is not None else b""
+#+end_example
+
+This seems to be a common pattern now in almost every =from_node= implementation. I wonder if we could refactor this by introducing a method =Document.source_for(node)= that would return the source or =None= if source is not available - it makes no sense to call a =from_node= with a document that doesn't have a source, so ideally each =from_node= would detect that and return =None= as well.
+
+Please refactor the various =_extract_*= functions to receive the document and use this new method to extract the source code for further processing.
+
+*** DONE Source handling refactor
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 12:21]
+:END:
+Refactor all factory methods =from_node= to require a =Document= argument. It shound never be =None=.
+Remove the =source= property from =Document= and its setter. Only the =source_for= method should be used.
+
+Remove the duplicate =_source_for_document= function, these should not be used. Refactor all places that require that function to unstead use =Document.source_for=.
+
+Avoid using =node.text= from tree-sitter. Only the =document.source_for= method should be used.
+
+Don't catch the error that =document.source_for= might throw.
+
+Remove the =_node_text_for_document= function. =document.source_for= should suffice.
+
+The =_parse_inline_nodes= function should also receive the whole document instead of plain source.
+
+*** DONE Code review comment
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 12:21]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_drawer.py
+
+#+begin_example
+def _source_for_document(document: Document | None, *, context: str) -> bytes:
+    """Return full document source bytes or raise for source-less documents."""
+    if document is None:
+        return b""
+    source = document.source_for()
+    if source is None:
+        raise ValueError(f"{context} requires document source bytes")
+    return source
+#+end_example
+
+This function is duplicated in numerous modules. I don't like that it exists - usually the source is extracted so that it can be indexed directly with a node start & end bytes' offest. Instead, all those places should use =document.source_for=. Please refactor all usages of these =_source_for_document= functions. I would like =document.source_for= to always accept a node. No =None= value, no default argument value.
+
+*** DONE src/org_parser/_node.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 12:19]
+:END:
+
+In file src/org_parser/_node.py around line 77, near the ~def node_source(node: tree_sitter.Node | None, document: Document | None) -> str~
+
+#+begin_example
+-    if source is None:
++    try:
++        source = document.source_for(node)
++    except ValueError:
+
+#+end_example
+
+Wack
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 12:19]
+:END:
+
+In file src/org_parser/document/_heading.py around line 660, near the ~def _extract_body(~
+
+#+begin_example
+     """Return ``(scheduled, deadline, closed)`` planning timestamps."""
++    source = document.source
++    if source is None:
++        raise ValueError("Heading planning extraction requires document source bytes")
+
+#+end_example
+
+Please use the =source_for= method instead of getting the source directly.
+*** DONE src/org_parser/element/_block.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 12:19]
+:END:
+
+In file src/org_parser/element/_block.py around line 769, near the ~def _extract_indent_block(~
+
+#+begin_example
++    if document is None:
++        value = field_node.text.decode() if field_node.text is not None else ""
+
+#+end_example
+
+Should it use the tree-sitter node =text=?
+*** DONE src/org_parser/element/_drawer.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 12:20]
+:END:
+
+In file src/org_parser/element/_drawer.py around line 75, near the ~class Drawer(Element):~
+
+#+begin_example
++        elif document is None:
++            name = name_node.text.decode() if name_node.text is not None else ""
+
+#+end_example
+
+=from_node= methods should require the document to be present.
+*** DONE src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 12:21]
+:END:
+
+In file src/org_parser/element/_list.py around line 509, near the ~class List(Element):~
+
+#+begin_example
+-    value = node_text(field_node, source)
++    value = _node_text_for_document(field_node, document)
+
+#+end_example
+
+Should not be needed.
+*** DONE src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 12:21]
+:END:
+
+In file src/org_parser/element/_list.py around line 644, near the ~def _normalize_optional_text(value: str | None) -> str | None:~
+
+#+begin_example
+
++def _node_text_for_document(
++    node: tree_sitter.Node | None,
++    document: Document | None,
++) -> str:
++    """Return node text using document source when available."""
++    if node is None:
++        return ""
++    if document is None:
++        return node.text.decode() if node.text is not None else ""
++    return document.source_for(node).decode()
+
+#+end_example
+
+This whole function should not exist.
+*** DONE src/org_parser/text/_rich_text.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 12:21]
+:END:
+
+In file src/org_parser/text/_rich_text.py around line 195, near the ~class RichText:~
+
+#+begin_example
+             parts = _parse_inline_nodes(node.named_children, source, document)
+
+#+end_example
+
+This should also receive the whole document rather than source.
+*** DONE Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_list.py::parsed = _parse_repeat_first_line(str(item.first_line))]]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 12:35]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_list.py
+
+#+begin_example
+        parsed = _parse_repeat_first_line(str(item.first_line))
+#+end_example
+
+This should take the rich text and analyze its parts so that we can avoid weird comparisons between tree sitter nodes and extracted timestamp strings. Please refactor this function to take the first line as rich text, then check for the plaintext item followed by a timestamp and the remainder and use those parts for the parsing.
+
+*** DONE src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 12:35]
+:END:
+
+In file src/org_parser/element/_list.py around line 307, near the ~class Repeat(ListItem):~
+
+#+begin_example
++        timestamp = _extract_repeat_timestamp(item, timestamp_text)
++        if timestamp is None:
+#+end_example
+
+This is weird. Ideally would be done in one go by using the timestamp node directly.
+
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 18:10]
+:END:
+
+In file src/org_parser/document/_document.py around line 334, near the ~class Document:~
+
+#+begin_example
++    @property
++    def node(self) -> tree_sitter.Node | None:
++        """Root parse node that backs this document, when present."""
++        return self._node
+#+end_example
+
+Shouldn't be needed.
+*** CANCELLED src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-20 Fri 18:18] \\
+  This would make it inconvenient to build the tree.
+:END:
+
+In file src/org_parser/element/_list.py around line 77, near the ~class ListItem(Element):~
+
+#+begin_example
+         parent: Document | Heading | Element | None = None,
+#+end_example
+
+Parent should be mandatory in all =from_node= implementations - if there's a tree there's a parent/child relationship.
+
+*** DONE src/org_parser/text/_rich_text.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 17:41]
+:END:
+
+In file src/org_parser/text/_rich_text.py around line 198, near the ~class RichText:~
+
+#+begin_example
++        root = document.node
++        if root is None:
++            raise ValueError("RichText.from_node requires document parse node")
++        source = document.source_for(root)
+
+#+end_example
+
+=RichText= should not store the source and instead store the document. I would rather it stored just the source representing this text element.
+
+*** DONE Code review comment
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 18:18]
+:END:
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/text/_rich_text.py::@classmethod
+ def from_node(
+ cls,
+ node: tree_sitter.Node,
+ *,
+ document: Document,
+ ) -> RichText:
+ """Create a :class:`RichText` from a single tree-sitter node.]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/text/_rich_text.py
+
+#+begin_example
+    @classmethod
+    def from_node(
+        cls,
+        node: tree_sitter.Node,
+        *,
+        document: Document,
+    ) -> RichText:
+        """Create a :class:`RichText` from a single tree-sitter node.
+#+end_example
+
+=RichText.from_node= is missing the optional parent. Please add that. Do add the parameter to =from_nodes= as well. Please also update the call-sites of =RichText.from_node= and =RichText.from_nodes= to include the parent node.
+
+*** DONE AI review comments
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 19:27]
+:END:
+Please fix the following issues:
+
+1. =_timestamp.py= - =is_explicit_range= only compares ~end_day != start_day~, so a cross-month range like =<2024-01-15>--<2024-02-15>= is misclassified as a same-day time range (same day number, different month), potentially corrupting rendered output.
+
+2. =_list.py:603,607= - Line break detection uses ="\\\\n"= (the 4-char literal =\\n=) instead of ="\\\\"= (two backslashes), which is what =LineBreak.__str__= actually produces. The repeat-note splitting logic would never match in normal usage.
+
+3. =_list_recovery.py= - Tabs counted as width 1 instead of 8, breaking indent comparison in mixed-indent documents.
+
+4. =_clock.py= - Missing =__repr__= on =Clock=
+
+5. =_rich_text.py:197= - Wrong return type annotation on =RichText.from_nodes=. The method is annotated =-> RichText | None= but never returns =None=. This causes callers in =_table.py= to have an unreachable =value is None= branch, and worse, they re-wrap the result as =RichText(str(value).strip())=, discarding source-byte preservation for table cells.
+
+*** DONE Repeats with a note issue
+Given this example:
+#+begin_example
+:LOGBOOK:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 21:51]
+:END:
+- State "CANCELLED"  from "TODO"       [2025-07-28 pon 18:41] \\
+  No need to.
+- State "DONE"       from "TODO"       [2025-07-28 pon 18:33]
+- State "DONE"       from "TODO"       [2025-07-26 sob 22:18]
+- State "DONE"       from "TODO"       [2025-06-29 nie 20:54]
+- State "DONE"       from "TODO"       [2025-06-26 czw 22:39]
+- State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
+  Missed it.
+- State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
+  Note
+:END:
+#+end_example
+
+The repeat recovery should recognize 7 repeats, four that don't have a note and three that do. Currently, it only recognizez the four that don't have a note. Notice the newline charecters following the line-break.
+
+Please update the implementation to make sure that tese do work correctly. Please also update the existing tests that don't have a newline to make more sense - when there are trailing characters following the linebreak it is currently parsed as a plaintext item. In such a case, when the first line of a list item does not end with a line break, please include the trailing data in the note along with the body (if one follows).
+
+Stringification of a repeat should also include the trailing characters on the first line and the body as a note.
+
+** DONE Blank line handling
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 23:08]
+:END:
+There is a medium-severity bug in =src/org_parser/element/_list_recovery.py:58= where blank lines are dropped whenever a list run is open outside an indent block.
+
+Parsing =- a\n\nPara\n=, then making the doc dirty, serializes as =- a\nPara\n= (blank line lost).
+
+Root cause: =BlankLine= is intentionally ignored while =list_run= is active (=src/org_parser/element/_list_recovery.py:58=), so no separator survives into dirty rendering.
+
+* Semantic nodes dev experience
+** Convenience fields
+Add extra fields for convevience:
+
+1. =Document=
+   - is_root
+   - is_terminal
+
+2. =Heading=
+   - latest_timestamp
+   - earliest_timestamp
+   - is_completed
+   - is_root
+   - is_terminal
+
+** iterator interface
+Document, Heading and RichText should support an iterator interface.
+- Document iterates over all the headings contained within, including subheadings
+- Heading iterates over the children
+- Table iterates over the rows, which iterate over the colums.
+- List iterates over the list items.
+- RichText iterates over constituent parts.
+
+=document[0][2].body[2][x][y]= - x,y table cell in a body of third child of the first heading in a document.
+
+** Convenience constructors
+*** Programatically create RichText from strings
+Invoke the tree sitter parser on text mutation.
+
+*** Programatically create timestamps from strings
+*** Programatically create arbitrary elements without document structure or parse tree
+** Mutation handling
+- When an element is attached to another element their =parent= relation and dirty flag should be set correctly.
+
+** Recover inherited tags
+- nodes tags & inherited tags field (file-order lists not sets)
+
+** Recover inherited categories
+- nodes category & inherited category field
+** Attach CAPTION, TBLNAME, PLOT and RESULTS to the following element
+
+** Check all list items for potential repeats.
+* Release
+** Semantic node documentation

@@ -11,6 +11,19 @@ Level 1 heading
     (plain_text)))
 
 ================
+Heading title keeps at-sign text
+================
+* DELEGATED Fix Nexus @types resolving.
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (plain_text)))
+
+================
 Heading and body lines keep double-dash switches as plain text
 ================
 *** --watch & --serve switches
@@ -26,9 +39,9 @@ Heading and body lines keep double-dash switches as plain text
     (section
       (paragraph
         (plain_text)
+        (newline)
         (plain_text)
-        (plain_text)
-        (plain_text)))))
+        (newline)))))
 
 ================
 Heading with multiple regular links and plus in description
@@ -68,32 +81,41 @@ Heading counters with TODO and priority variants
   (heading
     (stars)
     (todo_keyword)
-    (priority)
-    (completion_counter)
+    (priority
+      (priority_value))
+    (completion_counter
+      (completion_counter_value))
     (plain_text))
   (heading
     (stars)
     (todo_keyword)
-    (priority)
-    (completion_counter)
+    (priority
+      (priority_value))
+    (completion_counter
+      (completion_counter_value))
     (plain_text))
   (heading
     (stars)
     (todo_keyword)
-    (priority)
-    (completion_counter)
+    (priority
+      (priority_value))
+    (completion_counter
+      (completion_counter_value))
     (plain_text))
   (heading
     (stars)
     (todo_keyword)
-    (priority)
+    (priority
+      (priority_value))
     (plain_text)
-    (completion_counter))
+    (completion_counter
+      (completion_counter_value)))
   (heading
     (stars)
     (todo_keyword)
     (plain_text)
-    (completion_counter)
+    (completion_counter
+      (completion_counter_value))
     (plain_text)))
 
 ================
@@ -154,6 +176,77 @@ TODO keywords accumulate from #+TODO lines
     (stars)
     (todo_keyword)
     (plain_text)))
+
+================
+TODO keywords allow dash and underscore
+================
+#+TODO: TODO IN-PROGRESS IN_PROGRESS | DONE
+* IN-PROGRESS Hyphenated task
+* IN_PROGRESS Underscored task
+
+---
+
+(document
+  (zeroth_section
+    (special_keyword
+      (keyword_key)
+      (keyword_value)))
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (plain_text)))
+
+================
+Heading TODO title starts with plus text
+================
+*** TODO + in list/headings
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    todo: (todo_keyword)
+    title: (plain_text)
+    title: (plain_text)))
+
+================
+Heading title and body list keep plus text
+================
+*** CLJS & Reframe vs Elm vs React + Redux
+ - React + Redux quickly turns into spaghetti code
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    title: (plain_text)
+    title: (plain_text)
+    body: (section
+      (block
+        indent: (indent)
+        body: (list_item
+          first_line: (plain_text))))))
+
+================
+Unknown uppercase title keeps plus text
+================
+** SUSPENDED The suspended state causes an issue Foo + Bar
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    title: (plain_text)
+    title: (plain_text)))
 
 ================
 Heading title contains colon before real tags
@@ -280,7 +373,8 @@ Heading with priority
 (document
   (heading
     (stars)
-    (priority)
+    (priority
+      (priority_value))
     (plain_text)))
 
 ================
@@ -294,7 +388,8 @@ Heading with slash completion counter
   (heading
     (stars)
     (plain_text)
-    (completion_counter)))
+    (completion_counter
+      (completion_counter_value))))
 
 ================
 Heading with TODO, priority, and empty completion counter
@@ -307,8 +402,10 @@ Heading with TODO, priority, and empty completion counter
   (heading
     (stars)
     (todo_keyword)
-    (priority)
-    (completion_counter)
+    (priority
+      (priority_value))
+    (completion_counter
+      (completion_counter_value))
     (plain_text)))
 
 ================
@@ -337,7 +434,8 @@ Heading with TODO, priority, and tags
   (heading
     (stars)
     (todo_keyword)
-    (priority)
+    (priority
+      (priority_value))
     (plain_text)
     (tags
       (tag)
@@ -383,7 +481,8 @@ Heading keeps non-cookie bracket text and trailing counter
   (heading
     (stars)
     (plain_text)
-    (completion_counter)))
+    (completion_counter
+      (completion_counter_value))))
 
 ================
 Nested headings three levels
@@ -432,7 +531,8 @@ Some body text.
     (plain_text)
     (section
       (paragraph
-        (plain_text))))
+        (plain_text)
+        (newline))))
   (heading
     (stars)
     (plain_text)))

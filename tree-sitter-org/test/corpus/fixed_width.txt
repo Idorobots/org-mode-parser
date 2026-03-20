@@ -44,7 +44,9 @@ Indented fixed-width line
 
 (document
   (zeroth_section
-    (fixed_width)))
+    (block
+      (indent)
+      (fixed_width))))
 
 ================
 Indented empty fixed-width line
@@ -55,7 +57,9 @@ Indented empty fixed-width line
 
 (document
   (zeroth_section
-    (fixed_width)))
+    (block
+      (indent)
+      (fixed_width))))
 
 ================
 Fixed-width followed by paragraph
@@ -71,8 +75,10 @@ This is a paragraph.
   (zeroth_section
     (fixed_width)
     (fixed_width)
+    (blank_line)
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Double colon in paragraph is not fixed-width
@@ -84,7 +90,8 @@ test :: Not a fixed width section
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Paragraph ending with colon is not fixed-width
@@ -96,8 +103,8 @@ Test paragraph:
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
-
+      (plain_text)
+      (newline))))
 
 ================
 Colon in middle of paragraph is not fixed-width
@@ -109,4 +116,5 @@ Another test: yes, it passes
 (document
   (zeroth_section
     (paragraph
-      (plain_text))))
+      (plain_text)
+      (newline))))

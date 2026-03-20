@@ -11,7 +11,8 @@ This has *bold* words.
       (plain_text)
       (bold
         (plain_text))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Italic text
@@ -26,7 +27,8 @@ This has /italic/ words.
       (plain_text)
       (italic
         (plain_text))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Underline text
@@ -41,7 +43,8 @@ This has _underline_ words.
       (plain_text)
       (underline
         (plain_text))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Underline with parentheses and hyphen boundaries
@@ -57,13 +60,15 @@ Consider: (_underline inside parentheses_) and -_underline after a hyphen_-.
       (underline
         (plain_text))
       (plain_text)
+      (newline)
       (plain_text)
       (underline
         (plain_text))
       (plain_text)
       (underline
         (plain_text))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Strikethrough text
@@ -78,7 +83,8 @@ This has +deleted+ words.
       (plain_text)
       (strike_through
         (plain_text))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Strikethrough at beginning of line
@@ -91,7 +97,8 @@ Strikethrough at beginning of line
   (zeroth_section
     (paragraph
       (strike_through
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Strikethrough at line start with trailing text
@@ -105,7 +112,8 @@ Strikethrough at line start with trailing text
     (paragraph
       (strike_through
         (plain_text))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Verbatim text
@@ -120,7 +128,8 @@ This has =verbatim= words.
       (plain_text)
       (verbatim
         (verbatim_content))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Code text
@@ -135,7 +144,8 @@ This has ~code~ words.
       (plain_text)
       (code
         (code_content))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Code span with bracketed generic type and trailing punctuation
@@ -150,7 +160,8 @@ text ~dict[str, int]~.
       (plain_text)
       (code
         (code_content))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Indented code span with bracketed type
@@ -161,10 +172,13 @@ Indented code span with bracketed type
 
 (document
   (zeroth_section
-    (paragraph
-      (plain_text)
-      (code
-        (code_content)))))
+    (block
+      (indent)
+      (paragraph
+        (plain_text)
+        (code
+          (code_content))
+        (newline)))))
 
 ================
 Code span with method call
@@ -178,7 +192,8 @@ text ~TimeRange.update()~
     (paragraph
       (plain_text)
       (code
-        (code_content)))))
+        (code_content))
+      (newline))))
 
 ================
 Code span with bracketed dict inside parentheses
@@ -193,7 +208,8 @@ Code span with bracketed dict inside parentheses
       (plain_text)
       (code
         (code_content))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Code span with empty-arg call
@@ -207,7 +223,8 @@ text ~analyze()~
     (paragraph
       (plain_text)
       (code
-        (code_content)))))
+        (code_content))
+      (newline))))
 
 ================
 Code span with punctuation and bracket token
@@ -221,7 +238,8 @@ text ~.[O:L]~
     (paragraph
       (plain_text)
       (code
-        (code_content)))))
+        (code_content))
+      (newline))))
 
 ================
 Separated verbatim spans with plain text between
@@ -238,7 +256,8 @@ Separated verbatim spans with plain text between
       (plain_text)
       (verbatim
         (verbatim_content))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Separated verbatim spans around explanatory text
@@ -256,7 +275,8 @@ Note comma-quoting in example block above: lines that would start with =,*= (lik
       (plain_text)
       (verbatim
         (verbatim_content))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Separated code spans with plain text between
@@ -273,7 +293,8 @@ Separated code spans with plain text between
       (plain_text)
       (code
         (code_content))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Separated code spans around explanatory text
@@ -291,7 +312,8 @@ Note comma-quoting in example block above: lines that would start with ~,*~ (lik
       (plain_text)
       (code
         (code_content))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Invalid spaced markup markers stay plain text
@@ -307,25 +329,24 @@ Invalid spaced markup markers stay plain text
 
 (document
   (zeroth_section
-    (plain_list
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (plain_text)))))
+    (list_item
+      first_line: (plain_text)
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (plain_text))))
 
 ================
 Nested markup openings in list items
@@ -342,43 +363,42 @@ Nested markup openings in list items
 
 (document
   (zeroth_section
-    (plain_list
-      (item
-        first_line: (bold
-          body: (italic
-            body: (plain_text))))
-      (item
-        first_line: (italic
-          body: (bold
-            body: (plain_text))))
-      (item
-        first_line: (bold
-          body: (plain_text)
-          body: (underline
-            body: (plain_text))
-          body: (plain_text)))
-      (item
-        first_line: (italic
-          body: (plain_text)
-          body: (underline
-            body: (plain_text))
-          body: (plain_text)))
-      (item
-        first_line: (plain_text)
-        first_line: (bold
-          body: (italic
-            body: (plain_text)))
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (italic
+    (list_item
+      first_line: (bold
+        body: (italic
+          body: (plain_text))))
+    (list_item
+      first_line: (italic
+        body: (bold
+          body: (plain_text))))
+    (list_item
+      first_line: (bold
+        body: (plain_text)
+        body: (underline
           body: (plain_text))
-        first_line: (plain_text))
-      (item
-        first_line: (plain_text)
-        first_line: (italic
+        body: (plain_text)))
+    (list_item
+      first_line: (italic
+        body: (plain_text)
+        body: (underline
           body: (plain_text))
-        first_line: (plain_text)))))
+        body: (plain_text)))
+    (list_item
+      first_line: (plain_text)
+      first_line: (bold
+        body: (italic
+          body: (plain_text)))
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (italic
+        body: (plain_text))
+      first_line: (plain_text))
+    (list_item
+      first_line: (plain_text)
+      first_line: (italic
+        body: (plain_text))
+      first_line: (plain_text))))
 
 ================
 Verbatim with inner equals before final close
@@ -391,7 +411,8 @@ Verbatim with inner equals before final close
   (zeroth_section
     (paragraph
       (verbatim
-        (verbatim_content)))))
+        (verbatim_content))
+      (newline))))
 
 ================
 Verbatim and code allow doubled inner markers
@@ -407,7 +428,8 @@ Verbatim and code allow doubled inner markers
         (verbatim_content))
       (plain_text)
       (code
-        (code_content)))))
+        (code_content))
+      (newline))))
 
 ================
 Bold at beginning of line
@@ -421,7 +443,8 @@ Bold at beginning of line
     (paragraph
       (bold
         (plain_text))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Bold at start of paragraph continuation line
@@ -435,8 +458,10 @@ line one
   (zeroth_section
     (paragraph
       (plain_text)
+      (newline)
       (bold
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Nested markup — italic inside bold
@@ -452,7 +477,8 @@ Nested markup — italic inside bold
         (plain_text)
         (italic
           (plain_text))
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Multiple markup types in one paragraph
@@ -468,7 +494,8 @@ Multiple markup types in one paragraph
         (plain_text))
       (plain_text)
       (italic
-        (plain_text)))))
+        (plain_text))
+      (newline))))
 
 ================
 Bold in heading title — markup after plain text
@@ -570,7 +597,8 @@ Adjacent markup with slash boundary
         (plain_text))
       (italic
         (plain_text))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Adjacent literal markup with shared boundary
@@ -586,7 +614,8 @@ Adjacent literal markup with shared boundary
         (code_content))
       (verbatim
         (verbatim_content))
-      (plain_text))))
+      (plain_text)
+      (newline))))
 
 ================
 Adjacent code spans with slash separator
@@ -604,4 +633,5 @@ Increment hash field values atomically -- identical semantics to ~INCR~/~INCRBYF
       (plain_text)
       (code
         (code_content))
-      (plain_text))))
+      (plain_text)
+      (newline))))

@@ -1,0 +1,412 @@
+"""Drawer element implementations for Org Mode drawers."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator, MutableMapping, Sequence
+from typing import TYPE_CHECKING
+
+from org_parser._nodes import BLOCK, NODE_PROPERTY
+from org_parser.element._dispatch import body_element_factories
+from org_parser.element._element import (
+    Element,
+    build_semantic_repr,
+    element_from_error_or_unknown,
+    ensure_trailing_newline,
+    node_source,
+)
+from org_parser.element._list import List, ListItem, Repeat
+from org_parser.element._list_recovery import recover_lists
+from org_parser.element._structure import IndentBlock
+from org_parser.text._rich_text import RichText
+from org_parser.time import Clock
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import tree_sitter
+
+    from org_parser.document._document import Document
+    from org_parser.document._heading import Heading
+
+__all__ = ["Drawer", "Logbook", "Properties"]
+
+
+class Drawer(Element):
+    """Generic drawer element with a mutable name and body.
+
+    Args:
+        name: Drawer name without surrounding colons.
+        body: Parsed child elements contained in the drawer.
+        parent: Optional parent owner object.
+    """
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        body: list[Element] | None = None,
+        parent: Document | Heading | Element | None = None,
+    ) -> None:
+        super().__init__(parent=parent)
+        self._name = name
+        self._body = body if body is not None else []
+        self._adopt_body(self._body)
+
+    @classmethod
+    def from_node(
+        cls,
+        node: tree_sitter.Node,
+        document: Document,
+        *,
+        parent: Document | Heading | Element | None = None,
+    ) -> Drawer:
+        """Create a :class:`Drawer` from a tree-sitter ``drawer`` node."""
+        name_node = node.child_by_field_name("name")
+        name = "" if name_node is None else document.source_for(name_node).decode()
+        drawer = cls(
+            name=name,
+            body=recover_lists(
+                [
+                    _extract_drawer_body_element(child, document)
+                    for child in node.children_by_field_name("body")
+                ],
+                parent=parent,
+            ),
+            parent=parent,
+        )
+        drawer._node = node
+        drawer._document = document
+        return drawer
+
+    @property
+    def name(self) -> str:
+        """Drawer name without surrounding colons."""
+        return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        """Set drawer name and mark the drawer as dirty."""
+        self._name = value
+        self._mark_dirty()
+
+    @property
+    def body(self) -> list[Element]:
+        """Mutable list of drawer body elements."""
+        return self._body
+
+    @body.setter
+    def body(self, value: list[Element]) -> None:
+        """Set drawer body and mark the drawer as dirty."""
+        self._body = value
+        self._adopt_body(self._body)
+        self._mark_dirty()
+
+    def _adopt_body(self, body: Sequence[Element]) -> None:
+        """Assign this drawer as parent for all body elements."""
+        for element in body:
+            element.parent = self
+
+    def reformat(self) -> None:
+        """Mark body and this drawer dirty for scratch-built rendering."""
+        for element in self._body:
+            element.reformat()
+        self.mark_dirty()
+
+    def __str__(self) -> str:
+        """Render drawer text preserving source text while clean."""
+        if not self.dirty and self._node is not None and self._document is not None:
+            return node_source(self._node, self._document)
+
+        body_text = "".join(
+            ensure_trailing_newline(str(element)) for element in self._body
+        )
+        return f":{self._name}:\n{body_text}:END:\n"
+
+    def __repr__(self) -> str:
+        """Return a tree-oriented representation for debugging."""
+        return build_semantic_repr("Drawer", name=self._name, body=self._body)
+
+
+class Logbook(Drawer):
+    """Specialized drawer for ``:LOGBOOK:`` entries."""
+
+    def __init__(
+        self,
+        *,
+        body: list[Element] | None = None,
+        clock_entries: list[Clock] | None = None,
+        repeats: list[Repeat] | None = None,
+        parent: Document | Heading | Element | None = None,
+    ) -> None:
+        super().__init__(
+            name="LOGBOOK",
+            body=body,
+            parent=parent,
+        )
+        self._clock_entries = clock_entries if clock_entries is not None else []
+        self._repeats: list[Repeat] = repeats if repeats is not None else []
+        self._adopt_body(self._clock_entries)
+
+    @classmethod
+    def from_node(
+        cls,
+        node: tree_sitter.Node,
+        document: Document,
+        *,
+        parent: Document | Heading | Element | None = None,
+    ) -> Logbook:
+        """Create a :class:`Logbook` from ``logbook_drawer`` node."""
+        body = recover_lists(
+            [
+                _extract_drawer_body_element(child, document)
+                for child in node.children_by_field_name("body")
+            ],
+            parent=parent,
+        )
+        repeats = _extract_logbook_repeats(body, document)
+        clock_entries = [element for element in body if isinstance(element, Clock)]
+        logbook = cls(
+            body=body,
+            clock_entries=clock_entries,
+            repeats=repeats,
+            parent=parent,
+        )
+        logbook._node = node
+        logbook._document = document
+        return logbook
+
+    @property
+    def clock_entries(self) -> list[Clock]:
+        """Clock entries extracted from logbook body."""
+        return self._clock_entries
+
+    @clock_entries.setter
+    def clock_entries(self, value: list[Clock]) -> None:
+        """Set logbook clock entries and mark the drawer as dirty."""
+        self._clock_entries = value
+        self._adopt_body(self._clock_entries)
+        self._mark_dirty()
+
+    @property
+    def repeats(self) -> list[Repeat]:
+        """Repeated task entries extracted from list items in this logbook."""
+        return self._repeats
+
+    @repeats.setter
+    def repeats(self, value: list[Repeat]) -> None:
+        """Set logbook repeat entries and mark the drawer as dirty."""
+        self._repeats = value
+        _sync_logbook_repeat_list(self, self._repeats)
+        self._mark_dirty()
+
+    def reformat(self) -> None:
+        """Mark all logbook children and this drawer dirty."""
+        for element in self._body:
+            element.reformat()
+        for clock in self._clock_entries:
+            clock.reformat()
+        for repeat in self._repeats:
+            repeat.reformat()
+        self.mark_dirty()
+
+    def __repr__(self) -> str:
+        """Return a tree-oriented representation for debugging."""
+        return build_semantic_repr(
+            "Logbook",
+            body=self._body,
+            clock_entries=self._clock_entries,
+            repeats=self._repeats,
+        )
+
+
+class Properties(Element, MutableMapping[str, RichText]):
+    """Property drawer element with dictionary-like mutable access."""
+
+    def __init__(
+        self,
+        *,
+        properties: dict[str, RichText] | None = None,
+        parent: Document | Heading | Element | None = None,
+    ) -> None:
+        super().__init__(parent=parent)
+        self._properties: dict[str, RichText] = {}
+        if properties is not None:
+            for key, value in properties.items():
+                self._set_property(key, value, mark_dirty=False)
+
+    @classmethod
+    def from_node(
+        cls,
+        node: tree_sitter.Node,
+        document: Document,
+        *,
+        parent: Document | Heading | Element | None = None,
+    ) -> Properties:
+        """Create a :class:`Properties` from ``property_drawer`` node."""
+        properties = cls(parent=parent)
+        for child in node.named_children:
+            if child.type != NODE_PROPERTY:
+                continue
+            name_node = child.child_by_field_name("name")
+            if name_node is None:
+                continue
+            key = document.source_for(name_node).decode()
+            value_node = child.child_by_field_name("value")
+            value = (
+                RichText.from_node(value_node, document=document, parent=properties)
+                if value_node is not None
+                else RichText("")
+            )
+            properties._set_property(key, value, mark_dirty=False)
+        properties._node = node
+        properties._document = document
+        return properties
+
+    def _set_property(
+        self,
+        key: str,
+        value: RichText,
+        *,
+        mark_dirty: bool,
+    ) -> None:
+        """Set one property value with optional dirty propagation."""
+        if key in self._properties:
+            del self._properties[key]
+        self._properties[key] = value
+        value.parent = self
+        if mark_dirty:
+            self._mark_dirty()
+
+    def __getitem__(self, key: str) -> RichText:
+        """Return the rich-text value for one property key."""
+        return self._properties[key]
+
+    def __setitem__(self, key: str, value: RichText) -> None:
+        """Set one property value and mark drawer as dirty."""
+        self._set_property(key, value, mark_dirty=True)
+
+    def __delitem__(self, key: str) -> None:
+        """Delete one property key and mark drawer as dirty."""
+        del self._properties[key]
+        self._mark_dirty()
+
+    def __iter__(self) -> Iterator[str]:
+        """Iterate over property keys in insertion order."""
+        return iter(self._properties)
+
+    def __len__(self) -> int:
+        """Return number of stored properties."""
+        return len(self._properties)
+
+    def reformat(self) -> None:
+        """Mark all property values and this drawer dirty."""
+        for value in self._properties.values():
+            value.reformat()
+        self.mark_dirty()
+
+    def __str__(self) -> str:
+        """Render property drawer preserving source text while clean."""
+        if not self.dirty and self._node is not None and self._document is not None:
+            return node_source(self._node, self._document)
+
+        lines = [":PROPERTIES:\n"]
+        for key, value in self._properties.items():
+            rendered_value = str(value)
+            if rendered_value == "":
+                lines.append(f":{key}:\n")
+            else:
+                lines.append(f":{key}: {rendered_value}\n")
+        lines.append(":END:\n")
+        return "".join(lines)
+
+    def __repr__(self) -> str:
+        """Return a tree-oriented representation for debugging."""
+        return build_semantic_repr("Properties", properties=self._properties)
+
+
+def _extract_drawer_body_element(
+    node: tree_sitter.Node,
+    document: Document,
+    *,
+    parent: Document | Heading | Element | None = None,
+) -> Element:
+    """Build one semantic element object for a drawer body child node."""
+    if node.type == BLOCK:
+        return _extract_indent_block(node, document, parent=parent)
+
+    dispatch: dict[str, Callable[..., Element]] = body_element_factories()
+    factory = dispatch.get(node.type)
+    if factory is None:
+        return element_from_error_or_unknown(node, document, parent=parent)
+    return factory(node, document, parent=parent)
+
+
+def _extract_indent_block(
+    node: tree_sitter.Node,
+    document: Document,
+    *,
+    parent: Document | Heading | Element | None = None,
+) -> IndentBlock:
+    """Build one :class:`IndentBlock` for a drawer body ``block`` node."""
+    indent_node = node.child_by_field_name("indent")
+    indent_text = node_source(indent_node, document)
+    indent = indent_text if indent_text != "" else None
+    block = IndentBlock(
+        body=[
+            _extract_drawer_body_element(child, document, parent=parent)
+            for child in node.children_by_field_name("body")
+            if child.is_named
+        ],
+        indent=indent,
+    )
+    block.attach_source(node, document)
+    return block
+
+
+def _extract_logbook_repeats(body: list[Element], document: Document) -> list[Repeat]:
+    """Convert repeat-form list items in logbook lists into :class:`Repeat`.
+
+    This runs after list recovery so each candidate item already owns its
+    continuation body, which the repeat parser uses as the note payload.
+    """
+    repeats: list[Repeat] = []
+    for element in body:
+        if not isinstance(element, List):
+            continue
+        updated_items: list[ListItem] = []
+        converted = False
+        for item in element.items:
+            if isinstance(item, Repeat):
+                updated_items.append(item)
+                repeats.append(item)
+                continue
+            repeat = Repeat.from_list_item(item, document)
+            if repeat is None:
+                updated_items.append(item)
+                continue
+            updated_items.append(repeat)
+            repeats.append(repeat)
+            converted = True
+        if converted:
+            element.set_items(updated_items, mark_dirty=False)
+    return repeats
+
+
+def _sync_logbook_repeat_list(logbook: Logbook, repeats: list[Repeat]) -> None:
+    """Synchronize explicit repeat entries into a concrete logbook list."""
+    target_list: List | None = None
+    for element in logbook.body:
+        if not isinstance(element, List):
+            continue
+        if any(isinstance(item, Repeat) for item in element.items):
+            target_list = element
+            break
+
+    if target_list is None:
+        if not repeats:
+            return
+        target_list = List(items=list(repeats), parent=logbook)
+        logbook.body = [*logbook.body, target_list]
+        return
+
+    target_list.items = list(repeats)

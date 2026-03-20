@@ -12,7 +12,8 @@ Some notes here.
     (drawer
       (drawer_name)
       (paragraph
-        (plain_text)))))
+        (plain_text)
+        (newline)))))
 
 ================
 Property drawer
@@ -95,7 +96,8 @@ Property drawer with empty body
 
 (document
   (zeroth_section
-    properties: (property_drawer)))
+    (property_drawer
+      (blank_line))))
 
 ================
 Property drawer with empty values
@@ -110,7 +112,7 @@ Property drawer with empty values
 
 (document
   (zeroth_section
-    properties: (property_drawer
+    (property_drawer
       (node_property
         name: (property_name))
       (node_property
@@ -131,7 +133,7 @@ Property value with colon
 
 (document
   (zeroth_section
-    properties: (property_drawer
+    (property_drawer
       (node_property
         name: (property_name)
         value: (property_value))
@@ -149,8 +151,10 @@ Indented drawer
 
 (document
   (zeroth_section
-    (drawer
-      (drawer_name))))
+    (block
+      (indent)
+      (drawer
+        (drawer_name)))))
 
 ================
 Indented property drawer in heading
@@ -167,10 +171,12 @@ Indented property drawer in heading
     stars: (stars)
     title: (plain_text)
     body: (section
-      (property_drawer
-        (node_property
-          name: (property_name)
-          value: (property_value))))))
+      (block
+        indent: (indent)
+        body: (property_drawer
+          (node_property
+            name: (property_name)
+            value: (property_value)))))))
 
 ================
 Property link with multiline description
@@ -186,15 +192,44 @@ Property link with multiline description
 
 (document
   (zeroth_section
-    properties: (property_drawer
+    (property_drawer
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text)
+          description: (newline)
           description: (plain_text)
+          description: (newline)
           description: (plain_text)
+          description: (newline)
           description: (plain_text))))))
+
+================
+Property link with multiline path
+================
+:PROPERTIES:
+:context: [[file:src/org_parser/text/_rich_text.py::@classmethod
+ def from_node(
+ cls,
+ node: tree_sitter.Node,
+ *,
+ document: Document,
+ ) -> RichText:
+ """Create a :class:`RichText` from a single tree-sitter node."""]]
+:END:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path
+            (plain_text)))))))
 
 ================
 Drawer transition after property link keeps logbook timestamp
@@ -210,23 +245,22 @@ Drawer transition after property link keeps logbook timestamp
 
 (document
   (zeroth_section
-    properties: (property_drawer
+    (property_drawer
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text))))
-    (drawer
-      name: (drawer_name)
-      body: (plain_list
-        (item
-          first_line: (plain_text)
-          first_line: (timestamp
-            year: (ts_year)
-            month: (ts_month)
-            day: (ts_day)
-            dayname: (ts_dayname)
-            time: (ts_time)))))))
+    (logbook_drawer
+      body: (list_item
+        first_line: (plain_text)
+        first_line: (timestamp
+          year: (ts_year)
+          month: (ts_month)
+          day: (ts_day)
+          dayname: (ts_dayname)
+          time: (ts_time))))))
 
 ================
 Indented logbook then properties with multiline link
@@ -249,26 +283,30 @@ Indented logbook then properties with multiline link
     stars: (stars)
     title: (plain_text)
     body: (section
-      (drawer
-        name: (drawer_name)
-        body: (plain_list
-          (item
+      (block
+        indent: (indent)
+        body: (logbook_drawer
+          body: (list_item
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
               month: (ts_month)
               day: (ts_day)
               dayname: (ts_dayname)
-              time: (ts_time)))))
-      (property_drawer
-        (node_property
-          name: (property_name)
-          value: (regular_link
-            path: (link_path)
-            description: (plain_text)
-            description: (plain_text)
-            description: (plain_text)
-            description: (plain_text)))))))
+              time: (ts_time))))
+        body: (property_drawer
+          (node_property
+            name: (property_name)
+            value: (regular_link
+              path: (link_path
+                (plain_text))
+              description: (plain_text)
+              description: (newline)
+              description: (plain_text)
+              description: (newline)
+              description: (plain_text)
+              description: (newline)
+              description: (plain_text))))))))
 
 ================
 Property drawer after logbook in heading body
@@ -288,22 +326,21 @@ Property drawer after logbook in heading body
     stars: (stars)
     title: (plain_text)
     body: (section
-      (drawer
-        name: (drawer_name)
-        body: (plain_list
-          (item
-            first_line: (plain_text)
-            first_line: (timestamp
-              year: (ts_year)
-              month: (ts_month)
-              day: (ts_day)
-              dayname: (ts_dayname)
-              time: (ts_time)))))
+      (logbook_drawer
+        body: (list_item
+          first_line: (plain_text)
+          first_line: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time))))
       (property_drawer
         (node_property
           name: (property_name)
           value: (regular_link
-            path: (link_path)
+            path: (link_path
+              (plain_text))
             description: (plain_text)))))))
 
 ================
@@ -328,22 +365,27 @@ Malformed property link value does not break next heading drawer
     stars: (stars)
     title: (plain_text)
     body: (section
-      (property_drawer
-        (node_property
-          name: (property_name)
-          value: (regular_link
-            path: (link_path)
-            description: (plain_text))))
-      (paragraph
-        (plain_text))))
+      (block
+        indent: (indent)
+        body: (property_drawer
+          (node_property
+            name: (property_name)
+            value: (regular_link
+              path: (link_path
+                (plain_text))
+              description: (plain_text))))
+        body: (paragraph
+          (plain_text)
+          (newline)))
+      (blank_line)))
   (heading
     stars: (stars)
     title: (plain_text)
     body: (section
-      (drawer
-        name: (drawer_name)
-        body: (plain_list
-          (item
+      (block
+        indent: (indent)
+        body: (logbook_drawer
+          body: (list_item
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -351,7 +393,7 @@ Malformed property link value does not break next heading drawer
               day: (ts_day)
               dayname: (ts_dayname)
               time: (ts_time)))
-          (item
+          body: (list_item
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -389,7 +431,8 @@ Custom drawer with double-colon text line
     (drawer
       name: (drawer_name)
       body: (paragraph
-        (plain_text)))))
+        (plain_text)
+        (newline)))))
 
 ================
 Custom drawer with indented timestamp line
@@ -404,12 +447,16 @@ Custom drawer with indented timestamp line
   (zeroth_section
     (drawer
       name: (drawer_name)
-      body: (timestamp
-        year: (ts_year)
-        month: (ts_month)
-        day: (ts_day)
-        dayname: (ts_dayname))
-      body: (plain_text))))
+      body: (block
+        indent: (indent)
+        body: (paragraph
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (plain_text)
+          (newline))))))
 
 ================
 LOGBOOK drawer with mis-aligned end in archive style
@@ -426,19 +473,18 @@ LOGBOOK drawer with mis-aligned end in archive style
 
 (document
   (zeroth_section
-    (drawer
-      name: (drawer_name)
-      body: (plain_list
-        (item
-          first_line: (plain_text)
-          first_line: (timestamp
-            year: (ts_year)
-            month: (ts_month)
-            day: (ts_day)
-            dayname: (ts_dayname)
-            time: (ts_time)))
-        (item
-          indent: (item_indent)
+    (logbook_drawer
+      body: (list_item
+        first_line: (plain_text)
+        first_line: (timestamp
+          year: (ts_year)
+          month: (ts_month)
+          day: (ts_day)
+          dayname: (ts_dayname)
+          time: (ts_time)))
+      body: (block
+        indent: (indent)
+        body: (list_item
           first_line: (plain_text)
           first_line: (timestamp
             year: (ts_year)
@@ -447,11 +493,13 @@ LOGBOOK drawer with mis-aligned end in archive style
             dayname: (ts_dayname)
             time: (ts_time))
           first_line: (plain_text)
-          first_line: (line_break)
-          body: (item_continuation_line
-            content: (plain_text)))
-        (item
-          indent: (item_indent)
+          first_line: (line_break))
+        body: (block
+          indent: (indent)
+          body: (paragraph
+            (plain_text)
+            (newline)))
+        body: (list_item
           first_line: (plain_text)
           first_line: (timestamp
             year: (ts_year)
@@ -459,8 +507,7 @@ LOGBOOK drawer with mis-aligned end in archive style
             day: (ts_day)
             dayname: (ts_dayname)
             time: (ts_time)))
-        (item
-          indent: (item_indent)
+        body: (list_item
           first_line: (plain_text)
           first_line: (timestamp
             year: (ts_year)
@@ -468,6 +515,29 @@ LOGBOOK drawer with mis-aligned end in archive style
             day: (ts_day)
             dayname: (ts_dayname)
             time: (ts_time)))))))
+
+================
+Logbook drawer end with trailing angle text
+================
+:LOGBOOK:  <
+- State "DONE"       from "TODO"       [2017-03-17 Fri 20:42]
+:END:      <<<<<<<<<<<<<<<<
+
+---
+
+(document
+  (zeroth_section
+    (logbook_drawer
+      body: (drawer_start_text)
+      body: (list_item
+        first_line: (plain_text)
+        first_line: (timestamp
+          year: (ts_year)
+          month: (ts_month)
+          day: (ts_day)
+          dayname: (ts_dayname)
+          time: (ts_time)))
+      end_text: (plain_text))))
 
 ================
 Indented LOGBOOK drawer in heading
@@ -484,10 +554,10 @@ Indented LOGBOOK drawer in heading
     stars: (stars)
     title: (plain_text)
     body: (section
-      (drawer
-        name: (drawer_name)
-        body: (plain_list
-          (item
+      (block
+        indent: (indent)
+        body: (logbook_drawer
+          body: (list_item
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -512,10 +582,10 @@ Indented LOGBOOK drawer with note line
     stars: (stars)
     title: (plain_text)
     body: (section
-      (drawer
-        name: (drawer_name)
-        body: (plain_list
-          (item
+      (block
+        indent: (indent)
+        body: (logbook_drawer
+          body: (list_item
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -524,9 +594,45 @@ Indented LOGBOOK drawer with note line
               dayname: (ts_dayname)
               time: (ts_time))
             first_line: (plain_text)
-            first_line: (line_break)
-            body: (item_continuation_line
-              content: (plain_text))))))))
+            first_line: (line_break))
+          body: (block
+            indent: (indent)
+            body: (paragraph
+              (plain_text)
+              (newline))))))))
+
+================
+Unindented LOGBOOK drawer with continuation note
+================
+* H
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\
+  No need to.
+:END:
+
+---
+
+(document
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (logbook_drawer
+        body: (list_item
+          first_line: (plain_text)
+          first_line: (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time))
+          first_line: (plain_text)
+          first_line: (line_break))
+        body: (block
+          indent: (indent)
+          body: (paragraph
+            (plain_text)
+            (newline)))))))
 
 ================
 LOGBOOK drawer start line with inline text and unindented list
@@ -545,11 +651,11 @@ LOGBOOK drawer start line with inline text and unindented list
     todo: (todo_keyword)
     title: (plain_text)
     body: (section
-      (drawer
-        name: (drawer_name)
-        body: (drawer_start_text)
-        body: (plain_list
-          (item
+      (block
+        indent: (indent)
+        body: (logbook_drawer
+          body: (drawer_start_text)
+          body: (list_item
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -557,7 +663,7 @@ LOGBOOK drawer start line with inline text and unindented list
               day: (ts_day)
               dayname: (ts_dayname)
               time: (ts_time)))
-          (item
+          body: (list_item
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -565,6 +671,30 @@ LOGBOOK drawer start line with inline text and unindented list
               day: (ts_day)
               dayname: (ts_dayname)
               time: (ts_time))))))))
+
+================
+Logbook escaped timestamp stays plain text
+================
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-04-16 nie 21:32]
+- State "DONE" from "TODO" \[2023-04-12 śro 00:36\]
+:END:
+
+---
+
+(document
+  (zeroth_section
+    (logbook_drawer
+      body: (list_item
+        first_line: (plain_text)
+        first_line: (timestamp
+          year: (ts_year)
+          month: (ts_month)
+          day: (ts_day)
+          dayname: (ts_dayname)
+          time: (ts_time)))
+      body: (list_item
+        first_line: (plain_text)))))
 
 ================
 Indented property drawer with >>> in link description
@@ -577,13 +707,16 @@ Indented property drawer with >>> in link description
 
 (document
   (zeroth_section
-    properties: (property_drawer
-      (node_property
-        name: (property_name)
-        value: (regular_link
-          path: (link_path)
-          description: (plain_text)
-          description: (plain_text))))))
+    (block
+      indent: (indent)
+      body: (property_drawer
+        (node_property
+          name: (property_name)
+          value: (regular_link
+            path: (link_path
+              (plain_text))
+            description: (plain_text)
+            description: (plain_text)))))))
 
 ================
 Non-indented property drawer with >>> in link description
@@ -596,11 +729,12 @@ Non-indented property drawer with >>> in link description
 
 (document
   (zeroth_section
-    properties: (property_drawer
+    (property_drawer
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text)
           description: (plain_text))))))
 
@@ -622,23 +756,26 @@ Property link description ending with []] in archive-style heading
     todo: (todo_keyword)
     title: (plain_text)
     body: (section
-      (property_drawer
-        (node_property
-          name: (property_name)
-          value: (property_value))
-        (node_property
-          name: (property_name)
-          value: (timestamp
-            year: (ts_year)
-            month: (ts_month)
-            day: (ts_day)
-            dayname: (ts_dayname)
-            time: (ts_time)))
-        (node_property
-          name: (property_name)
-          value: (regular_link
-            path: (link_path)
-            description: (plain_text)))))))
+      (block
+        indent: (indent)
+        body: (property_drawer
+          (node_property
+            name: (property_name)
+            value: (property_value))
+          (node_property
+            name: (property_name)
+            value: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time)))
+          (node_property
+            name: (property_name)
+            value: (regular_link
+              path: (link_path
+                (plain_text))
+              description: (plain_text))))))))
 
 ================
 Logbook before properties with []] link description tail
@@ -659,23 +796,24 @@ Logbook before properties with []] link description tail
     todo: (todo_keyword)
     title: (plain_text)
     body: (section
-      (drawer
-        name: (drawer_name)
-        body: (plain_list
-          (item
+      (block
+        indent: (indent)
+        body: (logbook_drawer
+          body: (list_item
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
               month: (ts_month)
               day: (ts_day)
               dayname: (ts_dayname)
-              time: (ts_time)))))
-      (property_drawer
-        (node_property
-          name: (property_name)
-          value: (regular_link
-            path: (link_path)
-            description: (plain_text)))))))
+              time: (ts_time))))
+        body: (property_drawer
+          (node_property
+            name: (property_name)
+            value: (regular_link
+              path: (link_path
+                (plain_text))
+              description: (plain_text))))))))
 
 ================
 Property link description with bracket list and <<":">> fragment
@@ -688,14 +826,17 @@ Property link description with bracket list and <<":">> fragment
 
 (document
   (zeroth_section
-    properties: (property_drawer
-      (node_property
-        name: (property_name)
-        value: (regular_link
-          path: (link_path)
-          description: (plain_text)
-          description: (plain_text)
-          description: (plain_text))))))
+    (block
+      indent: (indent)
+      body: (property_drawer
+        (node_property
+          name: (property_name)
+          value: (regular_link
+            path: (link_path
+              (plain_text))
+            description: (plain_text)
+            description: (plain_text)
+            description: (plain_text)))))))
 
 ================
 Property link-like value with unmatched trailing brackets falls back to property_value
@@ -708,7 +849,7 @@ Property link-like value with unmatched trailing brackets falls back to property
 
 (document
   (zeroth_section
-    properties: (property_drawer
+    (property_drawer
       (node_property
         name: (property_name)
         value: (property_value)))))
@@ -724,11 +865,14 @@ Property link with C++ stream operators in description
 
 (document
   (zeroth_section
-    properties: (property_drawer
+    (property_drawer
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text)
+            (plain_text)
+            (plain_text))
           description: (plain_text))))))
 
 ================
@@ -742,11 +886,12 @@ Property link with Erlang tuple and records in description
 
 (document
   (zeroth_section
-    properties: (property_drawer
+    (property_drawer
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text)
           description: (plain_text))))))
 
@@ -761,11 +906,12 @@ Property link with templated command and bracketed key
 
 (document
   (zeroth_section
-    properties: (property_drawer
+    (property_drawer
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text)
           description: (plain_text))))))
 
@@ -780,13 +926,144 @@ Property link with templated filters and quoted headers
 
 (document
   (zeroth_section
-    properties: (property_drawer
+    (property_drawer
       (node_property
         name: (property_name)
         value: (regular_link
-          path: (link_path)
+          path: (link_path
+            (plain_text))
           description: (plain_text)
           description: (plain_text))))))
+
+================
+Property link with Scala signature in description
+================
+:properties:
+:context: [[file:/ServiceWorker.scala::private%20def%20groupsToDtos(groupedSynced:%20Seq%5BSet%5BSynced%5D%5D,%20getSyncMapper:%20GetSyncMapper):%20SyncWorkerM%5BRegroupDtos%5D%20%3D%20{][file:/ServiceWorker.scala::private def groupsToDtos(groupedSynced: Seq[Set[Synced]], getSyncMapper: GetSyncMapper): SyncWorkerM[RegroupDtos] = {]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path
+            (plain_text))
+          description: (plain_text))
+        value: (property_value)))))
+
+================
+Property link path with bracketed dispatch vector
+================
+:properties:
+:context: [[file:~/events.cljs::{:dispatch [:fetch-docs]}))]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path
+            (plain_text)
+            (plain_text)
+            (plain_text)))))))
+
+================
+Property link path with regex and trailing comment
+================
+:properties:
+:context: [[file:~/md.clj::p #"\n(?i)<!--\s*more\s*-->\n"] ;; FIXME Still needs contextual preview marker replacement.]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)))))))
+
+================
+Malformed property link with nested bracket payload falls back
+================
+:properties:
+:context: [[file:~/org/repeat.org::*Hangul romanization: [[jo/yo\][medial ㅛ]\]][Hangul romanization: medial ㅛ]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (property_value)))))
+
+================
+Property link with escaped nested bracket payload in path
+================
+:properties:
+:context: [[file:~/org/repeat.org::*\[\[Nobody can deny, that...\]\[Niemand kann leugnen, dass...\]\]][Niemand kann leugnen, dass...]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text)
+            (plain_text))
+          description: (plain_text))))))
+
+================
+Property link path with Scala generic type brackets
+================
+:properties:
+:context: [[file:/StreamProvider.scala::textMessage.textStream.runFold("")(_ + _).map(_.parseJson.convertTo[StreamRequest])]]
+:end:
+
+---
+
+(document
+  (zeroth_section
+    (property_drawer
+      (node_property
+        name: (property_name)
+        value: (regular_link
+          path: (link_path
+            (plain_text)
+            (plain_text)
+            (plain_text)))))))
 
 ================
 Fully indented custom drawer with timestamp line
@@ -799,11 +1076,57 @@ Fully indented custom drawer with timestamp line
 
 (document
   (zeroth_section
-    (drawer
-      name: (drawer_name)
-      body: (timestamp
-        year: (ts_year)
-        month: (ts_month)
-        day: (ts_day)
-        dayname: (ts_dayname))
-      body: (plain_text))))
+    (block
+      indent: (indent)
+      body: (drawer
+        name: (drawer_name)
+        body: (paragraph
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (plain_text)
+          (newline))))))
+
+================
+Indented custom drawer with consecutive timestamp paragraphs
+================
+  :FEEDING_LOG:
+  [2025-01-04 Sat] Fed 1:1:1 (starter:flour:water). Rose 3x in 4 hours.
+  [2025-01-05 Sun] Fed 1:2:2. Peak at 6 hours - slightly slower.
+  [2025-01-06 Mon] Fed 1:5:5. Testing for long cold ferment.
+  :END:
+
+---
+
+(document
+  (zeroth_section
+    (block
+      indent: (indent)
+      body: (drawer
+        name: (drawer_name)
+        body: (paragraph
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (plain_text)
+          (newline))
+        body: (paragraph
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (plain_text)
+          (newline))
+        body: (paragraph
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (plain_text)
+          (newline))))))

@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-and-parse-check:
+  tree-sitter:
+    name: Tree-sitter corpus tests & parse-check
     runs-on: ubuntu-latest
 
     steps:
@@ -39,3 +40,39 @@ jobs:
 
       - name: Parse-check examples and key Org files
         run: python3 check.py "examples/*.org" "*.org"
+
+  python-library:
+    name: Python library — format, lint, types, tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Tree-sitter CLI
+        run: npm install --global tree-sitter-cli@0.26.6
+
+      - name: Generate and build org.so
+        working-directory: tree-sitter-org
+        run: |
+          tree-sitter generate
+          tree-sitter build
+
+      - name: Install Poetry
+        run: pip install "poetry==2.3.2"
+
+      - name: Install Python dependencies
+        run: poetry install
+
+      - name: Run Python quality gate (format · lint · types · tests)
+        run: poetry run task check
