@@ -600,11 +600,11 @@ def _parse_repeat_first_line(
         return None
 
     remainder = "".join(str(part) for part in first_line.parts[2:])
-    has_line_break = "\\\\n" in remainder
+    has_line_break = "\\\\" in remainder
     note_text: str | None = None
     trailing = remainder
     if has_line_break:
-        trailing, raw_note_text = remainder.split("\\\\n", maxsplit=1)
+        trailing, raw_note_text = remainder.split("\\\\", maxsplit=1)
         normalized_note = textwrap.dedent(raw_note_text)
         note_text = _normalize_optional_text(normalized_note)
     elif trailing.strip() != "":

@@ -200,11 +200,18 @@ def _render_timestamp(ts: Timestamp) -> str:
 
     is_explicit_range = (
         ts.end_year is not None
+        and ts.end_month is not None
         and ts.end_day is not None
-        and ts.end_day != ts.start_day
+        and (
+            ts.end_year != ts.start_year
+            or ts.end_month != ts.start_month
+            or ts.end_day != ts.start_day
+        )
     )
     is_same_day_time_range = (
         ts.end_year is not None
+        and ts.end_year == ts.start_year
+        and ts.end_month == ts.start_month
         and ts.end_day == ts.start_day
         and ts.end_hour is not None
         and ts.end_minute is not None

@@ -222,6 +222,62 @@ def test_dirty_flag_excluded_from_equality() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Cross-month and cross-year explicit range rendering (regression for
+# is_explicit_range day-only comparison bug)
+# ---------------------------------------------------------------------------
+
+
+def test_str_dirty_cross_month_range_not_collapsed() -> None:
+    """Cross-month range with the same day-of-month renders as explicit range.
+
+    Regression: the old check ``end_day != start_day`` misclassified a range
+    like Jan-15 → Feb-15 as a same-day time range, silently dropping the end
+    date when the timestamp was dirty.
+    """
+    ts = _make_ts(
+        raw="<stale>",
+        start_dayname="Wed",
+        end_year=2024,
+        end_month=2,
+        end_day=15,
+        end_dayname="Thu",
+    )
+    ts.mark_dirty()
+    assert str(ts) == "<2024-01-15 Wed>--<2024-02-15 Thu>"
+
+
+def test_str_dirty_cross_year_range_same_day_not_collapsed() -> None:
+    """Cross-year range with the same month and day renders as explicit range."""
+    ts = _make_ts(
+        raw="<stale>",
+        start_dayname="Mon",
+        end_year=2025,
+        end_month=1,
+        end_day=15,
+        end_dayname="Wed",
+    )
+    ts.mark_dirty()
+    assert str(ts) == "<2024-01-15 Mon>--<2025-01-15 Wed>"
+
+
+def test_str_dirty_same_day_time_range_still_works_after_fix() -> None:
+    """Same-day time range (start/end same date, different times) is unaffected."""
+    ts = _make_ts(
+        raw="<stale>",
+        start_hour=9,
+        start_minute=0,
+        end_year=2024,
+        end_month=1,
+        end_day=15,
+        end_dayname="Mon",
+        end_hour=11,
+        end_minute=30,
+    )
+    ts.mark_dirty()
+    assert str(ts) == "<2024-01-15 Mon 09:00-11:30>"
+
+
+# ---------------------------------------------------------------------------
 # Edge cases
 # ---------------------------------------------------------------------------
 

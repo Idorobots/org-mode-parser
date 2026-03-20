@@ -23,8 +23,8 @@ def test_org_table_parses_rows_cells_and_formulas() -> None:
     row2 = table.rows[2]
     assert isinstance(row0, TableRow)
     assert isinstance(row2, TableRow)
-    assert str(row0.cells[0].value) == "A"
-    assert str(row2.cells[1].value) == "2"
+    assert str(row0.cells[0].value) == " A "
+    assert str(row2.cells[1].value) == " 2 "
     assert table.formulas == ["$2=$1+1"]
     assert row0.cells[0].value.parent is table
 

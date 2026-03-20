@@ -85,3 +85,60 @@ def test_clock_timestamp_setter_recomputes_duration() -> None:
     assert (
         str(clock) == "CLOCK: [2025-01-06 Mon 09:00]--[2025-01-06 Mon 11:45] =>  2:45\n"
     )
+
+
+def test_clock_timestamp_setter_clears_duration_when_end_removed() -> None:
+    """Replacing a ranged timestamp with a point timestamp clears the duration.
+
+    Regression: the old setter only recomputed duration when ``value.end`` was
+    set, but never cleared ``_duration`` when switching to a point timestamp.
+    A clock that previously had a range would keep the stale duration and emit
+    an erroneous ``=> H:MM`` in its ``__str__`` output.
+    """
+    document = loads("CLOCK: [2025-01-06 Mon 09:00]--[2025-01-06 Mon 11:00] =>  2:00\n")
+
+    assert isinstance(document.body[0], Clock)
+    clock = document.body[0]
+    assert clock.duration == "2:00"
+
+    # Replace with a point (open) timestamp — no end, no duration.
+    clock.timestamp = Timestamp(
+        raw="[2025-01-06 Mon 09:00]",
+        is_active=False,
+        start_year=2025,
+        start_month=1,
+        start_day=6,
+        start_dayname="Mon",
+        start_hour=9,
+        start_minute=0,
+    )
+
+    assert clock.duration is None
+    assert str(clock) == "CLOCK: [2025-01-06 Mon 09:00]\n"
+
+
+def test_clock_repr_includes_timestamp_and_duration() -> None:
+    """``repr(clock)`` includes timestamp and duration fields when present."""
+    clock = Clock(
+        timestamp=Timestamp(
+            raw="[2025-01-06 Mon 09:00]",
+            is_active=False,
+            start_year=2025,
+            start_month=1,
+            start_day=6,
+            start_dayname="Mon",
+            start_hour=9,
+            start_minute=0,
+        ),
+        duration="2:00",
+    )
+    r = repr(clock)
+    assert r.startswith("Clock(")
+    assert "timestamp=" in r
+    assert "duration='2:00'" in r
+
+
+def test_clock_repr_omits_none_fields() -> None:
+    """``repr(clock)`` omits ``None``-valued fields for a minimal clock."""
+    clock = Clock()
+    assert repr(clock) == "Clock()"

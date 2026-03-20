@@ -575,14 +575,7 @@ def _parse_zeroth_section(
                 elif sc.type == LOGBOOK_DRAWER:
                     logbook_drawers.append(Logbook.from_node(sc, parent, parent=parent))
                 elif sc.type == DRAWER:
-                    drawer = Drawer.from_node(sc, parent, parent=parent)
-                    drawer_name = drawer.name.upper()
-                    if drawer_name == "PROPERTIES":
-                        property_drawers.append(Properties.from_drawer(drawer))
-                    elif drawer_name == "LOGBOOK":
-                        logbook_drawers.append(Logbook.from_drawer(drawer))
-                    else:
-                        body.append(drawer)
+                    body.append(Drawer.from_node(sc, parent, parent=parent))
                 else:
                     body.append(
                         extract_body_element(sc, parent=parent, document=parent)

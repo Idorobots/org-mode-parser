@@ -194,7 +194,7 @@ class RichText:
         *,
         document: Document,
         parent: Document | Heading | Element | None = None,
-    ) -> RichText | None:
+    ) -> RichText:
         """Create a :class:`RichText` from multiple contiguous nodes.
 
         Args:

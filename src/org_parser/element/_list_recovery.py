@@ -194,7 +194,9 @@ def _indent_width(indent: str | None) -> int:
             width += 1
             continue
         if char == "\t":
-            width += 1
+            # Org Mode (Emacs) treats a tab as 8 display columns, matching
+            # the default tab-width used when computing list indentation.
+            width += 8
             continue
         break
     return width

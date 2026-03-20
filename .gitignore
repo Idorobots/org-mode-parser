@@ -1,8 +1,8 @@
-.agent-shell
+.agent-shell/
 .coverage
 src/org_parser/__pycache__/
 src/org_parser/document/__pycache__/
 tests/__pycache__/
-src/org_parser/element/__pycache__
-src/org_parser/text/__pycache__
-src/org_parser/time/__pycache__
+src/org_parser/element/__pycache__/
+src/org_parser/text/__pycache__/
+src/org_parser/time/__pycache__/

@@ -644,14 +644,7 @@ def _extract_body(
         elif child.type == LOGBOOK_DRAWER:
             logbook_drawers.append(Logbook.from_node(child, document, parent=parent))
         elif child.type == DRAWER:
-            drawer = Drawer.from_node(child, document, parent=parent)
-            drawer_name = drawer.name.upper()
-            if drawer_name == "PROPERTIES":
-                properties_drawers.append(Properties.from_drawer(drawer))
-            elif drawer_name == "LOGBOOK":
-                logbook_drawers.append(Logbook.from_drawer(drawer))
-            else:
-                body.append(drawer)
+            body.append(Drawer.from_node(child, document, parent=parent))
         else:
             body.append(extract_body_element(child, parent=parent, document=document))
 

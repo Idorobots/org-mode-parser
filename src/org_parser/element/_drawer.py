@@ -175,14 +175,6 @@ class Logbook(Drawer):
         logbook._document = document
         return logbook
 
-    @classmethod
-    def from_drawer(cls, drawer: Drawer) -> Logbook:
-        """Create a :class:`Logbook` from a generic drawer instance."""
-        body = list(drawer.body)
-        repeats = _extract_logbook_repeats(body)
-        clock_entries = [element for element in body if isinstance(element, Clock)]
-        return cls(body=body, clock_entries=clock_entries, repeats=repeats)
-
     @property
     def clock_entries(self) -> list[Clock]:
         """Clock entries extracted from logbook body."""
@@ -268,23 +260,6 @@ class Properties(Element, MutableMapping[str, RichText]):
             properties._set_property(key, value, mark_dirty=False)
         properties._node = node
         properties._document = document
-        return properties
-
-    @classmethod
-    def from_drawer(cls, drawer: Drawer) -> Properties:
-        """Create a :class:`Properties` value from a generic drawer body."""
-        properties = cls()
-        for element in drawer.body:
-            line = node_source(element._node, element._document).rstrip("\n")
-            if not line.startswith(":"):
-                continue
-            rest = line[1:]
-            delimiter_index = rest.find(":")
-            if delimiter_index <= 0:
-                continue
-            key = rest[:delimiter_index]
-            value_text = rest[delimiter_index + 1 :].strip()
-            properties._set_property(key, RichText(value_text), mark_dirty=False)
         return properties
 
     def _set_property(

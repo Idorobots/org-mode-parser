@@ -275,8 +275,7 @@ def _parse_org_table_row(
         if child.type != TABLE_CELL:
             continue
         value = RichText.from_nodes(child.named_children, document=document)
-        rich_text = RichText("") if value is None else RichText(str(value).strip())
-        cells.append(TableCell(value=rich_text, table=table))
+        cells.append(TableCell(value=value, table=table))
     return TableRow(cells=cells, table=table)
 
 
@@ -326,7 +325,7 @@ def _render_org_table(rows: list[TableRow | TableRuleRow], formulas: list[str]) 
         if isinstance(row, TableRuleRow):
             continue
         for idx in range(column_count):
-            value = str(row.cells[idx]) if idx < len(row.cells) else ""
+            value = str(row.cells[idx]).strip() if idx < len(row.cells) else ""
             widths[idx] = max(widths[idx], len(value))
 
     widths = [width if width > 0 else 1 for width in widths]
@@ -340,7 +339,7 @@ def _render_org_table(rows: list[TableRow | TableRuleRow], formulas: list[str]) 
 
         rendered_cells: list[str] = []
         for idx in range(column_count):
-            value = str(row.cells[idx]) if idx < len(row.cells) else ""
+            value = str(row.cells[idx]).strip() if idx < len(row.cells) else ""
             rendered_cells.append(f" {value.ljust(widths[idx])} ")
         parts.append(f"|{'|'.join(rendered_cells)}|\n")
 

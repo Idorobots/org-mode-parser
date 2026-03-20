@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from org_parser._node import node_source
-from org_parser.element._element import Element
+from org_parser.element._element import Element, build_semantic_repr
 from org_parser.time._timestamp import Timestamp
 
 if TYPE_CHECKING:
@@ -66,6 +66,8 @@ class Clock(Element):
         self._timestamp = value
         if value is not None and value.end is not None:
             self._duration = _duration_from_timestamp(value)
+        else:
+            self._duration = None
         self._mark_dirty()
 
     @property
@@ -78,6 +80,12 @@ class Clock(Element):
         """Set duration text and mark this clock element as dirty."""
         self._duration = _normalize_duration(value)
         self._mark_dirty()
+
+    def __repr__(self) -> str:
+        """Return a developer-friendly representation."""
+        return build_semantic_repr(
+            "Clock", timestamp=self._timestamp, duration=self._duration
+        )
 
     def reformat(self) -> None:
         """Mark timestamp and this clock dirty for scratch-built rendering."""

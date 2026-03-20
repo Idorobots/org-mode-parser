@@ -52,8 +52,8 @@ def test_repeat_uses_entire_item_body_as_note_payload() -> None:
     document = loads(
         "* H\n"
         ":LOGBOOK:\n"
-        '- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\\\n'
-        "  One note paragraph.\n"
+        '- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\\\ '
+        "One note paragraph.\n"
         ":END:\n"
     )
 
