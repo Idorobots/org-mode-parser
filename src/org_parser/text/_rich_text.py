@@ -91,10 +91,8 @@ class RichText:
         else:
             self._parts = list(text_or_parts)
         self._parent = parent
-        self._node: tree_sitter.Node | None = None
-        self._source: bytes = b""
-        self._start_byte: int | None = None
-        self._end_byte: int | None = None
+        self._document: Document | None = None
+        self._source: bytes | None = None
         self._dirty = False
 
     @property
@@ -178,19 +176,13 @@ class RichText:
             node: The tree-sitter node to parse.
             document: The owning :class:`Document`.
         """
-        root = document.node
-        if root is None:
-            raise ValueError("RichText.from_node requires document parse node")
-        source = document.source_for(root)
         if node.type == PARAGRAPH:
             parts = _parse_inline_nodes(node.named_children, document)
         else:
             parts = _parse_inline_nodes([node], document)
         rt = cls(parts)
-        rt._node = node
-        rt._source = source
-        rt._start_byte = node.start_byte
-        rt._end_byte = node.end_byte
+        rt._document = document
+        rt._source = document.source_for(node)
         return rt
 
     @classmethod
@@ -206,33 +198,18 @@ class RichText:
             nodes: Ordered sequence of tree-sitter nodes to parse.
             document: The owning :class:`Document`.
         """
-        if not nodes:
-            return None
-        root = document.node
-        if root is None:
-            raise ValueError("RichText.from_nodes requires document parse node")
-        source = document.source_for(root)
-        first = nodes[0]
-        last = nodes[-1]
         parts = _parse_inline_nodes(nodes, document)
         rt = cls(parts)
-        rt._node = first
-        rt._source = source
-        rt._start_byte = first.start_byte
-        rt._end_byte = last.end_byte
+        rt._document = document
+        rt._source = b"".join(document.source_for(node) for node in nodes)
         return rt
 
     # -- dunder protocols ----------------------------------------------------
 
     def __str__(self) -> str:
         """Return rich text as Org syntax."""
-        if (
-            not self._dirty
-            and self._start_byte is not None
-            and self._end_byte is not None
-            and self._source
-        ):
-            return self._source[self._start_byte : self._end_byte].decode()
+        if not self._dirty and self._source is not None:
+            return self._source.decode()
         return "".join(str(part) for part in self._parts)
 
     def __repr__(self) -> str:
