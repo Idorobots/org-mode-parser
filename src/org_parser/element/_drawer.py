@@ -261,7 +261,7 @@ class Properties(Element, MutableMapping[str, RichText]):
             key = document.source_for(name_node).decode()
             value_node = child.child_by_field_name("value")
             value = (
-                RichText.from_node(value_node, document=document)
+                RichText.from_node(value_node, document=document, parent=properties)
                 if value_node is not None
                 else RichText("")
             )

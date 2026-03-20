@@ -169,18 +169,20 @@ class RichText:
         node: tree_sitter.Node,
         *,
         document: Document,
+        parent: Document | Heading | Element | None = None,
     ) -> RichText:
         """Create a :class:`RichText` from a single tree-sitter node.
 
         Args:
             node: The tree-sitter node to parse.
             document: The owning :class:`Document`.
+            parent: Optional parent owner object.
         """
         if node.type == PARAGRAPH:
             parts = _parse_inline_nodes(node.named_children, document)
         else:
             parts = _parse_inline_nodes([node], document)
-        rt = cls(parts)
+        rt = cls(parts, parent=parent)
         rt._document = document
         rt._source = document.source_for(node)
         return rt
@@ -191,15 +193,17 @@ class RichText:
         nodes: Sequence[tree_sitter.Node],
         *,
         document: Document,
+        parent: Document | Heading | Element | None = None,
     ) -> RichText | None:
         """Create a :class:`RichText` from multiple contiguous nodes.
 
         Args:
             nodes: Ordered sequence of tree-sitter nodes to parse.
             document: The owning :class:`Document`.
+            parent: Optional parent owner object.
         """
         parts = _parse_inline_nodes(nodes, document)
-        rt = cls(parts)
+        rt = cls(parts, parent=parent)
         rt._document = document
         rt._source = b"".join(document.source_for(node) for node in nodes)
         return rt
