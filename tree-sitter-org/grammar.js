@@ -485,11 +485,11 @@ module.exports = grammar({
     _item_first_line: $ => repeat1($._object),
 
     _bullet: $ => choice(
-      $._unordered_bullet,
+      $.unordered_bullet,
       $._ordered_bullet,
     ),
 
-    _unordered_bullet: _ => token(/[+*-][ \t]+/),
+    unordered_bullet: _ => token(/[+*-][ \t]+/),
 
     _ordered_bullet: $ => seq(
       field('counter', alias($._COUNTER, $.counter)),

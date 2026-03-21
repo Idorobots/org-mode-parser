@@ -254,6 +254,7 @@ Drawer transition after property link keeps logbook timestamp
           description: (plain_text))))
     (logbook_drawer
       body: (list_item
+        bullet: (unordered_bullet)
         first_line: (plain_text)
         first_line: (timestamp
           year: (ts_year)
@@ -287,6 +288,7 @@ Indented logbook then properties with multiline link
         indent: (indent)
         body: (logbook_drawer
           body: (list_item
+            bullet: (unordered_bullet)
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -328,6 +330,7 @@ Property drawer after logbook in heading body
     body: (section
       (logbook_drawer
         body: (list_item
+          bullet: (unordered_bullet)
           first_line: (plain_text)
           first_line: (timestamp
             year: (ts_year)
@@ -386,6 +389,7 @@ Malformed property link value does not break next heading drawer
         indent: (indent)
         body: (logbook_drawer
           body: (list_item
+            bullet: (unordered_bullet)
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -394,6 +398,7 @@ Malformed property link value does not break next heading drawer
               dayname: (ts_dayname)
               time: (ts_time)))
           body: (list_item
+            bullet: (unordered_bullet)
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -475,6 +480,7 @@ LOGBOOK drawer with mis-aligned end in archive style
   (zeroth_section
     (logbook_drawer
       body: (list_item
+        bullet: (unordered_bullet)
         first_line: (plain_text)
         first_line: (timestamp
           year: (ts_year)
@@ -485,6 +491,7 @@ LOGBOOK drawer with mis-aligned end in archive style
       body: (block
         indent: (indent)
         body: (list_item
+          bullet: (unordered_bullet)
           first_line: (plain_text)
           first_line: (timestamp
             year: (ts_year)
@@ -500,6 +507,7 @@ LOGBOOK drawer with mis-aligned end in archive style
             (plain_text)
             (newline)))
         body: (list_item
+          bullet: (unordered_bullet)
           first_line: (plain_text)
           first_line: (timestamp
             year: (ts_year)
@@ -508,6 +516,7 @@ LOGBOOK drawer with mis-aligned end in archive style
             dayname: (ts_dayname)
             time: (ts_time)))
         body: (list_item
+          bullet: (unordered_bullet)
           first_line: (plain_text)
           first_line: (timestamp
             year: (ts_year)
@@ -530,6 +539,7 @@ Logbook drawer end with trailing angle text
     (logbook_drawer
       body: (drawer_start_text)
       body: (list_item
+        bullet: (unordered_bullet)
         first_line: (plain_text)
         first_line: (timestamp
           year: (ts_year)
@@ -558,6 +568,7 @@ Indented LOGBOOK drawer in heading
         indent: (indent)
         body: (logbook_drawer
           body: (list_item
+            bullet: (unordered_bullet)
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -586,6 +597,7 @@ Indented LOGBOOK drawer with note line
         indent: (indent)
         body: (logbook_drawer
           body: (list_item
+            bullet: (unordered_bullet)
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -619,6 +631,7 @@ Unindented LOGBOOK drawer with continuation note
     body: (section
       (logbook_drawer
         body: (list_item
+          bullet: (unordered_bullet)
           first_line: (plain_text)
           first_line: (timestamp
             year: (ts_year)
@@ -656,6 +669,7 @@ LOGBOOK drawer start line with inline text and unindented list
         body: (logbook_drawer
           body: (drawer_start_text)
           body: (list_item
+            bullet: (unordered_bullet)
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -664,6 +678,7 @@ LOGBOOK drawer start line with inline text and unindented list
               dayname: (ts_dayname)
               time: (ts_time)))
           body: (list_item
+            bullet: (unordered_bullet)
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)
@@ -686,6 +701,7 @@ Logbook escaped timestamp stays plain text
   (zeroth_section
     (logbook_drawer
       body: (list_item
+        bullet: (unordered_bullet)
         first_line: (plain_text)
         first_line: (timestamp
           year: (ts_year)
@@ -694,6 +710,7 @@ Logbook escaped timestamp stays plain text
           dayname: (ts_dayname)
           time: (ts_time)))
       body: (list_item
+        bullet: (unordered_bullet)
         first_line: (plain_text)))))
 
 ================
@@ -800,6 +817,7 @@ Logbook before properties with []] link description tail
         indent: (indent)
         body: (logbook_drawer
           body: (list_item
+            bullet: (unordered_bullet)
             first_line: (plain_text)
             first_line: (timestamp
               year: (ts_year)

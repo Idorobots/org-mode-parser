@@ -232,6 +232,7 @@ Heading title and body list keep plus text
       (block
         indent: (indent)
         body: (list_item
+          bullet: (unordered_bullet)
           first_line: (plain_text))))))
 
 ================

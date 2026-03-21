@@ -27,6 +27,18 @@ def recover_lists(
     return _recover_stream(elements, parent=parent, in_block=False, base_indent=0)
 
 
+def _bullet_key(item: ListItem) -> str:
+    """Return a hashable key that identifies the bullet type for list grouping.
+
+    Consecutive list items that share the same key belong to the same list.
+    For unordered items the key is the bullet character (``"-"``, ``"+"``,
+    ``"*"``).  For ordered items the key is the terminator character
+    (``"."``, ``")"``) only; the counter value and counter type (numeric vs
+    alpha) do not distinguish list membership.
+    """
+    return item.bullet
+
+
 def _recover_stream(  # noqa: PLR0915
     elements: list[Element],
     *,
@@ -66,6 +78,8 @@ def _recover_stream(  # noqa: PLR0915
                 recovered.append(element)
         elif isinstance(element, ListItem):
             flush_paragraph_run()
+            if list_run and _bullet_key(element) != _bullet_key(list_run[0]):
+                flush_list_run()
             list_run.append(element)
         elif isinstance(element, Paragraph):
             attached = _attach_paragraph_to_pending_item(

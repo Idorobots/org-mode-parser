@@ -889,6 +889,14 @@ static int scan_markup_open(
     return 1;
   }
 
+  // '*' followed by space/tab at a line-start context is an unordered list
+  // bullet, not the opening of bold markup.  Yield to the grammar's
+  // unordered_bullet token rule so the list_item rule can match instead.
+  if (marker == '*' && (next == ' ' || next == '\t') &&
+      is_list_line_start_context(s, marker_col)) {
+    return -1;  // yield to unordered_bullet
+  }
+
   if (next == ' ' || next == '\t' || next == '\n' || eof(lexer)) {
     if (valid_symbols[TOKEN_PLAIN_TEXT]) {
       lexer->result_symbol = TOKEN_PLAIN_TEXT;
@@ -1596,6 +1604,29 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
         }
       }
 
+      s->prev_char = last;
+      mark_end(lexer);
+      found_any = true;
+      continue;
+    }
+
+    // Avoid starting plain_text at [a-z][.)][ \t] at line start.  This yields
+    // to the grammar's _ordered_bullet rule so single-letter alpha counters
+    // (e.g. "a. item" / "b) item") are parsed as list_item, not paragraph.
+    // The check mirrors the digit-ordered-bullet yield above: only fire when
+    // no characters have been consumed yet and we are at a line-start position.
+    if (!found_any && (get_column(lexer) == 0 || s->prev_char == 0) &&
+        ch >= 'a' && ch <= 'z') {
+      int32_t last = ch;
+      advance(lexer);  // consume the letter
+      int32_t next = lookahead(lexer);
+      if (next == '.' || next == ')') {
+        last = next;
+        advance(lexer);  // consume the terminator
+        if (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+          return false;  // [a-z][.)][ \t] — yield to _ordered_bullet
+        }
+      }
       s->prev_char = last;
       mark_end(lexer);
       found_any = true;

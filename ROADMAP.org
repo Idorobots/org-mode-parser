@@ -1725,488 +1725,6 @@ Let's try something different, make the script only find the leaf errors and dis
 
 By leaf errors I mean errors that are as close to a leaf as possible, not the top level errors, not necessarily errors at the very leaf of the expression - just the final level at which an error occurs that does not have an error embedded in them.
 
-* TODO Parser fidelity
-** DONE Special handling for LOGBOOK
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-08 Sun 17:50]
-:END:
-The =LOGBOOK= drawer should be treated in the same way as the =PROPERTIES= drawer, i.e. it should have a dedicated parse tree node associated with it. Other custom drawers can be left as-is.
-
-** DONE Bind indent in lesser/greater elements
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-09 Mon 22:01]
-:END:
-Update the parser to bind indent level in elements such as drawers, blocks, paragraphs and all list items. Bind it even if the indent level is 0. It's sufficient to bind the indent of the beginning of the element.
-This will be used by semantic analysis to recover list nesting.
-
-*** COMMENT
-The indent is still not added to the beginning of an object such as a drawer when it is following a list item.
-
-** CANCELLED Heading line abstraction
-:LOGBOOK:
-- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\
-  No need for that with the semantic nodes.
-:END:
-Add an abstraction over the heading line, so that the heading consists of a =heading_line= and a =body=.
-
-** DONE Priority value abstraction in the parser
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-08 Sun 13:56]
-:END:
-Priority values are not bound in the parser, but should for easier extraction of the value:
-
-#+begin_example
-,* TODO [#A] Test
-#+end_example
-
-In the above example, it would be ideal if the parser extracted the value =A= and bound it as a subnode of the priority node under the name =value=.
-
-Please update the semantic nodes to use that extracted value instead.
-
-** DONE Counter value abstraction in the parser
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-08 Sun 14:07]
-:END:
-Completion counter values are not bound in the parser, but should for easier extraction of the value:
-
-#+begin_example
-,* TODO Test [1/2]
-#+end_example
-
-In the above example, it would be ideal if the parser extracted the value =1/2= and bound it as a subnode of the counter node under the name =value=.
-
-Please update the semantic nodes to use that extracted value instead.
-
-** DONE Dashes in #+TODO states
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-08 Sun 13:44]
-:END:
-The value =IN-PROGRESS= doesn't parse as a todo state when configured, but should.
-
-#+begin_example
-#+TODO: TODO IN-PROGRESS | DONE
-,* TODO Test
-,* DONE test
-,* IN-PROGRESS Test
-#+end_example
-
-Adjust the parse rules for todo states to allow for =-= and =_= in state names.
-
-** DONE Multiline paragraphs don't preserve newlines
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-09 Mon 18:50]
-:END:
-The following example ends up as three separate plaintext lines separated by newlines, but none of these newlines is captured.
-
-#+begin_example
-This is some text:
-More text
-More text
-#+end_example
-
-Ideally, the paragraph would still span multiple lines, but would capture the newlines properly. The newline character can be a part of each line.
-*** COMMENT
-Initially, Opus blew through all the quota trying to figure out what could be done and produced an unsatisfactory plan.
-Then, Codex was able to reword the plan and begin execution, however, there were issues with API communication with OpenAI, so Codex couldn't finish implementing the plan. Sonnet continued the implementation, but decided to make newlines a separate plaintext item, which is fine. In the end, Sonnet reverted all changes and instead implemented a work-around in Python by checking for the missing newline characters.
-
-** DONE List vs List item indent problems
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-10 Tue 10:15]
-:END:
-We recently introduced blanks and indentation to the parse tree.
-With those values we could optimize the flat list representation in the parse tree to not impose a structure of a =plain_list= with embedded =items=. Instead, each item should become a =list_item= that lives separately and has an indent associated with it.
-
-The rules for parsing these items remain the same. The rules for =plain_list= should be removed. Pay special attention to attach the indent to the elements following a =list_item= - =list_item= should end at a newline boundary when followed by a non-text element such as a drawer or a block. If that following element is indented, the indent should be attached to that element.
-
-There's a regression when parsing a list that is following a heading and a drawer:
-#+begin_example
-,** Unreleased
-:PROPERTIES:
-:CUSTOM_ID: unreleased
-:END:
-
-- IN-PROGRESS Add ~OBJECT FREQ~ command for LFU policy introspection. :feature:
-- TODO Implement ~LMPOP~ and ~ZMPOP~ for multi-key blocking pops. :feature:
-- TODO Structured JSON logging via =tracing-subscriber= JSON formatter. :observability:
-#+end_example
-
-Please make sure to fix the issue.
-
-Another regression:
-#+begin_example
-- [X] Javadoc documentation
-- [X] Logging:
-  + [X] Competitor
-  + [X] Shooting range
-- [X] UML diagrams:
-#+end_example
-
-Looks like lists do not recognize the bullets correctly. Please make sure that all the bullets are recognized correctly for unordered and ordered lists. Make sure that =list_item= bindgs the bullet used for the list.
-
-Make sure to add corpus tests for all of these regressions.
-
-*** COMMENT
-Somehow, fixing the bullet issue was really hard for Codex, it attempted two "solutions" breaking more tests in the process and it reverted the code twice calling the second attempt as "fixed".
-
-Another session also failed to fix the issue and instead removed the test case from the corpus.
-
-Finally, the third time I decided to get rid of the item continuation lines altogether, which allowed the AI to actually make something working, except that now it parses =+= as =repeat_marker=. Still to do:
-
-- List reconstruction doesn't properly add bodies that start with an indent.
-- =- + foo= in lists is causing an error (markup.txt test file was updated to get that in)
-- some of the archive files don't parse now
-- parser doesn't bind the bullet used for the list
-
-** DONE Indent on table formula
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-10 Tue 10:30]
-:END:
-Here's a new edge case that popped up:
-#+begin_example
- |    *Total* |              |            |                 |                |              150 |
- #+TBLFM: @>$6=vsum(@2$6..@>>$6)
-#+end_example
-The TBLFM line is indented and the indentation causes an error. Please add a test case for this and fix the issue.
-
-** DONE =+= in list/headings
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-10 Tue 10:43]
-:END:
-I found some more edge cases all related to the =+= character and lists:
-
-#+begin_example
-,*** TODO + in list/headings
-#+end_example
-Here the initial =+= character of the heading line causes an issue - it should be interpreted as a plaintext character.
-
-#+begin_example
-,*** CLJS & Reframe vs Elm vs React + Redux
- - React + Redux quickly turns into spaghetti code
-#+end_example
-Here the =+= in the title causes a parse failure but should instead be interpreted as plaintext.
-
-#+begin_example
-,** SUSPENDED The suspended state causes an issue Foo + Bar
-#+end_example
-In this one there is a similar failure, however, it parses fine when the =SUSPENDED= state is either a recognizable state or missing.
-
-#+begin_example
-- State "CANCELLED"  from "TODO"       [2014-06-06 pią 08:26] \\
-  -1 - this is not working right.
-- State "CANCELLED"  from "TODO"       [2014-06-05 czw 15:31]
-#+end_example
-In this one there's no =+= character, but the =-1= is mistaken for a potential list item. It sholud be interpreted as a plaintext item (no space after the =-= character).
-
-Please add test cases for all of these edge cases and fix them.
-
-** CANCELLED Explicit indent in paragraphs
-:LOGBOOK:
-- State "CANCELLED"  from "TODO"       [2026-03-11 Wed 18:59] \\
-  See comment.
-:END:
-Paragraph text now includes its indentation level. I'd like the indent to be explicitly parsed and added as the =indent= field of a paragraph node so that it's easier to recover the document structure at a later point.
-
-The =indent= field should be explicitly bound in the paragraph. Corpus tests should be updated to support that field.
-
-Add an additional corpus test that checks for paragraph indent parsing:
-
-#+begin_example
-,** Test
-  hurr
-
-- foo
-  durr
-#+end_example
-
-Both =hurr= and =durr= containing paragraphs should have an indent.
-
-*** COMMENT
-The AI made some attempts but it proved to hard to do without confusing the indented paragraph for other elements. I proposed an alternative approach: having the indent as en explicit wrapper on all indent-sensitive elements, but Codex didn't like the idea.
-
-** DONE Explicit indent blocks in sections
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-11 Wed 19:07]
-:END:
-Are you certain that having a dedicated syntactic node for the indent wouldn't work? We could handle the current indent level in the scanner and just ignore the leading whitespace on the line when considering elements. Then the whole parse would be wrapped in a dedicated block effectively providing nesting.
-
-Could the indent-block logic apply just to the sections? Zeroth section and heading sections.
-
-I'd like to proceed with this idea, replace all indent handling in all elements with section-based indent-block handling. Each line's indent should be considered by the scanner to keep track of the current indent level. Elements should be parsed according to their usual rules, except without consideration for the indent (the scanner is taking care for that). The result should be a section content with explicit indent blocks that wrap the elements that share those indents. For elements, the initial indent at the element start should be the determining one (i.e. drawers can span a dedent).
-
-The AST node for the indent should be called =block= and have an explicit field called =indent= that represents its indent level.
-Blocks can be nested and they can nest other elements within them.
-
-Execute the plan from @docs/plans/section-indent-block-plan.md The goal is 100% corpus test passing, do not omit the currently failing test.
-
-I think your problems are stemming from the fact that blocks do not nest. Here's an example:
-
-#+begin_example
-- Foo
-  Baz
-  + hurr
-    - derp
-  + durr
-- Bar
-#+end_example
-
-Following the =- Foo= line, there should be an indent-block of depth 2, following =+ hurr= there should be a single-line indent-block of depth 4.
-There's no need to handle list nesting. Only blocks should nest. List's are no longer a thing. Only list items that are individual items that do not have a body even.
-
-Indent blocks should be the only indent-bearing nodes in the AST. All other nodes shouldn't have anything to do with identation.
-The per-element indent captures can be removed. Table row should also be handled without relying on the indent in the rule.
-Blank line can remain an exception that consumes the whitespace.
-
-Heading planning can consume its own whitespace (it's not part of a section or zeroth-section, so no need to handle that with indent blocks).
-
-*** COMMENT
-The brainstorming resulted in a plan stored for posterity in docs/plans. The AI extremely reluctant to implement any of it, stopping at every oportunity, explaining that this is a large refactor and that almost all tests would have to change.
-
-A lot churning later it still couldn't do it. Took a good dozen extra encouragement prompts to get this somewhat working, but it was very hand-holdy.
-
-** DONE Numeric priority values
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-11 Wed 19:07]
-:END:
-Parser was updated not to recognize numeric priority values. Numeric values should be supported.
-
-** DONE Post-refactor edge cases
-I found some edge cases that don't seem to work now after the refactor:
-
-#+begin_example
-:properties:
-:context: [[file:/ServiceWorker.scala::private%20def%20groupsToDtos(groupedSynced:%20Seq%5BSet%5BSynced%5D%5D,%20getSyncMapper:%20GetSyncMapper):%20SyncWorkerM%5BRegroupDtos%5D%20%3D%20{][file:/ServiceWorker.scala::private def groupsToDtos(groupedSynced: Seq[Set[Synced]], getSyncMapper: GetSyncMapper): SyncWorkerM[RegroupDtos] = {]]
-:end:
-#+end_example
-Here, the link description fails to parse when in a drawer, however it parses fine outside of it.
-
-#+begin_example
-    #+PLOT: ind:1 deps:(2 3 4)
-    |    10000 |     33634 |     53458 |     28740 |
-    |    20000 |     66908 |    106692 |     61941 |
-#+end_example
-Indented keywords preceeding Org Tables seem to cause an issue in the parser. Mulitple PLOT lines complicate the issue even further. All of the above lines should be a parte of an indent block and parse as a single keyword line and an two-row Org table.
-
-#+begin_example
-,* DELEGATED Fix Nexus @types resolving.
-#+end_example
-The =@= character in the title stopped working. It should be treated as a regular plain text.
-
-#+begin_example
-Test
-=============
-Test
-#+end_example
-Here all lines should be treated as plain-text.
-
-#+begin_example
-:properties:
-:context: [[file:~/events.cljs::{:dispatch [:fetch-docs]}))]]
-:end:
-#+end_example
-Here's another link issue - the =:= causes a parse error. This is a valid link (I think).
-
-#+begin_example
-:properties:
-:context: [[file:~/md.clj::p #"\n(?i)<!--\s*more\s*-->\n"] ;; FIXME Still needs contextual preview marker replacement.]]
-:end:
-#+end_example
-Here's another issue - the link is malformed - it lacks an opening bracket on the link description. In such a case it would be ideal if the entire property value were parsed as plaintext.
-
-#+begin_example
-:properties:
-:context: [[file:~/org/repeat.org::*Hangul romanization: [[jo/yo\][medial ㅛ]\]][Hangul romanization: medial ㅛ]]
-:end:
-#+end_example
-This one uses a search term with brackets and escape sequence. It should fall back to a plaintext value.
-
-#+begin_example
-:properties:
-:context: [[file:/StreamProvider.scala::textMessage.textStream.runFold("")(_ + _).map(_.parseJson.convertTo[StreamRequest])]]
-:end:
-#+end_example
-Another scala link that doesn't parse well. The search term looks valid, it fails to parse as it uses brackets.
-
-#+begin_example
-```yaml
----
-name: Load average
-identifier: urn:example:load-average
-```
-#+end_example
-Here the =---= line is reporting an error - that should be parsed as a text line.
-
-#+begin_example
-:properties:
-:context: [[file:~/org/repeat.org::*\[\[Nobody can deny, that...\]\[Niemand kann leugnen, dass...\]\]][Niemand kann leugnen, dass...]]
-:end:
-#+end_example
-Here the backslash character presents an issue in the search path.
-
-#+begin_example
-:LOGBOOK:  <
-- State "DONE"       from "TODO"       [2017-03-17 Fri 20:42]
-:END:      <<<<<<<<<<<<<<<<
-#+end_example
-This one is weird - the drawer start text parses fine, but then drawer parsing failse because of the additional angle brackets followig the =:end:=. I think the text following the =:end:= marker should be parsed as plaintext.
-
-#+begin_example
-```json
-{
-  "nodes": [{
-    "parameters": [{
-    }],
-    "returnTypes": ["MONITOR_HEALTH_STATES"],
-    "script": "...",
-  }],
-  "timestamp": "2022-01-17T16:17:55.707Z[Etc/UTC]"
-}
-```
-#+end_example
-Here's one more case that's failing. It's raw JSON in the body of the task. Specifically the =}],= is tripping up the parser. It should be treated as a plaintext in this case.
-
-#+begin_example
-  -
-#+end_example
-Here an issue stems from a single dash on a line - it's not a proper list item, so it should be treated as a plain text character.
-
-#+begin_example
-:properties:
-:context: [[file:~/org/refile.org::DONE Add mDNS support to the SSM scala agent. :Scala:Networking:
-:end:
-#+end_example
-Here, the end of the link syntaxt never appears, so the parser fails. As a fallback, this should be treated as a plaintext value.
-
-#+begin_example
-:LOGBOOK:
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-11 Wed 21:11]
-:END:
-- State "DONE"       from "TODO"       [2023-04-16 nie 21:32]
-- State "DONE" from "TODO" \[2023-04-12 śro 00:36\]
-:END:
-#+end_example
-The second line should consist of plaintext - the incorrect timestamp should fail parsing and fallback to text.
-
-#+begin_example
-`foo << 2 + bar << 4 + baz << 8` is not the same as `(foo << 2) + (bar << 4) + (baz << 8)`.
-#+end_example
-Here, the text fails to parse as a target and should fallback to plaintext.
-
-** DONE Logbook contents should recognize indent blocks
-#+begin_example
-:LOGBOOK:
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-20 Fri 21:50]
-:END:
-- State "CANCELLED"  from "TODO"       [2025-07-28 pon 18:41] \\
-  No need to.
-- State "DONE"       from "TODO"       [2025-07-28 pon 18:33]
-- State "DONE"       from "TODO"       [2025-07-26 sob 22:18]
-- State "DONE"       from "TODO"       [2025-06-29 nie 20:54]
-- State "DONE"       from "TODO"       [2025-06-26 czw 22:39]
-- State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
-  Missed it.
-- State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
-  Note
-:END:
-#+end_example
-
-None of the indented lines are in a block, but they should be so that we can recover the list structure within a drawer element.
-When this same list is outside of the drawer, it correctly parses with indent blocks.
-
-There is one failing Python wrapper test that should pass after this is fixed on the grammar level.
-
-** DONE Custom drawer text contents should always be wrapped in a paragraph
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-20 Fri 22:13]
-:END:
-#+begin_example
-  :test:
-  [2026-01-01 Wto 10:00] This is not wrapped in a paragraph, unless dedented.
-  :end:
-#+end_example
-
-The above fragment doesn't parse correctly - the contents are not wrapped in a paragraph when the entire drawer is indented. It parses correctly when the drawer itself is dedented.
-Please make sure these indented drawers still parse correctly with a paragraph inside.
-
-** DONE Indented timestamp issue
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-20 Fri 22:13]
-:END:
-Here are some corner cases:
-
-#+begin_example
-:PROGRESS:
-  [2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
-:END:
-
-  [2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
-
-[2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
-#+end_example
-
-Both of the indented lines that start with a timestamp are failing to parse. The last line parses fine when there is no indent present. All lines parse fine if the indented lines have anything else than a timestamp at the very start (even if there's a timestamp following the prefix).
-
-All of the above lines containing timestamps should parse as a paragraph of text that begins with a timestamp and is followed by some plain text.
-
-Update the corpus tests that currently expect an ERROR node to be produced for these cases.
-
-** DONE Multiple indentend timestamps
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-20 Fri 22:53]
-:END:
-I found one more edge case:
-#+begin_example
-  :FEEDING_LOG:
-  [2025-01-04 Sat] Fed 1:1:1 (starter:flour:water). Rose 3× in 4 hours.
-  [2025-01-05 Sun] Fed 1:2:2. Peak at 6 hours — slightly slower.
-  [2025-01-06 Mon] Fed 1:5:5. Testing for long cold ferment.
-  :END:
-#+end_example
-All three lines should parse as paragraphs.
-
-** DONE Another multi-line link edge case
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-21 Sat 00:09]
-:END:
-#+begin_example
-:PROPERTIES:
-:context: [[file:src/org_parser/text/_rich_text.py::@classmethod
- def from_node(
- cls,
- node: tree_sitter.Node,
- *,
- document: Document,
- ) -> RichText:
- """Create a :class:`RichText` from a single tree-sitter node.]]
-:END:
-#+end_example
-
-The above fails to parse correctly, the link should be a valid multi-line link.
-
-** DONE Lone end marker breaks the parser
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-03-20 Fri 23:59]
-:END:
-#+begin_example
-,* TODO Heading
-  - State "DONE"       from "TODO"       [2014-08-15 pią 23:25]
-  :END:
-#+end_example
-
-The above example is technically malformed, but it should parse as a heading with one list item followed by a indented plaintext item.
-
-The recent fix causes the END marker to not be a part of the indent block. Can this be fixed?
-
-** TODO List bullet
-Bind the list_item bullet in the parse tree - currently the unordered and ordered list items are indistinguishable since they don't expose the list bullet in the parse tree.
-
-** Support for Babel call syntax
-** Support for Org entities
-** Support for subscript/superscript
-** Better support for tableel tables
-Table.el tables are parsed weird right now - just the frame lines are parsed as tableel tables with the actual table data parsed as Org Tables.
-
 * DONE Semantic nodes implementation
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-03-21 Sat 00:47]
@@ -4345,6 +3863,515 @@ There is a medium-severity bug in =src/org_parser/element/_list_recovery.py:58= 
 Parsing =- a\n\nPara\n=, then making the doc dirty, serializes as =- a\nPara\n= (blank line lost).
 
 Root cause: =BlankLine= is intentionally ignored while =list_run= is active (=src/org_parser/element/_list_recovery.py:58=), so no separator survives into dirty rendering.
+
+* TODO Parser fidelity
+** DONE Special handling for LOGBOOK
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 17:50]
+:END:
+The =LOGBOOK= drawer should be treated in the same way as the =PROPERTIES= drawer, i.e. it should have a dedicated parse tree node associated with it. Other custom drawers can be left as-is.
+
+** DONE Bind indent in lesser/greater elements
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-09 Mon 22:01]
+:END:
+Update the parser to bind indent level in elements such as drawers, blocks, paragraphs and all list items. Bind it even if the indent level is 0. It's sufficient to bind the indent of the beginning of the element.
+This will be used by semantic analysis to recover list nesting.
+
+*** COMMENT
+The indent is still not added to the beginning of an object such as a drawer when it is following a list item.
+
+** CANCELLED Heading line abstraction
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-08 Sun 13:18] \\
+  No need for that with the semantic nodes.
+:END:
+Add an abstraction over the heading line, so that the heading consists of a =heading_line= and a =body=.
+
+** DONE Priority value abstraction in the parser
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 13:56]
+:END:
+Priority values are not bound in the parser, but should for easier extraction of the value:
+
+#+begin_example
+,* TODO [#A] Test
+#+end_example
+
+In the above example, it would be ideal if the parser extracted the value =A= and bound it as a subnode of the priority node under the name =value=.
+
+Please update the semantic nodes to use that extracted value instead.
+
+** DONE Counter value abstraction in the parser
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 14:07]
+:END:
+Completion counter values are not bound in the parser, but should for easier extraction of the value:
+
+#+begin_example
+,* TODO Test [1/2]
+#+end_example
+
+In the above example, it would be ideal if the parser extracted the value =1/2= and bound it as a subnode of the counter node under the name =value=.
+
+Please update the semantic nodes to use that extracted value instead.
+
+** DONE Dashes in #+TODO states
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-08 Sun 13:44]
+:END:
+The value =IN-PROGRESS= doesn't parse as a todo state when configured, but should.
+
+#+begin_example
+#+TODO: TODO IN-PROGRESS | DONE
+,* TODO Test
+,* DONE test
+,* IN-PROGRESS Test
+#+end_example
+
+Adjust the parse rules for todo states to allow for =-= and =_= in state names.
+
+** DONE Multiline paragraphs don't preserve newlines
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-09 Mon 18:50]
+:END:
+The following example ends up as three separate plaintext lines separated by newlines, but none of these newlines is captured.
+
+#+begin_example
+This is some text:
+More text
+More text
+#+end_example
+
+Ideally, the paragraph would still span multiple lines, but would capture the newlines properly. The newline character can be a part of each line.
+*** COMMENT
+Initially, Opus blew through all the quota trying to figure out what could be done and produced an unsatisfactory plan.
+Then, Codex was able to reword the plan and begin execution, however, there were issues with API communication with OpenAI, so Codex couldn't finish implementing the plan. Sonnet continued the implementation, but decided to make newlines a separate plaintext item, which is fine. In the end, Sonnet reverted all changes and instead implemented a work-around in Python by checking for the missing newline characters.
+
+** DONE List vs List item indent problems
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-10 Tue 10:15]
+:END:
+We recently introduced blanks and indentation to the parse tree.
+With those values we could optimize the flat list representation in the parse tree to not impose a structure of a =plain_list= with embedded =items=. Instead, each item should become a =list_item= that lives separately and has an indent associated with it.
+
+The rules for parsing these items remain the same. The rules for =plain_list= should be removed. Pay special attention to attach the indent to the elements following a =list_item= - =list_item= should end at a newline boundary when followed by a non-text element such as a drawer or a block. If that following element is indented, the indent should be attached to that element.
+
+There's a regression when parsing a list that is following a heading and a drawer:
+#+begin_example
+,** Unreleased
+:PROPERTIES:
+:CUSTOM_ID: unreleased
+:END:
+
+- IN-PROGRESS Add ~OBJECT FREQ~ command for LFU policy introspection. :feature:
+- TODO Implement ~LMPOP~ and ~ZMPOP~ for multi-key blocking pops. :feature:
+- TODO Structured JSON logging via =tracing-subscriber= JSON formatter. :observability:
+#+end_example
+
+Please make sure to fix the issue.
+
+Another regression:
+#+begin_example
+- [X] Javadoc documentation
+- [X] Logging:
+  + [X] Competitor
+  + [X] Shooting range
+- [X] UML diagrams:
+#+end_example
+
+Looks like lists do not recognize the bullets correctly. Please make sure that all the bullets are recognized correctly for unordered and ordered lists. Make sure that =list_item= bindgs the bullet used for the list.
+
+Make sure to add corpus tests for all of these regressions.
+
+*** COMMENT
+Somehow, fixing the bullet issue was really hard for Codex, it attempted two "solutions" breaking more tests in the process and it reverted the code twice calling the second attempt as "fixed".
+
+Another session also failed to fix the issue and instead removed the test case from the corpus.
+
+Finally, the third time I decided to get rid of the item continuation lines altogether, which allowed the AI to actually make something working, except that now it parses =+= as =repeat_marker=. Still to do:
+
+- List reconstruction doesn't properly add bodies that start with an indent.
+- =- + foo= in lists is causing an error (markup.txt test file was updated to get that in)
+- some of the archive files don't parse now
+- parser doesn't bind the bullet used for the list
+
+** DONE Indent on table formula
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-10 Tue 10:30]
+:END:
+Here's a new edge case that popped up:
+#+begin_example
+ |    *Total* |              |            |                 |                |              150 |
+ #+TBLFM: @>$6=vsum(@2$6..@>>$6)
+#+end_example
+The TBLFM line is indented and the indentation causes an error. Please add a test case for this and fix the issue.
+
+** DONE =+= in list/headings
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-10 Tue 10:43]
+:END:
+I found some more edge cases all related to the =+= character and lists:
+
+#+begin_example
+,*** TODO + in list/headings
+#+end_example
+Here the initial =+= character of the heading line causes an issue - it should be interpreted as a plaintext character.
+
+#+begin_example
+,*** CLJS & Reframe vs Elm vs React + Redux
+ - React + Redux quickly turns into spaghetti code
+#+end_example
+Here the =+= in the title causes a parse failure but should instead be interpreted as plaintext.
+
+#+begin_example
+,** SUSPENDED The suspended state causes an issue Foo + Bar
+#+end_example
+In this one there is a similar failure, however, it parses fine when the =SUSPENDED= state is either a recognizable state or missing.
+
+#+begin_example
+- State "CANCELLED"  from "TODO"       [2014-06-06 pią 08:26] \\
+  -1 - this is not working right.
+- State "CANCELLED"  from "TODO"       [2014-06-05 czw 15:31]
+#+end_example
+In this one there's no =+= character, but the =-1= is mistaken for a potential list item. It sholud be interpreted as a plaintext item (no space after the =-= character).
+
+Please add test cases for all of these edge cases and fix them.
+
+** CANCELLED Explicit indent in paragraphs
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-11 Wed 18:59] \\
+  See comment.
+:END:
+Paragraph text now includes its indentation level. I'd like the indent to be explicitly parsed and added as the =indent= field of a paragraph node so that it's easier to recover the document structure at a later point.
+
+The =indent= field should be explicitly bound in the paragraph. Corpus tests should be updated to support that field.
+
+Add an additional corpus test that checks for paragraph indent parsing:
+
+#+begin_example
+,** Test
+  hurr
+
+- foo
+  durr
+#+end_example
+
+Both =hurr= and =durr= containing paragraphs should have an indent.
+
+*** COMMENT
+The AI made some attempts but it proved to hard to do without confusing the indented paragraph for other elements. I proposed an alternative approach: having the indent as en explicit wrapper on all indent-sensitive elements, but Codex didn't like the idea.
+
+** DONE Explicit indent blocks in sections
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-11 Wed 19:07]
+:END:
+Are you certain that having a dedicated syntactic node for the indent wouldn't work? We could handle the current indent level in the scanner and just ignore the leading whitespace on the line when considering elements. Then the whole parse would be wrapped in a dedicated block effectively providing nesting.
+
+Could the indent-block logic apply just to the sections? Zeroth section and heading sections.
+
+I'd like to proceed with this idea, replace all indent handling in all elements with section-based indent-block handling. Each line's indent should be considered by the scanner to keep track of the current indent level. Elements should be parsed according to their usual rules, except without consideration for the indent (the scanner is taking care for that). The result should be a section content with explicit indent blocks that wrap the elements that share those indents. For elements, the initial indent at the element start should be the determining one (i.e. drawers can span a dedent).
+
+The AST node for the indent should be called =block= and have an explicit field called =indent= that represents its indent level.
+Blocks can be nested and they can nest other elements within them.
+
+Execute the plan from @docs/plans/section-indent-block-plan.md The goal is 100% corpus test passing, do not omit the currently failing test.
+
+I think your problems are stemming from the fact that blocks do not nest. Here's an example:
+
+#+begin_example
+- Foo
+  Baz
+  + hurr
+    - derp
+  + durr
+- Bar
+#+end_example
+
+Following the =- Foo= line, there should be an indent-block of depth 2, following =+ hurr= there should be a single-line indent-block of depth 4.
+There's no need to handle list nesting. Only blocks should nest. List's are no longer a thing. Only list items that are individual items that do not have a body even.
+
+Indent blocks should be the only indent-bearing nodes in the AST. All other nodes shouldn't have anything to do with identation.
+The per-element indent captures can be removed. Table row should also be handled without relying on the indent in the rule.
+Blank line can remain an exception that consumes the whitespace.
+
+Heading planning can consume its own whitespace (it's not part of a section or zeroth-section, so no need to handle that with indent blocks).
+
+*** COMMENT
+The brainstorming resulted in a plan stored for posterity in docs/plans. The AI extremely reluctant to implement any of it, stopping at every oportunity, explaining that this is a large refactor and that almost all tests would have to change.
+
+A lot churning later it still couldn't do it. Took a good dozen extra encouragement prompts to get this somewhat working, but it was very hand-holdy.
+
+** DONE Numeric priority values
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-11 Wed 19:07]
+:END:
+Parser was updated not to recognize numeric priority values. Numeric values should be supported.
+
+** DONE Post-refactor edge cases
+I found some edge cases that don't seem to work now after the refactor:
+
+#+begin_example
+:properties:
+:context: [[file:/ServiceWorker.scala::private%20def%20groupsToDtos(groupedSynced:%20Seq%5BSet%5BSynced%5D%5D,%20getSyncMapper:%20GetSyncMapper):%20SyncWorkerM%5BRegroupDtos%5D%20%3D%20{][file:/ServiceWorker.scala::private def groupsToDtos(groupedSynced: Seq[Set[Synced]], getSyncMapper: GetSyncMapper): SyncWorkerM[RegroupDtos] = {]]
+:end:
+#+end_example
+Here, the link description fails to parse when in a drawer, however it parses fine outside of it.
+
+#+begin_example
+    #+PLOT: ind:1 deps:(2 3 4)
+    |    10000 |     33634 |     53458 |     28740 |
+    |    20000 |     66908 |    106692 |     61941 |
+#+end_example
+Indented keywords preceeding Org Tables seem to cause an issue in the parser. Mulitple PLOT lines complicate the issue even further. All of the above lines should be a parte of an indent block and parse as a single keyword line and an two-row Org table.
+
+#+begin_example
+,* DELEGATED Fix Nexus @types resolving.
+#+end_example
+The =@= character in the title stopped working. It should be treated as a regular plain text.
+
+#+begin_example
+Test
+=============
+Test
+#+end_example
+Here all lines should be treated as plain-text.
+
+#+begin_example
+:properties:
+:context: [[file:~/events.cljs::{:dispatch [:fetch-docs]}))]]
+:end:
+#+end_example
+Here's another link issue - the =:= causes a parse error. This is a valid link (I think).
+
+#+begin_example
+:properties:
+:context: [[file:~/md.clj::p #"\n(?i)<!--\s*more\s*-->\n"] ;; FIXME Still needs contextual preview marker replacement.]]
+:end:
+#+end_example
+Here's another issue - the link is malformed - it lacks an opening bracket on the link description. In such a case it would be ideal if the entire property value were parsed as plaintext.
+
+#+begin_example
+:properties:
+:context: [[file:~/org/repeat.org::*Hangul romanization: [[jo/yo\][medial ㅛ]\]][Hangul romanization: medial ㅛ]]
+:end:
+#+end_example
+This one uses a search term with brackets and escape sequence. It should fall back to a plaintext value.
+
+#+begin_example
+:properties:
+:context: [[file:/StreamProvider.scala::textMessage.textStream.runFold("")(_ + _).map(_.parseJson.convertTo[StreamRequest])]]
+:end:
+#+end_example
+Another scala link that doesn't parse well. The search term looks valid, it fails to parse as it uses brackets.
+
+#+begin_example
+```yaml
+---
+name: Load average
+identifier: urn:example:load-average
+```
+#+end_example
+Here the =---= line is reporting an error - that should be parsed as a text line.
+
+#+begin_example
+:properties:
+:context: [[file:~/org/repeat.org::*\[\[Nobody can deny, that...\]\[Niemand kann leugnen, dass...\]\]][Niemand kann leugnen, dass...]]
+:end:
+#+end_example
+Here the backslash character presents an issue in the search path.
+
+#+begin_example
+:LOGBOOK:  <
+- State "DONE"       from "TODO"       [2017-03-17 Fri 20:42]
+:END:      <<<<<<<<<<<<<<<<
+#+end_example
+This one is weird - the drawer start text parses fine, but then drawer parsing failse because of the additional angle brackets followig the =:end:=. I think the text following the =:end:= marker should be parsed as plaintext.
+
+#+begin_example
+```json
+{
+  "nodes": [{
+    "parameters": [{
+    }],
+    "returnTypes": ["MONITOR_HEALTH_STATES"],
+    "script": "...",
+  }],
+  "timestamp": "2022-01-17T16:17:55.707Z[Etc/UTC]"
+}
+```
+#+end_example
+Here's one more case that's failing. It's raw JSON in the body of the task. Specifically the =}],= is tripping up the parser. It should be treated as a plaintext in this case.
+
+#+begin_example
+  -
+#+end_example
+Here an issue stems from a single dash on a line - it's not a proper list item, so it should be treated as a plain text character.
+
+#+begin_example
+:properties:
+:context: [[file:~/org/refile.org::DONE Add mDNS support to the SSM scala agent. :Scala:Networking:
+:end:
+#+end_example
+Here, the end of the link syntaxt never appears, so the parser fails. As a fallback, this should be treated as a plaintext value.
+
+#+begin_example
+:LOGBOOK:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-11 Wed 21:11]
+:END:
+- State "DONE"       from "TODO"       [2023-04-16 nie 21:32]
+- State "DONE" from "TODO" \[2023-04-12 śro 00:36\]
+:END:
+#+end_example
+The second line should consist of plaintext - the incorrect timestamp should fail parsing and fallback to text.
+
+#+begin_example
+`foo << 2 + bar << 4 + baz << 8` is not the same as `(foo << 2) + (bar << 4) + (baz << 8)`.
+#+end_example
+Here, the text fails to parse as a target and should fallback to plaintext.
+
+** DONE Logbook contents should recognize indent blocks
+#+begin_example
+:LOGBOOK:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 21:50]
+:END:
+- State "CANCELLED"  from "TODO"       [2025-07-28 pon 18:41] \\
+  No need to.
+- State "DONE"       from "TODO"       [2025-07-28 pon 18:33]
+- State "DONE"       from "TODO"       [2025-07-26 sob 22:18]
+- State "DONE"       from "TODO"       [2025-06-29 nie 20:54]
+- State "DONE"       from "TODO"       [2025-06-26 czw 22:39]
+- State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
+  Missed it.
+- State "CANCELLED"  from "TODO"       [2025-06-20 pią 19:54] \\
+  Note
+:END:
+#+end_example
+
+None of the indented lines are in a block, but they should be so that we can recover the list structure within a drawer element.
+When this same list is outside of the drawer, it correctly parses with indent blocks.
+
+There is one failing Python wrapper test that should pass after this is fixed on the grammar level.
+
+** DONE Custom drawer text contents should always be wrapped in a paragraph
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 22:13]
+:END:
+#+begin_example
+  :test:
+  [2026-01-01 Wto 10:00] This is not wrapped in a paragraph, unless dedented.
+  :end:
+#+end_example
+
+The above fragment doesn't parse correctly - the contents are not wrapped in a paragraph when the entire drawer is indented. It parses correctly when the drawer itself is dedented.
+Please make sure these indented drawers still parse correctly with a paragraph inside.
+
+** DONE Indented timestamp issue
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 22:13]
+:END:
+Here are some corner cases:
+
+#+begin_example
+:PROGRESS:
+  [2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
+:END:
+
+  [2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
+
+[2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.
+#+end_example
+
+Both of the indented lines that start with a timestamp are failing to parse. The last line parses fine when there is no indent present. All lines parse fine if the indented lines have anything else than a timestamp at the very start (even if there's a timestamp following the prefix).
+
+All of the above lines containing timestamps should parse as a paragraph of text that begins with a timestamp and is followed by some plain text.
+
+Update the corpus tests that currently expect an ERROR node to be produced for these cases.
+
+** DONE Multiple indentend timestamps
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 22:53]
+:END:
+I found one more edge case:
+#+begin_example
+  :FEEDING_LOG:
+  [2025-01-04 Sat] Fed 1:1:1 (starter:flour:water). Rose 3× in 4 hours.
+  [2025-01-05 Sun] Fed 1:2:2. Peak at 6 hours — slightly slower.
+  [2025-01-06 Mon] Fed 1:5:5. Testing for long cold ferment.
+  :END:
+#+end_example
+All three lines should parse as paragraphs.
+
+** DONE Another multi-line link edge case
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-21 Sat 00:09]
+:END:
+#+begin_example
+:PROPERTIES:
+:context: [[file:src/org_parser/text/_rich_text.py::@classmethod
+ def from_node(
+ cls,
+ node: tree_sitter.Node,
+ *,
+ document: Document,
+ ) -> RichText:
+ """Create a :class:`RichText` from a single tree-sitter node.]]
+:END:
+#+end_example
+
+The above fails to parse correctly, the link should be a valid multi-line link.
+
+** DONE Lone end marker breaks the parser
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-20 Fri 23:59]
+:END:
+#+begin_example
+,* TODO Heading
+  - State "DONE"       from "TODO"       [2014-08-15 pią 23:25]
+  :END:
+#+end_example
+
+The above example is technically malformed, but it should parse as a heading with one list item followed by a indented plaintext item.
+
+The recent fix causes the END marker to not be a part of the indent block. Can this be fixed?
+
+** DONE List bullet
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-21 Sat 12:02]
+:END:
+Bind the =list_item= bullet in the parse tree - currently the various unordered list items are indistinguishable since they don't expose the list bullet in the parse tree.
+
+Upate the list recovery to take the bullet into account: if a consecutive list item run encounters an item with a different bullet than the items so far, it should end the list run and start a new one.
+
+Here's an example:
+#+begin_example
+- Foo
+- Bar
+  1. Ordered
+  2. orderede
+  a) another
+  b) one
++ Baz
++ Faz
+ * Hurr
+ * Durr
+ - Back
+ - To dashes
+#+end_example
+
+The above example contains two, two-item top-level lists. Each of these lists' second item contains two nested lists that are two-items each.
+
+The tree sitter parser should bind the bullet for all of these items.
+
+The Python wrapper should use the bullet to recover the list structure.
+
+** Support for Babel call syntax
+** Support for Org entities
+** Support for subscript/superscript
+** Better support for tableel tables
+Table.el tables are parsed weird right now - just the frame lines are parsed as tableel tables with the actual table data parsed as Org Tables.
 
 * Semantic nodes dev experience
 ** Convenience fields

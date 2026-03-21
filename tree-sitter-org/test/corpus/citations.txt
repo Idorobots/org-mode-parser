@@ -59,6 +59,7 @@ In prose: the foundational theory of information [cite:@shannon1948] was
       (newline))
     (blank_line)
     (list_item
+      bullet: (unordered_bullet)
       first_line: (plain_text)
       first_line: (citation
         body: (citation_body))

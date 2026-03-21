@@ -46,6 +46,7 @@
 
 ; --- Lists ---
 (list_item) @markup.list
+(unordered_bullet) @punctuation.special
 (checkbox) @constant
 (counter_set) @constant
 

@@ -252,3 +252,122 @@ def test_dirty_standalone_list_item_aligns_body_after_bullet_column() -> None:
     )
 
     assert str(item) == "- List item line\n  body is aligned to the line text\n"
+
+
+def test_unordered_bullet_property_returns_correct_character() -> None:
+    """Parsed list items expose the correct unordered bullet character."""
+    document = loads("- dash\n+ plus\n")
+
+    assert isinstance(document.body[0], List)
+    assert isinstance(document.body[1], List)
+    assert document.body[0].items[0].bullet == "-"
+    assert document.body[1].items[0].bullet == "+"
+
+
+def test_different_unordered_bullets_create_separate_lists() -> None:
+    """Consecutive items with different bullet chars form separate List objects."""
+    document = loads("- Foo\n- Bar\n+ Baz\n+ Faz\n")
+
+    assert len(document.body) == 2
+    dash_list, plus_list = document.body[0], document.body[1]
+    assert isinstance(dash_list, List)
+    assert isinstance(plus_list, List)
+    assert len(dash_list.items) == 2
+    assert len(plus_list.items) == 2
+    assert all(item.bullet == "-" for item in dash_list.items)
+    assert all(item.bullet == "+" for item in plus_list.items)
+
+
+def test_full_multi_bullet_example_recovers_correct_structure() -> None:
+    """The canonical mixed-bullet example produces two top-level lists.
+
+    Input::
+
+        - Foo
+        - Bar
+          1. Ordered
+          2. orderede
+          a) another
+          b) one
+        + Baz
+        + Faz
+         * Hurr
+         * Durr
+         - Back
+         - To dashes
+
+    Expected structure:
+
+    * Top-level ``-`` list: ``- Foo``, ``- Bar``
+
+      * ``- Bar``'s body contains two nested lists:
+        ``1.``/``2.`` (terminator ``"."``) and ``a)``/``b)`` (terminator ``")"``).
+
+    * Top-level ``+`` list: ``+ Baz``, ``+ Faz``
+
+      * ``+ Faz``'s body contains two nested lists:
+        ``* Hurr``/``* Durr`` and ``- Back``/``- To dashes``.
+    """
+    document = loads(
+        "- Foo\n"
+        "- Bar\n"
+        "  1. Ordered\n"
+        "  2. orderede\n"
+        "  a) another\n"
+        "  b) one\n"
+        "+ Baz\n"
+        "+ Faz\n"
+        " * Hurr\n"
+        " * Durr\n"
+        " - Back\n"
+        " - To dashes\n"
+    )
+
+    # Two top-level lists: dash list and plus list.
+    assert len(document.body) == 2
+    dash_list = document.body[0]
+    plus_list = document.body[1]
+    assert isinstance(dash_list, List)
+    assert isinstance(plus_list, List)
+    assert len(dash_list.items) == 2
+    assert len(plus_list.items) == 2
+
+    # First top-level dash list.
+    assert dash_list.items[0].bullet == "-"
+    assert str(dash_list.items[0].first_line) == "Foo"
+    assert dash_list.items[1].bullet == "-"
+    assert str(dash_list.items[1].first_line) == "Bar"
+
+    # "- Bar" body: two nested ordered lists split by terminator.
+    bar_body = dash_list.items[1].body
+    assert len(bar_body) == 2
+    assert isinstance(bar_body[0], List)
+    assert isinstance(bar_body[1], List)
+    period_list = bar_body[0]
+    paren_list = bar_body[1]
+    assert len(period_list.items) == 2
+    assert len(paren_list.items) == 2
+    assert period_list.items[0].bullet == "."
+    assert period_list.items[1].bullet == "."
+    assert paren_list.items[0].bullet == ")"
+    assert paren_list.items[1].bullet == ")"
+
+    # Second top-level plus list.
+    assert plus_list.items[0].bullet == "+"
+    assert str(plus_list.items[0].first_line) == "Baz"
+    assert plus_list.items[1].bullet == "+"
+    assert str(plus_list.items[1].first_line) == "Faz"
+
+    # "+ Faz" body: two nested unordered lists split by bullet char.
+    faz_body = plus_list.items[1].body
+    assert len(faz_body) == 2
+    assert isinstance(faz_body[0], List)
+    assert isinstance(faz_body[1], List)
+    star_list = faz_body[0]
+    back_dash_list = faz_body[1]
+    assert len(star_list.items) == 2
+    assert len(back_dash_list.items) == 2
+    assert star_list.items[0].bullet == "*"
+    assert star_list.items[1].bullet == "*"
+    assert back_dash_list.items[0].bullet == "-"
+    assert back_dash_list.items[1].bullet == "-"

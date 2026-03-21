@@ -330,21 +330,27 @@ Invalid spaced markup markers stay plain text
 (document
   (zeroth_section
     (list_item
+      bullet: (unordered_bullet)
       first_line: (plain_text)
       first_line: (plain_text))
     (list_item
+      bullet: (unordered_bullet)
       first_line: (plain_text)
       first_line: (plain_text))
     (list_item
+      bullet: (unordered_bullet)
       first_line: (plain_text)
       first_line: (plain_text))
     (list_item
+      bullet: (unordered_bullet)
       first_line: (plain_text)
       first_line: (plain_text))
     (list_item
+      bullet: (unordered_bullet)
       first_line: (plain_text)
       first_line: (plain_text))
     (list_item
+      bullet: (unordered_bullet)
       first_line: (plain_text)
       first_line: (plain_text))))
 
@@ -364,37 +370,44 @@ Nested markup openings in list items
 (document
   (zeroth_section
     (list_item
+      bullet: (unordered_bullet)
       first_line: (bold
         body: (italic
           body: (plain_text))))
     (list_item
+      bullet: (unordered_bullet)
       first_line: (italic
         body: (bold
           body: (plain_text))))
     (list_item
+      bullet: (unordered_bullet)
       first_line: (bold
         body: (plain_text)
         body: (underline
           body: (plain_text))
         body: (plain_text)))
     (list_item
+      bullet: (unordered_bullet)
       first_line: (italic
         body: (plain_text)
         body: (underline
           body: (plain_text))
         body: (plain_text)))
     (list_item
+      bullet: (unordered_bullet)
       first_line: (plain_text)
       first_line: (bold
         body: (italic
           body: (plain_text)))
       first_line: (plain_text))
     (list_item
+      bullet: (unordered_bullet)
       first_line: (plain_text)
       first_line: (italic
         body: (plain_text))
       first_line: (plain_text))
     (list_item
+      bullet: (unordered_bullet)
       first_line: (plain_text)
       first_line: (italic
         body: (plain_text))

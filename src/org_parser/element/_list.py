@@ -515,13 +515,20 @@ def _extract_optional_field_text(
 
 
 def _extract_bullet(node: tree_sitter.Node, document: Document) -> str:
-    """Return bullet marker text from one list item node."""
+    """Return bullet marker text from one list item node.
+
+    For unordered items the ``unordered_bullet`` token includes trailing
+    whitespace (e.g. ``"- "``), so the value is right-stripped to return
+    just the marker character (``"-"``, ``"+"``, or ``"*"``).  For ordered
+    items the terminator token (``"."`` or ``")"``) has no trailing
+    whitespace and is returned as-is.
+    """
     bullet_nodes = node.children_by_field_name("bullet")
     if not bullet_nodes:
         return "-"
     bullet_node = bullet_nodes[-1]
     value = document.source_for(bullet_node).decode()
-    return value if value != "" else "-"
+    return value.rstrip() if value else "-"
 
 
 def _extract_counter_set(
