@@ -3864,7 +3864,10 @@ Parsing =- a\n\nPara\n=, then making the doc dirty, serializes as =- a\nPara\n= 
 
 Root cause: =BlankLine= is intentionally ignored while =list_run= is active (=src/org_parser/element/_list_recovery.py:58=), so no separator survives into dirty rendering.
 
-* TODO Parser fidelity
+* DONE Parser fidelity
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-21 Sat 23:56]
+:END:
 ** DONE Special handling for LOGBOOK
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-03-08 Sun 17:50]
@@ -4367,11 +4370,77 @@ The tree sitter parser should bind the bullet for all of these items.
 
 The Python wrapper should use the bullet to recover the list structure.
 
-** Support for Babel call syntax
-** Support for Org entities
-** Support for subscript/superscript
-** Better support for tableel tables
+** DONE Support for Babel call syntax
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-21 Sat 21:49]
+:END:
+Add support for the Babel call syntax, both top-level and inline. It would be ideal to extract the call name an arguments and make them available.
+
+You can find their syntax description in @docs/plans/syntax.md
+
+These should be supported on the Tree-Sitter level with dedicated semantic nodes in the Python wrapper.
+
+Please add Python wrapper nodes for the recently added Babel primitives.
+
+** DONE Support for Macros
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-21 Sat 22:11]
+:END:
+Add support for the inline macro call syntax. It suffices if the content within the braces is captured as text. No need to parse it further.
+
+You can find their syntax description in @docs/plans/syntax.md
+
+These should be supported on the Tree-Sitter level with dedicated semantic nodes in the Python wrapper.
+
+** DONE Support for Org entities
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-21 Sat 23:13]
+:END:
+Add support for the inline Org entities syntax. The values don't need to have individual semantic representation. It suffices to have a one =InlineEntity= class representing all of them.
+
+You can find their syntax description in @docs/plans/syntax.md
+
+These should be supported on the Tree-Sitter level with dedicated semantic nodes in the Python wrapper.
+
+** DONE Support for subscript/superscript
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-21 Sat 23:29]
+:END:
+Add support for the subscript and superscript inline syntax. The contents of the sub/superscript should be parsed according to the normal rules and be wrapped in an inline object representing the sub/superscript.
+
+You can find their syntax description in @docs/plans/syntax.md
+
+These should be supported on the Tree-Sitter level with dedicated semantic nodes in the Python wrapper.
+
+** CANCELLED Support for LaTeX
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-21 Sat 22:44] \\
+  These should be within a latex export block.
+:END:
+Add support for the LaTeX fragments, both inline and environments. The contents don't need to be parsed and can be represented as text in the parse tree.
+
+You can find their syntax description in @docs/plans/syntax.md
+
+These should be supported on the Tree-Sitter level with dedicated semantic nodes in the Python wrapper.
+
+** DONE Better support for tableel tables
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-21 Sat 23:55]
+:END:
 Table.el tables are parsed weird right now - just the frame lines are parsed as tableel tables with the actual table data parsed as Org Tables.
+
+Please update the grammar to handle tableel tables correctly - the entire block should be parsed as verbatim text, i.e. no distinction for different rows or cells.
+
+#+begin_example
++-----+-----+
+| foo | bar |
++-----+-----+
+| faz | baz |
++-----+-----+
+#+end_example
+
+This example should parse as a single table.el table, and not extract any structure.
+Please add support for these degenerate tables in the Python wrapper. Split the Table.el semantic node into a separate class and make the current =Table= only handle proper org tables.
 
 * Semantic nodes dev experience
 ** Convenience fields
@@ -4416,4 +4485,23 @@ Invoke the tree sitter parser on text mutation.
 
 ** Check all list items for potential repeats.
 * Release
+** DONE Supported syntax in the README.org
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 00:09]
+:END:
+Please expand the README.org file with examples of all the features supported by the parser. It should list all the supported features in the =Supported features= heading as subheadings.
+
+Each features should have a clear example embedded within the file itself and a description of whether it is supported in Tree-Sitter grammar or just in Python wrapper and via what means (node names, module names etc).
+Keep the examples short and instrumental, focused on just a single feature.
+Keep the descriptions short and focused.
+
+You can combine multiple related features into a single subheading (for instance, all inline markup objects can be a single subheading, various lists, etc). Here's an example:
+
+#+begin_example
+,** Inline markup
+_This_ /parser/ *supports* =the= ~following~ +inline+ markup^{objects}.
+
+All of the above are supported in the Tree-Sitter grammar as well as in the Python wrapper.
+#+end_example
+
 ** Semantic node documentation

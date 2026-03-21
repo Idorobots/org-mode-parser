@@ -2,42 +2,160 @@
 #+OPTIONS: toc:t
 
 * Overview
-This project implements a Tree-Sitter-based parser for Emacs Org-Mode files with a Python wrapper presenting "nicer" semantic nodes.
+This project implements a Tree-Sitter-based parser for Emacs Org-Mode files
+with a Python wrapper providing "nicer" semantic nodes.
 
 The long-term goal is high fidelity and eventually 100% feature coverage, while
 keeping robust error recovery and useful parse trees for downstream processing.
 
-See [[file:examples/][examples directory]] to get an idea of the parser completeness.
+See [[#supported-features][here]] for a list of supported Org features.
 
-* Current Caveats
-- Nested lists are parsed in a *flat* form: nested items are emitted as items
-  on the parent list, with an explicit indent marker so nesting can be
-  reconstructed in post-processing.
-- List items do not always "parent" complex elements such as tables, fixed-width areas or drawers.
+* Gotchas
+- Tree-Sitter parser doesn't handle nested list structure - all list items are
+  treated as separate entities. Indentation blocks are explicitly provided for
+  downstream structure recovery.
 - Blank lines semantics are not kept - double blank lines do not terminate list items, etc.
-- Malformed objects are usually treated as plaintext (or recovered with generic
-  parse-error nodes) instead of hard-failing the full parse.
-- Table.el tables parse as multiple Org-Mode tables intertwined with =tableel_table= elements.
-- Paragraph's constituents do not bind the newline character in the Tree-Sitter parser, it's deferred to the semantic nodes construction.
+- Table.el tables parse as verbatim blocks of text.
+- Malformed objects are usually treated as plaintext or recovered with generic
+  parse-error nodes.
 
 * Explicitly Not Supported
+- Inline tasks are not represented as a dedicated node type,
+  they are treated as regular headings.
+- Sexp timestamps (like =<%%(...)>=) are not parsed as regular timestamp nodes,
+  they are plain text instead.
+- LaTeX fragments & environments are not parsed as structured Org objects,
+  they are plain text instead.
 
-- Inlinetasks are not represented as a dedicated node type; high-star headings
-  are treated as regular headings.
-- LaTeX environments are not parsed as structured Org objects.
-- LaTeX fragments are not parsed as structured Org objects.
-- Babel call syntax (=#+call:=) has no dedicated Babel AST node.
-- Inline Babel calls (=call_NAME(...)=) have no dedicated AST node.
-- Org entities (like =\alpha=, =\cent=) are not parsed as dedicated entity
-  nodes.
-- Org macros (like ={{{name}}}=) are not parsed as dedicated macro nodes.
-- Subscript/superscript syntax is not parsed as dedicated sub/superscript
-  nodes.
-- Sexp timestamps (like =<%%(...)>=) are not parsed as regular timestamp nodes.
-- Radio-link auto-detection is deferred (radio targets are parsed, but
-  auto-generated radio links are not resolved in-tree).
+* Supported features
+(You probably want to check the [[https://github.com/Idorobots/org-mode-parser/raw/refs/heads/main/README.org][raw file contents]] for this section to make more sense.)
 
-The docs list a target Org-Mode syntax subset.
+** Document structure and headings
+*** TODO [#A] Ship parser [1/3]                                                     :release:parser:
+**** Subtask
+
+Support: Tree-Sitter parses =heading= with fields like =stars=, =todo=,
+=priority=, =title=, =tags=. Python wrapper exposes
+=org_parser.document.Document= and =org_parser.document.Heading= with
+=level=, =todo=, =priority=, =title=, =counter=, =tags=, =children=.
+
+** Planning lines and timestamps
+*** Plan milestone
+SCHEDULED: <2026-03-25 Wed> DEADLINE: <2026-03-31 Tue> CLOSED: [2026-03-21 Sat 18:30]
+
+Support: Tree-Sitter provides =planning=, =planning_keyword=, and =timestamp=
+nodes (including =ts_year=, =ts_month=, =ts_day=, =ts_time=). Python wrapper
+maps these to =Heading.scheduled/deadline/closed= and =org_parser.time.Timestamp=.
+
+** Special and affiliated keywords
+#+TITLE: Org-Mode parser
+#+AUTHOR: Idorobots
+#+CAPTION[short]: Example table
+#+RESULTS: value
+
+Support: Tree-Sitter parses =special_keyword= and affiliated keyword nodes like
+=caption_keyword=, =results_keyword=, =plot_keyword=, =tblname_keyword=. Python
+wrapper maps them to =org_parser.element.Keyword=,
+=CaptionKeyword=, =ResultsKeyword=, =PlotKeyword=, =TblnameKeyword=.
+
+** Drawers, properties, logbooks, and clocks
+:PROPERTIES:
+:Effort: 1:30
+:END:
+
+:LOGBOOK:
+CLOCK: [2026-03-21 Sat 09:00]--[2026-03-21 Sat 10:30] =>  1:30
+:END:
+
+Support: Tree-Sitter supports =property_drawer=, =logbook_drawer=, =drawer=,
+=node_property=, and =clock=. Python wrapper exposes
+=org_parser.element.Properties=, =Logbook=, =Drawer= and =org_parser.time.Clock=.
+
+** Repeated task entries in LOGBOOK
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-21 Sat 10:00]
+:END:
+
+Support: Tree-Sitter parses this as list/timestamp primitives. Python wrapper
+adds semantic recovery via =org_parser.element.Repeat=
+(from =org_parser.element._list.Repeat.from_list_item=).
+
+** Lists (unordered, ordered, checkboxes, descriptive)
+- [ ] inbox
+1. [@4] ordered item
+- term :: definition
+
+Support: Tree-Sitter parses =list_item= with fields such as =bullet=,
+=counter=, =counter_set=, =checkbox=, =tag=, =first_line=. Python wrapper
+exposes =org_parser.element.List= and =ListItem=.
+
+** Nested list recovery
+- parent
+  - child
+
+Support: Tree-Sitter keeps list items flat (see gotchas). Python wrapper
+recovers semantic list grouping and continuation bodies through
+=org_parser.element._list_recovery.recover_lists=.
+
+** Blocks and fixed-width areas
+#+begin_src python
+print("ok")
+#+end_src
+
+: fixed-width
+
+#+begin_example
+Examples
+#+end_example
+
+#+begin_verse
+Verse blocks
+#+end_verse
+
+#+begin: dynamic
+Dynamic blocks
+#+end:
+
+Support: Tree-Sitter supports block nodes including =src_block=, =quote_block=,
+=center_block=, =special_block=, =dynamic_block=, =comment_block=,
+=example_block=, =export_block=, =verse_block=, and =fixed_width=. Python wrapper
+maps them to classes in =org_parser.element= (for example =SourceBlock=,
+=QuoteBlock=, =DynamicBlock=, =FixedWidthBlock=).
+
+** Tables and formulas
+| Name | Score |
+|------+-------|
+| Ada  |    10 |
+#+TBLFM: $2=$2+1
+
+Support: Tree-Sitter supports =org_table= with =table_row=, =table_cell=,
+=table_rule=, =tblfm_line=, and also =tableel_table=. Python wrapper exposes
+=org_parser.element.Table=, =TableRow=, =TableCell=, =TableRuleRow=, and
+=TableEl=.
+
+** Links and targets
+https://example.org
+<mailto:team@example.org>
+[[id:abc123][Read me]] <<anchor>> <<<radio target>>>
+
+Support: Tree-Sitter parses =plain_link=, =angle_link=, =regular_link=,
+=target=, =radio_target=. Python wrapper maps them to
+=PlainLink=, =AngleLink=, =RegularLink=, =Target=, =RadioTarget=
+inside =org_parser.text.RichText= parts.
+
+** Inline markup and inline objects
+_This_ /parser/ *supports* =the= ~following~ +inline+ markup^{objects},
+including entities like \alpha{}, macros like {{{version}}}, footnote
+references like [fn:note], citations like [cite:@doe], export snippets like
+@@html:<em>@@, inline source blocks like src_python{1+1}, and inline babel
+calls like call_sum(1,2).
+
+Support: Tree-Sitter supports inline nodes such as =bold=, =italic=,
+=underline=, =strike_through=, =verbatim=, =code=, =subscript=,
+=superscript=, =entity=, =macro=, =footnote_reference=, =citation=,
+=export_snippet=, =inline_source_block=, =inline_babel_call=, and
+=line_break=. Python wrapper maps them to classes in =org_parser.text=
+through =org_parser.text.RichText.from_node()/from_nodes()=.
 
 * Roadmap
 See [[file:ROADMAP.org][ROADMAP.org]] for planned work and milestone history.
