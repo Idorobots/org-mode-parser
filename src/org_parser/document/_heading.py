@@ -40,7 +40,7 @@ from org_parser.element._structure_recovery import (
 )
 from org_parser.text._inline import CompletionCounter
 from org_parser.text._rich_text import RichText
-from org_parser.time import Timestamp
+from org_parser.time import Clock, Timestamp
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -70,6 +70,7 @@ class Heading:
         counter: Completion counter object (e.g. ``[1/3]``), or *None*.
         heading_tags: A list of tag strings found on this heading line in source order.
         repeated_tasks: Repeated task entries extracted from ``LOGBOOK``.
+        clock_entries: Clock entries extracted from ``LOGBOOK``.
         body: Body elements of the heading (excludes sub-headings).
         children: Direct sub-headings of this heading.
     """
@@ -91,6 +92,7 @@ class Heading:
         properties: Properties | None = None,
         logbook: Logbook | None = None,
         repeated_tasks: list[Repeat] | None = None,
+        clock_entries: list[Clock] | None = None,
         body: list[Element] | None = None,
         children: list[Heading] | None = None,
     ) -> None:
@@ -112,6 +114,11 @@ class Heading:
             if repeated_tasks is not None
             else ([] if logbook is None else logbook.repeats)
         )
+        self._clock_entries: list[Clock] = (
+            clock_entries
+            if clock_entries is not None
+            else ([] if logbook is None else logbook.clock_entries)
+        )
         self._body: list[Element] = body if body is not None else []
         self._children: list[Heading] = children if children is not None else []
         self._node: tree_sitter.Node | None = None
@@ -122,6 +129,7 @@ class Heading:
         self._adopt_element(self._properties)
         self._adopt_element(self._logbook)
         self._sync_repeated_tasks_from_logbook()
+        self._sync_clock_from_logbook()
         self._adopt_elements(self._body)
         self._adopt_elements(self._children)
 
@@ -182,6 +190,7 @@ class Heading:
         heading._logbook = logbook
         heading._body = body
         heading._sync_repeated_tasks_from_logbook()
+        heading._sync_clock_from_logbook()
 
         # Recursively build sub-headings.
         for child in node.children:
@@ -406,6 +415,7 @@ class Heading:
         self._logbook = value
         self._adopt_element(self._logbook)
         self._sync_repeated_tasks_from_logbook()
+        self._sync_clock_from_logbook()
         self._mark_dirty()
 
     @property
@@ -417,15 +427,28 @@ class Heading:
     def repeated_tasks(self, value: list[Repeat]) -> None:
         """Set repeated tasks and synchronize them into the logbook drawer."""
         self._repeated_tasks = value
-        logbook = self._ensure_logbook_for_repeats()
+        logbook = self._ensure_logbook()
         logbook.repeats = self._repeated_tasks
         self._mark_dirty()
 
     def add_repeated_task(self, repeat: Repeat) -> None:
         """Append one repeated task and synchronize it into the logbook."""
         self._repeated_tasks = [*self._repeated_tasks, repeat]
-        logbook = self._ensure_logbook_for_repeats()
+        logbook = self._ensure_logbook()
         logbook.repeats = self._repeated_tasks
+        self._mark_dirty()
+
+    @property
+    def clock_entries(self) -> list[Clock]:
+        """Clock entries extracted from this heading's logbook."""
+        return self._clock_entries
+
+    @clock_entries.setter
+    def clock_entries(self, value: list[Clock]) -> None:
+        """Set clock entries and synchronize them into the logbook drawer."""
+        self._clock_entries = value
+        logbook = self._ensure_logbook()
+        logbook.clock_entries = self._clock_entries
         self._mark_dirty()
 
     @property
@@ -493,6 +516,8 @@ class Heading:
             self._logbook.reformat()
         for repeat in self._repeated_tasks:
             repeat.reformat()
+        for clock in self._clock_entries:
+            clock.reformat()
         for element in self._body:
             element.reformat()
         for child in self._children:
@@ -523,7 +548,14 @@ class Heading:
             return
         self._repeated_tasks = self._logbook.repeats
 
-    def _ensure_logbook_for_repeats(self) -> Logbook:
+    def _sync_clock_from_logbook(self) -> None:
+        """Synchronize local clock cache from the current logbook."""
+        if self._logbook is None:
+            self._clock_entries = []
+            return
+        self._clock_entries = self._logbook.clock_entries
+
+    def _ensure_logbook(self) -> Logbook:
         """Return heading logbook, creating one when absent."""
         if self._logbook is None:
             self._logbook = Logbook(parent=self)
@@ -610,6 +642,7 @@ class Heading:
         list_parts = [
             ("heading_tags", self._heading_tags),
             ("repeated_tasks", self._repeated_tasks),
+            ("clock_entries", self._clock_entries),
             ("body", self._body),
             ("children", self._children),
         ]

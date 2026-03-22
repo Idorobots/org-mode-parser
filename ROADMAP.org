@@ -4558,9 +4558,11 @@ When an element is attached to another element their =parent= relation and dirty
 
 If a heading is attached to another heading, its level should be adjusted to be at least one-more than the parent. All of its children's levels should be adjusted as well. All adjusted headings should be marked dirty.
 
-** TODO Clock extraction
-Update the =Heading= class with a new field:
-   - =clock= - returns a list of all =CLOCK= items (by analogy to =repeated_tasks=).
+** DONE Clock extraction
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 17:34]
+:END:
+Update the =Heading= class with a new field =clock_entries= - returns a list of all =CLOCK= items (by analogy to =repeated_tasks=).
 
 The extraction of these values should be done in a similar fashion to the =repeated_tasks= extraction. The goal is for the heading to cache the clocked items.
 

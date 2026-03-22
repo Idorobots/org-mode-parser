@@ -5,7 +5,7 @@ from __future__ import annotations
 from org_parser import loads
 from org_parser.element import List, Logbook, Paragraph, Repeat
 from org_parser.text import RichText
-from org_parser.time import Timestamp
+from org_parser.time import Clock, Timestamp
 
 
 def test_repeat_parses_logbook_item_without_note() -> None:
@@ -135,6 +135,56 @@ def test_repeated_tasks_append_creates_logbook_when_missing() -> None:
     assert isinstance(heading.logbook, Logbook)
     assert len(heading.repeated_tasks) == 1
     assert len(heading.logbook.repeats) == 1
+
+
+def test_heading_clock_cache_extracts_logbook_clock_entries() -> None:
+    """Heading exposes cached ``CLOCK`` entries extracted from ``LOGBOOK``."""
+    document = loads(
+        "* H\n"
+        ":LOGBOOK:\n"
+        "CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 10:30] =>  1:30\n"
+        ":END:\n"
+    )
+
+    heading = document.children[0]
+    assert len(heading.clock_entries) == 1
+    assert isinstance(heading.clock_entries[0], Clock)
+    assert heading.logbook is not None
+    assert heading.clock_entries is heading.logbook.clock_entries
+
+
+def test_heading_clock_setter_creates_logbook_when_missing() -> None:
+    """Assigning heading clocks creates logbook and syncs body/cache objects."""
+    document = loads("* H\nBody\n")
+    heading = document.children[0]
+    assert heading.logbook is None
+
+    clock = Clock(
+        timestamp=Timestamp(
+            raw="[2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30]",
+            is_active=False,
+            start_year=2025,
+            start_month=1,
+            start_day=8,
+            start_dayname="Wed",
+            start_hour=9,
+            start_minute=0,
+            end_year=2025,
+            end_month=1,
+            end_day=8,
+            end_dayname="Wed",
+            end_hour=9,
+            end_minute=30,
+        ),
+        duration="0:30",
+    )
+    heading.clock_entries = [clock]
+
+    assert isinstance(heading.logbook, Logbook)
+    assert heading.clock_entries == [clock]
+    assert heading.logbook.clock_entries == [clock]
+    assert heading.logbook.body == [clock]
+    assert heading.logbook.body[0] is heading.clock_entries[0]
 
 
 def test_non_logbook_lists_do_not_convert_items_to_repeats() -> None:
