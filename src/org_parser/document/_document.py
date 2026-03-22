@@ -223,7 +223,7 @@ class Document:
     @property
     def title(self) -> RichText | None:
         """The ``#+TITLE:`` value, or *None*."""
-        kw = self._find_keyword(TITLE)
+        kw = self._find_last_keyword(TITLE)
         return kw.value if kw is not None else None
 
     @title.setter
@@ -234,7 +234,7 @@ class Document:
     @property
     def author(self) -> RichText | None:
         """The ``#+AUTHOR:`` value, or *None*."""
-        kw = self._find_keyword(AUTHOR)
+        kw = self._find_last_keyword(AUTHOR)
         return kw.value if kw is not None else None
 
     @author.setter
@@ -251,7 +251,7 @@ class Document:
         file extension), which matches Org Mode's own default-category
         behaviour.  Returns *None* when no filename is known (empty string).
         """
-        kw = self._find_keyword(CATEGORY)
+        kw = self._find_last_keyword(CATEGORY)
         if kw is not None:
             return kw.value
         stem = Path(self._filename).stem if self._filename else None
@@ -265,7 +265,7 @@ class Document:
     @property
     def description(self) -> RichText | None:
         """The ``#+DESCRIPTION:`` value, or *None*."""
-        kw = self._find_keyword(DESCRIPTION)
+        kw = self._find_last_keyword(DESCRIPTION)
         return kw.value if kw is not None else None
 
     @description.setter
@@ -276,7 +276,7 @@ class Document:
     @property
     def todo(self) -> RichText | None:
         """The ``#+TODO:`` value, or *None*."""
-        kw = self._find_keyword(TODO)
+        kw = self._find_last_keyword(TODO)
         return kw.value if kw is not None else None
 
     @todo.setter
@@ -286,16 +286,19 @@ class Document:
 
     @property
     def tags(self) -> list[str]:
-        """Tags from the ``#+FILETAGS:`` keyword, as individual strings.
+        """Tags from all ``#+FILETAGS:`` keywords, as individual strings.
 
         Returns an empty list when no ``#+FILETAGS:`` keyword is present.
+        Multiple ``#+FILETAGS:`` lines are aggregated in keyword-list order.
         The returned list is a fresh copy; mutate via the setter.
         """
-        kw = self._find_keyword(FILETAGS)
-        if kw is None:
-            return []
-        # Parse ":foo:bar:" → ["foo", "bar"], ignoring empty segments.
-        return [t for t in str(kw.value).strip(":").split(":") if t]
+        tags: list[str] = []
+        for kw in self._keywords:
+            if kw.key != FILETAGS:
+                continue
+            # Parse ":foo:bar:" → ["foo", "bar"], ignoring empty segments.
+            tags.extend(t for t in str(kw.value).strip(":").split(":") if t)
+        return tags
 
     @tags.setter
     def tags(self, value: list[str]) -> None:
@@ -303,19 +306,16 @@ class Document:
 
         Setting an empty list removes the ``#+FILETAGS:`` keyword entirely.
         """
+        had_filetags = any(kw.key == FILETAGS for kw in self._keywords)
         if not value:
-            kw = self._find_keyword(FILETAGS)
-            if kw is not None:
-                self._keywords.remove(kw)
-            self._mark_dirty()
+            self._keywords = [kw for kw in self._keywords if kw.key != FILETAGS]
+            if had_filetags:
+                self._mark_dirty()
             return
+        self._keywords = [kw for kw in self._keywords if kw.key != FILETAGS]
         filetags_str = ":" + ":".join(value) + ":"
-        existing = self._find_keyword(FILETAGS)
-        if existing is not None:
-            existing.value = RichText(filetags_str)
-        else:
-            new_kw = Keyword(key=FILETAGS, value=RichText(filetags_str), parent=self)
-            self._keywords.append(new_kw)
+        new_kw = Keyword(key=FILETAGS, value=RichText(filetags_str), parent=self)
+        self._keywords.append(new_kw)
         self._mark_dirty()
 
     @property
@@ -506,9 +506,9 @@ class Document:
             child.reformat()
         self.mark_dirty()
 
-    def _find_keyword(self, key: str) -> Keyword | None:
-        """Return the first keyword with the given upper-cased key, or *None*."""
-        for kw in self._keywords:
+    def _find_last_keyword(self, key: str) -> Keyword | None:
+        """Return the last keyword with *key*, or *None* when absent."""
+        for kw in reversed(self._keywords):
             if kw.key == key:
                 return kw
         return None
@@ -524,10 +524,9 @@ class Document:
         the existing keyword's value is updated in place, or a new keyword is
         appended when no entry for *key* exists.
         """
-        existing = self._find_keyword(key)
+        existing = self._find_last_keyword(key)
         if value is None:
-            if existing is not None:
-                self._keywords.remove(existing)
+            self._keywords = [kw for kw in self._keywords if kw.key != key]
         elif existing is not None:
             existing.value = value
         else:
@@ -807,10 +806,7 @@ def _render_document_dirty(document: Document) -> str:
 
     # Render dedicated keywords in the canonical fixed order.
     for key in _DEDICATED_ORDER:
-        for kw in keywords:
-            if kw.key == key:
-                parts.append(str(kw))
-                break
+        parts.extend(str(kw) for kw in keywords if kw.key == key)
 
     # Render non-dedicated keywords in their list order.
     parts.extend(str(kw) for kw in keywords if kw.key not in _DEDICATED_KEYS)

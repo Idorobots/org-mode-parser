@@ -323,11 +323,14 @@ class Heading:
         (outermost first), then this heading's own ``heading_tags``.
         Duplicates are removed; the first occurrence is kept.
         """
-        # Parent's tags are already fully resolved (FILETAGS + all ancestors).
-        inherited = self._parent.tags
-        seen = set(inherited)
-        own = [t for t in self._heading_tags if t not in seen]
-        return [*inherited, *own]
+        result: list[str] = []
+        seen: set[str] = set()
+        for tag in [*self._parent.tags, *self._heading_tags]:
+            if tag in seen:
+                continue
+            seen.add(tag)
+            result.append(tag)
+        return result
 
     @property
     def heading_category(self) -> RichText | None:

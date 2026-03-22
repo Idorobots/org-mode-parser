@@ -110,3 +110,21 @@ def test_heading_str_dirty_includes_planning_line(
         "SCHEDULED: <2025-01-01 Wed> DEADLINE: <2025-01-10 Fri> "
         "CLOSED: [2025-01-08 Wed 14:23]\n"
     ) in rendered
+
+
+def test_document_str_dirty_preserves_repeated_todo_keywords(tmp_path: Path) -> None:
+    """Dirty document rendering preserves repeated dedicated TODO keywords."""
+    path = tmp_path / "multi-todo.org"
+    path.write_bytes(
+        b"#+TODO: TODO(t) IN-PROGRESS(i) | DONE(d@/!)\n"
+        b"#+TODO: | CANCELLED(c@/!) REWORKED(r@/!)\n"
+        b"* TODO Sample task\n"
+    )
+
+    document = load(str(path))
+    document.filename = "renamed.org"  # mark dirty without changing keywords
+
+    rendered = str(document)
+    assert rendered.count("#+TODO:") == 2
+    assert "#+TODO: TODO(t) IN-PROGRESS(i) | DONE(d@/!)\n" in rendered
+    assert "#+TODO: | CANCELLED(c@/!) REWORKED(r@/!)\n" in rendered

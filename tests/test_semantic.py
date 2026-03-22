@@ -182,6 +182,12 @@ class TestDocumentManual:
         assert "body=" not in r
         assert "children=" not in r
 
+    def test_dedicated_keyword_getters_use_last_value(self) -> None:
+        """Dedicated keyword properties use last-write-wins semantics."""
+        doc = Document.from_source("#+TITLE: First\n#+TITLE: Second\n")
+        assert doc.title is not None
+        assert str(doc.title) == "Second"
+
 
 # ===================================================================
 # Heading — manual construction
@@ -606,6 +612,22 @@ class TestDocumentFiletags:
         rendered = str(doc)
         assert "#+FILETAGS: :gamma:delta:" in rendered
 
+    def test_tags_aggregate_multiple_filetags_keywords(self, tmp_path: Path) -> None:
+        """Document.tags includes values from all FILETAGS keywords in order."""
+        path = tmp_path / "multi-filetags.org"
+        path.write_bytes(b"#+FILETAGS: :alpha:beta:\n" b"#+FILETAGS: :gamma:\n")
+        doc = _load_document(path)
+        assert doc.tags == ["alpha", "beta", "gamma"]
+
+    def test_tags_setter_replaces_all_existing_filetags(self, tmp_path: Path) -> None:
+        """Setting Document.tags replaces every existing FILETAGS keyword."""
+        path = tmp_path / "replace-filetags.org"
+        path.write_bytes(b"#+FILETAGS: :alpha:\n" b"#+FILETAGS: :beta:\n")
+        doc = _load_document(path)
+        doc.tags = ["new1", "new2"]
+        assert doc.tags == ["new1", "new2"]
+        assert len([kw for kw in doc.keywords if kw.key == "FILETAGS"]) == 1
+
 
 # ===================================================================
 # Heading inherited tags
@@ -704,6 +726,23 @@ class TestTagInheritance:
         h = Heading(level=1, document=doc, parent=doc, heading_tags=["work", "next"])
         assert h.heading_tags == ["work", "next"]
         assert h.tags == ["work", "next"]
+
+    def test_tags_deduplicate_repeated_own_tags(self) -> None:
+        """Repeated tags on one heading line are deduplicated in order."""
+        doc = Document(filename="t.org")
+        heading = Heading(
+            level=1,
+            document=doc,
+            parent=doc,
+            heading_tags=["x", "x", "y", "x"],
+        )
+        assert heading.tags == ["x", "y"]
+
+    def test_tags_deduplicate_inherited_and_own_repeats(self) -> None:
+        """Heading.tags removes duplicates across FILETAGS and own tags."""
+        doc = Document.from_source("#+FILETAGS: :x:x:y:\n* H :x:y:z:\n")
+        heading = doc.children[0]
+        assert heading.tags == ["x", "y", "z"]
 
 
 # ===================================================================

@@ -4467,7 +4467,10 @@ It seems that a recent fix introduced a regression:
 
 Note the trailing line with spaces in it - the removal of this whitespace makes the parser work properly. This case should be handled and the blank line should be treated as part of the indent block.
 
-* TODO Semantic nodes dev experience
+* DONE Semantic nodes dev experience
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 22:22]
+:END:
 ** DONE Recover inherited tags
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-03-22 Sun 15:40]
@@ -4887,6 +4890,38 @@ In file src/org_parser/text/_rich_text.py around line 219, near the ~class RichT
 #+end_example
 
 This guard is not needed - we're passing the extractor that either extracts a value or causes =parse_source_with_extractor= to throw. Please remove these.
+** DONE Code review comment
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 23:51]
+:END:
+
+- High: dirty document rendering can lose repeated dedicated keywords, especially multiple `#+TODO:` lines, because `_render_document_dirty` only keeps the first dedicated key then drops the rest (`src/org_parser/document/_document.py:809`, `src/org_parser/document/_document.py:816`).
+- Medium: dedicated keyword lookup currently returns the first match (`src/org_parser/document/_document.py:509`) but the class docs say last-write-wins (`src/org_parser/document/_document.py:82`), so behavior and contract conflict.
+- Medium: `Heading.tags` dedup is incomplete; duplicates inside `heading_tags` can leak through because `seen` is not updated during own-tag filtering (`src/org_parser/document/_heading.py:327`).
+
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::def _mark_dirty(self) -> None:
+ """Mark this document as dirty."""
+ if self._dirty:
+ return
+ self._dirty = True]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_document.py
+
+#+begin_example
+    def _mark_dirty(self) -> None:
+        """Mark this document as dirty."""
+        if self._dirty:
+            return
+        self._dirty = True
+#+end_example
+
+The private =_mark_dirty= method is pretty useless. We can go with only the publicly available =mark_dirty=. Please update all the classes that have a =_mark_dirty= and =mark_dirty= to only use the public one.
 * Release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:
