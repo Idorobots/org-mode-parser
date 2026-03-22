@@ -67,7 +67,7 @@ from org_parser.text._inline import (
 from org_parser.time import Timestamp
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
     import tree_sitter
 
@@ -120,7 +120,7 @@ class RichText:
     def text(self, value: str) -> None:
         """Replace content with plain text and mark rich text as dirty."""
         self._parts = [PlainText(value)]
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def dirty(self) -> bool:
@@ -137,8 +137,8 @@ class RichText:
         """Set the parent object without changing dirty state."""
         self._parent = value
 
-    def _mark_dirty(self) -> None:
-        """Mark this rich text dirty and bubble to parent objects."""
+    def mark_dirty(self) -> None:
+        """Mark this rich text as dirty."""
         if self._dirty:
             return
         self._dirty = True
@@ -146,10 +146,6 @@ class RichText:
         if parent is None:
             return
         parent.mark_dirty()
-
-    def mark_dirty(self) -> None:
-        """Mark this rich text as dirty."""
-        self._mark_dirty()
 
     def reformat(self) -> None:
         """Mark nested inline objects, then this rich text, as dirty."""
@@ -160,19 +156,43 @@ class RichText:
     def append(self, part: InlineObject | str) -> None:
         """Append content and mark rich text as dirty."""
         self._parts.append(_coerce_inline_object(part))
-        self._mark_dirty()
+        self.mark_dirty()
 
     def prepend(self, part: InlineObject | str) -> None:
         """Prepend content and mark rich text as dirty."""
         self._parts.insert(0, _coerce_inline_object(part))
-        self._mark_dirty()
+        self.mark_dirty()
 
     def insert(self, index: int, part: InlineObject | str) -> None:
         """Insert content at *index* and mark rich text as dirty."""
         self._parts.insert(index, _coerce_inline_object(part))
-        self._mark_dirty()
+        self.mark_dirty()
 
     # -- factory methods -----------------------------------------------------
+
+    @classmethod
+    def from_source(cls, source: str) -> RichText:
+        """Parse *source* and return one strict :class:`RichText` value.
+
+        The source must parse to exactly one paragraph element and no headings
+        or zeroth-section metadata.
+
+        Args:
+            source: Org source text containing one rich-text paragraph.
+
+        Returns:
+            Parsed :class:`RichText` for the paragraph content.
+
+        Raises:
+            ValueError: If parsing fails or the structure is not one paragraph.
+        """
+        from org_parser._from_source import parse_source_with_extractor
+
+        rich_text, _ = parse_source_with_extractor(
+            source,
+            extractor=_extract_single_rich_text_node,
+        )
+        return rich_text
 
     @classmethod
     def from_node(
@@ -242,6 +262,18 @@ class RichText:
     def __hash__(self) -> int:
         """Hash by rendered textual content."""
         return hash(str(self))
+
+    def __iter__(self) -> Iterator[InlineObject]:
+        """Iterate over inline-object parts."""
+        return iter(self._parts)
+
+    def __len__(self) -> int:
+        """Return number of inline-object parts."""
+        return len(self._parts)
+
+    def __getitem__(self, index: int | slice) -> InlineObject | list[InlineObject]:
+        """Return one inline-object part (or part slice)."""
+        return self._parts[index]
 
 
 def _coerce_inline_object(part: InlineObject | str) -> InlineObject:
@@ -526,3 +558,25 @@ def _find_first_node_by_type(
             return node
         stack.extend(reversed(node.children))
     return None
+
+
+def _extract_single_rich_text_node(
+    document: Document,
+) -> RichText | None:
+    """Return the sole rich-text semantic value for ``from_source``."""
+    from org_parser.element import Paragraph
+
+    invalid_document_shape = (
+        document.keywords
+        or document.properties is not None
+        or document.logbook is not None
+        or document.children
+        or len(document.body) != 1
+    )
+    if invalid_document_shape:
+        return None
+
+    paragraph = document.body[0]
+    if not isinstance(paragraph, Paragraph):
+        return None
+    return paragraph.body

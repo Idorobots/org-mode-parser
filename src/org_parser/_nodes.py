@@ -143,6 +143,7 @@ AUTHOR = "AUTHOR"
 CATEGORY = "CATEGORY"
 DESCRIPTION = "DESCRIPTION"
 TODO = "TODO"
+FILETAGS = "FILETAGS"
 
 # ---------------------------------------------------------------------------
 # Drawers

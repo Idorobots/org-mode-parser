@@ -15,8 +15,11 @@ from org_parser.element._element import (
     node_source,
 )
 from org_parser.element._list import List, ListItem, Repeat
-from org_parser.element._list_recovery import recover_lists
 from org_parser.element._structure import IndentBlock
+from org_parser.element._structure_recovery import (
+    attach_affiliated_keywords,
+    recover_lists,
+)
 from org_parser.text._rich_text import RichText
 from org_parser.time import Clock
 
@@ -63,15 +66,17 @@ class Drawer(Element):
         """Create a :class:`Drawer` from a tree-sitter ``drawer`` node."""
         name_node = node.child_by_field_name("name")
         name = "" if name_node is None else document.source_for(name_node).decode()
+        drawer_body = recover_lists(
+            [
+                _extract_drawer_body_element(child, document)
+                for child in node.children_by_field_name("body")
+            ],
+            parent=parent,
+        )
+        attach_affiliated_keywords(drawer_body)
         drawer = cls(
             name=name,
-            body=recover_lists(
-                [
-                    _extract_drawer_body_element(child, document)
-                    for child in node.children_by_field_name("body")
-                ],
-                parent=parent,
-            ),
+            body=drawer_body,
             parent=parent,
         )
         drawer._node = node
@@ -87,7 +92,7 @@ class Drawer(Element):
     def name(self, value: str) -> None:
         """Set drawer name and mark the drawer as dirty."""
         self._name = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body(self) -> list[Element]:
@@ -99,7 +104,12 @@ class Drawer(Element):
         """Set drawer body and mark the drawer as dirty."""
         self._body = value
         self._adopt_body(self._body)
-        self._mark_dirty()
+        self.mark_dirty()
+
+    @property
+    def body_text(self) -> str:
+        """Stringified text of all drawer body elements."""
+        return "".join(str(element) for element in self._body)
 
     def _adopt_body(self, body: Sequence[Element]) -> None:
         """Assign this drawer as parent for all body elements."""
@@ -126,6 +136,18 @@ class Drawer(Element):
         """Return a tree-oriented representation for debugging."""
         return build_semantic_repr("Drawer", name=self._name, body=self._body)
 
+    def __iter__(self) -> Iterator[Element]:
+        """Iterate over body elements."""
+        return iter(self._body)
+
+    def __len__(self) -> int:
+        """Return number of body elements."""
+        return len(self._body)
+
+    def __getitem__(self, index: int | slice) -> Element | list[Element]:
+        """Return one body element (or body slice)."""
+        return self._body[index]
+
 
 class Logbook(Drawer):
     """Specialized drawer for ``:LOGBOOK:`` entries."""
@@ -146,6 +168,24 @@ class Logbook(Drawer):
         self._clock_entries = clock_entries if clock_entries is not None else []
         self._repeats: list[Repeat] = repeats if repeats is not None else []
         self._adopt_body(self._clock_entries)
+        self._sync_clock_entries_into_body()
+        _sync_logbook_repeat_list(self, self._repeats, mark_dirty=False)
+
+    @property
+    def body(self) -> list[Element]:
+        """Mutable list of drawer body elements."""
+        return self._body
+
+    @body.setter
+    def body(self, value: list[Element]) -> None:
+        """Set drawer body and synchronize extracted logbook entry caches."""
+        self._body = value
+        self._adopt_body(self._body)
+        self._clock_entries = [
+            element for element in self._body if isinstance(element, Clock)
+        ]
+        self._repeats = _extract_existing_logbook_repeats(self._body)
+        self.mark_dirty()
 
     @classmethod
     def from_node(
@@ -163,6 +203,7 @@ class Logbook(Drawer):
             ],
             parent=parent,
         )
+        attach_affiliated_keywords(body)
         repeats = _extract_logbook_repeats(body, document)
         clock_entries = [element for element in body if isinstance(element, Clock)]
         logbook = cls(
@@ -185,7 +226,8 @@ class Logbook(Drawer):
         """Set logbook clock entries and mark the drawer as dirty."""
         self._clock_entries = value
         self._adopt_body(self._clock_entries)
-        self._mark_dirty()
+        self._sync_clock_entries_into_body()
+        self.mark_dirty()
 
     @property
     def repeats(self) -> list[Repeat]:
@@ -196,8 +238,8 @@ class Logbook(Drawer):
     def repeats(self, value: list[Repeat]) -> None:
         """Set logbook repeat entries and mark the drawer as dirty."""
         self._repeats = value
-        _sync_logbook_repeat_list(self, self._repeats)
-        self._mark_dirty()
+        _sync_logbook_repeat_list(self, self._repeats, mark_dirty=True)
+        self.mark_dirty()
 
     def reformat(self) -> None:
         """Mark all logbook children and this drawer dirty."""
@@ -217,6 +259,48 @@ class Logbook(Drawer):
             clock_entries=self._clock_entries,
             repeats=self._repeats,
         )
+
+    def _sync_clock_entries_into_body(self) -> None:
+        """Synchronize explicit clock entries into concrete logbook body order."""
+        first_clock_index = next(
+            (
+                index
+                for index, element in enumerate(self._body)
+                if isinstance(element, Clock)
+            ),
+            None,
+        )
+        body_without_clocks = [
+            element for element in self._body if not isinstance(element, Clock)
+        ]
+
+        if not self._clock_entries:
+            self._body = body_without_clocks
+            self._adopt_body(self._body)
+            return
+
+        insert_at = len(body_without_clocks)
+        if first_clock_index is not None:
+            insert_at = len(
+                [
+                    element
+                    for element in self._body[:first_clock_index]
+                    if not isinstance(element, Clock)
+                ]
+            )
+
+        updated_body = [
+            *body_without_clocks[:insert_at],
+            *self._clock_entries,
+            *body_without_clocks[insert_at:],
+        ]
+        self._body = updated_body
+        self._adopt_body(self._body)
+
+    def append_to_body_without_dirty(self, element: Element) -> None:
+        """Append one body element without changing this drawer's dirty state."""
+        self._body = [*self._body, element]
+        self._adopt_body(self._body)
 
 
 class Properties(Element, MutableMapping[str, RichText]):
@@ -275,20 +359,20 @@ class Properties(Element, MutableMapping[str, RichText]):
         self._properties[key] = value
         value.parent = self
         if mark_dirty:
-            self._mark_dirty()
+            self.mark_dirty()
 
     def __getitem__(self, key: str) -> RichText:
         """Return the rich-text value for one property key."""
         return self._properties[key]
 
-    def __setitem__(self, key: str, value: RichText) -> None:
+    def __setitem__(self, key: str, value: RichText | str) -> None:
         """Set one property value and mark drawer as dirty."""
-        self._set_property(key, value, mark_dirty=True)
+        self._set_property(key, _coerce_rich_text(value), mark_dirty=True)
 
     def __delitem__(self, key: str) -> None:
         """Delete one property key and mark drawer as dirty."""
         del self._properties[key]
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __iter__(self) -> Iterator[str]:
         """Iterate over property keys in insertion order."""
@@ -339,6 +423,13 @@ def _extract_drawer_body_element(
     if factory is None:
         return element_from_error_or_unknown(node, document, parent=parent)
     return factory(node, document, parent=parent)
+
+
+def _coerce_rich_text(value: RichText | str) -> RichText:
+    """Return *value* as :class:`RichText`."""
+    if isinstance(value, RichText):
+        return value
+    return RichText(value)
 
 
 def _extract_indent_block(
@@ -392,7 +483,22 @@ def _extract_logbook_repeats(body: list[Element], document: Document) -> list[Re
     return repeats
 
 
-def _sync_logbook_repeat_list(logbook: Logbook, repeats: list[Repeat]) -> None:
+def _extract_existing_logbook_repeats(body: list[Element]) -> list[Repeat]:
+    """Collect repeat entries already present in logbook body list items."""
+    repeats: list[Repeat] = []
+    for element in body:
+        if not isinstance(element, List):
+            continue
+        repeats.extend(item for item in element.items if isinstance(item, Repeat))
+    return repeats
+
+
+def _sync_logbook_repeat_list(
+    logbook: Logbook,
+    repeats: list[Repeat],
+    *,
+    mark_dirty: bool,
+) -> None:
     """Synchronize explicit repeat entries into a concrete logbook list."""
     target_list: List | None = None
     for element in logbook.body:
@@ -406,7 +512,10 @@ def _sync_logbook_repeat_list(logbook: Logbook, repeats: list[Repeat]) -> None:
         if not repeats:
             return
         target_list = List(items=list(repeats), parent=logbook)
-        logbook.body = [*logbook.body, target_list]
+        if mark_dirty:
+            logbook.body = [*logbook.body, target_list]
+        else:
+            logbook.append_to_body_without_dirty(target_list)
         return
 
-    target_list.items = list(repeats)
+    target_list.set_items(list(repeats), mark_dirty=mark_dirty)

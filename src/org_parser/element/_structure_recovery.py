@@ -1,4 +1,4 @@
-"""Semantic recovery helpers for list and block structure."""
+"""Semantic recovery helpers for list, block, and affiliated-keyword structure."""
 
 from __future__ import annotations
 
@@ -14,8 +14,9 @@ if TYPE_CHECKING:
     from org_parser.document._document import Document
     from org_parser.document._heading import Heading
     from org_parser.element._element import Element
+    from org_parser.element._keyword import AffiliatedKeyword
 
-__all__ = ["recover_lists"]
+__all__ = ["attach_affiliated_keywords", "recover_lists"]
 
 
 def recover_lists(
@@ -25,6 +26,50 @@ def recover_lists(
 ) -> list[Element]:
     """Recover semantic lists and paragraph runs from section elements."""
     return _recover_stream(elements, parent=parent, in_block=False, base_indent=0)
+
+
+def attach_affiliated_keywords(body: list[Element]) -> None:
+    """Attach affiliated keywords to the element immediately following them.
+
+    Each affiliated keyword (``#+CAPTION:``, ``#+TBLNAME:``, ``#+PLOT:``,
+    ``#+RESULTS:``) found in *body* is attached to the next
+    non-affiliated-keyword element via
+    :meth:`~org_parser.element._element.Element.attach_keyword`.  If a
+    trailing sequence of affiliated keywords has no following element they
+    are left unattached.  Keywords are **not** removed from *body*.
+
+    List item bodies encountered in *body* are also processed so that
+    affiliated keywords inside list item continuations are linked to the
+    correct following element.
+
+    Args:
+        body: The flat list of body elements to process.
+    """
+    _attach_in_stream(body)
+    for element in body:
+        if isinstance(element, List):
+            for item in element.items:
+                _attach_in_stream(item.body)
+
+
+def _attach_in_stream(body: list[Element]) -> None:
+    """Attach pending affiliated keywords within one flat element stream.
+
+    Args:
+        body: A flat sequence of body elements to scan.
+    """
+    from org_parser.element._keyword import AffiliatedKeyword
+
+    pending: list[AffiliatedKeyword] = []
+    for element in body:
+        if isinstance(element, AffiliatedKeyword):
+            pending.append(element)
+        else:
+            for kw in pending:
+                element.attach_keyword(kw)
+            pending.clear()
+    # Trailing affiliated keywords without a following element are intentionally
+    # left unattached — no error is raised.
 
 
 def _bullet_key(item: ListItem) -> str:

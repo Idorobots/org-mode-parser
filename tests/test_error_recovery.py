@@ -407,4 +407,4 @@ class TestZerothSectionErrorRecovery:
         """Keywords before the ERROR in the zeroth section are still extracted."""
         doc = _parse_source("#+TITLE: Doc\n<<unclosed\n* Heading\n")
         assert doc.title is not None
-        assert str(doc.title.value) == "Doc"
+        assert str(doc.title) == "Doc"

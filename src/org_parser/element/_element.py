@@ -8,7 +8,7 @@ drawer, etc.).  Concrete subclasses add per-element semantic fields;
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 from org_parser._node import node_source
 
@@ -17,8 +17,11 @@ if TYPE_CHECKING:
 
     from org_parser.document._document import Document
     from org_parser.document._heading import Heading
+    from org_parser.element._keyword import AffiliatedKeyword
 
 __all__ = ["Element", "node_source"]
+
+_ElementT = TypeVar("_ElementT", bound="Element")
 
 
 def build_semantic_repr(class_name: str, /, **fields: object) -> str:
@@ -52,6 +55,48 @@ class Element:
         self._node: tree_sitter.Node | None = None
         self._document: Document | None = None
         self._dirty = False
+        self._keywords: list[AffiliatedKeyword] | None = None
+
+    @classmethod
+    def from_source(cls: type[_ElementT], source: str) -> _ElementT:
+        """Parse *source* and return one strict semantic element.
+
+        The source must parse to exactly one non-heading semantic element.
+
+        Args:
+            source: Org source text containing exactly one element.
+
+        Returns:
+            The parsed semantic element instance.
+
+        Raises:
+            ValueError: If parsing fails, structure is not exactly one element,
+                or the parsed element does not match *cls*.
+        """
+        from org_parser._from_source import parse_document_from_source
+
+        document = parse_document_from_source(source)
+        if document.children:
+            raise ValueError("Unexpected parse tree structure")
+
+        semantic_nodes: list[Element] = []
+        semantic_nodes.extend(document.keywords)
+        if document.properties is not None:
+            semantic_nodes.append(document.properties)
+        if document.logbook is not None:
+            semantic_nodes.append(document.logbook)
+        semantic_nodes.extend(document.body)
+
+        if len(semantic_nodes) != 1:
+            raise ValueError("Unexpected parse tree structure")
+
+        semantic_node: Element = semantic_nodes[0]
+        if not isinstance(semantic_node, cls):
+            raise ValueError(
+                f"Parsed element is {semantic_node.__class__.__name__}, "
+                f"expected {cls.__name__}"
+            )
+        return semantic_node
 
     # -- public read-only properties -----------------------------------------
 
@@ -70,8 +115,47 @@ class Element:
         """Whether this element has been mutated after creation."""
         return self._dirty
 
-    def _mark_dirty(self) -> None:
-        """Mark this element dirty and bubble to parent objects."""
+    @property
+    def text(self) -> str:
+        """Stringified text representation of this element."""
+        return str(self)
+
+    @property
+    def body_text(self) -> str:
+        """Stringified body text for elements that implement body content."""
+        return ""
+
+    @property
+    def keywords(self) -> list[AffiliatedKeyword]:
+        """Affiliated keywords attached to this element, in document order.
+
+        Affiliated keywords (``#+CAPTION:``, ``#+TBLNAME:``, ``#+PLOT:``,
+        ``#+RESULTS:``) that immediately precede this element in the document
+        body are linked here during parsing.  The list is empty when no
+        affiliated keywords precede this element.
+
+        The keywords remain as independent elements in the containing body
+        list and are not duplicated in the serialised output of this element.
+        """
+        return self._keywords if self._keywords is not None else []
+
+    def attach_keyword(self, keyword: AffiliatedKeyword) -> None:
+        """Attach an affiliated keyword to this element without marking it dirty.
+
+        This method is called during body post-processing to link affiliated
+        keywords (``#+CAPTION:``, ``#+TBLNAME:``, ``#+PLOT:``,
+        ``#+RESULTS:``) to the element that immediately follows them.  The
+        keyword is appended to :attr:`keywords` in document order.
+
+        Args:
+            keyword: The affiliated keyword to attach.
+        """
+        if self._keywords is None:
+            self._keywords = []
+        self._keywords.append(keyword)
+
+    def mark_dirty(self) -> None:
+        """Mark this element as dirty."""
         if self._dirty:
             return
         self._dirty = True
@@ -79,10 +163,6 @@ class Element:
         if parent is None:
             return
         parent.mark_dirty()
-
-    def mark_dirty(self) -> None:
-        """Mark this element as dirty."""
-        self._mark_dirty()
 
     def attach_source(
         self,

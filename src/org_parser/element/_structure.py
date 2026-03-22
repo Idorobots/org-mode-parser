@@ -21,7 +21,7 @@ from org_parser.element._element import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
     import tree_sitter
 
@@ -113,7 +113,7 @@ class Comment(Element):
     def text(self, value: str) -> None:
         """Set comment body text and mark this element as dirty."""
         self._text = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __str__(self) -> str:
         """Render the comment line, preserving source while parse-backed and clean."""
@@ -167,7 +167,7 @@ class HorizontalRule(Element):
     def rule(self, value: str) -> None:
         """Set the rule text and mark this element as dirty."""
         self._rule = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __str__(self) -> str:
         """Render the rule line, preserving source while parse-backed and clean."""
@@ -207,7 +207,7 @@ class IndentBlock(Element):
     def indent(self, value: str | None) -> None:
         """Set block indentation text and mark this block as dirty."""
         self._indent = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body(self) -> list[Element]:
@@ -219,7 +219,12 @@ class IndentBlock(Element):
         """Set nested elements and mark this block dirty."""
         self._body = value
         self._adopt_body(self._body)
-        self._mark_dirty()
+        self.mark_dirty()
+
+    @property
+    def body_text(self) -> str:
+        """Stringified text of all nested indentation-block elements."""
+        return "".join(str(element) for element in self._body)
 
     def _adopt_body(self, body: Sequence[Element]) -> None:
         """Assign this block as parent for all nested elements."""
@@ -245,3 +250,15 @@ class IndentBlock(Element):
     def __repr__(self) -> str:
         """Return a tree-oriented representation for debugging."""
         return build_semantic_repr("IndentBlock", body=self._body, indent=self._indent)
+
+    def __iter__(self) -> Iterator[Element]:
+        """Iterate over body elements."""
+        return iter(self._body)
+
+    def __len__(self) -> int:
+        """Return number of body elements."""
+        return len(self._body)
+
+    def __getitem__(self, index: int | slice) -> Element | list[Element]:
+        """Return one body element (or body slice)."""
+        return self._body[index]

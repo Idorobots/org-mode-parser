@@ -94,7 +94,7 @@ def test_dumps_dirty_zeroth_section_still_includes_all_headings(
     from org_parser.text import RichText
 
     document = load(str(example_file("nested-headings-basic.org")))
-    document.keywords = {"AUTHOR": Keyword(key="AUTHOR", value=RichText("Alice"))}
+    document.keywords = [Keyword(key="AUTHOR", value=RichText("Alice"))]
 
     result = dumps(document)
 

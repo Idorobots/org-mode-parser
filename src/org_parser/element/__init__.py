@@ -26,6 +26,7 @@ from org_parser.element._block import (
 from org_parser.element._drawer import Drawer, Logbook, Properties
 from org_parser.element._element import Element
 from org_parser.element._keyword import (
+    AffiliatedKeyword,
     CaptionKeyword,
     Keyword,
     PlotKeyword,
@@ -43,6 +44,7 @@ from org_parser.element._structure import (
 from org_parser.element._table import Table, TableCell, TableEl, TableRow, TableRuleRow
 
 __all__ = [
+    "AffiliatedKeyword",
     "BabelCall",
     "BlankLine",
     "CaptionKeyword",

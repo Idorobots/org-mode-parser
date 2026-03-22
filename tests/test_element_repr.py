@@ -47,7 +47,7 @@ def test_document_and_heading_repr_show_semantic_tree() -> None:
 
     document_repr = repr(document)
     assert "Document(" in document_repr
-    assert "title=Keyword(" in document_repr
+    assert "title=RichText(" in document_repr
     assert "children=[Heading(" in document_repr
 
     heading_repr = repr(document.children[0])

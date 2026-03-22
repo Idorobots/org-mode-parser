@@ -4467,48 +4467,464 @@ It seems that a recent fix introduced a regression:
 
 Note the trailing line with spaces in it - the removal of this whitespace makes the parser work properly. This case should be handled and the blank line should be treated as part of the indent block.
 
-* Semantic nodes dev experience
-** Convenience fields
-Add extra fields for convevience:
+* DONE Semantic nodes dev experience
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 22:22]
+:END:
+** DONE Recover inherited tags
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 15:40]
+:END:
+The =Heading.tags= property should also include the tags from the parent headings (if any). An additional attribute should be introduced called =heading_tags= that only returns the list of tags found on this particular heading (if any).
 
-1. =Document=
-   - is_root
-   - is_terminal
+The =heading_tags= property should be mutable, while the =tags= should be made read-only.
 
-2. =Heading=
-   - latest_timestamp
-   - earliest_timestamp
-   - is_completed
-   - is_root
-   - is_terminal
+In =tags=, duplicated tag entries should be removed (leave just the first occurance, exact match). The order should be preserved.
 
-** iterator interface
-Document, Heading and RichText should support an iterator interface.
-- Document iterates over all the headings contained within, including subheadings
-- Heading iterates over the children
-- Table iterates over the rows, which iterate over the colums.
-- List iterates over the list items.
-- RichText iterates over constituent parts.
+Add support for document-level =#+FILETAGS:= - a field called =tags= should be added to the =Document= class that returns a list of tags parsed from =#+FILETAGS:= keyword (if any). The =Document.tags= field should be mutable (adjusting the filetags keyword on set). These file-tags should be taken into account when computing the inherited tags property.
 
-=document[0][2].body[2][x][y]= - x,y table cell in a body of third child of the first heading in a document.
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 15:40]
+:END:
 
-** Convenience constructors
-*** Programatically create RichText from strings
-Invoke the tree sitter parser on text mutation.
+In file src/org_parser/document/_heading.py around line 323, near the ~class Heading:~
 
-*** Programatically create timestamps from strings
-*** Programatically create arbitrary elements without document structure or parse tree
-** Mutation handling
-- When an element is attached to another element their =parent= relation and dirty flag should be set correctly.
+#+begin_example
++        ancestors: list[Heading] = []
++        node: Heading | Document = self._parent
++        while isinstance(node, Heading):
++            ancestors.append(node)
++            node = node._parent
++
++        collected: list[str] = []
++        # Document FILETAGS come first.
++        collected.extend(node.tags)
++        # Ancestor tags outermost → innermost.
++        for ancestor in reversed(ancestors):
++            collected.extend(ancestor.heading_tags)
++        # Own tags last.
++        collected.extend(self._heading_tags)
++
++        # Deduplicate preserving first occurrence.
++        seen: set[str] = set()
++        result: list[str] = []
++        for tag in collected:
++            if tag not in seen:
++                seen.add(tag)
++                result.append(tag)
++        return result
+#+end_example
 
-** Recover inherited tags
-- nodes tags & inherited tags field (file-order lists not sets)
+It might be easier to just fetch the =parent.tags= and deduplicate making sure that the parent tags come first.
 
-** Recover inherited categories
-- nodes category & inherited category field
-** Attach CAPTION, TBLNAME, PLOT and RESULTS to the following element
+** DONE Keyword refactor
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 16:04]
+:END:
+Update the =Document.keywords= field to be a list instead of a map.
 
-** Check all list items for potential repeats.
+All the fields that return a =Keyword= should instead return the value of the keyword. They still should have setters that allow setting the specific keyword value. The updated value should be reflected in the list returned by =keywords=.
+
+** DONE Recover inherited categories
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 16:23]
+:END:
+Add a mutable field called =heading_category= to the =Heading= class that returns the heading category computed as the value of the =CATEGORY= property from the =PROPERTIES= drawer (if available). When set, the relevant property should be added to the properties of this heading.
+
+Add a read-only field called =category= to the =Heading= class that returns either the =heading_category= or an inherited =parent.category= if heading category is not available.
+
+The document's own category should be extracted from the =#+CATEGORY= keyword (as done currently), or from the basename of the file the document was created from if no category is specified. If there's no file, there should be no category (=None=).
+
+** DONE Attach CAPTION, TBLNAME, PLOT and RESULTS to the following element
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 16:49]
+:END:
+Add an optional =keywords: list[Keyword] | None= field to the =Element= class that will be used to attach keywords to a an element. Add a read-only attribute =keywords= that returns the list.
+
+Add a method called =attach_keyword= to the =Element= class - the metod should add a keyword to the internal keyword list. It should not mark the element as dirty.
+
+Add a processing step to all =from_node= implementations that extract bodies that will attach any affilatable keywords such as CAPTION, TBLNAME, PLOT or RESULTS to the following elements.
+
+The keywords should not be removed from the body, just "linked" to the following elements. If there is no following element available, then skip attaching the keyword.
+
+The internal keywords should not be taken into account when stringifying elements.
+
+** DONE Mutation handling
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 17:11]
+:END:
+When an element is attached to another element their =parent= relation and dirty flag should be set correctly. Make sure that is the case in every setter.
+
+If a heading is attached to another heading, its level should be adjusted to be at least one-more than the parent. All of its children's levels should be adjusted as well. All adjusted headings should be marked dirty.
+
+** DONE Clock extraction
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 17:34]
+:END:
+Update the =Heading= class with a new field =clock_entries= - returns a list of all =CLOCK= items (by analogy to =repeated_tasks=).
+
+The extraction of these values should be done in a similar fashion to the =repeated_tasks= extraction. The goal is for the heading to cache the clocked items.
+
+The body of the =Logbook= should be updated with the recovered =Clock= and =Repeat= values - fetching the logbook body and the list of repeats should result in the same objects to be present in the list. Same for clocks.
+
+** DONE More repeats/clocks recovery
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 17:57]
+:END:
+Check all heading body lists for potential repeats.
+
+Similarly, all CLOCK items within a body of a heading should be extracted and stored in the heading =clock_entries= property.
+
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 17:55]
+:END:
+
+In file src/org_parser/document/_heading.py around line 868, near the ~def _find_first_subheading(node: tree_sitter.Node) -> tree_sitter.Node | None:~
+
+#+begin_example
++                    walk(converted_item.body)
+#+end_example
+
+Don't descend into the list bodies, only top-level lists should be analyzed for heading repeats/clocks.
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 17:57]
+:END:
+
+In file src/org_parser/document/_heading.py around line 879, near the ~def _find_first_subheading(node: tree_sitter.Node) -> tree_sitter.Node | None:~
+
+#+begin_example
++def _nested_body_elements(element: Element) -> list[Element] | None:
++    """Return nested element body list when *element* exposes one.
++
++    Some semantic element classes use a ``body`` attribute that is itself a
++    list of nested :class:`Element` instances (for example drawers, container
++    blocks, and list items). This helper returns that nested list when present
++    and type-compatible, otherwise ``None``.
++    """
++    body = getattr(element, "body", None)
++    if not isinstance(body, list):
++        return None
++    if any(not isinstance(nested, Element) for nested in body):
++        return None
++    return body
+#+end_example
+
+I don't like this approach - please update the recovery algorithm to explicitly mention elements by class name. We expect CLOCK entries and repeats only in LOGBOOK drawers, custom drawers and lists.
+
+** DONE Convenience fields
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 19:04]
+:END:
+Add extra read-only fields for convevience:
+
+1. =Document=:
+   - =is_root= - returns =True=
+   - =is_leaf= - returns =True= if the =children= list is empty.
+   - =all_states= - returns all discovered valid TODO states (based on the =#+TODO:= keyword).
+   - =todo_states= - returns all discovered valid not-completed states (based on the =#+TODO:= keyword).
+   - =done_states= - returns all discovered valid completed states (based on the =#+TODO:= keyword).
+   - =body_text= - returns the stringified text of the =body=.
+   - =all_headings= - returns the list of all headings of any level (children, and their children) in file-definition order.
+
+2. =Heading=:
+   - =is_root= - returns =False= if the heading has a =parent=.
+   - =is_leaf= - returns =True= if the =children= list is empty.
+   - =is_completed= - returns =True= if the current TODO state is within the =documen.done_states=.
+   - =has_timestamp= - returns =True= if any of the timestamps are set or if there are repeated tasks.
+   - =timestamps= - returns a list of all timestamps of this task, including : =scheduled=, =closed=, =deadline=, any =repeated_tasks= or any =clock_entries=.
+   - =latest_timestamp= - returns the latest timestamp from the set: =scheduled=, =closed=, =deadline=, any =repeated_tasks= or any =clock_entries=.
+   - =earliest_timestamp= - return the earliest timestamp from the set: =scheduled=, =closed=, =deadline=, any =repeated_tasks= or any =clock_entries=.
+   - =body_text= - returns the stringified text of the =body=.
+   - =title_text= - returns the stringified text of the =title=.
+   - =heading_text= - returns the stringified text of the entire heading line, including the stars, priority, todo state, etc.
+
+3. =Element= subclasses:
+   - =text= - returns the stringified text of the element (=return str(self)=).
+   - =body_text= - returns the stringified text of the =body= attribute (if the element subclass has one).
+
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 18:45]
+:END:
+
+In file src/org_parser/document/_heading.py around line 488, near the ~class Heading:~
+
+#+begin_example
++def _ensure_document_child_heading_level(child: Heading, *, parent_level: int) -> None:
++    """Ensure one top-level child heading has a valid level for *parent_level*."""
++    min_level = parent_level + 1
++    if child.level >= min_level:
++        return
++    delta = min_level - child.level
++    _shift_document_heading_subtree(child, delta=delta)
++
++
++def _shift_document_heading_subtree(heading: Heading, *, delta: int) -> None:
++    """Increase one heading subtree's levels by *delta*."""
++    heading.level = heading.level + delta
++    for child in heading.children:
++        _shift_document_heading_subtree(child, delta=delta)
++
++
+ def _render_document_dirty(document: Document) -> str:
+     """Render a dirty document from semantic fields only."""
+     parts: list[str] = []
+modified   src/org_parser/document/_heading.py
+@@ -486,6 +486,74 @@ class Heading:
+             _ensure_child_heading_level(child, parent_level=self._level)
+         self._mark_dirty()
+#+end_example
+
+This is a direct copy of the heading functions. Please make those ones public and re-use them here.
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 18:49]
+:END:
+
+In file src/org_parser/document/_heading.py around line 523, near the ~class Heading:~
+
+#+begin_example
++    @property
++    def latest_timestamp(self) -> Timestamp | None:
++        """Latest timestamp across planning values and logbook-derived timestamps."""
++        values = self.timestamps
++        if not values:
++            return None
++        return max(values, key=lambda timestamp: timestamp.start)
+#+end_example
+
+Should use =timestamp.end= if provided and fallback to start if not.
+*** DONE src/org_parser/element/_element.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 18:56]
+:END:
+
+In file src/org_parser/element/_element.py around line 90, near the ~class Element:~
+
+#+begin_example
++    @property
++    def body_text(self) -> str:
++        """Stringified text of this element's ``body`` value when present."""
++        body: object | None = getattr(self, "body", None)
++        if body is None:
++            return ""
++        if isinstance(body, list):
++            body_list = cast("list[object]", body)
++            return "".join(str(element) for element in body_list)
++        return str(body)
+#+end_example
+
+That's lazy, please add individual methods to the elements that have a body.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 19:03]
+:END:
+
+In file src/org_parser/document/_document.py around line 740, near the ~def _append_heading_subtree(headings: Sequence[Heading], parts: list[str]) -> No~
+
+#+begin_example
++def _parse_todo_states(todo: RichText | None) -> tuple[list[str], list[str], list[str]]:
++    """Return ``(all_states, todo_states, done_states)`` for ``#+TODO:`` text."""
++    if todo is None:
++        return [], [], []
++
++    tokens = [token for token in str(todo).split() if token != ""]
++    if not tokens:
++        return [], [], []
++
++    if "|" not in tokens:
++        return tokens, tokens, []
++
++    split_index = tokens.index("|")
++    todo_states = [token for token in tokens[:split_index] if token != "|"]
++    done_states = [token for token in tokens[split_index + 1 :] if token != "|"]
++    all_states = [*todo_states, *done_states]
++    return all_states, todo_states, done_states
+#+end_example
+
+This needs to be tested with "complex" todo specifiers:
+
+#+begin_example
+#+TODO: TODO(t) | DONE(d@/!)
+#+TODO: | CANCELLED(c@/!) REWORKED(r@/!)
+#+end_example
+
+Document should also handle multiple =#+TODO= keywords.
+** DONE Iterator/Sequence interface
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 19:33]
+:END:
+=Document=, =Heading=, =Table=, =List=, =Drawer=, =Logbook=, =Properties= and  =RichText= should support an iterator/sequence interface:
+
+- =Document= iterates over all the headings contained within, including subheading (=all_headings= attribute).
+- =Heading= iterates over the children
+- =Table= iterates over the rows, which iterate over the colum values. It should be possible to mutate table cell values via assignment: ~table[0][0] = value~
+- =List= iterates over the list items.
+- =RichText= iterates over constituent parts.
+- =Drawer= iterates over the body elements.
+- =Logbook= iterates over the recovered body elements.
+- Any other elements that return a list as their body, should iterate over the body.
+- =Properties= should be indexable by strings and return the values of their properties. It should be possible to mutate =Properties= via setting a key ~node.properties["foo"] = bar~.
+
+Example: =document[0][2].body[2][x][y]= - x,y table cell in a body of third child of the first heading in a document.
+
+** DONE Convenience constructors
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 22:13]
+:END:
+Add a new class method =from_source= to =Document=, =Heading=,  =RichText=, =Timestamp= and =Element= subclasses that will invoke the parser and extract the resulting parse tree as a semantic node. These new methods will be used to:
+
+1. Programatically create RichText from strings
+   #+begin_example
+   RichText.from_source("*this* should /parse/ fine_{+1}")
+   #+end_example
+
+2. Programatically create timestamps from strings
+   #+begin_example
+   Timestamp.from_source("<2026-03-22 Sun 14:43>")
+   #+end_example
+
+3. Programatically create arbitrary elements
+   #+begin_example
+   List.from_source("- foo\n- bar\n")
+   #+end_example
+
+4. Programatically create arbitrary headings
+   #+begin_example
+   Heading.from_source("* TODO Some new task")
+   #+end_example
+
+5. Programatically create entire documents
+   #+begin_example
+   Document.from_source("#+title: Document\n* TODO Some task")
+   #+end_example
+
+In most cases, this should just be equivalent to something similar to:
+#+begin_src python
+tree = PARSER.parse(source)
+doc = Document.from_tree(tree)
+return cls.from_node(extract_specific_node(tree), doc)
+#+end_src
+
+If the parse tree has errors or if it results in an unexpected tree structure, the method should raise an =ValueError=.
+
+Since most of these =from_source= implementations will be very similar, it makes sense to abstract the parsing into a helper function that runs the parser and accepts a node extractor returning a =node= and =document=.
+
+*** DONE Code review comment
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 21:47]
+:END:
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/_from_source.py::if _tree_has_parse_errors(tree.root_node):
+ raise ValueError("Source contains parse errors")]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/_from_source.py
+
+#+begin_example
+    if _tree_has_parse_errors(tree.root_node):
+        raise ValueError("Source contains parse errors")
+#+end_example
+
+You can use `document.errors` to see if there are any errors reported.
+*** DONE src/org_parser/_from_source.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 22:11]
+:END:
+
+In file src/org_parser/_from_source.py around line 52, near the ~Merge~
+
+#+begin_example
++def parse_source_with_extractor(
++    source: str,
++    *,
++    extractor: Callable[[tree_sitter.Node, Document], tree_sitter.Node | None],
++) -> tuple[tree_sitter.Node, Document]:
+
+#+end_example
+
+Does it make more sense to return the parsed element here? Now if we return the node we're re-doing the same parsing work as was already done within this function. I'd rater the result of calling =parse_source_with_extractor= to be the element and the document. You can use typevars for the extractor and return types.
+
+The extractors should also use the document for the extraction, not the Tree-Sitter nodes.
+
+*** DONE src/org_parser/text/_rich_text.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 22:13]
+:END:
+
+In file src/org_parser/text/_rich_text.py around line 219, near the ~class RichText:~
+
+#+begin_example
++        if not isinstance(rich_text, cls):
++            raise ValueError("Unexpected parse tree structure")
+#+end_example
+
+This guard is not needed - we're passing the extractor that either extracts a value or causes =parse_source_with_extractor= to throw. Please remove these.
+** DONE Code review comment
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 23:51]
+:END:
+
+- High: dirty document rendering can lose repeated dedicated keywords, especially multiple `#+TODO:` lines, because `_render_document_dirty` only keeps the first dedicated key then drops the rest (`src/org_parser/document/_document.py:809`, `src/org_parser/document/_document.py:816`).
+- Medium: dedicated keyword lookup currently returns the first match (`src/org_parser/document/_document.py:509`) but the class docs say last-write-wins (`src/org_parser/document/_document.py:82`), so behavior and contract conflict.
+- Medium: `Heading.tags` dedup is incomplete; duplicates inside `heading_tags` can leak through because `seen` is not updated during own-tag filtering (`src/org_parser/document/_heading.py:327`).
+
+** DONE Code review comment
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-23 Mon 00:03]
+:END:
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::def _mark_dirty(self) -> None:
+ """Mark this document as dirty."""
+ if self._dirty:
+ return
+ self._dirty = True]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_document.py
+
+#+begin_example
+    def _mark_dirty(self) -> None:
+        """Mark this document as dirty."""
+        if self._dirty:
+            return
+        self._dirty = True
+#+end_example
+
+The private =_mark_dirty= method is pretty useless. We can go with only the publicly available =mark_dirty=. Please update all the classes that have a =_mark_dirty= and =mark_dirty= to only use the public one.
 * Release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:
@@ -4530,3 +4946,4 @@ All of the above are supported in the Tree-Sitter grammar as well as in the Pyth
 #+end_example
 
 ** Semantic node documentation
+** Library release

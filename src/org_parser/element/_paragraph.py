@@ -71,7 +71,7 @@ class Paragraph(Element):
     def indent(self, value: str | None) -> None:
         """Set paragraph indentation and mark the paragraph as dirty."""
         self._indent = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body(self) -> RichText:
@@ -83,7 +83,12 @@ class Paragraph(Element):
         """Set body rich text and mark this paragraph as dirty."""
         self._body = value
         self._body.parent = self
-        self._mark_dirty()
+        self.mark_dirty()
+
+    @property
+    def body_text(self) -> str:
+        """Stringified text of the paragraph body."""
+        return str(self._body)
 
     def reformat(self) -> None:
         """Mark body and this paragraph dirty for scratch-built rendering."""

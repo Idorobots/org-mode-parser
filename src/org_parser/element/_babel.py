@@ -102,7 +102,7 @@ class BabelCall(Element):
     def name(self, value: str) -> None:
         """Set the called function name and mark this element as dirty."""
         self._name = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def arguments(self) -> str | None:
@@ -113,7 +113,7 @@ class BabelCall(Element):
     def arguments(self, value: str | None) -> None:
         """Set the argument string and mark this element as dirty."""
         self._arguments = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def inside_header(self) -> str | None:
@@ -124,7 +124,7 @@ class BabelCall(Element):
     def inside_header(self, value: str | None) -> None:
         """Set the inside-header string and mark this element as dirty."""
         self._inside_header = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def outside_header(self) -> str | None:
@@ -135,7 +135,7 @@ class BabelCall(Element):
     def outside_header(self, value: str | None) -> None:
         """Set the outside-header string and mark this element as dirty."""
         self._outside_header = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     # -- rendering -----------------------------------------------------------
 

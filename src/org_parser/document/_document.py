@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from org_parser._node import is_error_node
@@ -11,6 +12,7 @@ from org_parser._nodes import (
     CATEGORY,
     DESCRIPTION,
     DRAWER,
+    FILETAGS,
     HEADING,
     LOGBOOK_DRAWER,
     PROPERTY_DRAWER,
@@ -29,15 +31,20 @@ from org_parser.element._element import (
     element_from_error_or_unknown,
 )
 from org_parser.element._keyword import Keyword
+from org_parser.text._rich_text import RichText
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
     import tree_sitter
 
     from org_parser.document._heading import Heading
 
 __all__ = ["Document", "ParseError"]
+
+# Canonical render order for dedicated keywords and the set for fast lookup.
+_DEDICATED_ORDER = [TITLE, AUTHOR, CATEGORY, DESCRIPTION, TODO]
+_DEDICATED_KEYS: frozenset[str] = frozenset(_DEDICATED_ORDER)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -61,18 +68,20 @@ class Document:
     """Representation of a full Org Mode document.
 
     A :class:`Document` exposes the zeroth-section body elements, top-level
-    headings, and well-known keyword properties (``TITLE``, ``AUTHOR``, etc.)
-    parsed from the file.
+    headings, and well-known keyword properties (``TITLE``, ``AUTHOR``,
+    ``FILETAGS``, etc.) parsed from the file.
 
     Args:
         filename: The filename of the document.
-        title: The ``#+TITLE:`` keyword object, or *None*.
-        author: The ``#+AUTHOR:`` keyword object, or *None*.
-        category: The ``#+CATEGORY:`` keyword object, or *None*.
-        description: The ``#+DESCRIPTION:`` keyword object, or *None*.
-        todo: The ``#+TODO:`` keyword object, or *None*.
-        keywords: Remaining special keywords not covered by the dedicated
-            properties, keyed by upper-cased keyword name as :class:`Keyword`.
+        title: The value of the ``#+TITLE:`` keyword, or *None*.
+        author: The value of the ``#+AUTHOR:`` keyword, or *None*.
+        category: The value of the ``#+CATEGORY:`` keyword, or *None*.
+        description: The value of the ``#+DESCRIPTION:`` keyword, or *None*.
+        todo: The value of the ``#+TODO:`` keyword, or *None*.
+        keywords: All special keywords as an ordered list of
+            :class:`Keyword` objects.  Keywords in this list that share a
+            key with one of the dedicated parameters above will override the
+            dedicated value (last-write-wins).
         properties: Merged zeroth-section ``PROPERTIES`` drawer, or *None*.
         logbook: Merged zeroth-section ``LOGBOOK`` drawer, or *None*.
         body: Zeroth-section elements (excluding headings and special
@@ -84,24 +93,31 @@ class Document:
         self,
         *,
         filename: str,
-        title: Keyword | None = None,
-        author: Keyword | None = None,
-        category: Keyword | None = None,
-        description: Keyword | None = None,
-        todo: Keyword | None = None,
-        keywords: dict[str, Keyword] | None = None,
+        title: RichText | None = None,
+        author: RichText | None = None,
+        category: RichText | None = None,
+        description: RichText | None = None,
+        todo: RichText | None = None,
+        keywords: list[Keyword] | None = None,
         properties: Properties | None = None,
         logbook: Logbook | None = None,
         body: list[Element] | None = None,
         children: list[Heading] | None = None,
     ) -> None:
         self._filename = filename
-        self._title = title
-        self._author = author
-        self._category = category
-        self._description = description
-        self._todo = todo
-        self._keywords: dict[str, Keyword] = keywords if keywords is not None else {}
+
+        # Build the keyword list from dedicated params first, then merge
+        # the explicit keywords list on top (last-write-wins).
+        self._keywords: list[Keyword] = []
+        self._init_set_keyword(TITLE, title)
+        self._init_set_keyword(AUTHOR, author)
+        self._init_set_keyword(CATEGORY, category)
+        self._init_set_keyword(DESCRIPTION, description)
+        self._init_set_keyword(TODO, todo)
+        if keywords is not None:
+            for kw in keywords:
+                self._init_merge_keyword(kw)
+
         self._properties = properties
         self._logbook = logbook
         self._body: list[Element] = body if body is not None else []
@@ -111,9 +127,6 @@ class Document:
         self._dirty = False
         self._errors: list[ParseError] = []
 
-        self._sync_keywords_with_dedicated()
-
-        self._adopt_dedicated_keywords()
         self._adopt_keywords(self._keywords)
         self._adopt_element(self._properties)
         self._adopt_element(self._logbook)
@@ -121,6 +134,24 @@ class Document:
         self._adopt_elements(self._children)
 
     # -- factory method ------------------------------------------------------
+
+    @classmethod
+    def from_source(cls, source: str, *, filename: str = "") -> Document:
+        """Build a :class:`Document` from Org source text.
+
+        Args:
+            source: Org source text to parse.
+            filename: Optional filename assigned to the parsed document.
+
+        Returns:
+            A fully populated parse-backed :class:`Document`.
+
+        Raises:
+            ValueError: If the source contains parse errors.
+        """
+        from org_parser._from_source import parse_document_from_source
+
+        return parse_document_from_source(source, filename=filename)
 
     @classmethod
     def from_tree(
@@ -151,17 +182,11 @@ class Document:
         doc._source = source
 
         # --- extract zeroth-section data ------------------------------------
-        all_kw, properties, logbook, body = _parse_zeroth_section(root, parent=doc)
-        doc._title = all_kw.get(TITLE)
-        doc._author = all_kw.get(AUTHOR)
-        doc._category = all_kw.get(CATEGORY)
-        doc._description = all_kw.get(DESCRIPTION)
-        doc._todo = all_kw.get(TODO)
-        doc._keywords = all_kw
+        kw_list, properties, logbook, body = _parse_zeroth_section(root, parent=doc)
+        doc._keywords = kw_list
         doc._properties = properties
         doc._logbook = logbook
         doc._body = body
-        doc._adopt_dedicated_keywords()
         doc._adopt_keywords(doc._keywords)
         doc._adopt_element(doc._properties)
         doc._adopt_element(doc._logbook)
@@ -193,80 +218,117 @@ class Document:
     def filename(self, value: str) -> None:
         """Set the filename and mark the document as dirty."""
         self._filename = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
-    def title(self) -> Keyword | None:
+    def title(self) -> RichText | None:
         """The ``#+TITLE:`` value, or *None*."""
-        return self._title
+        kw = self._find_last_keyword(TITLE)
+        return kw.value if kw is not None else None
 
     @title.setter
-    def title(self, value: Keyword | None) -> None:
+    def title(self, value: RichText | None) -> None:
         """Set the ``#+TITLE:`` value and mark the document as dirty."""
-        self._title = value
-        self._update_dedicated_keyword_entry(TITLE, value)
+        self._set_keyword_value(TITLE, value)
 
     @property
-    def author(self) -> Keyword | None:
+    def author(self) -> RichText | None:
         """The ``#+AUTHOR:`` value, or *None*."""
-        return self._author
+        kw = self._find_last_keyword(AUTHOR)
+        return kw.value if kw is not None else None
 
     @author.setter
-    def author(self, value: Keyword | None) -> None:
+    def author(self, value: RichText | None) -> None:
         """Set the ``#+AUTHOR:`` value and mark the document as dirty."""
-        self._author = value
-        self._update_dedicated_keyword_entry(AUTHOR, value)
+        self._set_keyword_value(AUTHOR, value)
 
     @property
-    def category(self) -> Keyword | None:
-        """The ``#+CATEGORY:`` value, or *None*."""
-        return self._category
+    def category(self) -> RichText | None:
+        """The effective category for this document.
+
+        Returns the ``#+CATEGORY:`` keyword value when present.  Otherwise
+        falls back to the stem of :attr:`filename` (the basename without its
+        file extension), which matches Org Mode's own default-category
+        behaviour.  Returns *None* when no filename is known (empty string).
+        """
+        kw = self._find_last_keyword(CATEGORY)
+        if kw is not None:
+            return kw.value
+        stem = Path(self._filename).stem if self._filename else None
+        return RichText(stem) if stem else None
 
     @category.setter
-    def category(self, value: Keyword | None) -> None:
+    def category(self, value: RichText | None) -> None:
         """Set the ``#+CATEGORY:`` value and mark the document as dirty."""
-        self._category = value
-        self._update_dedicated_keyword_entry(CATEGORY, value)
+        self._set_keyword_value(CATEGORY, value)
 
     @property
-    def description(self) -> Keyword | None:
+    def description(self) -> RichText | None:
         """The ``#+DESCRIPTION:`` value, or *None*."""
-        return self._description
+        kw = self._find_last_keyword(DESCRIPTION)
+        return kw.value if kw is not None else None
 
     @description.setter
-    def description(self, value: Keyword | None) -> None:
+    def description(self, value: RichText | None) -> None:
         """Set the ``#+DESCRIPTION:`` value and mark the document as dirty."""
-        self._description = value
-        self._update_dedicated_keyword_entry(DESCRIPTION, value)
+        self._set_keyword_value(DESCRIPTION, value)
 
     @property
-    def todo(self) -> Keyword | None:
+    def todo(self) -> RichText | None:
         """The ``#+TODO:`` value, or *None*."""
-        return self._todo
+        kw = self._find_last_keyword(TODO)
+        return kw.value if kw is not None else None
 
     @todo.setter
-    def todo(self, value: Keyword | None) -> None:
+    def todo(self, value: RichText | None) -> None:
         """Set the ``#+TODO:`` value and mark the document as dirty."""
-        self._todo = value
-        self._update_dedicated_keyword_entry(TODO, value)
+        self._set_keyword_value(TODO, value)
 
     @property
-    def keywords(self) -> dict[str, Keyword]:
-        """Non-dedicated special keywords, keyed by upper-cased name."""
+    def tags(self) -> list[str]:
+        """Tags from all ``#+FILETAGS:`` keywords, as individual strings.
+
+        Returns an empty list when no ``#+FILETAGS:`` keyword is present.
+        Multiple ``#+FILETAGS:`` lines are aggregated in keyword-list order.
+        The returned list is a fresh copy; mutate via the setter.
+        """
+        tags: list[str] = []
+        for kw in self._keywords:
+            if kw.key != FILETAGS:
+                continue
+            # Parse ":foo:bar:" → ["foo", "bar"], ignoring empty segments.
+            tags.extend(t for t in str(kw.value).strip(":").split(":") if t)
+        return tags
+
+    @tags.setter
+    def tags(self, value: list[str]) -> None:
+        """Set document-level file tags, updating ``#+FILETAGS:`` accordingly.
+
+        Setting an empty list removes the ``#+FILETAGS:`` keyword entirely.
+        """
+        had_filetags = any(kw.key == FILETAGS for kw in self._keywords)
+        if not value:
+            self._keywords = [kw for kw in self._keywords if kw.key != FILETAGS]
+            if had_filetags:
+                self.mark_dirty()
+            return
+        self._keywords = [kw for kw in self._keywords if kw.key != FILETAGS]
+        filetags_str = ":" + ":".join(value) + ":"
+        new_kw = Keyword(key=FILETAGS, value=RichText(filetags_str), parent=self)
+        self._keywords.append(new_kw)
+        self.mark_dirty()
+
+    @property
+    def keywords(self) -> list[Keyword]:
+        """All special keywords as an ordered list."""
         return self._keywords
 
     @keywords.setter
-    def keywords(self, value: dict[str, Keyword]) -> None:
-        """Set non-dedicated keywords and mark the document as dirty."""
+    def keywords(self, value: list[Keyword]) -> None:
+        """Set the keywords list and mark the document as dirty."""
         self._keywords = value
-        self._title = self._keywords.get(TITLE)
-        self._author = self._keywords.get(AUTHOR)
-        self._category = self._keywords.get(CATEGORY)
-        self._description = self._keywords.get(DESCRIPTION)
-        self._todo = self._keywords.get(TODO)
-        self._adopt_dedicated_keywords()
         self._adopt_keywords(self._keywords)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def properties(self) -> Properties | None:
@@ -278,7 +340,7 @@ class Document:
         """Set merged ``PROPERTIES`` drawer and mark the document dirty."""
         self._properties = value
         self._adopt_element(self._properties)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def logbook(self) -> Logbook | None:
@@ -290,7 +352,7 @@ class Document:
         """Set merged ``LOGBOOK`` drawer and mark the document dirty."""
         self._logbook = value
         self._adopt_element(self._logbook)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body(self) -> list[Element]:
@@ -302,7 +364,7 @@ class Document:
         """Set zeroth-section body elements and mark the document as dirty."""
         self._body = value
         self._adopt_elements(self._body)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def children(self) -> list[Heading]:
@@ -311,10 +373,59 @@ class Document:
 
     @children.setter
     def children(self, value: list[Heading]) -> None:
-        """Set top-level headings and mark the document as dirty."""
+        """Set top-level headings, enforce minimum level, and mark dirty.
+
+        Each heading is adopted (parent set to this document) and then checked:
+        if its :attr:`~org_parser.document._heading.Heading.level` is zero or
+        negative it is shifted — along with its entire descendant subtree — to
+        level 1.  Only headings whose level is actually changed are marked
+        dirty.
+        """
+        # Lazy import avoids the circular dependency with _heading.py.
+        from org_parser.document._heading import ensure_child_heading_level
+
         self._children = value
         self._adopt_elements(self._children)
-        self._mark_dirty()
+        for child in self._children:
+            ensure_child_heading_level(child, parent_level=0)
+        self.mark_dirty()
+
+    @property
+    def is_root(self) -> bool:
+        """Whether this node is the root of a parsed document tree."""
+        return True
+
+    @property
+    def is_leaf(self) -> bool:
+        """Whether this document has no top-level headings."""
+        return not self._children
+
+    @property
+    def all_states(self) -> list[str]:
+        """All discovered TODO keyword states from the ``#+TODO:`` definition."""
+        return _parse_todo_states(self._todo_keyword_values())[0]
+
+    @property
+    def todo_states(self) -> list[str]:
+        """Discovered non-completed TODO states from the ``#+TODO:`` definition."""
+        return _parse_todo_states(self._todo_keyword_values())[1]
+
+    @property
+    def done_states(self) -> list[str]:
+        """Discovered completed TODO states from the ``#+TODO:`` definition."""
+        return _parse_todo_states(self._todo_keyword_values())[2]
+
+    @property
+    def body_text(self) -> str:
+        """Stringified text for all zeroth-section body elements."""
+        return "".join(str(element) for element in self._body)
+
+    @property
+    def all_headings(self) -> list[Heading]:
+        """All headings in file-definition order across the full document tree."""
+        ordered: list[Heading] = []
+        _collect_heading_subtree(self._children, ordered)
+        return ordered
 
     def source_for(self, node: tree_sitter.Node) -> bytes:
         """Return source bytes for one node span.
@@ -367,23 +478,19 @@ class Document:
             )
         )
 
-    def _mark_dirty(self) -> None:
-        """Mark this document as dirty."""
-        if self._dirty:
-            return
-        self._dirty = True
-
     def mark_dirty(self) -> None:
         """Mark this document as dirty.
 
         This public helper is intended for nested objects that need to bubble
         mutation state up to the owning document.
         """
-        self._mark_dirty()
+        if self._dirty:
+            return
+        self._dirty = True
 
     def reformat(self) -> None:
         """Recursively mark document descendants dirty, then self dirty."""
-        for keyword in self._keywords.values():
+        for keyword in self._keywords:
             keyword.reformat()
         if self._properties is not None:
             self._properties.reformat()
@@ -395,6 +502,52 @@ class Document:
             child.reformat()
         self.mark_dirty()
 
+    def _find_last_keyword(self, key: str) -> Keyword | None:
+        """Return the last keyword with *key*, or *None* when absent."""
+        for kw in reversed(self._keywords):
+            if kw.key == key:
+                return kw
+        return None
+
+    def _todo_keyword_values(self) -> list[RichText]:
+        """Return ``#+TODO:`` keyword values in document order."""
+        return [kw.value for kw in self._keywords if kw.key == TODO]
+
+    def _set_keyword_value(self, key: str, value: RichText | None) -> None:
+        """Update, create, or remove a keyword entry by key.
+
+        If *value* is *None* the keyword is removed from the list.  Otherwise
+        the existing keyword's value is updated in place, or a new keyword is
+        appended when no entry for *key* exists.
+        """
+        existing = self._find_last_keyword(key)
+        if value is None:
+            self._keywords = [kw for kw in self._keywords if kw.key != key]
+        elif existing is not None:
+            existing.value = value
+        else:
+            new_kw = Keyword(key=key, value=value, parent=self)
+            self._keywords.append(new_kw)
+        self.mark_dirty()
+
+    def _init_set_keyword(self, key: str, value: RichText | None) -> None:
+        """Init-time helper: append a keyword for *key* if *value* is not *None*."""
+        if value is None:
+            return
+        self._keywords.append(Keyword(key=key, value=value))
+
+    def _init_merge_keyword(self, kw: Keyword) -> None:
+        """Init-time helper: merge *kw* into the list (last-write-wins).
+
+        If a keyword with the same key already exists it is replaced in place;
+        otherwise *kw* is appended.
+        """
+        for i, existing in enumerate(self._keywords):
+            if existing.key == kw.key:
+                self._keywords[i] = kw
+                return
+        self._keywords.append(kw)
+
     def _adopt_element(
         self,
         value: Keyword | Properties | Logbook | Element | Heading | None,
@@ -404,61 +557,10 @@ class Document:
             return
         value.parent = self
 
-    def _adopt_dedicated_keywords(self) -> None:
-        """Assign this document as parent for dedicated keyword objects."""
-        self._adopt_elements(
-            [
-                self._title,
-                self._author,
-                self._category,
-                self._description,
-                self._todo,
-            ]
-        )
-
-    def _adopt_keywords(self, keywords: dict[str, Keyword]) -> None:
+    def _adopt_keywords(self, keywords: list[Keyword]) -> None:
         """Assign this document as parent for all keyword entries."""
-        self._adopt_elements(list(keywords.values()))
-
-    def _update_dedicated_keyword_entry(
-        self,
-        key: str,
-        value: Keyword | None,
-    ) -> None:
-        """Update one dedicated keyword map entry and adoption state."""
-        if value is None:
-            self._keywords.pop(key, None)
-        else:
-            self._keywords[key] = value
-        self._adopt_element(value)
-        self._mark_dirty()
-
-    def _sync_keywords_with_dedicated(self) -> None:
-        """Ensure dedicated keyword properties and map stay aligned."""
-        if self._title is None:
-            self._title = self._keywords.get(TITLE)
-        else:
-            self._keywords[TITLE] = self._title
-
-        if self._author is None:
-            self._author = self._keywords.get(AUTHOR)
-        else:
-            self._keywords[AUTHOR] = self._author
-
-        if self._category is None:
-            self._category = self._keywords.get(CATEGORY)
-        else:
-            self._keywords[CATEGORY] = self._category
-
-        if self._description is None:
-            self._description = self._keywords.get(DESCRIPTION)
-        else:
-            self._keywords[DESCRIPTION] = self._description
-
-        if self._todo is None:
-            self._todo = self._keywords.get(TODO)
-        else:
-            self._keywords[TODO] = self._todo
+        for kw in keywords:
+            self._adopt_element(kw)
 
     def _adopt_elements(
         self,
@@ -507,18 +609,24 @@ class Document:
     def __repr__(self) -> str:
         """Return a tree-oriented representation for debugging."""
         parts = [f"filename={self._filename!r}"]
-        if self._title is not None:
-            parts.append(f"title={self._title!r}")
-        if self._author is not None:
-            parts.append(f"author={self._author!r}")
-        if self._category is not None:
-            parts.append(f"category={self._category!r}")
-        if self._description is not None:
-            parts.append(f"description={self._description!r}")
-        if self._todo is not None:
-            parts.append(f"todo={self._todo!r}")
-        if self._keywords:
-            parts.append(f"keywords={self._keywords!r}")
+        title = self.title
+        if title is not None:
+            parts.append(f"title={title!r}")
+        author = self.author
+        if author is not None:
+            parts.append(f"author={author!r}")
+        category = self.category
+        if category is not None:
+            parts.append(f"category={category!r}")
+        description = self.description
+        if description is not None:
+            parts.append(f"description={description!r}")
+        todo = self.todo
+        if todo is not None:
+            parts.append(f"todo={todo!r}")
+        extra_kws = [kw for kw in self._keywords if kw.key not in _DEDICATED_KEYS]
+        if extra_kws:
+            parts.append(f"keywords={extra_kws!r}")
         if self._properties is not None:
             parts.append(f"properties={self._properties!r}")
         if self._logbook is not None:
@@ -528,6 +636,18 @@ class Document:
         if self._children:
             parts.append(f"children={self._children!r}")
         return f"Document({', '.join(parts)})"
+
+    def __iter__(self) -> Iterator[Heading]:
+        """Iterate over all headings in file-definition order."""
+        return iter(self.all_headings)
+
+    def __len__(self) -> int:
+        """Return number of headings across the full document tree."""
+        return len(self.all_headings)
+
+    def __getitem__(self, index: int | slice) -> Heading | list[Heading]:
+        """Return one heading (or heading slice) from :attr:`all_headings`."""
+        return self.all_headings[index]
 
 
 # ---------------------------------------------------------------------------
@@ -539,23 +659,27 @@ def _parse_zeroth_section(
     root: tree_sitter.Node,
     *,
     parent: Document,
-) -> tuple[dict[str, Keyword], Properties | None, Logbook | None, list[Element]]:
+) -> tuple[list[Keyword], Properties | None, Logbook | None, list[Element]]:
     """Extract all keywords and body elements from the zeroth section.
 
     Returns:
-        A ``(keywords, properties, logbook, body)`` tuple. *keywords* maps
-        upper-cased keyword names to :class:`Keyword` values. Dedicated
-        drawer values are merged across repeated drawers. *body* contains
-        non-keyword, non-dedicated-drawer elements.
+        A ``(keywords, properties, logbook, body)`` tuple. *keywords* is an
+        ordered list of :class:`Keyword` values in source order; duplicate
+        keys are preserved.  Dedicated drawer values are merged across
+        repeated drawers. *body* contains non-keyword,
+        non-dedicated-drawer elements.
     """
     from org_parser.document._body import (
         extract_body_element,
         merge_logbook_drawers,
         merge_properties_drawers,
     )
-    from org_parser.element._list_recovery import recover_lists
+    from org_parser.element._structure_recovery import (
+        attach_affiliated_keywords,
+        recover_lists,
+    )
 
-    keywords: dict[str, Keyword] = {}
+    keywords: list[Keyword] = []
     property_drawers: list[Properties] = []
     logbook_drawers: list[Logbook] = []
     body: list[Element] = []
@@ -564,8 +688,7 @@ def _parse_zeroth_section(
         if child.type == ZEROTH_SECTION:
             for sc in child.named_children:
                 if sc.type == SPECIAL_KEYWORD:
-                    key, keyword = _extract_keyword(sc, parent=parent)
-                    keywords[key] = keyword
+                    keywords.append(_extract_keyword(sc, parent=parent))
                 elif sc.type == PROPERTY_DRAWER:
                     property_drawers.append(
                         Properties.from_node(sc, parent, parent=parent)
@@ -580,11 +703,13 @@ def _parse_zeroth_section(
                     )
             break  # only one zeroth section
 
+    recovered_body = recover_lists(body, parent=parent)
+    attach_affiliated_keywords(recovered_body)
     return (
         keywords,
         merge_properties_drawers(property_drawers, parent=parent),
         merge_logbook_drawers(logbook_drawers, parent=parent),
-        recover_lists(body, parent=parent),
+        recovered_body,
     )
 
 
@@ -592,13 +717,9 @@ def _extract_keyword(
     kw_node: tree_sitter.Node,
     *,
     parent: Document,
-) -> tuple[str, Keyword]:
-    """Return ``(KEY, value)`` for a single ``special_keyword`` node.
-
-    The key is upper-case normalised.
-    """
-    keyword = Keyword.from_node(kw_node, parent, parent=parent)
-    return keyword.key, keyword
+) -> Keyword:
+    """Build and return a :class:`Keyword` for a single ``special_keyword`` node."""
+    return Keyword.from_node(kw_node, parent, parent=parent)
 
 
 def _find_first_child_by_type(
@@ -624,24 +745,67 @@ def _append_heading_subtree(headings: Sequence[Heading], parts: list[str]) -> No
         _append_heading_subtree(heading.children, parts)
 
 
+def _collect_heading_subtree(headings: Sequence[Heading], out: list[Heading]) -> None:
+    """Append *headings* and descendants to *out* in source definition order."""
+    for heading in headings:
+        out.append(heading)
+        _collect_heading_subtree(heading.children, out)
+
+
+def _parse_todo_states(
+    todo_values: Sequence[RichText],
+) -> tuple[list[str], list[str], list[str]]:
+    """Return ``(all_states, todo_states, done_states)`` for ``#+TODO:`` values."""
+    todo_states: list[str] = []
+    done_states: list[str] = []
+
+    for todo in todo_values:
+        in_done_group = False
+        for token in str(todo).split():
+            if token == "|":
+                in_done_group = True
+                continue
+
+            state = _todo_state_name(token)
+            if state is None:
+                continue
+            if in_done_group:
+                if state not in done_states:
+                    done_states.append(state)
+            elif state not in todo_states:
+                todo_states.append(state)
+
+    all_states = [*todo_states]
+    for state in done_states:
+        if state not in all_states:
+            all_states.append(state)
+    return all_states, todo_states, done_states
+
+
+def _todo_state_name(token: str) -> str | None:
+    """Extract one TODO state token name from keyword syntax.
+
+    This strips optional fast-selection metadata, for example:
+    ``TODO(t)`` -> ``TODO`` and ``DONE(d@/!)`` -> ``DONE``.
+    """
+    stripped = token.strip()
+    if stripped == "":
+        return None
+    head, _, _ = stripped.partition("(")
+    return head if head != "" else None
+
+
 def _render_document_dirty(document: Document) -> str:
     """Render a dirty document from semantic fields only."""
     parts: list[str] = []
+    keywords = document.keywords
 
-    dedicated_keywords = [
-        document.title,
-        document.author,
-        document.category,
-        document.description,
-        document.todo,
-    ]
+    # Render dedicated keywords in the canonical fixed order.
+    for key in _DEDICATED_ORDER:
+        parts.extend(str(kw) for kw in keywords if kw.key == key)
 
-    parts.extend(str(keyword) for keyword in dedicated_keywords if keyword is not None)
-    parts.extend(
-        str(keyword)
-        for key, keyword in document.keywords.items()
-        if key not in {TITLE, AUTHOR, CATEGORY, DESCRIPTION, TODO}
-    )
+    # Render non-dedicated keywords in their list order.
+    parts.extend(str(kw) for kw in keywords if kw.key not in _DEDICATED_KEYS)
 
     if document.properties is not None:
         parts.append(str(document.properties))

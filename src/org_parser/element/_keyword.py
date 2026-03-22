@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from org_parser.document._heading import Heading
 
 __all__ = [
+    "AffiliatedKeyword",
     "CaptionKeyword",
     "Keyword",
     "PlotKeyword",
@@ -109,7 +110,7 @@ class Keyword(Element):
     def key(self, value: str) -> None:
         """Set keyword key and mark as dirty."""
         self._key = value.upper()
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def value(self) -> RichText:
@@ -121,7 +122,7 @@ class Keyword(Element):
         """Set keyword value and mark as dirty."""
         self._value = value
         self._value.parent = self
-        self._mark_dirty()
+        self.mark_dirty()
 
     def reformat(self) -> None:
         """Mark value and this keyword dirty for scratch-built rendering."""
@@ -151,8 +152,13 @@ class Keyword(Element):
 # ---------------------------------------------------------------------------
 
 
-class _AffiliatedKeyword(Element):
+class AffiliatedKeyword(Element):
     """Base class for affiliated keyword lines (``#+KEY: value``).
+
+    Affiliated keywords annotate the element immediately following them in
+    the document body.  The four concrete subclasses are
+    :class:`CaptionKeyword`, :class:`TblnameKeyword`,
+    :class:`ResultsKeyword`, and :class:`PlotKeyword`.
 
     Subclasses set :attr:`_keyword` to the canonical upper-cased keyword
     string used for rendering (e.g. ``"CAPTION"``, ``"TBLNAME"``).
@@ -194,7 +200,7 @@ class _AffiliatedKeyword(Element):
     def value(self, v: str | None) -> None:
         """Set the keyword value and mark this element as dirty."""
         self._value = v
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __str__(self) -> str:
         """Render the keyword line, preserving source while parse-backed and clean."""
@@ -214,7 +220,7 @@ class _AffiliatedKeyword(Element):
 # ---------------------------------------------------------------------------
 
 
-class CaptionKeyword(_AffiliatedKeyword):
+class CaptionKeyword(AffiliatedKeyword):
     """A ``#+CAPTION:`` affiliated keyword line.
 
     Captions annotate the element immediately following them (typically a
@@ -269,7 +275,7 @@ class CaptionKeyword(_AffiliatedKeyword):
     def short(self, value: str | None) -> None:
         """Set the short caption and mark this element as dirty."""
         self._short = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __str__(self) -> str:
         """Render the caption line, preserving source while parse-backed and clean."""
@@ -288,7 +294,7 @@ class CaptionKeyword(_AffiliatedKeyword):
         return f"{cls_name}(value={self._value!r})"
 
 
-class TblnameKeyword(_AffiliatedKeyword):
+class TblnameKeyword(AffiliatedKeyword):
     """A ``#+TBLNAME:`` affiliated keyword line.
 
     Assigns a name to the table immediately following it, allowing other
@@ -314,7 +320,7 @@ class TblnameKeyword(_AffiliatedKeyword):
         return elem
 
 
-class ResultsKeyword(_AffiliatedKeyword):
+class ResultsKeyword(AffiliatedKeyword):
     """A ``#+RESULTS:`` affiliated keyword line.
 
     Marks the block immediately following it as the results of a source
@@ -347,7 +353,7 @@ class ResultsKeyword(_AffiliatedKeyword):
         return elem
 
 
-class PlotKeyword(_AffiliatedKeyword):
+class PlotKeyword(AffiliatedKeyword):
     """A ``#+PLOT:`` affiliated keyword line.
 
     Carries gnuplot configuration for the table immediately following it.

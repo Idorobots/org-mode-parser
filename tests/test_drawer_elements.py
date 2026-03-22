@@ -5,7 +5,7 @@ from __future__ import annotations
 from org_parser import loads
 from org_parser.element import Drawer, List, Logbook, Properties, Repeat
 from org_parser.text import RichText
-from org_parser.time import Clock
+from org_parser.time import Clock, Timestamp
 
 
 def test_property_drawer_parses_to_properties_mapping() -> None:
@@ -105,7 +105,55 @@ def test_logbook_drawer_extracts_clocks_and_repeats() -> None:
     assert logbook.repeats[0].before == "TODO"
     assert isinstance(logbook.repeats[0].parent, List)
     assert all(entry.parent is logbook for entry in logbook.clock_entries)
+    assert any(element is logbook.clock_entries[0] for element in logbook.body)
+    assert any(element is logbook.clock_entries[1] for element in logbook.body)
+    repeat_items = [
+        item
+        for element in logbook.body
+        if isinstance(element, List)
+        for item in element.items
+        if isinstance(item, Repeat)
+    ]
+    assert repeat_items == [logbook.repeats[0]]
     assert document.children[0].body == []
+
+
+def test_logbook_setters_keep_body_and_extracted_entries_identical() -> None:
+    """Assigned clocks/repeats are the same objects that appear in body."""
+    document = loads("* H\n")
+    heading = document.children[0]
+
+    clock = Clock(duration="0:30")
+    repeat = Repeat(
+        after="DONE",
+        before="TODO",
+        timestamp=Timestamp(
+            raw="[2026-03-08 Sun 17:59]",
+            is_active=False,
+            start_year=2026,
+            start_month=3,
+            start_day=8,
+            start_dayname="Sun",
+            start_hour=17,
+            start_minute=59,
+        ),
+    )
+
+    logbook = Logbook(parent=heading)
+    logbook.clock_entries = [clock]
+    logbook.repeats = [repeat]
+
+    assert logbook.clock_entries[0] is clock
+    assert any(element is clock for element in logbook.body)
+    repeat_items = [
+        item
+        for element in logbook.body
+        if isinstance(element, List)
+        for item in element.items
+        if isinstance(item, Repeat)
+    ]
+    assert repeat_items == [repeat]
+    assert repeat_items[0] is logbook.repeats[0]
 
 
 def test_document_merges_multiple_properties_and_logbooks() -> None:
