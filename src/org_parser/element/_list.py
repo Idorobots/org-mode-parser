@@ -17,7 +17,7 @@ from org_parser.text._rich_text import RichText
 from org_parser.time import Timestamp
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
     import tree_sitter
 
@@ -244,6 +244,18 @@ class ListItem(Element):
             first_line=self._first_line,
             body=self._body,
         )
+
+    def __iter__(self) -> Iterator[Element]:
+        """Iterate over body elements."""
+        return iter(self._body)
+
+    def __len__(self) -> int:
+        """Return number of body elements."""
+        return len(self._body)
+
+    def __getitem__(self, index: int | slice) -> Element | list[Element]:
+        """Return one body element (or body slice)."""
+        return self._body[index]
 
 
 class Repeat(ListItem):
@@ -504,6 +516,18 @@ class List(Element):
     def __repr__(self) -> str:
         """Return a tree-oriented representation for debugging."""
         return build_semantic_repr("List", items=self._items)
+
+    def __iter__(self) -> Iterator[ListItem]:
+        """Iterate over list items."""
+        return iter(self._items)
+
+    def __len__(self) -> int:
+        """Return number of list items."""
+        return len(self._items)
+
+    def __getitem__(self, index: int | slice) -> ListItem | list[ListItem]:
+        """Return one list item (or list-item slice)."""
+        return self._items[index]
 
 
 def _extract_optional_field_text(

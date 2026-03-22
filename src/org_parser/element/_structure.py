@@ -21,7 +21,7 @@ from org_parser.element._element import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
     import tree_sitter
 
@@ -250,3 +250,15 @@ class IndentBlock(Element):
     def __repr__(self) -> str:
         """Return a tree-oriented representation for debugging."""
         return build_semantic_repr("IndentBlock", body=self._body, indent=self._indent)
+
+    def __iter__(self) -> Iterator[Element]:
+        """Iterate over body elements."""
+        return iter(self._body)
+
+    def __len__(self) -> int:
+        """Return number of body elements."""
+        return len(self._body)
+
+    def __getitem__(self, index: int | slice) -> Element | list[Element]:
+        """Return one body element (or body slice)."""
+        return self._body[index]

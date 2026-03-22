@@ -21,6 +21,8 @@ from org_parser.element._element import Element, build_semantic_repr
 from org_parser.text._rich_text import RichText
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     import tree_sitter
 
     from org_parser.document._document import Document
@@ -106,6 +108,24 @@ class TableRow:
     def __repr__(self) -> str:
         """Return a tree-oriented representation for debugging."""
         return build_semantic_repr("TableRow", cells=self._cells)
+
+    def __iter__(self) -> Iterator[RichText]:
+        """Iterate over column values in this row."""
+        return (cell.value for cell in self._cells)
+
+    def __len__(self) -> int:
+        """Return number of columns in this row."""
+        return len(self._cells)
+
+    def __getitem__(self, index: int | slice) -> RichText | list[RichText]:
+        """Return one column value (or value slice) from this row."""
+        if isinstance(index, slice):
+            return [cell.value for cell in self._cells[index]]
+        return self._cells[index].value
+
+    def __setitem__(self, index: int, value: RichText | str) -> None:
+        """Set one column value and mark the owning table as dirty."""
+        self._cells[index].value = _coerce_rich_text(value)
 
 
 class TableRuleRow:
@@ -236,6 +256,27 @@ class Table(Element):
             formulas=self._formulas,
         )
 
+    def __iter__(self) -> Iterator[TableRow | TableRuleRow]:
+        """Iterate over table rows."""
+        return iter(self._rows)
+
+    def __len__(self) -> int:
+        """Return number of rows in this table."""
+        return len(self._rows)
+
+    def __getitem__(
+        self,
+        index: int | slice,
+    ) -> TableRow | TableRuleRow | list[TableRow | TableRuleRow]:
+        """Return one table row (or row slice)."""
+        return self._rows[index]
+
+    def __setitem__(self, index: int, value: TableRow | TableRuleRow) -> None:
+        """Replace one table row and mark this table as dirty."""
+        self._rows[index] = value
+        value.set_table(self)
+        self._mark_dirty()
+
 
 class TableEl(Element):
     """Opaque Table.el grid semantic element."""
@@ -298,6 +339,13 @@ def _extract_tblfm_formula(
     if line.upper().startswith(prefix.upper()):
         return line[len(prefix) :].strip()
     return line.strip()
+
+
+def _coerce_rich_text(value: RichText | str) -> RichText:
+    """Return *value* as :class:`RichText`."""
+    if isinstance(value, RichText):
+        return value
+    return RichText(value)
 
 
 def _render_org_table(rows: list[TableRow | TableRuleRow], formulas: list[str]) -> str:

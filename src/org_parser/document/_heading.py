@@ -45,7 +45,7 @@ from org_parser.text._rich_text import RichText
 from org_parser.time import Clock, Timestamp
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
     import tree_sitter
 
@@ -741,6 +741,18 @@ class Heading:
         ]
         parts.extend(f"{name}={value!r}" for name, value in list_parts if value)
         return f"Heading({', '.join(parts)})"
+
+    def __iter__(self) -> Iterator[Heading]:
+        """Iterate over direct child headings."""
+        return iter(self._children)
+
+    def __len__(self) -> int:
+        """Return number of direct child headings."""
+        return len(self._children)
+
+    def __getitem__(self, index: int | slice) -> Heading | list[Heading]:
+        """Return one direct child heading (or heading slice)."""
+        return self._children[index]
 
 
 # ---------------------------------------------------------------------------

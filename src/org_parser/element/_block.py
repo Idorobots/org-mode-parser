@@ -16,7 +16,7 @@ from org_parser.element._element import (
 from org_parser.element._structure import IndentBlock
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable, Iterator, Sequence
 
     import tree_sitter
 
@@ -99,6 +99,18 @@ class _ContainerBlock(Element):
             begin_line=self._begin_line,
             body=self._body,
         )
+
+    def __iter__(self) -> Iterator[Element]:
+        """Iterate over body elements."""
+        return iter(self._body)
+
+    def __len__(self) -> int:
+        """Return number of body elements."""
+        return len(self._body)
+
+    def __getitem__(self, index: int | slice) -> Element | list[Element]:
+        """Return one body element (or body slice)."""
+        return self._body[index]
 
 
 class _TextBlock(Element):

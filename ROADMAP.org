@@ -4771,16 +4771,21 @@ This needs to be tested with "complex" todo specifiers:
 #+end_example
 
 Document should also handle multiple =#+TODO= keywords.
-** TODO Iterator interface
+** DONE Iterator/Sequence interface
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 19:33]
+:END:
 =Document=, =Heading=, =Table=, =List=, =Drawer=, =Logbook=, =Properties= and  =RichText= should support an iterator/sequence interface:
 
 - =Document= iterates over all the headings contained within, including subheading (=all_headings= attribute).
 - =Heading= iterates over the children
-- =Table= iterates over the rows, which iterate over the colum values
+- =Table= iterates over the rows, which iterate over the colum values. It should be possible to mutate table cell values via assignment: ~table[0][0] = value~
 - =List= iterates over the list items.
 - =RichText= iterates over constituent parts.
 - =Drawer= iterates over the body elements.
 - =Logbook= iterates over the recovered body elements.
+- Any other elements that return a list as their body, should iterate over the body.
+- =Properties= should be indexable by strings and return the values of their properties. It should be possible to mutate =Properties= via setting a key ~node.properties["foo"] = bar~.
 
 Example: =document[0][2].body[2][x][y]= - x,y table cell in a body of third child of the first heading in a document.
 

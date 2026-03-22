@@ -136,6 +136,18 @@ class Drawer(Element):
         """Return a tree-oriented representation for debugging."""
         return build_semantic_repr("Drawer", name=self._name, body=self._body)
 
+    def __iter__(self) -> Iterator[Element]:
+        """Iterate over body elements."""
+        return iter(self._body)
+
+    def __len__(self) -> int:
+        """Return number of body elements."""
+        return len(self._body)
+
+    def __getitem__(self, index: int | slice) -> Element | list[Element]:
+        """Return one body element (or body slice)."""
+        return self._body[index]
+
 
 class Logbook(Drawer):
     """Specialized drawer for ``:LOGBOOK:`` entries."""
@@ -353,9 +365,9 @@ class Properties(Element, MutableMapping[str, RichText]):
         """Return the rich-text value for one property key."""
         return self._properties[key]
 
-    def __setitem__(self, key: str, value: RichText) -> None:
+    def __setitem__(self, key: str, value: RichText | str) -> None:
         """Set one property value and mark drawer as dirty."""
-        self._set_property(key, value, mark_dirty=True)
+        self._set_property(key, _coerce_rich_text(value), mark_dirty=True)
 
     def __delitem__(self, key: str) -> None:
         """Delete one property key and mark drawer as dirty."""
@@ -411,6 +423,13 @@ def _extract_drawer_body_element(
     if factory is None:
         return element_from_error_or_unknown(node, document, parent=parent)
     return factory(node, document, parent=parent)
+
+
+def _coerce_rich_text(value: RichText | str) -> RichText:
+    """Return *value* as :class:`RichText`."""
+    if isinstance(value, RichText):
+        return value
+    return RichText(value)
 
 
 def _extract_indent_block(

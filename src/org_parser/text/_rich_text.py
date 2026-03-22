@@ -67,7 +67,7 @@ from org_parser.text._inline import (
 from org_parser.time import Timestamp
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
     import tree_sitter
 
@@ -242,6 +242,18 @@ class RichText:
     def __hash__(self) -> int:
         """Hash by rendered textual content."""
         return hash(str(self))
+
+    def __iter__(self) -> Iterator[InlineObject]:
+        """Iterate over inline-object parts."""
+        return iter(self._parts)
+
+    def __len__(self) -> int:
+        """Return number of inline-object parts."""
+        return len(self._parts)
+
+    def __getitem__(self, index: int | slice) -> InlineObject | list[InlineObject]:
+        """Return one inline-object part (or part slice)."""
+        return self._parts[index]
 
 
 def _coerce_inline_object(part: InlineObject | str) -> InlineObject:

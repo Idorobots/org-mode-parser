@@ -34,7 +34,7 @@ from org_parser.element._keyword import Keyword
 from org_parser.text._rich_text import RichText
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
     import tree_sitter
 
@@ -623,6 +623,18 @@ class Document:
         if self._children:
             parts.append(f"children={self._children!r}")
         return f"Document({', '.join(parts)})"
+
+    def __iter__(self) -> Iterator[Heading]:
+        """Iterate over all headings in file-definition order."""
+        return iter(self.all_headings)
+
+    def __len__(self) -> int:
+        """Return number of headings across the full document tree."""
+        return len(self.all_headings)
+
+    def __getitem__(self, index: int | slice) -> Heading | list[Heading]:
+        """Return one heading (or heading slice) from :attr:`all_headings`."""
+        return self.all_headings[index]
 
 
 # ---------------------------------------------------------------------------
