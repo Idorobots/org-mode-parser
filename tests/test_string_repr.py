@@ -88,7 +88,7 @@ def test_heading_str_dirty_rebuilds_and_omits_children(
     heading = document.children[0]
     heading.todo = "DONE"
     heading.priority = "A"
-    heading.tags = ["ops", "critical"]
+    heading.heading_tags = ["ops", "critical"]
 
     rendered = str(heading)
     assert rendered.startswith("* DONE [#A] First top-level heading :ops:critical:\n")

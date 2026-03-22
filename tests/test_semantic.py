@@ -394,14 +394,14 @@ class TestHeadingFields:
         assert "B" in priorities
 
     def test_tags(self, example_file: Callable[[str], Path]) -> None:
-        """Tags are extracted as a list of strings."""
+        """heading_tags are extracted as a list of individual strings."""
         doc = _load_document(example_file("priorities-and-special-headings.org"))
         # "* TODO [#A] Critical: ... :ops:critical:"
-        tagged = [h for h in doc.children if len(h.tags) > 0]
+        tagged = [h for h in doc.children if len(h.heading_tags) > 0]
         assert len(tagged) > 0
         # Check that tags are individual strings, not the full `:a:b:` form
         for h in tagged:
-            for tag in h.tags:
+            for tag in h.heading_tags:
                 assert ":" not in tag
 
     def test_title_text(self, example_file: Callable[[str], Path]) -> None:
@@ -512,3 +512,173 @@ class TestEdgeCases:
             depth += 1
         assert depth == 6
         assert h.level == 6
+
+
+# ===================================================================
+# Document FILETAGS
+# ===================================================================
+
+
+class TestDocumentFiletags:
+    """Tests for ``Document.tags`` (``#+FILETAGS:`` parsing and mutation)."""
+
+    def test_tags_parsed_from_file(self, example_file: Callable[[str], Path]) -> None:
+        """Document.tags is populated from #+FILETAGS: in the zeroth section."""
+        doc = _load_document(example_file("special-keywords-basic.org"))
+        assert doc.tags == ["foo", "bar"]
+
+    def test_tags_empty_when_no_filetags(self, tmp_path: Path) -> None:
+        """Document.tags returns an empty list when #+FILETAGS: is absent."""
+        path = tmp_path / "no-filetags.org"
+        path.write_bytes(b"#+TITLE: No Tags\n")
+        doc = _load_document(path)
+        assert doc.tags == []
+
+    def test_tags_setter_updates_keyword(self) -> None:
+        """Setting Document.tags creates or updates the FILETAGS keyword."""
+        doc = Document(filename="test.org")
+        assert doc.tags == []
+        doc.tags = ["alpha", "beta"]
+        assert doc.tags == ["alpha", "beta"]
+        assert "FILETAGS" in doc.keywords
+        assert str(doc.keywords["FILETAGS"].value) == ":alpha:beta:"
+
+    def test_tags_setter_empty_removes_keyword(self) -> None:
+        """Setting Document.tags to [] removes the FILETAGS keyword entirely."""
+        doc = Document(filename="test.org")
+        doc.tags = ["alpha"]
+        assert "FILETAGS" in doc.keywords
+        doc.tags = []
+        assert doc.tags == []
+        assert "FILETAGS" not in doc.keywords
+
+    def test_tags_setter_overwrites_existing(self) -> None:
+        """Setting Document.tags twice replaces the previous value."""
+        doc = Document(filename="test.org")
+        doc.tags = ["old"]
+        doc.tags = ["new1", "new2"]
+        assert doc.tags == ["new1", "new2"]
+        assert str(doc.keywords["FILETAGS"].value) == ":new1:new2:"
+
+    def test_tags_setter_marks_dirty(self) -> None:
+        """Setting Document.tags marks the document dirty."""
+        doc = Document(filename="test.org")
+        assert not doc.dirty
+        doc.tags = ["x"]
+        assert doc.dirty
+
+    def test_tags_renders_as_filetags_keyword(self) -> None:
+        """A document with tags set renders #+FILETAGS: in its output."""
+        doc = Document(filename="test.org")
+        doc.tags = ["foo", "bar"]
+        rendered = str(doc)
+        assert "#+FILETAGS: :foo:bar:" in rendered
+
+    def test_tags_roundtrip(self, tmp_path: Path) -> None:
+        """FILETAGS round-trips through parse → set → render correctly."""
+        path = tmp_path / "ft.org"
+        path.write_bytes(b"#+FILETAGS: :alpha:beta:\n")
+        doc = _load_document(path)
+        assert doc.tags == ["alpha", "beta"]
+        doc.tags = ["gamma", "delta"]
+        rendered = str(doc)
+        assert "#+FILETAGS: :gamma:delta:" in rendered
+
+
+# ===================================================================
+# Heading inherited tags
+# ===================================================================
+
+
+class TestTagInheritance:
+    """Tests for ``Heading.tags`` — inherited tag resolution."""
+
+    def test_root_heading_includes_filetags_and_own(
+        self, example_file: Callable[[str], Path]
+    ) -> None:
+        """Top-level heading tags = FILETAGS + own heading_tags."""
+        doc = _load_document(example_file("inherited-tags.org"))
+        parent = doc.children[0]  # * Parent Heading :parent_tag:
+        assert parent.heading_tags == ["parent_tag"]
+        assert parent.tags == ["filetag1", "filetag2", "parent_tag"]
+
+    def test_child_inherits_parent_and_filetags(
+        self, example_file: Callable[[str], Path]
+    ) -> None:
+        """Child heading tags = FILETAGS + parent's heading_tags + own."""
+        doc = _load_document(example_file("inherited-tags.org"))
+        child = doc.children[0].children[0]  # ** Child Heading :child_tag:
+        assert child.heading_tags == ["child_tag"]
+        assert child.tags == ["filetag1", "filetag2", "parent_tag", "child_tag"]
+
+    def test_grandchild_full_chain(self, example_file: Callable[[str], Path]) -> None:
+        """Grandchild collects the full FILETAGS → parent → child → own chain."""
+        doc = _load_document(example_file("inherited-tags.org"))
+        grandchild = doc.children[0].children[0].children[0]
+        assert grandchild.heading_tags == ["grandchild_tag"]
+        assert grandchild.tags == [
+            "filetag1",
+            "filetag2",
+            "parent_tag",
+            "child_tag",
+            "grandchild_tag",
+        ]
+
+    def test_deduplication_own_tag_matches_ancestor(
+        self, example_file: Callable[[str], Path]
+    ) -> None:
+        """A tag in own heading_tags that already appears in an ancestor is removed."""
+        doc = _load_document(example_file("inherited-tags.org"))
+        # *** Grandchild With Duplicate Own Tag :parent_tag:
+        dup = doc.children[0].children[0].children[1]
+        assert dup.heading_tags == ["parent_tag"]
+        # parent_tag already came from the grandparent; first occurrence wins.
+        assert dup.tags == ["filetag1", "filetag2", "parent_tag", "child_tag"]
+
+    def test_heading_without_own_tags(
+        self, example_file: Callable[[str], Path]
+    ) -> None:
+        """A heading with no own tags still gets FILETAGS."""
+        doc = _load_document(example_file("inherited-tags.org"))
+        no_tags = doc.children[1]  # * Heading Without Own Tags
+        assert no_tags.heading_tags == []
+        assert no_tags.tags == ["filetag1", "filetag2"]
+
+    def test_child_deduplicates_filetag(
+        self, example_file: Callable[[str], Path]
+    ) -> None:
+        """Own tag that duplicates a FILETAG keeps only the first occurrence."""
+        doc = _load_document(example_file("inherited-tags.org"))
+        # ** Child With Filetag Duplicate :filetag1:
+        child = doc.children[1].children[0]
+        assert child.heading_tags == ["filetag1"]
+        # filetag1 already came from FILETAGS; deduplicated.
+        assert child.tags == ["filetag1", "filetag2"]
+
+    def test_heading_tags_excludes_inherited(
+        self, example_file: Callable[[str], Path]
+    ) -> None:
+        """heading_tags only contains the tags found on this heading line."""
+        doc = _load_document(example_file("inherited-tags.org"))
+        child = doc.children[0].children[0]
+        # heading_tags must not include parent or FILETAGS
+        assert "filetag1" not in child.heading_tags
+        assert "filetag2" not in child.heading_tags
+        assert "parent_tag" not in child.heading_tags
+
+    def test_tags_readonly(self) -> None:
+        """Heading.tags is a read-only property; assignment raises AttributeError."""
+        doc = Document(filename="t.org")
+        h = Heading(level=1, document=doc, parent=doc)
+        try:
+            h.tags = ["x"]  # type: ignore[misc]
+            assert False, "Expected AttributeError"  # noqa: B011
+        except AttributeError:
+            pass
+
+    def test_tags_no_filetags_no_ancestors(self) -> None:
+        """Heading with no FILETAGS and no ancestor tags: tags == heading_tags."""
+        doc = Document(filename="t.org")
+        h = Heading(level=1, document=doc, parent=doc, heading_tags=["work", "next"])
+        assert h.heading_tags == ["work", "next"]
+        assert h.tags == ["work", "next"]

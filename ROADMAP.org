@@ -4468,7 +4468,10 @@ It seems that a recent fix introduced a regression:
 Note the trailing line with spaces in it - the removal of this whitespace makes the parser work properly. This case should be handled and the blank line should be treated as part of the indent block.
 
 * TODO Semantic nodes dev experience
-** TODO Recover inherited tags
+** DONE Recover inherited tags
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 15:40]
+:END:
 The =Heading.tags= property should also include the tags from the parent headings (if any). An additional attribute should be introduced called =heading_tags= that only returns the list of tags found on this particular heading (if any).
 
 The =heading_tags= property should be mutable, while the =tags= should be made read-only.
@@ -4476,6 +4479,44 @@ The =heading_tags= property should be mutable, while the =tags= should be made r
 In =tags=, duplicated tag entries should be removed (leave just the first occurance, exact match). The order should be preserved.
 
 Add support for document-level =#+FILETAGS:= - a field called =tags= should be added to the =Document= class that returns a list of tags parsed from =#+FILETAGS:= keyword (if any). The =Document.tags= field should be mutable (adjusting the filetags keyword on set). These file-tags should be taken into account when computing the inherited tags property.
+
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 15:40]
+:END:
+
+In file src/org_parser/document/_heading.py around line 323, near the ~class Heading:~
+
+#+begin_example
++        ancestors: list[Heading] = []
++        node: Heading | Document = self._parent
++        while isinstance(node, Heading):
++            ancestors.append(node)
++            node = node._parent
++
++        collected: list[str] = []
++        # Document FILETAGS come first.
++        collected.extend(node.tags)
++        # Ancestor tags outermost → innermost.
++        for ancestor in reversed(ancestors):
++            collected.extend(ancestor.heading_tags)
++        # Own tags last.
++        collected.extend(self._heading_tags)
++
++        # Deduplicate preserving first occurrence.
++        seen: set[str] = set()
++        result: list[str] = []
++        for tag in collected:
++            if tag not in seen:
++                seen.add(tag)
++                result.append(tag)
++        return result
+#+end_example
+
+It might be easier to just fetch the =parent.tags= and deduplicate making sure that the parent tags come first.
 
 ** TODO Keyword refactor
 Update the =Document.keywords= field to be a list instead of a map.

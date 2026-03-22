@@ -1,0 +1,14 @@
+#+TITLE: Inherited Tags Test
+#+FILETAGS: :filetag1:filetag2:
+
+* Parent Heading :parent_tag:
+
+** Child Heading :child_tag:
+
+*** Grandchild Heading :grandchild_tag:
+
+*** Grandchild With Duplicate Own Tag :parent_tag:
+
+* Heading Without Own Tags
+
+** Child With Filetag Duplicate :filetag1:

@@ -11,6 +11,7 @@ from org_parser._nodes import (
     CATEGORY,
     DESCRIPTION,
     DRAWER,
+    FILETAGS,
     HEADING,
     LOGBOOK_DRAWER,
     PROPERTY_DRAWER,
@@ -29,6 +30,7 @@ from org_parser.element._element import (
     element_from_error_or_unknown,
 )
 from org_parser.element._keyword import Keyword
+from org_parser.text._rich_text import RichText
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -61,8 +63,8 @@ class Document:
     """Representation of a full Org Mode document.
 
     A :class:`Document` exposes the zeroth-section body elements, top-level
-    headings, and well-known keyword properties (``TITLE``, ``AUTHOR``, etc.)
-    parsed from the file.
+    headings, and well-known keyword properties (``TITLE``, ``AUTHOR``,
+    ``FILETAGS``, etc.) parsed from the file.
 
     Args:
         filename: The filename of the document.
@@ -249,6 +251,38 @@ class Document:
         """Set the ``#+TODO:`` value and mark the document as dirty."""
         self._todo = value
         self._update_dedicated_keyword_entry(TODO, value)
+
+    @property
+    def tags(self) -> list[str]:
+        """Tags from the ``#+FILETAGS:`` keyword, as individual strings.
+
+        Returns an empty list when no ``#+FILETAGS:`` keyword is present.
+        The returned list is a fresh copy; mutate via the setter.
+        """
+        kw = self._keywords.get(FILETAGS)
+        if kw is None:
+            return []
+        # Parse ":foo:bar:" → ["foo", "bar"], ignoring empty segments.
+        return [t for t in str(kw.value).strip(":").split(":") if t]
+
+    @tags.setter
+    def tags(self, value: list[str]) -> None:
+        """Set document-level file tags, updating ``#+FILETAGS:`` accordingly.
+
+        Setting an empty list removes the ``#+FILETAGS:`` keyword entirely.
+        """
+        if not value:
+            self._keywords.pop(FILETAGS, None)
+            self._mark_dirty()
+            return
+        filetags_str = ":" + ":".join(value) + ":"
+        existing = self._keywords.get(FILETAGS)
+        if existing is not None:
+            existing.value = RichText(filetags_str)
+        else:
+            new_kw = Keyword(key=FILETAGS, value=RichText(filetags_str), parent=self)
+            self._keywords[FILETAGS] = new_kw
+        self._mark_dirty()
 
     @property
     def keywords(self) -> dict[str, Keyword]:

@@ -128,7 +128,7 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
     heading.priority = "A"
     heading.title = RichText("Heading")
     heading.counter = CompletionCounter("1/2")
-    heading.tags = ["work", "next"]
+    heading.heading_tags = ["work", "next"]
     heading.scheduled = Timestamp(
         raw="<2025-03-01 Sat>",
         is_active=True,
@@ -167,7 +167,7 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
     assert heading.priority == "A"
     assert heading.title == "Heading"
     assert heading.counter == CompletionCounter("1/2")
-    assert heading.tags == ["work", "next"]
+    assert heading.heading_tags == ["work", "next"]
     assert heading.scheduled is not None
     assert heading.deadline is not None
     assert heading.closed is not None
@@ -220,6 +220,27 @@ def test_parsed_objects_start_clean(example_file: Callable[[str], Path]) -> None
     assert document.dirty is False
     assert len(document.children) > 0
     assert document.children[0].dirty is False
+
+
+def test_document_tags_setter_marks_dirty() -> None:
+    """Setting Document.tags marks the document dirty."""
+    document = Document(filename="doc.org")
+    assert document.dirty is False
+    document.tags = ["work", "project"]
+    assert document.dirty is True
+    assert document.tags == ["work", "project"]
+    assert "FILETAGS" in document.keywords
+
+
+def test_heading_tags_property_is_read_only() -> None:
+    """Heading.tags is read-only; assignment raises AttributeError."""
+    document = Document(filename="doc.org")
+    heading = Heading(level=1, document=document, parent=document)
+    try:
+        heading.tags = ["x"]  # type: ignore[misc]
+        assert False, "Expected AttributeError"  # noqa: B011
+    except AttributeError:
+        pass
 
 
 def test_mark_dirty_methods_mark_objects_programmatically() -> None:

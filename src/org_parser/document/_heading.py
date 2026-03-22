@@ -65,7 +65,7 @@ class Heading:
             *None*.
         title: The heading title as :class:`RichText`, or *None*.
         counter: Completion counter object (e.g. ``[1/3]``), or *None*.
-        tags: A list of tag strings in source order.
+        heading_tags: A list of tag strings found on this heading line in source order.
         repeated_tasks: Repeated task entries extracted from ``LOGBOOK``.
         body: Body elements of the heading (excludes sub-headings).
         children: Direct sub-headings of this heading.
@@ -81,7 +81,7 @@ class Heading:
         priority: str | None = None,
         title: RichText | None = None,
         counter: CompletionCounter | None = None,
-        tags: list[str] | None = None,
+        heading_tags: list[str] | None = None,
         scheduled: Timestamp | None = None,
         closed: Timestamp | None = None,
         deadline: Timestamp | None = None,
@@ -98,7 +98,7 @@ class Heading:
         self._priority = priority
         self._title = title
         self._counter = counter
-        self._tags: list[str] = tags if tags is not None else []
+        self._heading_tags: list[str] = heading_tags if heading_tags is not None else []
         self._scheduled = scheduled
         self._closed = closed
         self._deadline = deadline
@@ -160,7 +160,7 @@ class Heading:
             priority=priority,
             title=title,
             counter=counter,
-            tags=tags,
+            heading_tags=tags,
             scheduled=scheduled,
             deadline=deadline,
             closed=closed,
@@ -267,15 +267,29 @@ class Heading:
         self._mark_dirty()
 
     @property
-    def tags(self) -> list[str]:
-        """Tag strings in source order."""
-        return self._tags
+    def heading_tags(self) -> list[str]:
+        """Tag strings found on this heading line, in source order."""
+        return self._heading_tags
 
-    @tags.setter
-    def tags(self, value: list[str]) -> None:
-        """Set tag strings and mark this heading as dirty."""
-        self._tags = value
+    @heading_tags.setter
+    def heading_tags(self, value: list[str]) -> None:
+        """Set tag strings on this heading line and mark it as dirty."""
+        self._heading_tags = value
         self._mark_dirty()
+
+    @property
+    def tags(self) -> list[str]:
+        """All effective tags inherited from FILETAGS and ancestor headings.
+
+        Returns document FILETAGS, then each ancestor's ``heading_tags``
+        (outermost first), then this heading's own ``heading_tags``.
+        Duplicates are removed; the first occurrence is kept.
+        """
+        # Parent's tags are already fully resolved (FILETAGS + all ancestors).
+        inherited = self._parent.tags
+        seen = set(inherited)
+        own = [t for t in self._heading_tags if t not in seen]
+        return [*inherited, *own]
 
     @property
     def scheduled(self) -> Timestamp | None:
@@ -535,7 +549,7 @@ class Heading:
         )
 
         list_parts = [
-            ("tags", self._tags),
+            ("heading_tags", self._heading_tags),
             ("repeated_tasks", self._repeated_tasks),
             ("body", self._body),
             ("children", self._children),
@@ -710,9 +724,9 @@ def _render_heading_dirty(heading: Heading) -> str:
 
     headline = " ".join(line_parts)
 
-    if heading.tags:
+    if heading.heading_tags:
         space = "" if headline.endswith(" ") else " "
-        headline = f"{headline}{space}:{':'.join(heading.tags)}:"
+        headline = f"{headline}{space}:{':'.join(heading.heading_tags)}:"
 
     parts = [f"{headline}\n"]
     planning_entries: list[str] = []
