@@ -154,8 +154,8 @@ class Element:
             self._keywords = []
         self._keywords.append(keyword)
 
-    def _mark_dirty(self) -> None:
-        """Mark this element dirty and bubble to parent objects."""
+    def mark_dirty(self) -> None:
+        """Mark this element as dirty."""
         if self._dirty:
             return
         self._dirty = True
@@ -163,10 +163,6 @@ class Element:
         if parent is None:
             return
         parent.mark_dirty()
-
-    def mark_dirty(self) -> None:
-        """Mark this element as dirty."""
-        self._mark_dirty()
 
     def attach_source(
         self,

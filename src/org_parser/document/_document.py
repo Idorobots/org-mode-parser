@@ -218,7 +218,7 @@ class Document:
     def filename(self, value: str) -> None:
         """Set the filename and mark the document as dirty."""
         self._filename = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def title(self) -> RichText | None:
@@ -310,13 +310,13 @@ class Document:
         if not value:
             self._keywords = [kw for kw in self._keywords if kw.key != FILETAGS]
             if had_filetags:
-                self._mark_dirty()
+                self.mark_dirty()
             return
         self._keywords = [kw for kw in self._keywords if kw.key != FILETAGS]
         filetags_str = ":" + ":".join(value) + ":"
         new_kw = Keyword(key=FILETAGS, value=RichText(filetags_str), parent=self)
         self._keywords.append(new_kw)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def keywords(self) -> list[Keyword]:
@@ -328,7 +328,7 @@ class Document:
         """Set the keywords list and mark the document as dirty."""
         self._keywords = value
         self._adopt_keywords(self._keywords)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def properties(self) -> Properties | None:
@@ -340,7 +340,7 @@ class Document:
         """Set merged ``PROPERTIES`` drawer and mark the document dirty."""
         self._properties = value
         self._adopt_element(self._properties)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def logbook(self) -> Logbook | None:
@@ -352,7 +352,7 @@ class Document:
         """Set merged ``LOGBOOK`` drawer and mark the document dirty."""
         self._logbook = value
         self._adopt_element(self._logbook)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body(self) -> list[Element]:
@@ -364,7 +364,7 @@ class Document:
         """Set zeroth-section body elements and mark the document as dirty."""
         self._body = value
         self._adopt_elements(self._body)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def children(self) -> list[Heading]:
@@ -388,7 +388,7 @@ class Document:
         self._adopt_elements(self._children)
         for child in self._children:
             ensure_child_heading_level(child, parent_level=0)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def is_root(self) -> bool:
@@ -478,19 +478,15 @@ class Document:
             )
         )
 
-    def _mark_dirty(self) -> None:
-        """Mark this document as dirty."""
-        if self._dirty:
-            return
-        self._dirty = True
-
     def mark_dirty(self) -> None:
         """Mark this document as dirty.
 
         This public helper is intended for nested objects that need to bubble
         mutation state up to the owning document.
         """
-        self._mark_dirty()
+        if self._dirty:
+            return
+        self._dirty = True
 
     def reformat(self) -> None:
         """Recursively mark document descendants dirty, then self dirty."""
@@ -532,7 +528,7 @@ class Document:
         else:
             new_kw = Keyword(key=key, value=value, parent=self)
             self._keywords.append(new_kw)
-        self._mark_dirty()
+        self.mark_dirty()
 
     def _init_set_keyword(self, key: str, value: RichText | None) -> None:
         """Init-time helper: append a keyword for *key* if *value* is not *None*."""

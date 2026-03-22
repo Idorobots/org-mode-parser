@@ -64,7 +64,7 @@ class _ContainerBlock(Element):
         """Set block contents and mark this block as dirty."""
         self._body = value
         self._adopt_body(self._body)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body_text(self) -> str:
@@ -138,7 +138,7 @@ class _TextBlock(Element):
     def body(self, value: str) -> None:
         """Set block contents text and mark this block as dirty."""
         self._body = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __str__(self) -> str:
         """Render block text preserving source while parse-backed and clean."""
@@ -204,7 +204,7 @@ class CenterBlock(_ContainerBlock):
         """Set begin-line parameters and mark this block as dirty."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_begin_line("center", self._parameters)
-        self._mark_dirty()
+        self.mark_dirty()
 
 
 class QuoteBlock(_ContainerBlock):
@@ -255,7 +255,7 @@ class QuoteBlock(_ContainerBlock):
         """Set begin-line parameters and mark this block as dirty."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_begin_line("quote", self._parameters)
-        self._mark_dirty()
+        self.mark_dirty()
 
 
 class SpecialBlock(_ContainerBlock):
@@ -312,7 +312,7 @@ class SpecialBlock(_ContainerBlock):
         self._name = value
         self._begin_line = _render_begin_line(self._name, self._parameters)
         self._end_line = f"#+end_{self._name}"
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def parameters(self) -> str | None:
@@ -324,7 +324,7 @@ class SpecialBlock(_ContainerBlock):
         """Set begin-line parameters and mark this block as dirty."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_begin_line(self._name, self._parameters)
-        self._mark_dirty()
+        self.mark_dirty()
 
 
 class DynamicBlock(_ContainerBlock):
@@ -380,7 +380,7 @@ class DynamicBlock(_ContainerBlock):
         """Set dynamic block name and mark this block as dirty."""
         self._name = value
         self._begin_line = _render_dynamic_begin_line(self._name, self._parameters)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def parameters(self) -> str | None:
@@ -392,7 +392,7 @@ class DynamicBlock(_ContainerBlock):
         """Set begin-line parameters and mark this block as dirty."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_dynamic_begin_line(self._name, self._parameters)
-        self._mark_dirty()
+        self.mark_dirty()
 
 
 class VerseBlock(_ContainerBlock):
@@ -512,7 +512,7 @@ class ExampleBlock(_TextBlock):
         """Set begin-line parameters and mark this block as dirty."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_begin_line("example", self._parameters)
-        self._mark_dirty()
+        self.mark_dirty()
 
 
 class ExportBlock(_TextBlock):
@@ -568,7 +568,7 @@ class ExportBlock(_TextBlock):
         """Set export backend and mark this block as dirty."""
         self._backend = value
         self._begin_line = _render_export_begin_line(self._backend, self._parameters)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def parameters(self) -> str | None:
@@ -580,7 +580,7 @@ class ExportBlock(_TextBlock):
         """Set begin-line parameters and mark this block as dirty."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_export_begin_line(self._backend, self._parameters)
-        self._mark_dirty()
+        self.mark_dirty()
 
 
 class SourceBlock(_TextBlock):
@@ -636,7 +636,7 @@ class SourceBlock(_TextBlock):
         """Set source language and mark this block as dirty."""
         self._language = _normalize_optional_text(value)
         self._begin_line = _render_source_begin_line(self._language, self._switches)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def switches(self) -> str | None:
@@ -648,7 +648,7 @@ class SourceBlock(_TextBlock):
         """Set source switches and mark this block as dirty."""
         self._switches = _normalize_optional_text(value)
         self._begin_line = _render_source_begin_line(self._language, self._switches)
-        self._mark_dirty()
+        self.mark_dirty()
 
 
 class FixedWidthBlock(Element):
@@ -690,7 +690,7 @@ class FixedWidthBlock(Element):
     def body(self, value: str) -> None:
         """Set fixed-width content text and mark this block as dirty."""
         self._body = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __str__(self) -> str:
         """Render fixed-width line preserving source while parse-backed and clean."""

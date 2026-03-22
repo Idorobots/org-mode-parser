@@ -68,7 +68,7 @@ class Clock(Element):
             self._duration = _duration_from_timestamp(value)
         else:
             self._duration = None
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def duration(self) -> str | None:
@@ -79,7 +79,7 @@ class Clock(Element):
     def duration(self, value: str | None) -> None:
         """Set duration text and mark this clock element as dirty."""
         self._duration = _normalize_duration(value)
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __repr__(self) -> str:
         """Return a developer-friendly representation."""

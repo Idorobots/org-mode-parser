@@ -110,7 +110,7 @@ class Keyword(Element):
     def key(self, value: str) -> None:
         """Set keyword key and mark as dirty."""
         self._key = value.upper()
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def value(self) -> RichText:
@@ -122,7 +122,7 @@ class Keyword(Element):
         """Set keyword value and mark as dirty."""
         self._value = value
         self._value.parent = self
-        self._mark_dirty()
+        self.mark_dirty()
 
     def reformat(self) -> None:
         """Mark value and this keyword dirty for scratch-built rendering."""
@@ -200,7 +200,7 @@ class AffiliatedKeyword(Element):
     def value(self, v: str | None) -> None:
         """Set the keyword value and mark this element as dirty."""
         self._value = v
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __str__(self) -> str:
         """Render the keyword line, preserving source while parse-backed and clean."""
@@ -275,7 +275,7 @@ class CaptionKeyword(AffiliatedKeyword):
     def short(self, value: str | None) -> None:
         """Set the short caption and mark this element as dirty."""
         self._short = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __str__(self) -> str:
         """Render the caption line, preserving source while parse-backed and clean."""

@@ -92,7 +92,7 @@ class Drawer(Element):
     def name(self, value: str) -> None:
         """Set drawer name and mark the drawer as dirty."""
         self._name = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body(self) -> list[Element]:
@@ -104,7 +104,7 @@ class Drawer(Element):
         """Set drawer body and mark the drawer as dirty."""
         self._body = value
         self._adopt_body(self._body)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body_text(self) -> str:
@@ -185,7 +185,7 @@ class Logbook(Drawer):
             element for element in self._body if isinstance(element, Clock)
         ]
         self._repeats = _extract_existing_logbook_repeats(self._body)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @classmethod
     def from_node(
@@ -227,7 +227,7 @@ class Logbook(Drawer):
         self._clock_entries = value
         self._adopt_body(self._clock_entries)
         self._sync_clock_entries_into_body()
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def repeats(self) -> list[Repeat]:
@@ -239,7 +239,7 @@ class Logbook(Drawer):
         """Set logbook repeat entries and mark the drawer as dirty."""
         self._repeats = value
         _sync_logbook_repeat_list(self, self._repeats, mark_dirty=True)
-        self._mark_dirty()
+        self.mark_dirty()
 
     def reformat(self) -> None:
         """Mark all logbook children and this drawer dirty."""
@@ -359,7 +359,7 @@ class Properties(Element, MutableMapping[str, RichText]):
         self._properties[key] = value
         value.parent = self
         if mark_dirty:
-            self._mark_dirty()
+            self.mark_dirty()
 
     def __getitem__(self, key: str) -> RichText:
         """Return the rich-text value for one property key."""
@@ -372,7 +372,7 @@ class Properties(Element, MutableMapping[str, RichText]):
     def __delitem__(self, key: str) -> None:
         """Delete one property key and mark drawer as dirty."""
         del self._properties[key]
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __iter__(self) -> Iterator[str]:
         """Iterate over property keys in insertion order."""

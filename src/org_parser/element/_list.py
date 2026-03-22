@@ -94,7 +94,7 @@ class ListItem(Element):
     def bullet(self, value: str) -> None:
         """Set bullet marker and mark item dirty."""
         self._bullet = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def ordered_counter(self) -> str | None:
@@ -105,7 +105,7 @@ class ListItem(Element):
     def ordered_counter(self, value: str | None) -> None:
         """Set ordered-list counter value and mark item dirty."""
         self._ordered_counter = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def counter_set(self) -> str | None:
@@ -116,7 +116,7 @@ class ListItem(Element):
     def counter_set(self, value: str | None) -> None:
         """Set counter-set cookie value and mark item dirty."""
         self._counter_set = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def checkbox(self) -> str | None:
@@ -127,7 +127,7 @@ class ListItem(Element):
     def checkbox(self, value: str | None) -> None:
         """Set checkbox status and mark item dirty."""
         self._checkbox = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def item_tag(self) -> RichText | None:
@@ -140,7 +140,7 @@ class ListItem(Element):
         self._item_tag = value
         if self._item_tag is not None:
             self._item_tag.parent = self
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def first_line(self) -> RichText | None:
@@ -153,7 +153,7 @@ class ListItem(Element):
         self._first_line = value
         if self._first_line is not None:
             self._first_line.parent = self
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body(self) -> list[Element]:
@@ -165,7 +165,7 @@ class ListItem(Element):
         """Set body elements and mark item dirty."""
         self._body = value
         self._adopt_body(self._body)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body_text(self) -> str:
@@ -177,7 +177,7 @@ class ListItem(Element):
         element.parent = self
         self._body.append(element)
         if mark_dirty:
-            self._mark_dirty()
+            self.mark_dirty()
 
     def reformat(self) -> None:
         """Mark all child content and this item dirty."""
@@ -343,7 +343,7 @@ class Repeat(ListItem):
     def after(self, value: str) -> None:
         """Set the after-state and mark repeat entry dirty."""
         self._after = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def before(self) -> str:
@@ -354,7 +354,7 @@ class Repeat(ListItem):
     def before(self, value: str) -> None:
         """Set the before-state and mark repeat entry dirty."""
         self._before = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def timestamp(self) -> Timestamp:
@@ -365,7 +365,7 @@ class Repeat(ListItem):
     def timestamp(self, value: Timestamp) -> None:
         """Set repeat timestamp and mark repeat entry dirty."""
         self._timestamp = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     def reformat(self) -> None:
         """Mark timestamp, any child content, and this entry dirty."""
@@ -469,20 +469,20 @@ class List(Element):
         self._items = value
         self._adopt_items(self._items)
         if mark_dirty:
-            self._mark_dirty()
+            self.mark_dirty()
 
     def append_item(self, item: ListItem, *, mark_dirty: bool = True) -> None:
         """Append one list item with optional dirty propagation."""
         item.parent = self
         self._items.append(item)
         if mark_dirty:
-            self._mark_dirty()
+            self.mark_dirty()
 
     def insert_item(self, index: int, item: ListItem) -> None:
         """Insert one list item at *index* and mark list dirty."""
         item.parent = self
         self._items.insert(index, item)
-        self._mark_dirty()
+        self.mark_dirty()
 
     def reformat(self) -> None:
         """Mark all items and this list dirty."""
@@ -495,7 +495,7 @@ class List(Element):
         for item in items:
             item.parent = self
 
-    def _mark_dirty(self) -> None:
+    def mark_dirty(self) -> None:
         """Mark this list and all direct items as dirty."""
         if self._dirty:
             return

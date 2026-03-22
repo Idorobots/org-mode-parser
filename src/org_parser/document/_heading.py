@@ -257,7 +257,7 @@ class Heading:
     def level(self, value: int) -> None:
         """Set the heading level and mark this heading as dirty."""
         self._level = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def todo(self) -> str | None:
@@ -268,7 +268,7 @@ class Heading:
     def todo(self, value: str | None) -> None:
         """Set the TODO keyword and mark this heading as dirty."""
         self._todo = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def priority(self) -> str | None:
@@ -279,7 +279,7 @@ class Heading:
     def priority(self, value: str | None) -> None:
         """Set the priority value and mark this heading as dirty."""
         self._priority = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def title(self) -> RichText | None:
@@ -291,7 +291,7 @@ class Heading:
         """Set the heading title and mark this heading as dirty."""
         self._title = value
         self._adopt_element(self._title)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def counter(self) -> CompletionCounter | None:
@@ -302,7 +302,7 @@ class Heading:
     def counter(self, value: CompletionCounter | None) -> None:
         """Set the completion counter and mark this heading as dirty."""
         self._counter = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def heading_tags(self) -> list[str]:
@@ -313,7 +313,7 @@ class Heading:
     def heading_tags(self, value: list[str]) -> None:
         """Set tag strings on this heading line and mark it as dirty."""
         self._heading_tags = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def tags(self) -> list[str]:
@@ -358,12 +358,12 @@ class Heading:
         if value is None:
             if self._properties is not None and "CATEGORY" in self._properties:
                 del self._properties["CATEGORY"]
-                self._mark_dirty()
+                self.mark_dirty()
             return
         if self._properties is None:
             self._properties = Properties(parent=self)
         self._properties["CATEGORY"] = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def category(self) -> RichText | None:
@@ -421,7 +421,7 @@ class Heading:
         self._adopt_elements(self._body)
         self._sync_repeated_tasks()
         self._sync_clock_entries()
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def properties(self) -> Properties | None:
@@ -433,7 +433,7 @@ class Heading:
         """Set merged heading ``PROPERTIES`` drawer and mark dirty."""
         self._properties = value
         self._adopt_element(self._properties)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def logbook(self) -> Logbook | None:
@@ -447,7 +447,7 @@ class Heading:
         self._adopt_element(self._logbook)
         self._sync_repeated_tasks()
         self._sync_clock_entries()
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def repeated_tasks(self) -> list[Repeat]:
@@ -460,14 +460,14 @@ class Heading:
         self._repeated_tasks = value
         logbook = self._ensure_logbook()
         logbook.repeats = self._repeated_tasks
-        self._mark_dirty()
+        self.mark_dirty()
 
     def add_repeated_task(self, repeat: Repeat) -> None:
         """Append one repeated task and synchronize it into the logbook."""
         self._repeated_tasks = [*self._repeated_tasks, repeat]
         logbook = self._ensure_logbook()
         logbook.repeats = self._repeated_tasks
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def clock_entries(self) -> list[Clock]:
@@ -480,7 +480,7 @@ class Heading:
         self._clock_entries = value
         logbook = self._ensure_logbook()
         logbook.clock_entries = self._clock_entries
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def parent(self) -> Heading | Document:
@@ -511,7 +511,7 @@ class Heading:
         self._adopt_elements(self._children)
         for child in self._children:
             ensure_child_heading_level(child, parent_level=self._level)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def is_root(self) -> bool:
@@ -591,16 +591,12 @@ class Heading:
         """Whether this heading has been mutated after creation."""
         return self._dirty
 
-    def _mark_dirty(self) -> None:
+    def mark_dirty(self) -> None:
         """Mark this heading dirty and bubble to its parent chain."""
         if self._dirty:
             return
         self._dirty = True
         self._parent.mark_dirty()
-
-    def mark_dirty(self) -> None:
-        """Mark this heading dirty and bubble to its parent chain."""
-        self._mark_dirty()
 
     def reformat(self) -> None:
         """Recursively mark heading descendants dirty, then self dirty."""
@@ -696,7 +692,7 @@ class Heading:
             self._closed = value
         else:
             raise ValueError(f"Unknown planning keyword: {planning_keyword!r}")
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def siblings(self) -> list[Heading]:
@@ -1052,7 +1048,7 @@ def shift_heading_subtree(heading: Heading, *, delta: int) -> None:
     """Add *delta* to *heading* level and all its descendants', marking each dirty.
 
     The parent chain of *heading* must already be set correctly before calling
-    this function so that :meth:`Heading._mark_dirty` propagates through the
+    this function so that :meth:`Heading.mark_dirty` propagates through the
     right owners.
 
     Args:

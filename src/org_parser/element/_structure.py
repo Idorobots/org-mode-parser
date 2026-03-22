@@ -113,7 +113,7 @@ class Comment(Element):
     def text(self, value: str) -> None:
         """Set comment body text and mark this element as dirty."""
         self._text = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __str__(self) -> str:
         """Render the comment line, preserving source while parse-backed and clean."""
@@ -167,7 +167,7 @@ class HorizontalRule(Element):
     def rule(self, value: str) -> None:
         """Set the rule text and mark this element as dirty."""
         self._rule = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     def __str__(self) -> str:
         """Render the rule line, preserving source while parse-backed and clean."""
@@ -207,7 +207,7 @@ class IndentBlock(Element):
     def indent(self, value: str | None) -> None:
         """Set block indentation text and mark this block as dirty."""
         self._indent = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body(self) -> list[Element]:
@@ -219,7 +219,7 @@ class IndentBlock(Element):
         """Set nested elements and mark this block dirty."""
         self._body = value
         self._adopt_body(self._body)
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def body_text(self) -> str:

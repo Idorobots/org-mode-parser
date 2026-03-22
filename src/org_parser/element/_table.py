@@ -220,7 +220,7 @@ class Table(Element):
         """Set rows and mark table dirty."""
         self._rows = value
         self._adopt_rows()
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def formulas(self) -> list[str]:
@@ -231,7 +231,7 @@ class Table(Element):
     def formulas(self, value: list[str]) -> None:
         """Set formulas and mark table dirty."""
         self._formulas = value
-        self._mark_dirty()
+        self.mark_dirty()
 
     def _adopt_rows(self) -> None:
         """Assign this table as owner for all rows and cells."""
@@ -275,7 +275,7 @@ class Table(Element):
         """Replace one table row and mark this table as dirty."""
         self._rows[index] = value
         value.set_table(self)
-        self._mark_dirty()
+        self.mark_dirty()
 
 
 class TableEl(Element):

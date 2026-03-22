@@ -4902,7 +4902,10 @@ This guard is not needed - we're passing the extractor that either extracts a va
 - Medium: dedicated keyword lookup currently returns the first match (`src/org_parser/document/_document.py:509`) but the class docs say last-write-wins (`src/org_parser/document/_document.py:82`), so behavior and contract conflict.
 - Medium: `Heading.tags` dedup is incomplete; duplicates inside `heading_tags` can leak through because `seen` is not updated during own-tag filtering (`src/org_parser/document/_heading.py:327`).
 
-** TODO Code review comment
+** DONE Code review comment
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-23 Mon 00:03]
+:END:
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::def _mark_dirty(self) -> None:
  """Mark this document as dirty."""

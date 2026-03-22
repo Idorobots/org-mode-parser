@@ -120,7 +120,7 @@ class RichText:
     def text(self, value: str) -> None:
         """Replace content with plain text and mark rich text as dirty."""
         self._parts = [PlainText(value)]
-        self._mark_dirty()
+        self.mark_dirty()
 
     @property
     def dirty(self) -> bool:
@@ -137,8 +137,8 @@ class RichText:
         """Set the parent object without changing dirty state."""
         self._parent = value
 
-    def _mark_dirty(self) -> None:
-        """Mark this rich text dirty and bubble to parent objects."""
+    def mark_dirty(self) -> None:
+        """Mark this rich text as dirty."""
         if self._dirty:
             return
         self._dirty = True
@@ -146,10 +146,6 @@ class RichText:
         if parent is None:
             return
         parent.mark_dirty()
-
-    def mark_dirty(self) -> None:
-        """Mark this rich text as dirty."""
-        self._mark_dirty()
 
     def reformat(self) -> None:
         """Mark nested inline objects, then this rich text, as dirty."""
@@ -160,17 +156,17 @@ class RichText:
     def append(self, part: InlineObject | str) -> None:
         """Append content and mark rich text as dirty."""
         self._parts.append(_coerce_inline_object(part))
-        self._mark_dirty()
+        self.mark_dirty()
 
     def prepend(self, part: InlineObject | str) -> None:
         """Prepend content and mark rich text as dirty."""
         self._parts.insert(0, _coerce_inline_object(part))
-        self._mark_dirty()
+        self.mark_dirty()
 
     def insert(self, index: int, part: InlineObject | str) -> None:
         """Insert content at *index* and mark rich text as dirty."""
         self._parts.insert(index, _coerce_inline_object(part))
-        self._mark_dirty()
+        self.mark_dirty()
 
     # -- factory methods -----------------------------------------------------
 
