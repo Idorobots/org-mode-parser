@@ -4467,48 +4467,136 @@ It seems that a recent fix introduced a regression:
 
 Note the trailing line with spaces in it - the removal of this whitespace makes the parser work properly. This case should be handled and the blank line should be treated as part of the indent block.
 
-* Semantic nodes dev experience
-** Convenience fields
-Add extra fields for convevience:
+* TODO Semantic nodes dev experience
+** TODO Recover inherited tags
+The =Heading.tags= property should also include the tags from the parent headings (if any). An additional attribute should be introduced called =heading_tags= that only returns the list of tags found on this particular heading (if any).
 
-1. =Document=
-   - is_root
-   - is_terminal
+The =heading_tags= property should be mutable, while the =tags= should be made read-only.
 
-2. =Heading=
-   - latest_timestamp
-   - earliest_timestamp
-   - is_completed
-   - is_root
-   - is_terminal
+In =tags=, duplicated tag entries should be removed (leave just the first occurance, exact match). The order should be preserved.
 
-** iterator interface
-Document, Heading and RichText should support an iterator interface.
-- Document iterates over all the headings contained within, including subheadings
-- Heading iterates over the children
-- Table iterates over the rows, which iterate over the colums.
-- List iterates over the list items.
-- RichText iterates over constituent parts.
+Add support for document-level =#+FILETAGS:= - a field called =tags= should be added to the =Document= class that returns a list of tags parsed from =#+FILETAGS:= keyword (if any). The =Document.tags= field should be mutable (adjusting the filetags keyword on set). These file-tags should be taken into account when computing the inherited tags property.
 
-=document[0][2].body[2][x][y]= - x,y table cell in a body of third child of the first heading in a document.
+** TODO Keyword refactor
+Update the =Document.keywords= field to be a list instead of a map.
 
-** Convenience constructors
-*** Programatically create RichText from strings
-Invoke the tree sitter parser on text mutation.
+All the fields that return a =Keyword= should instead return the value of the keyword. They still should have setters that allow setting the specific keyword value. The updated value should be reflected in the list returned by =keywords=.
 
-*** Programatically create timestamps from strings
-*** Programatically create arbitrary elements without document structure or parse tree
-** Mutation handling
-- When an element is attached to another element their =parent= relation and dirty flag should be set correctly.
+** TODO Recover inherited categories
+Add a mutable field called =category= to the =Heading= class that returns the heading category computed as the value of the =CATEGORY= property from the =PROPERTIES= drawer (if available).
+If the category property is unavailable, =Heading= should "inherit" the =category= from the document they are a part of.
 
-** Recover inherited tags
-- nodes tags & inherited tags field (file-order lists not sets)
+The document's own category should be extracted from the =#+CATEGORY= keyword (as done currently), or from the basename of the file the document was created from if no category is specified. If there's no file, there should be no category (=None=).
 
-** Recover inherited categories
-- nodes category & inherited category field
-** Attach CAPTION, TBLNAME, PLOT and RESULTS to the following element
+** TODO Attach CAPTION, TBLNAME, PLOT and RESULTS to the following element
+Add an optional =keywords: list[Keyword] | None= field to the =Element= class that will be used to attach keywords to a an element. Add a read-only attribute =keywords= that returns the list.
 
-** Check all list items for potential repeats.
+Add a method called =attach_keyword= to the =Element= class - the metod should add a keyword to the internal keyword list. It should not mark the element as dirty.
+
+Add a processing step to all =from_node= implementations that extract bodies that will attach any affilatable keywords such as CAPTION, TBLNAME, PLOT or RESULTS to the following elements.
+
+The keywords should not be removed from the body, just "linked" to the following elements. If there is no following element available, then skip attaching the keyword.
+
+The internal keywords should not be taken into account when stringifying elements.
+
+** TODO Mutation handling
+When an element is attached to another element their =parent= relation and dirty flag should be set correctly. Make sure that is the case in every setter.
+
+If a heading is attached to another heading, its level should be adjusted to be at least one-more than the parent. All of its children's levels should be adjusted as well. All adjusted headings should be marked dirty.
+
+** TODO Clock extraction
+Update the =Heading= class with a new field:
+   - =clock= - returns a list of all =CLOCK= items (by analogy to =repeated_tasks=).
+
+The extraction of these values should be done in a similar fashion to the =repeated_tasks= extraction. The goal is for the heading to cache the clocked items.
+
+The body of the =Logbook= should be updated with the recovered =Clock= and =Repeat= values - fetching the logbook body and the list of repeats should result in the same objects to be present in the list. Same for clocks.
+
+** TODO More repeats/clocks recovery
+Check all heading body lists for potential repeats.
+
+Similarly, all CLOCK items within a body of a heading should be extracted and stored in the heading =clock= property.
+
+** TODO Convenience fields
+Add extra read-only fields for convevience:
+
+1. =Document=:
+   - =is_root= - returns =True=
+   - =is_leaf= - returns =True= if the =children= list is empty.
+   - =all_states= - returns all discovered valid TODO states (based on the =#+TODO:= keyword).
+   - =todo_states= - returns all discovered valid not-completed states (based on the =#+TODO:= keyword).
+   - =done_states= - returns all discovered valid completed states (based on the =#+TODO:= keyword).
+   - =body_text= - returns the stringified text of the =body=.
+   - =all_headings= - returns the list of all headings of any level (children, and their children) in file-definition order.
+
+2. =Heading=:
+   - =is_root= - returns =False= if the heading has a =parent=.
+   - =is_leaf= - returns =True= if the =children= list is empty.
+   - =is_completed= - returns =True= if the current TODO state is within the =documen.done_states=.
+   - =has_timestamp= - returns =True= if any of the timestamps are set or if there are repeated tasks.
+   - =timestamps= - returns a list of all timestamps of this task, including : =scheduled=, =closed=, =deadline=, any =repeated_tasks=.
+   - =latest_timestamp= - returns the latest timestamp from the set: =scheduled=, =closed=, =deadline=, any =repeated_tasks=.
+   - =earliest_timestamp= - return the earliest timestamp from the set: =scheduled=, =closed=, =deadline=, any =repeated_tasks=.
+   - =body_text= - returns the stringified text of the =body=.
+   - =title_text= - returns the stringified text of the =title=.
+   - =heading_text= - returns the stringified text of the entire heading line, including the stars, priority, todo state, etc.
+
+3. =Element= subclasses:
+   - =text= - returns the stringified text of the element (=return str(self)=).
+   - =body_text= - returns the stringified text of the =body= attribute (if the element subclass has one).
+
+** TODO Iterator interface
+=Document=, =Heading=, =Table=, =List=, =Drawer=, =Logbook=, =Properties= and  =RichText= should support an iterator/sequence interface:
+
+- =Document= iterates over all the headings contained within, including subheading (=all_headings= attribute).
+- =Heading= iterates over the children
+- =Table= iterates over the rows, which iterate over the colum values
+- =List= iterates over the list items.
+- =RichText= iterates over constituent parts.
+- =Drawer= iterates over the body elements.
+- =Logbook= iterates over the recovered body elements.
+
+Example: =document[0][2].body[2][x][y]= - x,y table cell in a body of third child of the first heading in a document.
+
+** TODO Convenience constructors
+Add a new class method =from_source= to =Document=, =Heading=,  =RichText=, =Timestamp= and =Element= subclasses that will invoke the parser and extract the resulting parse tree as a semantic node. These new methods will be used to:
+
+1. Programatically create RichText from strings
+   #+begin_example
+   RichText.from_source("*this* should /parse/ fine_{+1}")
+   #+end_example
+
+2. Programatically create timestamps from strings
+   #+begin_example
+   Timestamp.from_source("<2026-03-22 Sun 14:43>")
+   #+end_example
+
+3. Programatically create arbitrary elements
+   #+begin_example
+   List.from_source("- foo\n- bar\n")
+   #+end_example
+
+4. Programatically create arbitrary headings
+   #+begin_example
+   Heading.from_source("* TODO Some new task")
+   #+end_example
+
+5. Programatically create entire documents
+   #+begin_example
+   Document.from_source("#+title: Document\n* TODO Some task")
+   #+end_example
+
+In most cases, this should just be equivalent to something similar to:
+#+begin_src python
+tree = PARSER.parse(source)
+doc = Document.from_tree(tree)
+return cls.from_node(extract_specific_node(tree), doc)
+#+end_src
+
+If the parse tree has errors or if it results in an unexpected tree structure, the method should raise an =ValueError=.
+
+Since most of these =from_source= implementations will be very similar, it makes sense to abstract the parsing into a helper function that runs the parser and accepts a node extractor returning a =node= and =document=.
+
 * Release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:
@@ -4530,3 +4618,4 @@ All of the above are supported in the Tree-Sitter grammar as well as in the Pyth
 #+end_example
 
 ** Semantic node documentation
+** Library release
