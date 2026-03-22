@@ -26,6 +26,8 @@ from org_parser.document._body import (
 )
 from org_parser.element import (
     Drawer,
+    List,
+    ListItem,
     Logbook,
     Properties,
     Repeat,
@@ -128,10 +130,10 @@ class Heading:
 
         self._adopt_element(self._properties)
         self._adopt_element(self._logbook)
-        self._sync_repeated_tasks_from_logbook()
-        self._sync_clock_from_logbook()
         self._adopt_elements(self._body)
         self._adopt_elements(self._children)
+        self._sync_repeated_tasks()
+        self._sync_clock_entries()
 
     # -- factory method ------------------------------------------------------
 
@@ -189,8 +191,8 @@ class Heading:
         heading._properties = properties
         heading._logbook = logbook
         heading._body = body
-        heading._sync_repeated_tasks_from_logbook()
-        heading._sync_clock_from_logbook()
+        heading._sync_repeated_tasks()
+        heading._sync_clock_entries()
 
         # Recursively build sub-headings.
         for child in node.children:
@@ -390,6 +392,8 @@ class Heading:
         """Set body elements and mark this heading as dirty."""
         self._body = value
         self._adopt_elements(self._body)
+        self._sync_repeated_tasks()
+        self._sync_clock_entries()
         self._mark_dirty()
 
     @property
@@ -414,8 +418,8 @@ class Heading:
         """Set merged heading ``LOGBOOK`` drawer and mark dirty."""
         self._logbook = value
         self._adopt_element(self._logbook)
-        self._sync_repeated_tasks_from_logbook()
-        self._sync_clock_from_logbook()
+        self._sync_repeated_tasks()
+        self._sync_clock_entries()
         self._mark_dirty()
 
     @property
@@ -541,19 +545,35 @@ class Heading:
         for value in values:
             self._adopt_element(value)
 
-    def _sync_repeated_tasks_from_logbook(self) -> None:
-        """Synchronize local repeated-task cache from the current logbook."""
-        if self._logbook is None:
-            self._repeated_tasks = []
-            return
-        self._repeated_tasks = self._logbook.repeats
+    def _sync_repeated_tasks(self) -> None:
+        """Synchronize repeated-task cache from logbook and heading body."""
+        body_repeats, _ = _recover_heading_body_lists_and_extract_clocks(
+            self._body,
+            document=self._document,
+        )
 
-    def _sync_clock_from_logbook(self) -> None:
-        """Synchronize local clock cache from the current logbook."""
         if self._logbook is None:
-            self._clock_entries = []
+            self._repeated_tasks = body_repeats
             return
-        self._clock_entries = self._logbook.clock_entries
+        if not body_repeats:
+            self._repeated_tasks = self._logbook.repeats
+            return
+        self._repeated_tasks = [*self._logbook.repeats, *body_repeats]
+
+    def _sync_clock_entries(self) -> None:
+        """Synchronize clock cache from logbook and heading body."""
+        _, body_clocks = _recover_heading_body_lists_and_extract_clocks(
+            self._body,
+            document=self._document,
+        )
+
+        if self._logbook is None:
+            self._clock_entries = body_clocks
+            return
+        if not body_clocks:
+            self._clock_entries = self._logbook.clock_entries
+            return
+        self._clock_entries = [*self._logbook.clock_entries, *body_clocks]
 
     def _ensure_logbook(self) -> Logbook:
         """Return heading logbook, creating one when absent."""
@@ -801,6 +821,81 @@ def _find_first_subheading(node: tree_sitter.Node) -> tree_sitter.Node | None:
         if child.type == HEADING:
             return child
     return None
+
+
+def _recover_heading_body_lists_and_extract_clocks(
+    body: list[Element],
+    *,
+    document: Document,
+) -> tuple[list[Repeat], list[Clock]]:
+    """Recover repeat items in heading body lists and collect body clocks.
+
+    This scans only the element classes where repeat/clock records are
+    expected in heading bodies: ``List``, ``Logbook``, and custom ``Drawer``
+    contents. Any list item that matches repeated-task syntax is converted
+    in-place to :class:`Repeat` without marking the tree dirty, mirroring
+    parse-time semantic recovery behavior.
+
+    Args:
+        body: Heading body elements to scan.
+        document: Owning document used by repeat parsing for diagnostics.
+
+    Returns:
+        A tuple of ``(repeats, clocks)`` found in heading body content.
+    """
+    repeats: list[Repeat] = []
+    clocks: list[Clock] = []
+
+    def collect_from_list(list_element: List) -> None:
+        """Recover repeat items from one top-level plain list."""
+        updated_items: list[ListItem] = []
+        converted = False
+        for item in list_element.items:
+            converted_item: ListItem = item
+            if not isinstance(item, Repeat):
+                repeat = Repeat.from_list_item(item, document)
+                if repeat is not None:
+                    converted_item = repeat
+                    converted = True
+            updated_items.append(converted_item)
+            if isinstance(converted_item, Repeat):
+                repeats.append(converted_item)
+        if converted:
+            list_element.set_items(updated_items, mark_dirty=False)
+
+    def collect_from_drawer_body(elements: list[Element]) -> None:
+        """Collect repeats/clocks from explicit drawer body element classes."""
+        for element in elements:
+            if isinstance(element, Clock):
+                clocks.append(element)
+                continue
+
+            if isinstance(element, List):
+                collect_from_list(element)
+                continue
+
+            if isinstance(element, Logbook):
+                repeats.extend(element.repeats)
+                clocks.extend(element.clock_entries)
+                continue
+
+            if isinstance(element, Drawer):
+                collect_from_drawer_body(element.body)
+
+    for element in body:
+        if isinstance(element, List):
+            collect_from_list(element)
+            continue
+
+        if isinstance(element, Logbook):
+            repeats.extend(element.repeats)
+            clocks.extend(element.clock_entries)
+            continue
+
+        if isinstance(element, Drawer):
+            collect_from_drawer_body(element.body)
+
+    return repeats, clocks
 
 
 def _ensure_child_heading_level(child: Heading, *, parent_level: int) -> None:

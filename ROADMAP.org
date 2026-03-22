@@ -4568,10 +4568,57 @@ The extraction of these values should be done in a similar fashion to the =repea
 
 The body of the =Logbook= should be updated with the recovered =Clock= and =Repeat= values - fetching the logbook body and the list of repeats should result in the same objects to be present in the list. Same for clocks.
 
-** TODO More repeats/clocks recovery
+** DONE More repeats/clocks recovery
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 17:57]
+:END:
 Check all heading body lists for potential repeats.
 
-Similarly, all CLOCK items within a body of a heading should be extracted and stored in the heading =clock= property.
+Similarly, all CLOCK items within a body of a heading should be extracted and stored in the heading =clock_entries= property.
+
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 17:55]
+:END:
+
+In file src/org_parser/document/_heading.py around line 868, near the ~def _find_first_subheading(node: tree_sitter.Node) -> tree_sitter.Node | None:~
+
+#+begin_example
++                    walk(converted_item.body)
+#+end_example
+
+Don't descend into the list bodies, only top-level lists should be analyzed for heading repeats/clocks.
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 17:57]
+:END:
+
+In file src/org_parser/document/_heading.py around line 879, near the ~def _find_first_subheading(node: tree_sitter.Node) -> tree_sitter.Node | None:~
+
+#+begin_example
++def _nested_body_elements(element: Element) -> list[Element] | None:
++    """Return nested element body list when *element* exposes one.
++
++    Some semantic element classes use a ``body`` attribute that is itself a
++    list of nested :class:`Element` instances (for example drawers, container
++    blocks, and list items). This helper returns that nested list when present
++    and type-compatible, otherwise ``None``.
++    """
++    body = getattr(element, "body", None)
++    if not isinstance(body, list):
++        return None
++    if any(not isinstance(nested, Element) for nested in body):
++        return None
++    return body
+#+end_example
+
+I don't like this approach - please update the recovery algorithm to explicitly mention elements by class name. We expect CLOCK entries and repeats only in LOGBOOK drawers, custom drawers and lists.
 
 ** TODO Convenience fields
 Add extra read-only fields for convevience:

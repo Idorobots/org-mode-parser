@@ -209,3 +209,74 @@ def test_repeat_parse_requires_plain_item_shape() -> None:
     assert heading.logbook.repeats == []
     assert isinstance(heading.logbook.body[0], List)
     assert isinstance(heading.logbook.body[0].items[0], Repeat) is False
+
+
+def test_heading_body_lists_are_recovered_for_repeats() -> None:
+    """Heading body list items that match repeat syntax are recovered."""
+    document = loads(
+        "* H\n" '- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+    )
+
+    heading = document.children[0]
+    assert isinstance(heading.body[0], List)
+    parsed = heading.body[0]
+    assert isinstance(parsed.items[0], Repeat)
+    assert heading.repeated_tasks == [parsed.items[0]]
+
+
+def test_heading_body_nested_lists_are_not_recovered_for_repeats() -> None:
+    """Only top-level heading body lists are scanned for repeat recovery."""
+    document = loads(
+        "* H\n"
+        "- parent\n"
+        '  - State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+    )
+
+    heading = document.children[0]
+    assert isinstance(heading.body[0], List)
+    outer = heading.body[0]
+    assert len(outer.items) == 1
+    assert len(outer.items[0].body) == 1
+    assert isinstance(outer.items[0].body[0], List)
+    nested = outer.items[0].body[0]
+    assert isinstance(nested.items[0], Repeat) is False
+    assert heading.repeated_tasks == []
+
+
+def test_heading_clock_cache_ignores_non_drawer_body_clock_entries() -> None:
+    """Bare heading-body clocks are ignored by the explicit recovery scan."""
+    document = loads(
+        "* H\n" "\n" "CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 10:30] =>  1:30\n"
+    )
+
+    heading = document.children[0]
+    assert heading.clock_entries == []
+    assert heading.logbook is None
+
+
+def test_heading_clock_cache_extracts_nested_body_clock_entries() -> None:
+    """Heading clock cache includes clocks nested inside body containers."""
+    document = loads(
+        "* H\n"
+        ":NOTE:\n"
+        ":INNER:\n"
+        "CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+        ":END:\n"
+        ":END:\n"
+    )
+
+    heading = document.children[0]
+    assert len(heading.clock_entries) == 1
+    assert isinstance(heading.clock_entries[0], Clock)
+
+
+def test_heading_clock_cache_ignores_clocks_in_nested_list_bodies() -> None:
+    """Only top-level lists contribute clock extraction for heading cache."""
+    document = loads(
+        "* H\n"
+        "- parent\n"
+        "  CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+    )
+
+    heading = document.children[0]
+    assert heading.clock_entries == []
