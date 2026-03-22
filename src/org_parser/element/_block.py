@@ -59,6 +59,11 @@ class _ContainerBlock(Element):
         """Mutable block contents as semantic elements."""
         return self._body
 
+    @property
+    def body_text(self) -> str:
+        """Stringified text of all nested block body elements."""
+        return "".join(str(element) for element in self._body)
+
     @body.setter
     def body(self, value: list[Element]) -> None:
         """Set block contents and mark this block as dirty."""
@@ -115,6 +120,11 @@ class _TextBlock(Element):
     @property
     def body(self) -> str:
         """Mutable block contents text without delimiters."""
+        return self._body
+
+    @property
+    def body_text(self) -> str:
+        """Stringified text of this text block body."""
         return self._body
 
     @body.setter
@@ -667,6 +677,11 @@ class FixedWidthBlock(Element):
     @property
     def body(self) -> str:
         """Mutable fixed-width content text without ``:`` prefixes."""
+        return self._body
+
+    @property
+    def body_text(self) -> str:
+        """Stringified text of this fixed-width block body."""
         return self._body
 
     @body.setter

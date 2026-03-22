@@ -99,6 +99,11 @@ class Drawer(Element):
         """Mutable list of drawer body elements."""
         return self._body
 
+    @property
+    def body_text(self) -> str:
+        """Stringified text of all drawer body elements."""
+        return "".join(str(element) for element in self._body)
+
     @body.setter
     def body(self, value: list[Element]) -> None:
         """Set drawer body and mark the drawer as dirty."""

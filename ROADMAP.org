@@ -4620,7 +4620,10 @@ In file src/org_parser/document/_heading.py around line 879, near the ~def _find
 
 I don't like this approach - please update the recovery algorithm to explicitly mention elements by class name. We expect CLOCK entries and repeats only in LOGBOOK drawers, custom drawers and lists.
 
-** TODO Convenience fields
+** DONE Convenience fields
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 19:04]
+:END:
 Add extra read-only fields for convevience:
 
 1. =Document=:
@@ -4637,9 +4640,9 @@ Add extra read-only fields for convevience:
    - =is_leaf= - returns =True= if the =children= list is empty.
    - =is_completed= - returns =True= if the current TODO state is within the =documen.done_states=.
    - =has_timestamp= - returns =True= if any of the timestamps are set or if there are repeated tasks.
-   - =timestamps= - returns a list of all timestamps of this task, including : =scheduled=, =closed=, =deadline=, any =repeated_tasks=.
-   - =latest_timestamp= - returns the latest timestamp from the set: =scheduled=, =closed=, =deadline=, any =repeated_tasks=.
-   - =earliest_timestamp= - return the earliest timestamp from the set: =scheduled=, =closed=, =deadline=, any =repeated_tasks=.
+   - =timestamps= - returns a list of all timestamps of this task, including : =scheduled=, =closed=, =deadline=, any =repeated_tasks= or any =clock_entries=.
+   - =latest_timestamp= - returns the latest timestamp from the set: =scheduled=, =closed=, =deadline=, any =repeated_tasks= or any =clock_entries=.
+   - =earliest_timestamp= - return the earliest timestamp from the set: =scheduled=, =closed=, =deadline=, any =repeated_tasks= or any =clock_entries=.
    - =body_text= - returns the stringified text of the =body=.
    - =title_text= - returns the stringified text of the =title=.
    - =heading_text= - returns the stringified text of the entire heading line, including the stars, priority, todo state, etc.
@@ -4648,6 +4651,126 @@ Add extra read-only fields for convevience:
    - =text= - returns the stringified text of the element (=return str(self)=).
    - =body_text= - returns the stringified text of the =body= attribute (if the element subclass has one).
 
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 18:45]
+:END:
+
+In file src/org_parser/document/_heading.py around line 488, near the ~class Heading:~
+
+#+begin_example
++def _ensure_document_child_heading_level(child: Heading, *, parent_level: int) -> None:
++    """Ensure one top-level child heading has a valid level for *parent_level*."""
++    min_level = parent_level + 1
++    if child.level >= min_level:
++        return
++    delta = min_level - child.level
++    _shift_document_heading_subtree(child, delta=delta)
++
++
++def _shift_document_heading_subtree(heading: Heading, *, delta: int) -> None:
++    """Increase one heading subtree's levels by *delta*."""
++    heading.level = heading.level + delta
++    for child in heading.children:
++        _shift_document_heading_subtree(child, delta=delta)
++
++
+ def _render_document_dirty(document: Document) -> str:
+     """Render a dirty document from semantic fields only."""
+     parts: list[str] = []
+modified   src/org_parser/document/_heading.py
+@@ -486,6 +486,74 @@ class Heading:
+             _ensure_child_heading_level(child, parent_level=self._level)
+         self._mark_dirty()
+#+end_example
+
+This is a direct copy of the heading functions. Please make those ones public and re-use them here.
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 18:49]
+:END:
+
+In file src/org_parser/document/_heading.py around line 523, near the ~class Heading:~
+
+#+begin_example
++    @property
++    def latest_timestamp(self) -> Timestamp | None:
++        """Latest timestamp across planning values and logbook-derived timestamps."""
++        values = self.timestamps
++        if not values:
++            return None
++        return max(values, key=lambda timestamp: timestamp.start)
+#+end_example
+
+Should use =timestamp.end= if provided and fallback to start if not.
+*** DONE src/org_parser/element/_element.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 18:56]
+:END:
+
+In file src/org_parser/element/_element.py around line 90, near the ~class Element:~
+
+#+begin_example
++    @property
++    def body_text(self) -> str:
++        """Stringified text of this element's ``body`` value when present."""
++        body: object | None = getattr(self, "body", None)
++        if body is None:
++            return ""
++        if isinstance(body, list):
++            body_list = cast("list[object]", body)
++            return "".join(str(element) for element in body_list)
++        return str(body)
+#+end_example
+
+That's lazy, please add individual methods to the elements that have a body.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 19:03]
+:END:
+
+In file src/org_parser/document/_document.py around line 740, near the ~def _append_heading_subtree(headings: Sequence[Heading], parts: list[str]) -> No~
+
+#+begin_example
++def _parse_todo_states(todo: RichText | None) -> tuple[list[str], list[str], list[str]]:
++    """Return ``(all_states, todo_states, done_states)`` for ``#+TODO:`` text."""
++    if todo is None:
++        return [], [], []
++
++    tokens = [token for token in str(todo).split() if token != ""]
++    if not tokens:
++        return [], [], []
++
++    if "|" not in tokens:
++        return tokens, tokens, []
++
++    split_index = tokens.index("|")
++    todo_states = [token for token in tokens[:split_index] if token != "|"]
++    done_states = [token for token in tokens[split_index + 1 :] if token != "|"]
++    all_states = [*todo_states, *done_states]
++    return all_states, todo_states, done_states
+#+end_example
+
+This needs to be tested with "complex" todo specifiers:
+
+#+begin_example
+#+TODO: TODO(t) | DONE(d@/!)
+#+TODO: | CANCELLED(c@/!) REWORKED(r@/!)
+#+end_example
+
+Document should also handle multiple =#+TODO= keywords.
 ** TODO Iterator interface
 =Document=, =Heading=, =Table=, =List=, =Drawer=, =Logbook=, =Properties= and  =RichText= should support an iterator/sequence interface:
 

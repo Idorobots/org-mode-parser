@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from org_parser.document import Document, Heading, load_raw
-from org_parser.element import Element, Keyword, Paragraph
+from org_parser.element import Drawer, Element, Keyword, Logbook, Paragraph, Repeat
 from org_parser.text import CompletionCounter, RichText
+from org_parser.time import Clock, Timestamp
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -944,3 +945,270 @@ class TestHeadingCategory:
             assert False, "Expected AttributeError"  # noqa: B011
         except AttributeError:
             pass
+
+
+# ===================================================================
+# Convenience fields
+# ===================================================================
+
+
+class TestDocumentConvenienceFields:
+    """Tests for convenience read-only fields on :class:`Document`."""
+
+    def test_is_root_is_always_true(self) -> None:
+        """Document.is_root always reports True."""
+        assert Document(filename="x.org").is_root is True
+
+    def test_is_leaf_depends_on_children(self) -> None:
+        """Document.is_leaf reflects whether top-level headings exist."""
+        doc = Document(filename="x.org")
+        assert doc.is_leaf is True
+        doc.children = [Heading(level=1, document=doc, parent=doc)]
+        assert doc.is_leaf is False
+
+    def test_todo_state_groups_from_todo_keyword(
+        self, example_file: Callable[[str], Path]
+    ) -> None:
+        """TODO state convenience lists are parsed from #+TODO:."""
+        doc = _load_document(example_file("todo-and-done.org"))
+        assert doc.todo_states == ["TODO", "IN-PROGRESS", "WAITING"]
+        assert doc.done_states == ["DONE", "CANCELLED"]
+        assert doc.all_states == [
+            "TODO",
+            "IN-PROGRESS",
+            "WAITING",
+            "DONE",
+            "CANCELLED",
+        ]
+
+    def test_todo_state_groups_without_todo_keyword(self) -> None:
+        """Missing #+TODO: yields empty state groups."""
+        doc = Document(filename="x.org")
+        assert doc.todo_states == []
+        assert doc.done_states == []
+        assert doc.all_states == []
+
+    def test_todo_state_groups_strip_fast_selection_metadata(self) -> None:
+        """TODO states ignore fast-selection metadata in parentheses."""
+        doc = Document(filename="x.org", todo=RichText("TODO(t) | DONE(d@/!)"))
+        assert doc.todo_states == ["TODO"]
+        assert doc.done_states == ["DONE"]
+        assert doc.all_states == ["TODO", "DONE"]
+
+    def test_todo_state_groups_support_done_only_definition(self) -> None:
+        """TODO definitions can declare only done states after ``|``."""
+        doc = Document(filename="x.org", todo=RichText("| CANCELLED(c@/!) REWORKED(r@/!)"))
+        assert doc.todo_states == []
+        assert doc.done_states == ["CANCELLED", "REWORKED"]
+        assert doc.all_states == ["CANCELLED", "REWORKED"]
+
+    def test_todo_state_groups_across_multiple_todo_keywords(self, tmp_path: Path) -> None:
+        """State groups aggregate across multiple ``#+TODO:`` keywords."""
+        path = tmp_path / "multi-todo.org"
+        path.write_bytes(
+            b"#+TODO: TODO(t) IN-PROGRESS(i) | DONE(d@/!)\n"
+            b"#+TODO: | CANCELLED(c@/!) REWORKED(r@/!)\n"
+            b"* TODO Sample task\n"
+        )
+        doc = _load_document(path)
+        assert doc.todo_states == ["TODO", "IN-PROGRESS"]
+        assert doc.done_states == ["DONE", "CANCELLED", "REWORKED"]
+        assert doc.all_states == [
+            "TODO",
+            "IN-PROGRESS",
+            "DONE",
+            "CANCELLED",
+            "REWORKED",
+        ]
+
+    def test_body_text_joins_zeroth_section_elements(self) -> None:
+        """body_text concatenates the string output of body elements."""
+        doc = Document(
+            filename="x.org",
+            body=[
+                Paragraph(body=RichText("alpha\n")),
+                Paragraph(body=RichText("beta\n")),
+            ],
+        )
+        assert doc.body_text == "alpha\nbeta\n"
+
+    def test_all_headings_returns_flat_file_order(
+        self, example_file: Callable[[str], Path]
+    ) -> None:
+        """all_headings flattens the heading tree in definition order."""
+        doc = _load_document(example_file("nested-headings-basic.org"))
+        assert [heading.title_text for heading in doc.all_headings] == [
+            "First top-level heading",
+            "First sub-heading",
+            "Second sub-heading",
+            "Deeply nested heading",
+            "Second top-level heading",
+        ]
+
+
+class TestHeadingConvenienceFields:
+    """Tests for convenience read-only fields on :class:`Heading`."""
+
+    def test_is_root_is_always_false(self) -> None:
+        """Heading.is_root is always False, including top-level headings."""
+        doc = Document(filename="x.org")
+        top = Heading(level=1, document=doc, parent=doc)
+        nested = Heading(level=2, document=doc, parent=top)
+        assert top.is_root is False
+        assert nested.is_root is False
+
+    def test_is_leaf_depends_on_children(self) -> None:
+        """Heading.is_leaf reflects whether child headings exist."""
+        doc = Document(filename="x.org")
+        parent = Heading(level=1, document=doc, parent=doc)
+        child = Heading(level=2, document=doc, parent=parent)
+        assert parent.is_leaf is True
+        parent.children = [child]
+        assert parent.is_leaf is False
+
+    def test_is_completed_uses_document_done_states(
+        self, example_file: Callable[[str], Path]
+    ) -> None:
+        """is_completed checks heading todo state against document done states."""
+        doc = _load_document(example_file("todo-and-done.org"))
+        done = next(heading for heading in doc.children if heading.todo == "DONE")
+        todo = next(heading for heading in doc.children if heading.todo == "TODO")
+        assert done.is_completed is True
+        assert todo.is_completed is False
+
+    def test_is_completed_false_for_state_not_in_done_states(
+        self, example_file: Callable[[str], Path]
+    ) -> None:
+        """A TODO value not listed in done states is not considered complete."""
+        doc = _load_document(example_file("todo_keys.org"))
+        assert doc.children[0].todo == "DONE"
+        assert doc.done_states == ["CANCELLED"]
+        assert doc.children[0].is_completed is False
+
+    def test_timestamp_aggregation_and_extrema(self) -> None:
+        """Heading timestamp helpers include planning, repeat, and clock values."""
+        doc = Document(filename="x.org", todo=RichText("TODO | DONE"))
+        scheduled = Timestamp("<2025-01-02 Thu>", True, 2025, 1, 2)
+        closed = Timestamp("[2025-01-09 Thu]", False, 2025, 1, 9)
+        deadline = Timestamp("<2025-01-07 Tue>", True, 2025, 1, 7)
+        repeat_timestamp = Timestamp("[2025-01-05 Sun]", False, 2025, 1, 5)
+        clock_timestamp = Timestamp(
+            "[2025-01-03 Fri 10:00]--[2025-01-03 Fri 11:00]",
+            False,
+            2025,
+            1,
+            3,
+            start_hour=10,
+            start_minute=0,
+            end_year=2025,
+            end_month=1,
+            end_day=3,
+            end_hour=11,
+            end_minute=0,
+        )
+        heading = Heading(
+            level=1,
+            document=doc,
+            parent=doc,
+            scheduled=scheduled,
+            closed=closed,
+            deadline=deadline,
+            logbook=Logbook(
+                repeats=[Repeat(after="DONE", before="TODO", timestamp=repeat_timestamp)],
+                clock_entries=[Clock(timestamp=clock_timestamp)],
+            ),
+        )
+
+        assert heading.has_timestamp is True
+        assert heading.timestamps == [
+            scheduled,
+            closed,
+            deadline,
+            repeat_timestamp,
+            clock_timestamp,
+        ]
+        assert heading.earliest_timestamp is scheduled
+        assert heading.latest_timestamp is closed
+
+    def test_timestamp_helpers_when_empty(self) -> None:
+        """Timestamp convenience fields are empty/None without timestamp data."""
+        doc = Document(filename="x.org")
+        heading = Heading(level=1, document=doc, parent=doc)
+        assert heading.has_timestamp is False
+        assert heading.timestamps == []
+        assert heading.earliest_timestamp is None
+        assert heading.latest_timestamp is None
+
+    def test_latest_timestamp_prefers_end_when_present(self) -> None:
+        """latest_timestamp compares by end datetime when a range has one."""
+        doc = Document(filename="x.org")
+        with_end = Timestamp(
+            "[2025-01-01 Wed 23:00]--[2025-01-10 Fri 01:00]",
+            False,
+            2025,
+            1,
+            1,
+            start_hour=23,
+            start_minute=0,
+            end_year=2025,
+            end_month=1,
+            end_day=10,
+            end_hour=1,
+            end_minute=0,
+        )
+        later_start_only = Timestamp("<2025-01-09 Thu>", True, 2025, 1, 9)
+        heading = Heading(
+            level=1,
+            document=doc,
+            parent=doc,
+            scheduled=later_start_only,
+            logbook=Logbook(clock_entries=[Clock(timestamp=with_end)]),
+        )
+
+        assert heading.latest_timestamp is with_end
+
+    def test_title_body_and_heading_text_fields(self) -> None:
+        """title_text, body_text, and heading_text return stringified content."""
+        doc = Document(filename="x.org")
+        heading = Heading(
+            level=1,
+            document=doc,
+            parent=doc,
+            todo="TODO",
+            priority="A",
+            title=RichText("Feature work"),
+            heading_tags=["project", "urgent"],
+            body=[Paragraph(body=RichText("Body line\n"))],
+        )
+        assert heading.title_text == "Feature work"
+        assert heading.body_text == "Body line\n"
+        assert heading.heading_text == "* TODO [#A] Feature work :project:urgent:"
+
+
+class TestElementConvenienceFields:
+    """Tests for convenience read-only fields on :class:`Element` subclasses."""
+
+    def test_text_returns_stringified_element(self) -> None:
+        """Element.text matches __str__ output."""
+        paragraph = Paragraph(body=RichText("hello\n"))
+        assert paragraph.text == "hello\n"
+
+    def test_body_text_for_rich_text_body(self) -> None:
+        """Element.body_text returns text for scalar body values."""
+        paragraph = Paragraph(body=RichText("hello\n"))
+        assert paragraph.body_text == "hello\n"
+
+    def test_body_text_for_list_body(self) -> None:
+        """Element.body_text joins text for list-style body attributes."""
+        drawer = Drawer(
+            name="NOTES",
+            body=[
+                Paragraph(body=RichText("one\n")),
+                Paragraph(body=RichText("two\n")),
+            ],
+        )
+        assert drawer.body_text == "one\ntwo\n"
+
+    def test_body_text_empty_when_body_missing(self) -> None:
+        """Element.body_text is empty when no body attribute exists."""
+        assert Element().body_text == ""

@@ -364,13 +364,50 @@ class Document:
         dirty.
         """
         # Lazy import avoids the circular dependency with _heading.py.
-        from org_parser.document._heading import _ensure_child_heading_level
+        from org_parser.document._heading import ensure_child_heading_level
 
         self._children = value
         self._adopt_elements(self._children)
         for child in self._children:
-            _ensure_child_heading_level(child, parent_level=0)
+            ensure_child_heading_level(child, parent_level=0)
         self._mark_dirty()
+
+    @property
+    def is_root(self) -> bool:
+        """Whether this node is the root of a parsed document tree."""
+        return True
+
+    @property
+    def is_leaf(self) -> bool:
+        """Whether this document has no top-level headings."""
+        return not self._children
+
+    @property
+    def all_states(self) -> list[str]:
+        """All discovered TODO keyword states from the ``#+TODO:`` definition."""
+        return _parse_todo_states(self._todo_keyword_values())[0]
+
+    @property
+    def todo_states(self) -> list[str]:
+        """Discovered non-completed TODO states from the ``#+TODO:`` definition."""
+        return _parse_todo_states(self._todo_keyword_values())[1]
+
+    @property
+    def done_states(self) -> list[str]:
+        """Discovered completed TODO states from the ``#+TODO:`` definition."""
+        return _parse_todo_states(self._todo_keyword_values())[2]
+
+    @property
+    def body_text(self) -> str:
+        """Stringified text for all zeroth-section body elements."""
+        return "".join(str(element) for element in self._body)
+
+    @property
+    def all_headings(self) -> list[Heading]:
+        """All headings in file-definition order across the full document tree."""
+        ordered: list[Heading] = []
+        _collect_heading_subtree(self._children, ordered)
+        return ordered
 
     def source_for(self, node: tree_sitter.Node) -> bytes:
         """Return source bytes for one node span.
@@ -457,6 +494,10 @@ class Document:
             if kw.key == key:
                 return kw
         return None
+
+    def _todo_keyword_values(self) -> list[RichText]:
+        """Return ``#+TODO:`` keyword values in document order."""
+        return [kw.value for kw in self._keywords if kw.key == TODO]
 
     def _set_keyword_value(self, key: str, value: RichText | None) -> None:
         """Update, create, or remove a keyword entry by key.
@@ -677,6 +718,56 @@ def _append_heading_subtree(headings: Sequence[Heading], parts: list[str]) -> No
     for heading in headings:
         parts.append(str(heading))
         _append_heading_subtree(heading.children, parts)
+
+
+def _collect_heading_subtree(headings: Sequence[Heading], out: list[Heading]) -> None:
+    """Append *headings* and descendants to *out* in source definition order."""
+    for heading in headings:
+        out.append(heading)
+        _collect_heading_subtree(heading.children, out)
+
+
+def _parse_todo_states(
+    todo_values: Sequence[RichText],
+) -> tuple[list[str], list[str], list[str]]:
+    """Return ``(all_states, todo_states, done_states)`` for ``#+TODO:`` values."""
+    todo_states: list[str] = []
+    done_states: list[str] = []
+
+    for todo in todo_values:
+        in_done_group = False
+        for token in str(todo).split():
+            if token == "|":
+                in_done_group = True
+                continue
+
+            state = _todo_state_name(token)
+            if state is None:
+                continue
+            if in_done_group:
+                if state not in done_states:
+                    done_states.append(state)
+            elif state not in todo_states:
+                todo_states.append(state)
+
+    all_states = [*todo_states]
+    for state in done_states:
+        if state not in all_states:
+            all_states.append(state)
+    return all_states, todo_states, done_states
+
+
+def _todo_state_name(token: str) -> str | None:
+    """Extract one TODO state token name from keyword syntax.
+
+    This strips optional fast-selection metadata, for example:
+    ``TODO(t)`` -> ``TODO`` and ``DONE(d@/!)`` -> ``DONE``.
+    """
+    stripped = token.strip()
+    if stripped == "":
+        return None
+    head, _, _ = stripped.partition("(")
+    return head if head != "" else None
 
 
 def _render_document_dirty(document: Document) -> str:

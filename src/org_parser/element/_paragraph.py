@@ -78,6 +78,11 @@ class Paragraph(Element):
         """Mutable rich-text body of this paragraph."""
         return self._body
 
+    @property
+    def body_text(self) -> str:
+        """Stringified text of the paragraph body."""
+        return str(self._body)
+
     @body.setter
     def body(self, value: RichText) -> None:
         """Set body rich text and mark this paragraph as dirty."""

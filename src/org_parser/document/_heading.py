@@ -51,7 +51,7 @@ if TYPE_CHECKING:
 
     from org_parser.document._document import Document
 
-__all__ = ["Heading"]
+__all__ = ["Heading", "ensure_child_heading_level", "shift_heading_subtree"]
 
 
 class Heading:
@@ -483,8 +483,79 @@ class Heading:
         self._children = value
         self._adopt_elements(self._children)
         for child in self._children:
-            _ensure_child_heading_level(child, parent_level=self._level)
+            ensure_child_heading_level(child, parent_level=self._level)
         self._mark_dirty()
+
+    @property
+    def is_root(self) -> bool:
+        """Whether this heading is the root node of a document tree."""
+        return False
+
+    @property
+    def is_leaf(self) -> bool:
+        """Whether this heading has no direct sub-headings."""
+        return not self._children
+
+    @property
+    def is_completed(self) -> bool:
+        """Whether this heading's current TODO state is a done state."""
+        return self._todo is not None and self._todo in self._document.done_states
+
+    @property
+    def has_timestamp(self) -> bool:
+        """Whether this heading has any planning, repeat, or clock timestamp."""
+        return bool(self.timestamps)
+
+    @property
+    def timestamps(self) -> list[Timestamp]:
+        """All timestamps attached to this heading's planning and logbook data."""
+        collected: list[Timestamp] = []
+        for planning in (self._scheduled, self._closed, self._deadline):
+            if planning is not None:
+                collected.append(planning)
+        collected.extend(repeat.timestamp for repeat in self._repeated_tasks)
+        collected.extend(
+            clock.timestamp
+            for clock in self._clock_entries
+            if clock.timestamp is not None
+        )
+        return collected
+
+    @property
+    def latest_timestamp(self) -> Timestamp | None:
+        """Latest timestamp across planning values and logbook-derived timestamps."""
+        values = self.timestamps
+        if not values:
+            return None
+        return max(
+            values,
+            key=lambda timestamp: timestamp.end if timestamp.end else timestamp.start,
+        )
+
+    @property
+    def earliest_timestamp(self) -> Timestamp | None:
+        """Earliest timestamp across planning values and logbook-derived timestamps."""
+        values = self.timestamps
+        if not values:
+            return None
+        return min(values, key=lambda timestamp: timestamp.start)
+
+    @property
+    def body_text(self) -> str:
+        """Stringified text for all body elements of this heading."""
+        return "".join(str(element) for element in self._body)
+
+    @property
+    def title_text(self) -> str:
+        """Stringified text for this heading's title object."""
+        return "" if self._title is None else str(self._title)
+
+    @property
+    def heading_text(self) -> str:
+        """Stringified heading line including stars and line-level fields."""
+        rendered = str(self)
+        first_line, _, _ = rendered.partition("\n")
+        return first_line
 
     @property
     def dirty(self) -> bool:
@@ -898,7 +969,7 @@ def _recover_heading_body_lists_and_extract_clocks(
     return repeats, clocks
 
 
-def _ensure_child_heading_level(child: Heading, *, parent_level: int) -> None:
+def ensure_child_heading_level(child: Heading, *, parent_level: int) -> None:
     """Adjust *child* level to be strictly greater than *parent_level*.
 
     When ``child.level > parent_level`` the heading is already valid and this
@@ -914,13 +985,13 @@ def _ensure_child_heading_level(child: Heading, *, parent_level: int) -> None:
             document, which enforces a minimum child level of 1).
     """
     min_level = parent_level + 1
-    if child._level >= min_level:
+    if child.level >= min_level:
         return
-    delta = min_level - child._level
-    _shift_heading_subtree(child, delta=delta)
+    delta = min_level - child.level
+    shift_heading_subtree(child, delta=delta)
 
 
-def _shift_heading_subtree(heading: Heading, *, delta: int) -> None:
+def shift_heading_subtree(heading: Heading, *, delta: int) -> None:
     """Add *delta* to *heading* level and all its descendants', marking each dirty.
 
     The parent chain of *heading* must already be set correctly before calling
@@ -931,10 +1002,10 @@ def _shift_heading_subtree(heading: Heading, *, delta: int) -> None:
         heading: Root of the subtree to shift.
         delta: Positive integer amount to add to every level in the subtree.
     """
-    heading._level += delta
-    heading._mark_dirty()
-    for child in heading._children:
-        _shift_heading_subtree(child, delta=delta)
+    heading.level = heading.level + delta
+    heading.mark_dirty()
+    for child in heading.children:
+        shift_heading_subtree(child, delta=delta)
 
 
 def _render_heading_dirty(heading: Heading) -> str:

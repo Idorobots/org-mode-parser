@@ -214,6 +214,11 @@ class IndentBlock(Element):
         """Nested elements contained by this indentation block."""
         return self._body
 
+    @property
+    def body_text(self) -> str:
+        """Stringified text of all nested indentation-block elements."""
+        return "".join(str(element) for element in self._body)
+
     @body.setter
     def body(self, value: list[Element]) -> None:
         """Set nested elements and mark this block dirty."""

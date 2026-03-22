@@ -73,6 +73,16 @@ class Element:
         return self._dirty
 
     @property
+    def text(self) -> str:
+        """Stringified text representation of this element."""
+        return str(self)
+
+    @property
+    def body_text(self) -> str:
+        """Stringified body text for elements that implement body content."""
+        return ""
+
+    @property
     def keywords(self) -> list[AffiliatedKeyword]:
         """Affiliated keywords attached to this element, in document order.
 
