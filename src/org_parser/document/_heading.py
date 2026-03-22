@@ -138,6 +138,30 @@ class Heading:
     # -- factory method ------------------------------------------------------
 
     @classmethod
+    def from_source(cls, source: str) -> Heading:
+        """Build one heading from Org source text.
+
+        The source must parse to exactly one top-level heading and no other
+        zeroth-section semantic content.
+
+        Args:
+            source: Org source text containing exactly one heading.
+
+        Returns:
+            The parsed :class:`Heading`.
+
+        Raises:
+            ValueError: If parsing fails or the structure is not one heading.
+        """
+        from org_parser._from_source import parse_source_with_extractor
+
+        heading, _ = parse_source_with_extractor(
+            source,
+            extractor=_extract_single_heading_node,
+        )
+        return heading
+
+    @classmethod
     def from_node(
         cls,
         node: tree_sitter.Node,
@@ -898,6 +922,22 @@ def _extract_planning(
             closed = timestamp
 
     return scheduled, deadline, closed
+
+
+def _extract_single_heading_node(
+    document: Document,
+) -> Heading | None:
+    """Return the sole top-level heading semantic node from parsed source."""
+    if (
+        document.keywords
+        or document.properties is not None
+        or document.logbook is not None
+        or document.body
+    ):
+        return None
+    if len(document.children) != 1:
+        return None
+    return document.children[0]
 
 
 def _find_first_subheading(node: tree_sitter.Node) -> tree_sitter.Node | None:

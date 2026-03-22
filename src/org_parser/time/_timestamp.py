@@ -70,6 +70,38 @@ class Timestamp:
     _dirty: bool = field(default=False, init=False, repr=False, compare=False)
 
     @classmethod
+    def from_source(cls, source: str) -> Timestamp:
+        """Parse *source* and return one strict :class:`Timestamp`.
+
+        The source must parse to a single inline timestamp object with no
+        surrounding text.
+
+        Args:
+            source: Org source text containing exactly one timestamp.
+
+        Returns:
+            Parsed :class:`Timestamp`.
+
+        Raises:
+            ValueError: If parsing fails or the structure is not one timestamp.
+        """
+        from org_parser.text._inline import PlainText
+        from org_parser.text._rich_text import RichText
+
+        rich_text = RichText.from_source(source)
+        parts = [
+            part
+            for part in rich_text.parts
+            if not (isinstance(part, PlainText) and str(part) == "")
+        ]
+        if len(parts) != 1:
+            raise ValueError("Unexpected parse tree structure")
+        part = parts[0]
+        if not isinstance(part, cls):
+            raise ValueError("Unexpected parse tree structure")
+        return part
+
+    @classmethod
     def from_node(cls, node: tree_sitter.Node, document: Document) -> Timestamp:
         """Create a :class:`Timestamp` from a tree-sitter timestamp-like node."""
         raw = _extract_raw_timestamp_text(node, document)

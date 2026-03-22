@@ -175,6 +175,30 @@ class RichText:
     # -- factory methods -----------------------------------------------------
 
     @classmethod
+    def from_source(cls, source: str) -> RichText:
+        """Parse *source* and return one strict :class:`RichText` value.
+
+        The source must parse to exactly one paragraph element and no headings
+        or zeroth-section metadata.
+
+        Args:
+            source: Org source text containing one rich-text paragraph.
+
+        Returns:
+            Parsed :class:`RichText` for the paragraph content.
+
+        Raises:
+            ValueError: If parsing fails or the structure is not one paragraph.
+        """
+        from org_parser._from_source import parse_source_with_extractor
+
+        rich_text, _ = parse_source_with_extractor(
+            source,
+            extractor=_extract_single_rich_text_node,
+        )
+        return rich_text
+
+    @classmethod
     def from_node(
         cls,
         node: tree_sitter.Node,
@@ -538,3 +562,25 @@ def _find_first_node_by_type(
             return node
         stack.extend(reversed(node.children))
     return None
+
+
+def _extract_single_rich_text_node(
+    document: Document,
+) -> RichText | None:
+    """Return the sole rich-text semantic value for ``from_source``."""
+    from org_parser.element import Paragraph
+
+    invalid_document_shape = (
+        document.keywords
+        or document.properties is not None
+        or document.logbook is not None
+        or document.children
+        or len(document.body) != 1
+    )
+    if invalid_document_shape:
+        return None
+
+    paragraph = document.body[0]
+    if not isinstance(paragraph, Paragraph):
+        return None
+    return paragraph.body

@@ -136,6 +136,24 @@ class Document:
     # -- factory method ------------------------------------------------------
 
     @classmethod
+    def from_source(cls, source: str, *, filename: str = "") -> Document:
+        """Build a :class:`Document` from Org source text.
+
+        Args:
+            source: Org source text to parse.
+            filename: Optional filename assigned to the parsed document.
+
+        Returns:
+            A fully populated parse-backed :class:`Document`.
+
+        Raises:
+            ValueError: If the source contains parse errors.
+        """
+        from org_parser._from_source import parse_document_from_source
+
+        return parse_document_from_source(source, filename=filename)
+
+    @classmethod
     def from_tree(
         cls,
         tree: tree_sitter.Tree,

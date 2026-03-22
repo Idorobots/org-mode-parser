@@ -4789,7 +4789,10 @@ Document should also handle multiple =#+TODO= keywords.
 
 Example: =document[0][2].body[2][x][y]= - x,y table cell in a body of third child of the first heading in a document.
 
-** TODO Convenience constructors
+** DONE Convenience constructors
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 22:13]
+:END:
 Add a new class method =from_source= to =Document=, =Heading=,  =RichText=, =Timestamp= and =Element= subclasses that will invoke the parser and extract the resulting parse tree as a semantic node. These new methods will be used to:
 
 1. Programatically create RichText from strings
@@ -4828,6 +4831,62 @@ If the parse tree has errors or if it results in an unexpected tree structure, t
 
 Since most of these =from_source= implementations will be very similar, it makes sense to abstract the parsing into a helper function that runs the parser and accepts a node extractor returning a =node= and =document=.
 
+*** DONE Code review comment
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 21:47]
+:END:
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/_from_source.py::if _tree_has_parse_errors(tree.root_node):
+ raise ValueError("Source contains parse errors")]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/_from_source.py
+
+#+begin_example
+    if _tree_has_parse_errors(tree.root_node):
+        raise ValueError("Source contains parse errors")
+#+end_example
+
+You can use `document.errors` to see if there are any errors reported.
+*** DONE src/org_parser/_from_source.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 22:11]
+:END:
+
+In file src/org_parser/_from_source.py around line 52, near the ~Merge~
+
+#+begin_example
++def parse_source_with_extractor(
++    source: str,
++    *,
++    extractor: Callable[[tree_sitter.Node, Document], tree_sitter.Node | None],
++) -> tuple[tree_sitter.Node, Document]:
+
+#+end_example
+
+Does it make more sense to return the parsed element here? Now if we return the node we're re-doing the same parsing work as was already done within this function. I'd rater the result of calling =parse_source_with_extractor= to be the element and the document. You can use typevars for the extractor and return types.
+
+The extractors should also use the document for the extraction, not the Tree-Sitter nodes.
+
+*** DONE src/org_parser/text/_rich_text.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-22 Sun 22:13]
+:END:
+
+In file src/org_parser/text/_rich_text.py around line 219, near the ~class RichText:~
+
+#+begin_example
++        if not isinstance(rich_text, cls):
++            raise ValueError("Unexpected parse tree structure")
+#+end_example
+
+This guard is not needed - we're passing the extractor that either extracts a value or causes =parse_source_with_extractor= to throw. Please remove these.
 * Release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:
