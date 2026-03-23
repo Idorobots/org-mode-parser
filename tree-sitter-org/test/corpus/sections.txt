@@ -124,12 +124,12 @@ Indented paragraphs under heading and list item
       (blank_line)
       (list_item
         bullet: (unordered_bullet)
-        first_line: (plain_text))
-      (block
-        indent: (indent)
-        body: (paragraph
-          (plain_text)
-          (newline))))))
+        first_line: (plain_text)
+        body: (block
+          indent: (indent)
+          body: (paragraph
+            (plain_text)
+            (newline)))))))
 
 ================
 Indented hash comment inside heading body

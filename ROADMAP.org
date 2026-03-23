@@ -4925,6 +4925,19 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_doc
 #+end_example
 
 The private =_mark_dirty= method is pretty useless. We can go with only the publicly available =mark_dirty=. Please update all the classes that have a =_mark_dirty= and =mark_dirty= to only use the public one.
+* Tree-Sitter list recovery
+** TODO Support for list_item bodies
+Make list items accept a block body. It should be enough to accept just one block as the body as the block will likely contain all the relevant bits already.
+
+** TODO Anonymous body nodes
+Make the list item body block node anonymous so that all the bits are attached to the list item.
+
+** TODO Make list items be wrapped in a list node
+Wrap multiple consecutive list items in a list node. The list node should accept multiple items that themselves can contain lists via the block bodies. The lists should expose the list items under the =item= property.
+
+** Python list recovery
+Update the Python wrapper not to have to recover list structure but rather accept the Tree-Sitter node structure.
+
 * Release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:

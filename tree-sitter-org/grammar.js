@@ -478,7 +478,7 @@ module.exports = grammar({
     // --- 6.5 List Items ---
     //
     // List items are parsed as standalone section elements.
-    list_item: $ => prec.left(seq(
+    list_item: $ => prec.right(seq(
       field('bullet', $._bullet),
       optional(field('counter_set', $.counter_set)),
       optional(field('checkbox', $.checkbox)),
@@ -486,6 +486,7 @@ module.exports = grammar({
         seq(field('tag', $.item_tag), $._NL),
         seq(optional(field('first_line', $._item_first_line)), optional($._TRAILING), $._NL),
       ),
+      optional(field('body', $.block)),
     )),
 
     _item_first_line: $ => repeat1($._object),

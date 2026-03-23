@@ -427,12 +427,12 @@ Indented drawer starts after list item
   (zeroth_section
     (list_item
       bullet: (unordered_bullet)
-      first_line: (plain_text))
-    (block
-      indent: (indent)
-      body: (drawer
-        name: (drawer_name)
-        body: (drawer_kv_line)))))
+      first_line: (plain_text)
+      body: (block
+        indent: (indent)
+        body: (drawer
+          name: (drawer_name)
+          body: (drawer_kv_line))))))
 
 ================
 Indented fixed-width starts after list item
@@ -446,10 +446,10 @@ Indented fixed-width starts after list item
   (zeroth_section
     (list_item
       bullet: (unordered_bullet)
-      first_line: (plain_text))
-    (block
-      indent: (indent)
-      body: (fixed_width))))
+      first_line: (plain_text)
+      body: (block
+        indent: (indent)
+        body: (fixed_width)))))
 
 ================
 Indented nested item drawer starts after list
@@ -467,16 +467,16 @@ Indented nested item drawer starts after list
   (zeroth_section
     (list_item
       bullet: (unordered_bullet)
-      first_line: (plain_text))
-    (block
-      indent: (indent)
-      body: (list_item
-        bullet: (unordered_bullet)
-        first_line: (plain_text))
+      first_line: (plain_text)
       body: (block
         indent: (indent)
-        body: (logbook_drawer
-          body: (drawer_kv_line))))
+        body: (list_item
+          bullet: (unordered_bullet)
+          first_line: (plain_text)
+          body: (block
+            indent: (indent)
+            body: (logbook_drawer
+              body: (drawer_kv_line))))))
     (list_item
       bullet: (unordered_bullet)
       first_line: (plain_text))))
@@ -495,15 +495,15 @@ Indented nested fixed-width starts after list
   (zeroth_section
     (list_item
       bullet: (unordered_bullet)
-      first_line: (plain_text))
-    (block
-      indent: (indent)
-      body: (list_item
-        bullet: (unordered_bullet)
-        first_line: (plain_text))
+      first_line: (plain_text)
       body: (block
         indent: (indent)
-        body: (fixed_width)))
+        body: (list_item
+          bullet: (unordered_bullet)
+          first_line: (plain_text)
+          body: (block
+            indent: (indent)
+            body: (fixed_width)))))
     (list_item
       bullet: (unordered_bullet)
       first_line: (plain_text))))
@@ -529,16 +529,16 @@ Indented quote block after list item
       (blank_line)
       (list_item
         bullet: (unordered_bullet)
-        first_line: (plain_text))
-      (block
-        indent: (indent)
-        body: (quote_block
-          body: (paragraph
-            (plain_text)
-            (newline))
-          body: (paragraph
-            (plain_text)
-            (newline)))))))
+        first_line: (plain_text)
+        body: (block
+          indent: (indent)
+          body: (quote_block
+            body: (paragraph
+              (plain_text)
+              (newline))
+            body: (paragraph
+              (plain_text)
+              (newline))))))))
 
 ================
 Indented src block belongs to nested list item body
@@ -556,18 +556,18 @@ Indented src block belongs to nested list item body
   (zeroth_section
     (list_item
       bullet: (unordered_bullet)
-      first_line: (plain_text))
-    (block
-      indent: (indent)
-      body: (list_item
-        bullet: (unordered_bullet)
-        first_line: (plain_text))
+      first_line: (plain_text)
       body: (block
         indent: (indent)
-        body: (src_block
-          language: (language)
-          body: (src_block_body
-            (src_line)))))
+        body: (list_item
+          bullet: (unordered_bullet)
+          first_line: (plain_text)
+          body: (block
+            indent: (indent)
+            body: (src_block
+              language: (language)
+              body: (src_block_body
+                (src_line)))))))
     (list_item
       bullet: (unordered_bullet)
       first_line: (plain_text))))
@@ -686,17 +686,17 @@ List items with slash and percent completion counters
       checkbox: (checkbox)
       first_line: (plain_text)
       first_line: (completion_counter
-        value: (completion_counter_value)))
-    (block
-      indent: (indent)
-      body: (list_item
-        bullet: (unordered_bullet)
-        checkbox: (checkbox)
-        first_line: (plain_text))
-      body: (list_item
-        bullet: (unordered_bullet)
-        checkbox: (checkbox)
-        first_line: (plain_text)))
+        value: (completion_counter_value))
+      body: (block
+        indent: (indent)
+        body: (list_item
+          bullet: (unordered_bullet)
+          checkbox: (checkbox)
+          first_line: (plain_text))
+        body: (list_item
+          bullet: (unordered_bullet)
+          checkbox: (checkbox)
+          first_line: (plain_text))))
     (list_item
       bullet: (unordered_bullet)
       checkbox: (checkbox)
@@ -734,17 +734,17 @@ Nested plus checkbox list items stay list_item nodes
     (list_item
       bullet: (unordered_bullet)
       checkbox: (checkbox)
-      first_line: (plain_text))
-    (block
-      indent: (indent)
-      body: (list_item
-        bullet: (unordered_bullet)
-        checkbox: (checkbox)
-        first_line: (plain_text))
-      body: (list_item
-        bullet: (unordered_bullet)
-        checkbox: (checkbox)
-        first_line: (plain_text)))
+      first_line: (plain_text)
+      body: (block
+        indent: (indent)
+        body: (list_item
+          bullet: (unordered_bullet)
+          checkbox: (checkbox)
+          first_line: (plain_text))
+        body: (list_item
+          bullet: (unordered_bullet)
+          checkbox: (checkbox)
+          first_line: (plain_text))))
     (list_item
       bullet: (unordered_bullet)
       checkbox: (checkbox)
@@ -764,15 +764,15 @@ Nested list — flat with indent preserved
   (zeroth_section
     (list_item
       bullet: (unordered_bullet)
-      first_line: (plain_text))
-    (block
-      indent: (indent)
-      body: (list_item
-        bullet: (unordered_bullet)
-        first_line: (plain_text))
-      body: (list_item
-        bullet: (unordered_bullet)
-        first_line: (plain_text)))
+      first_line: (plain_text)
+      body: (block
+        indent: (indent)
+        body: (list_item
+          bullet: (unordered_bullet)
+          first_line: (plain_text))
+        body: (list_item
+          bullet: (unordered_bullet)
+          first_line: (plain_text))))
     (list_item
       bullet: (unordered_bullet)
       first_line: (plain_text))))
@@ -835,20 +835,20 @@ Indented numeric continuation lines stay in list items
   (zeroth_section
     (list_item
       bullet: (unordered_bullet)
-      first_line: (plain_text))
-    (block
-      indent: (indent)
-      body: (paragraph
-        (plain_text)
-        (newline)))
+      first_line: (plain_text)
+      body: (block
+        indent: (indent)
+        body: (paragraph
+          (plain_text)
+          (newline))))
     (list_item
       bullet: (unordered_bullet)
-      first_line: (plain_text))
-    (block
-      indent: (indent)
-      body: (paragraph
-        (plain_text)
-        (newline)))))
+      first_line: (plain_text)
+      body: (block
+        indent: (indent)
+        body: (paragraph
+          (plain_text)
+          (newline))))))
 
 ================
 List items with bullet-like continuation paragraphs
@@ -872,12 +872,12 @@ List items with bullet-like continuation paragraphs
         dayname: (ts_dayname)
         time: (ts_time))
       first_line: (plain_text)
-      first_line: (line_break))
-    (block
-      indent: (indent)
-      body: (paragraph
-        (plain_text)
-        (newline)))
+      first_line: (line_break)
+      body: (block
+        indent: (indent)
+        body: (paragraph
+          (plain_text)
+          (newline))))
     (list_item
       bullet: (unordered_bullet)
       first_line: (plain_text)
@@ -888,12 +888,12 @@ List items with bullet-like continuation paragraphs
         dayname: (ts_dayname)
         time: (ts_time))
       first_line: (plain_text)
-      first_line: (line_break))
-    (block
-      indent: (indent)
-      body: (paragraph
-        (plain_text)
-        (newline)))))
+      first_line: (line_break)
+      body: (block
+        indent: (indent)
+        body: (paragraph
+          (plain_text)
+          (newline))))))
 
 ================
 List continuation lines parse indented timestamps and links
@@ -908,22 +908,22 @@ List continuation lines parse indented timestamps and links
   (zeroth_section
     (list_item
       bullet: (unordered_bullet)
-      first_line: (plain_text))
-    (block
-      indent: (indent)
-      body: (paragraph
-        (timestamp
-          year: (ts_year)
-          month: (ts_month)
-          day: (ts_day)
-          dayname: (ts_dayname)
-          time: (ts_time))
-        (newline))
-      body: (paragraph
-        (regular_link
-          path: (link_path)
-          description: (plain_text))
-        (newline)))))
+      first_line: (plain_text)
+      body: (block
+        indent: (indent)
+        body: (paragraph
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time))
+          (newline))
+        body: (paragraph
+          (regular_link
+            path: (link_path)
+            description: (plain_text))
+          (newline))))))
 
 ================
 List items with completion counter variants
@@ -1036,12 +1036,12 @@ Mixed unordered bullet types expose distinct bullet nodes
       first_line: (plain_text))
     (list_item
       bullet: (unordered_bullet)
-      first_line: (plain_text))
-    (block
-      indent: (indent)
-      body: (list_item
-        bullet: (unordered_bullet)
-        first_line: (plain_text)))))
+      first_line: (plain_text)
+      body: (block
+        indent: (indent)
+        body: (list_item
+          bullet: (unordered_bullet)
+          first_line: (plain_text))))))
 
 ================
 Alpha-ordered list items parse as list_item nodes
