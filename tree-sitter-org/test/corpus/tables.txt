@@ -326,9 +326,10 @@ Table.el followed by plus list item
 (document
   (zeroth_section
     (tableel_table)
-    (list_item
-      bullet: (unordered_bullet)
-      first_line: (plain_text))))
+    (list
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (plain_text)))))
 
 ================
 Affiliated keywords between tables

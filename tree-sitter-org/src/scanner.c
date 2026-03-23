@@ -6,7 +6,6 @@
  *
  *   - Beginning-of-line detection (BOL via get_column)
  *   - Heading level tracking and containment
- *   - List indentation grouping
  *   - TODO keyword set management
  *   - Block begin/end name matching
  *   - Markup boundary lookbehind (PRE/POST constraints)
@@ -29,9 +28,6 @@
 enum TokenType {
   TOKEN_STARS,
   TOKEN_HEADING_END,
-  TOKEN_LIST_START,
-  TOKEN_LIST_END,
-  TOKEN_ITEM_END,
   TOKEN_TODO_KW,
   TOKEN_BLOCK_END_MATCH,
   TOKEN_GBLOCK_NAME,
@@ -72,7 +68,7 @@ enum TokenType {
 // Constants
 // ---------------------------------------------------------------------------
 #define MAX_HEADING_DEPTH   64
-#define MAX_LIST_DEPTH      64
+#define MAX_SECTION_BLOCK_DEPTH 64
 #define MAX_BLOCK_DEPTH     16
 #define MAX_TODO_KEYWORDS   32
 #define MAX_TODO_KW_LEN     32
@@ -143,10 +139,6 @@ typedef struct {
   uint8_t heading_levels[MAX_HEADING_DEPTH];
   uint8_t heading_depth;
 
-  // List indentation stack
-  uint16_t list_indents[MAX_LIST_DEPTH];
-  uint8_t list_depth;
-
   // TODO keyword set
   char todo_keywords[MAX_TODO_KEYWORDS][MAX_TODO_KW_LEN];
   uint8_t num_todo_keywords;
@@ -193,7 +185,7 @@ typedef struct {
   uint16_t plain_lbracket_depth;
 
   // Section-local indentation block stack.
-  uint16_t section_block_indents[MAX_LIST_DEPTH];
+  uint16_t section_block_indents[MAX_SECTION_BLOCK_DEPTH];
   uint8_t section_block_depth;
 
   // One-shot guard: after closing a block on an ``:end:`` marker, do not
@@ -395,14 +387,6 @@ unsigned tree_sitter_org_external_scanner_serialize(
     buffer[pos++] = (char)s->heading_levels[i];
   }
 
-  // list_depth + indents (2 bytes each)
-  if (pos + 1 + s->list_depth * 2 > SERIALIZE_BUF_SIZE) return 0;
-  buffer[pos++] = (char)s->list_depth;
-  for (uint8_t i = 0; i < s->list_depth; i++) {
-    buffer[pos++] = (char)(s->list_indents[i] >> 8);
-    buffer[pos++] = (char)(s->list_indents[i] & 0xFF);
-  }
-
   // section_block_depth + indents (2 bytes each)
   if (pos + 1 + s->section_block_depth * 2 > SERIALIZE_BUF_SIZE) return 0;
   buffer[pos++] = (char)s->section_block_depth;
@@ -470,7 +454,6 @@ void tree_sitter_org_external_scanner_deserialize(
 
   // Reset to defaults
   s->heading_depth = 0;
-  s->list_depth = 0;
   s->block_depth = 0;
   s->section_block_depth = 0;
   s->prev_char = 0;
@@ -495,14 +478,6 @@ void tree_sitter_org_external_scanner_deserialize(
   s->heading_depth = (uint8_t)buffer[pos++];
   for (uint8_t i = 0; i < s->heading_depth && pos < length; i++) {
     s->heading_levels[i] = (uint8_t)buffer[pos++];
-  }
-
-  // list_depth + indents
-  if (pos >= length) return;
-  s->list_depth = (uint8_t)buffer[pos++];
-  for (uint8_t i = 0; i < s->list_depth && pos + 1 < length; i++) {
-    s->list_indents[i] = (uint16_t)((uint8_t)buffer[pos] << 8 | (uint8_t)buffer[pos + 1]);
-    pos += 2;
   }
 
   // section_block_depth + indents
@@ -948,276 +923,9 @@ static int scan_markup_close(Scanner *s, TSLexer *lexer, int32_t marker, enum To
   return -1;
 }
 
-static bool is_list_line_start_context(const Scanner *s, uint32_t col);
-
-// _LIST_START: zero-width token emitted at the start of a plain_list.
-//
-// Lists are parsed FLAT: all items (including indented/nested ones) are
-// siblings inside a single plain_list node.  The _LISTITEM_INDENT field on
-// each item records its leading whitespace so that post-processing can
-// reconstruct the proper nested structure.
-//
-// Consequently, _LIST_START only fires when we are NOT already inside a list
-// (list_depth == 0).  Once a list is open, every subsequent bullet becomes a
-// sibling item without a new _LIST_START.
-//
-// Returns:
-//   1  = matched LIST_START
-//   2  = emitted TOKEN_PLAIN_TEXT fallback
-//   0  = no match, no advance performed
-//  -1  = no match, but probe advanced; caller must return false so tree-sitter
-//        rewinds lexer position before other scanners run.
-static int scan_list_start(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
-  if (s->list_depth >= MAX_LIST_DEPTH) return 0;
-
-  // Flat lists only: never start a nested list.
-  if (s->list_depth > 0) return 0;
-
-  mark_end(lexer);  // zero-width token position
-
-  uint32_t col = get_column(lexer);
-  int32_t ch = lookahead(lexer);
-
-  // Never start a new list from a bullet marker that appears mid-line.
-  // This prevents cases like "React + Redux" from spawning a new list item.
-  if (ch == '+' && col > 1 && s->prev_char != 0) return 0;
-
-  if (!is_list_line_start_context(s, col)) return 0;
-
-  if (ch == '+' || ch == '-') {
-    advance(lexer);
-    if (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
-      s->list_indents[s->list_depth] = (uint16_t)col;
-      s->list_depth++;
-      // Item text begins after a bullet + required space; treat that boundary
-      // as PRE-whitespace for inline markup opening at item start.
-      s->prev_char = ' ';
-      lexer->result_symbol = TOKEN_LIST_START;
-      return 1;
-    }
-
-    if (ch == '-' && lookahead(lexer) == '-') {
-      advance(lexer);
-      int32_t next = lookahead(lexer);
-      if (valid_symbols[TOKEN_PLAIN_TEXT] &&
-          (is_ascii_upper(next) || (next >= 'a' && next <= 'z'))) {
-        lexer->result_symbol = TOKEN_PLAIN_TEXT;
-        mark_end(lexer);
-        s->prev_char = '-';
-        return 2;
-      }
-      return -1;
-    }
-
-    // Recovery for '+' at BOL/non-list contexts (e.g. "+strike+").
-    // scan_list_start probes list bullets before markup scanners; if we
-    // consumed '+' and it is not a bullet, emit strike-open when valid.
-    if (ch == '+' && valid_symbols[TOKEN_MARKUP_OPEN_STRIKE] &&
-        is_markup_pre(s->prev_char) && lookahead(lexer) != ' ' &&
-        lookahead(lexer) != '\t' && lookahead(lexer) != '\n' &&
-        lookahead(lexer) != '-' && !eof(lexer)) {
-      lexer->result_symbol = TOKEN_MARKUP_OPEN_STRIKE;
-      mark_end(lexer);
-      s->prev_char = '+';
-      s->strike_open = true;
-      return 1;
-    }
-
-    return -1;
-  }
-
-  if (ch == '*' && col > 0) {
-    advance(lexer);
-    if (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
-      s->list_indents[s->list_depth] = (uint16_t)col;
-      s->list_depth++;
-      // Item text begins after a bullet + required space; treat that boundary
-      // as PRE-whitespace for inline markup opening at item start.
-      s->prev_char = ' ';
-      lexer->result_symbol = TOKEN_LIST_START;
-      return 1;
-    }
-    return -1;
-  }
-
-  if (ch >= '0' && ch <= '9') {
-    while (lookahead(lexer) >= '0' && lookahead(lexer) <= '9') {
-      advance(lexer);
-    }
-    if (lookahead(lexer) == '.' || lookahead(lexer) == ')') {
-      advance(lexer);
-      if (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
-        s->list_indents[s->list_depth] = (uint16_t)col;
-        s->list_depth++;
-        // Item text begins after a bullet + required space; treat that
-        // boundary as PRE-whitespace for inline markup opening at item start.
-        s->prev_char = ' ';
-        lexer->result_symbol = TOKEN_LIST_START;
-        return 1;
-      }
-    }
-
-    if (valid_symbols[TOKEN_PLAIN_TEXT]) {
-      while (!eof(lexer) && lookahead(lexer) != '\n') {
-        s->prev_char = lookahead(lexer);
-        advance(lexer);
-      }
-      mark_end(lexer);
-      lexer->result_symbol = TOKEN_PLAIN_TEXT;
-      return 2;
-    }
-
-    return -1;
-  }
-
-  return 0;
-}
-
-// _LIST_END: zero-width token emitted when the plain_list closes.
-//
-// Because lists are flat (see scan_list_start above), we end the list
-// whenever the next real character cannot start a list item or blank line.
-// This check is intentionally NON-ADVANCING: we only look at the current
-// lookahead character (and its column) without calling advance().  This
-// avoids corrupting the lexer position for subsequent scanners in the same
-// outer scan() call.
-//
-// Characters that mean the list CONTINUES (return false):
-//   '\n'           — blank line; the _blank_line rule in plain_list handles it
-//   ' ' / '\t'     — whitespace; scan_listitem_indent runs before us and
-//                    handles indented bullets.  If it returned -1 (indented
-//                    non-bullet), the outer function falls through here and
-//                    we see the non-bullet character instead of the space.
-//   '-' / '+'      — unordered bullet
-//   '0'..'9'       — ordered bullet (digit counter)
-//   'a'..'z'       — ordered bullet (letter counter)
-//   '*' at col > 0 — unordered star bullet (col 0 would be a heading)
-//
-// Everything else (heading '*' at col 0, '#', ':', etc.) ends the list.
-static bool is_space_or_tab(int32_t ch) {
-  return ch == ' ' || ch == '\t';
-}
-
 static bool is_list_line_start_context(const Scanner *s, uint32_t col) {
   if (col == 0) return true;
   return s->prev_char == 0 && s->section_block_depth > 0;
-}
-
-// Probe whether the current line starts with a valid Org list bullet.
-//
-// This function may advance lexer lookahead while probing; callers must either
-// emit a token in this scan call or return false from the outer scan function so
-// tree-sitter rewinds before other token checks.
-//
-// Return values:
-//   1  -> valid list bullet prefix found
-//   0  -> not a valid list bullet prefix
-static int probe_list_bullet_prefix(TSLexer *lexer, uint32_t col) {
-  int32_t ch = lookahead(lexer);
-
-  // Unordered bullets: '-', '+', '*' followed by space/tab.
-  if (ch == '-' || ch == '+') {
-    advance(lexer);
-    return is_space_or_tab(lookahead(lexer)) ? 1 : 0;
-  }
-
-  if (ch == '*') {
-    if (col == 0) return 0;  // heading starter, never an unordered list bullet
-    advance(lexer);
-    return is_space_or_tab(lookahead(lexer)) ? 1 : 0;
-  }
-
-  // Ordered bullets: [0-9]+[.)][ \t]
-  if (ch >= '0' && ch <= '9') {
-    do {
-      advance(lexer);
-      ch = lookahead(lexer);
-    } while (ch >= '0' && ch <= '9');
-
-    if (ch != '.' && ch != ')') return 0;
-    advance(lexer);
-    return is_space_or_tab(lookahead(lexer)) ? 1 : 0;
-  }
-
-  // Ordered bullets: [a-z][.)][ \t]
-  if (ch >= 'a' && ch <= 'z') {
-    advance(lexer);
-    ch = lookahead(lexer);
-    if (ch != '.' && ch != ')') return 0;
-    advance(lexer);
-    return is_space_or_tab(lookahead(lexer)) ? 1 : 0;
-  }
-
-  return 0;
-}
-
-// _LIST_END: zero-width token emitted when the plain_list closes.
-//
-// Return values:
-//   1  -> LIST_END emitted
-//   0  -> list continues, no advance performed
-//  -1  -> list continues, probe advanced; caller must return false so
-//         tree-sitter rewinds before other scanners run.
-static int scan_list_end(Scanner *s, TSLexer *lexer) {
-  if (s->list_depth == 0) return 0;
-
-  mark_end(lexer);  // zero-width; position set here (may be after whitespace
-                    // if scan_listitem_indent advanced in the -1 case)
-
-  if (eof(lexer)) {
-    s->list_depth--;
-    lexer->result_symbol = TOKEN_LIST_END;
-    return 1;
-  }
-
-  int32_t ch = lookahead(lexer);
-  uint32_t col = get_column(lexer);
-  uint16_t current_indent = s->list_indents[s->list_depth - 1];
-
-  if (ch == '\n') return 0;                 // blank line
-  if (ch == ' ' || ch == '\t') {
-    s->list_depth--;
-    lexer->result_symbol = TOKEN_LIST_END;
-    return 1;
-  }
-
-  // For bullet-like starters, verify full bullet shape rather than just first
-  // character so lines like "-----" correctly end the list.
-  if (ch == '-' || ch == '+' || ch == '*' ||
-      (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z')) {
-    if (!is_list_line_start_context(s, col)) return 0;
-    if (probe_list_bullet_prefix(lexer, col)) {
-      // We are continuing with another list item. The next object's PRE
-      // context should be whitespace (bullet separator), not the previous
-      // line's trailing character.
-      s->prev_char = ' ';
-      return -1;
-    }
-    s->list_depth--;
-    lexer->result_symbol = TOKEN_LIST_END;
-    return 1;
-  }
-
-  // Colon-prefixed lines terminate the current list. Fixed-width lines
-  // (': ' / ':\n') are handled earlier by scan_listitem_indent.
-  (void)current_indent;
-
-  // Heading '*' at col 0, keywords ('#'), drawers (':'), etc. — end the list.
-  s->list_depth--;
-  lexer->result_symbol = TOKEN_LIST_END;
-  return 1;
-}
-
-// _ITEM_END: only emit at EOF or double blank line when in a list
-static bool scan_item_end(Scanner *s, TSLexer *lexer) {
-  if (s->list_depth == 0) return false;
-  if (eof(lexer) || s->consecutive_blank_lines >= 2) {
-    lexer->result_symbol = TOKEN_ITEM_END;
-    mark_end(lexer);
-    s->consecutive_blank_lines = 0;
-    return true;
-  }
-  return false;
 }
 
 // _FNDEF_END: only emit at EOF or double blank line
@@ -2074,7 +1782,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
 
         // Preserve a real trailing heading tags suffix for grammar-level tags.
         // Inside list items, colon-wrapped tails (e.g. ":feature:") are text.
-        if (s->in_heading_line && s->list_depth == 0 && (s->prev_char == ' ' || s->prev_char == '\t')) {
+        if (s->in_heading_line && (s->prev_char == ' ' || s->prev_char == '\t')) {
           advance(lexer);
           if (is_heading_tag_char(lookahead(lexer)) && probe_heading_tags_suffix_after_colon(lexer)) {
             if (!found_any) return false;
@@ -2466,9 +2174,9 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
 
   if (ch == ':') {
     // Mid-line colons are often plain text ("test ::", "value: text").
-    // Treat ':' as potential heading-tags start only when not inside a list
-    // item and only if the remainder is a full tags suffix.
-    if (s->in_heading_line && s->list_depth == 0 && (s->prev_char == ' ' || s->prev_char == '\t')) {
+    // Treat ':' as potential heading-tags start only if the remainder is a
+    // full tags suffix.
+    if (s->in_heading_line && (s->prev_char == ' ' || s->prev_char == '\t')) {
       advance(lexer);
       s->prev_char = ':';
       mark_end(lexer);
@@ -2754,7 +2462,7 @@ static int scan_block_begin(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   if (indent_col == current) return -1;
 
   if (indent_col < current) return -1;
-  if (s->section_block_depth >= MAX_LIST_DEPTH) return -1;
+  if (s->section_block_depth >= MAX_SECTION_BLOCK_DEPTH) return -1;
 
   /* Fix the token boundary to the consumed whitespace now.  All advance()
    * calls below are purely for lookahead and do not extend the token.
@@ -2807,7 +2515,7 @@ static int scan_block_end(Scanner *s, TSLexer *lexer, const bool *valid_symbols)
 
   if (indent_col > current && !eof(lexer) && ch != '\n' &&
       valid_symbols[TOKEN_BLOCK_BEGIN]) {
-    if (s->section_block_depth >= MAX_LIST_DEPTH) return -1;
+    if (s->section_block_depth >= MAX_SECTION_BLOCK_DEPTH) return -1;
     s->section_block_indents[s->section_block_depth] = (uint16_t)indent_col;
     s->section_block_depth++;
     mark_end(lexer);
@@ -3083,12 +2791,9 @@ static bool scan_todo_setup_sync(Scanner *s, TSLexer *lexer) {
 //   followed by ' ' or '\n'/EOF.  Consuming the indent + ':' here means the
 //   grammar rule never needs an explicit _INDENT? prefix.
 //
-//   Column > 0 with prev_char == 0: the list scanner (scan_listitem_indent +
-//   scan_list_end) can advance past indentation and then emit a zero-width
-//   LIST_END, leaving the lexer positioned mid-line at ':'.  Because only
-//   zero-width / internal tokens ran, prev_char is still 0 even at column > 0.
-//   We treat this as a valid BOL context for indented fixed-width lines inside
-//   list items.
+//   Column > 0 with prev_char == 0: we left column 0 via grammar/internal
+//   tokens only, so no visible scanner token has consumed text on this line
+//   yet. We treat this as a valid BOL context for indented fixed-width lines.
 //
 // In all other cases (column > 0 with prev_char != 0, meaning external scanner
 // has already consumed visible content on this line) we return false.  The
@@ -3102,8 +2807,7 @@ static int scan_fixed_width_colon(Scanner *s, TSLexer *lexer, const bool *valid_
   bool advanced = false;
 
   if (get_column(lexer) == 0) {
-    if (s->list_depth > 0) return 0;
-
+    // Column-0 fixed-width lines are valid.
   } else {
     // Mid-line: only valid if no visible external text was consumed on this
     // line (pure BOL path via grammar/internal tokens).

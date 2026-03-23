@@ -4925,18 +4925,49 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_doc
 #+end_example
 
 The private =_mark_dirty= method is pretty useless. We can go with only the publicly available =mark_dirty=. Please update all the classes that have a =_mark_dirty= and =mark_dirty= to only use the public one.
-* TODO Tree-Sitter list recovery
-** TODO Support for list_item bodies
+* TODO Tree-Sitter structure recovery
+** DONE Support for list_item bodies
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-23 Mon 18:24]
+:END:
 Make list items accept a block body. It should be enough to accept just one block as the body as the block will likely contain all the relevant bits already.
 
-** TODO Anonymous body nodes
+** DONE Anonymous body nodes
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-23 Mon 18:24]
+:END:
 Make the list item body block node anonymous so that all the bits are attached to the list item.
 
-** TODO Make list items be wrapped in a list node
+** DONE Make list items be wrapped in a list node
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-23 Mon 19:43]
+:END:
 Wrap multiple consecutive list items in a list node. The list node should accept multiple items that themselves can contain lists via the block bodies. The lists should expose the list items under the =item= property.
 
+** TODO Block handling of lists & paragraphs
+When there are lists within a indent block, they are parsed as separate single-item lists. Lists should not be terminated on newlines within blocks.
+
+#+begin_example
+- foo
+  - baz
+  - herp
+- bar
+#+end_example
+
+In the above example, there should be two, two-item lists =list='s, one top-level and one nested in the first list item of the top-level list.
+
+Similarly, multiple text lines within a block currently parse as multiple separate paragraphs. It would be nice if these could parse as one paragraph that spans the entire text in a block:
+
+#+begin_example
+  Text
+  Text
+  Text
+#+end_example
+
+In the above example, all three text lines should be a memeber of the same paragraph that itself is within a block.
+
 ** TODO Python list recovery
-Update the Python wrapper not to have to recover list structure but rather accept the Tree-Sitter node structure.
+Update the Python wrapper not to have to recover list and paragraph structure but rather accept the Tree-Sitter node structure.
 
 * Release
 ** DONE Supported syntax in the README.org

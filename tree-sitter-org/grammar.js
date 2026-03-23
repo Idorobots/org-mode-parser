@@ -32,9 +32,6 @@ module.exports = grammar({
   externals: $ => [
     $.stars,              // Heading stars at column 0 (e.g. "***")
     $._HEADING_END,      // Close heading on same/higher-level stars or EOI
-    $._LIST_START,       // Open a plain list
-    $._LIST_END,         // Close a plain list
-    $._ITEM_END,         // Terminate a list item
     $._TODO_KW,          // Match current TODO keyword set
     $._BLOCK_END_MATCH,  // Verify #+end_NAME matches #+begin_NAME
     $._GBLOCK_NAME,      // Block name not a lesser block name
@@ -229,7 +226,7 @@ module.exports = grammar({
       $.logbook_drawer,
       $.dynamic_block,
       $.footnote_definition,
-      $.list_item,
+      $.list,
       $.org_table,
       $.tableel_table,
       $._lesser_block,
@@ -266,7 +263,7 @@ module.exports = grammar({
       $.logbook_drawer,
       $.dynamic_block,
       $.footnote_definition,
-      $.list_item,
+      $.list,
       $.org_table,
       $.tableel_table,
       $._lesser_block,
@@ -281,7 +278,7 @@ module.exports = grammar({
       $._greater_block,
       $.dynamic_block,
       $.footnote_definition,
-      $.list_item,
+      $.list,
       $.org_table,
       $.tableel_table,
       $._lesser_block,
@@ -481,7 +478,8 @@ module.exports = grammar({
 
     // --- 6.5 List Items ---
     //
-    // List items are parsed as standalone section elements.
+    list: $ => prec.right(repeat1(field('item', $.list_item))),
+
     list_item: $ => prec.right(seq(
       field('bullet', $._bullet),
       optional(field('counter_set', $.counter_set)),

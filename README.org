@@ -12,11 +12,7 @@ See [[#supported-features][here]] for a list of supported Org features.
 
 * Gotchas
 - Indented paragraphs parse slightly differently than non-indented ones.
-- Tree-Sitter parser doesn't handle nested list structure - all list items are
-  treated as separate entities. Indentation blocks are explicitly provided for
-  downstream structure recovery.
-- Blank lines semantics are not always kept - double blank lines do not terminate list items, etc.
-- Table.el tables parse as verbatim blocks of text.
+- Table.el tables parse as verbatim blocks of text. Their contents are inaccessible.
 - Malformed objects are usually treated as plaintext or recovered with generic
   parse-error nodes.
 

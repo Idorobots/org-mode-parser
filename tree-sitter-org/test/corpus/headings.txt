@@ -231,9 +231,10 @@ Heading title and body list keep plus text
     body: (section
       (block
         indent: (indent)
-        body: (list_item
-          bullet: (unordered_bullet)
-          first_line: (plain_text))))))
+        body: (list
+          item: (list_item
+            bullet: (unordered_bullet)
+            first_line: (plain_text)))))))
 
 ================
 Unknown uppercase title keeps plus text
