@@ -21,7 +21,7 @@ from org_parser.element._element import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Callable, Iterator, Sequence
 
     import tree_sitter
 
@@ -197,6 +197,50 @@ class Indent(Element):
         self._body = body if body is not None else []
         self._indent = indent
         self._adopt_body(self._body)
+
+    @classmethod
+    def from_node(
+        cls,
+        node: tree_sitter.Node,
+        document: Document,
+        *,
+        parent: Document | Heading | Element | None = None,
+        child_factory: Callable[..., Element],
+    ) -> Indent:
+        """Build one :class:`Indent` from a tree-sitter ``indent`` node.
+
+        The *child_factory* callable is responsible for dispatching each named
+        ``body`` field child to the appropriate element constructor for the
+        current parsing context.  It must accept the positional arguments
+        ``(node, document)`` and the keyword argument ``parent``.
+
+        Args:
+            node: A tree-sitter ``indent`` node.
+            document: The owning
+                :class:`~org_parser.document._document.Document`.
+            parent: Optional parent element to assign to the returned block.
+            child_factory: Callable with signature
+                ``(child_node, document, *, parent) -> Element`` used to build
+                each named body child.
+
+        Returns:
+            An :class:`Indent` whose body elements are built by
+            *child_factory* and whose source span is attached for clean
+            round-trip rendering.
+        """
+        indent_node = node.child_by_field_name("indent")
+        indent_text = node_source(indent_node, document)
+        indent = indent_text if indent_text != "" else None
+        block = cls(
+            body=[
+                child_factory(child, document, parent=parent)
+                for child in node.children_by_field_name("body")
+                if child.is_named
+            ],
+            indent=indent,
+        )
+        block.attach_source(node, document)
+        return block
 
     @property
     def indent(self) -> str | None:

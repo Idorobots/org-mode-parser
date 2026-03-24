@@ -758,19 +758,9 @@ def _extract_indent(
     parent: Document | Heading | Element | None = None,
 ) -> Indent:
     """Build one nested :class:`Indent` from an ``indent`` node."""
-    indent_node = node.child_by_field_name("indent")
-    indent_text = node_source(indent_node, document)
-    indent = indent_text if indent_text != "" else None
-    block = Indent(
-        body=[
-            _extract_nested_element(child, document, parent=parent)
-            for child in node.children_by_field_name("body")
-            if child.is_named
-        ],
-        indent=indent,
+    return Indent.from_node(
+        node, document, parent=parent, child_factory=_extract_nested_element
     )
-    block.attach_source(node, document)
-    return block
 
 
 def _extract_optional_field_text(

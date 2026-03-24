@@ -430,19 +430,9 @@ def _extract_indent(
     parent: Document | Heading | Element | None = None,
 ) -> Indent:
     """Build one :class:`Indent` for a drawer body ``indent`` node."""
-    indent_node = node.child_by_field_name("indent")
-    indent_text = node_source(indent_node, document)
-    indent = indent_text if indent_text != "" else None
-    block = Indent(
-        body=[
-            _extract_drawer_body_element(child, document, parent=parent)
-            for child in node.children_by_field_name("body")
-            if child.is_named
-        ],
-        indent=indent,
+    return Indent.from_node(
+        node, document, parent=parent, child_factory=_extract_drawer_body_element
     )
-    block.attach_source(node, document)
-    return block
 
 
 def _extract_logbook_repeats(body: list[Element], document: Document) -> list[Repeat]:
@@ -498,9 +488,7 @@ def _sync_logbook_repeat_list(
 ) -> None:
     """Synchronize explicit repeat entries into a concrete logbook list."""
     target_list: List | None = None
-    for element in logbook.body:
-        if not isinstance(element, List):
-            continue
+    for element in _iter_repeat_candidate_lists(logbook.body):
         if any(isinstance(item, Repeat) for item in element.items):
             target_list = element
             break

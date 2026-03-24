@@ -4925,7 +4925,10 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_doc
 #+end_example
 
 The private =_mark_dirty= method is pretty useless. We can go with only the publicly available =mark_dirty=. Please update all the classes that have a =_mark_dirty= and =mark_dirty= to only use the public one.
-* TODO Tree-Sitter structure recovery
+* DONE Tree-Sitter structure recovery
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-24 Tue 18:37]
+:END:
 ** DONE Support for list_item bodies
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-03-23 Mon 18:24]
@@ -5031,7 +5034,10 @@ Here's one more edge case:
 
 When the list note is the final element, the drawer isn't parsed correctly.
 
-** TODO Python list recovery
+** DONE Python list recovery
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-24 Tue 00:55]
+:END:
 Update the Python wrapper not to have to recover list and paragraph structure but rather accept the Tree-Sitter node structure as is currently. Do keep the =Repeat= recovery though in place.
 The =IndentBlock= should be renamed to just =Indent= and treated as a first-class citizen in the semantic tree.
 
