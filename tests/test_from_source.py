@@ -23,8 +23,34 @@ def test_heading_from_source_parses_single_heading() -> None:
     """Heading.from_source parses one top-level heading."""
     heading = Heading.from_source("* TODO Some new task")
     assert heading.todo == "TODO"
+    assert heading.is_comment is False
     assert heading.title is not None
     assert str(heading.title) == "Some new task"
+
+
+def test_heading_from_source_parses_comment_heading() -> None:
+    """Heading.from_source parses COMMENT marker into boolean state."""
+    heading = Heading.from_source("* COMMENT Internal only\n")
+    assert heading.is_comment is True
+    assert heading.title is not None
+    assert str(heading.title) == "Internal only"
+
+
+def test_heading_from_source_parses_comment_heading_without_title() -> None:
+    """Heading.from_source accepts COMMENT marker without heading title."""
+    heading = Heading.from_source("* COMMENT\n")
+    assert heading.is_comment is True
+    assert heading.title is not None
+    assert str(heading.title) == ""
+
+
+def test_heading_from_source_parses_todo_comment_without_title() -> None:
+    """Heading.from_source accepts TODO + COMMENT marker without heading title."""
+    heading = Heading.from_source("* TODO COMMENT\n")
+    assert heading.todo == "TODO"
+    assert heading.is_comment is True
+    assert heading.title is not None
+    assert str(heading.title) == ""
 
 
 def test_rich_text_from_source_parses_inline_objects() -> None:

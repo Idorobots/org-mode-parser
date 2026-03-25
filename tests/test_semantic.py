@@ -212,6 +212,7 @@ class TestHeadingManual:
         assert h.level == 1
         assert h.parent is doc
         assert h.todo is None
+        assert h.is_comment is False
         assert h.priority is None
         assert h.title is None
         assert h.counter is None
@@ -425,6 +426,15 @@ class TestHeadingFields:
         priorities = [h.priority for h in doc.children if h.priority is not None]
         assert "A" in priorities
         assert "B" in priorities
+
+    def test_comment_marker(self, example_file: Callable[[str], Path]) -> None:
+        """COMMENT heading marker is extracted as a boolean field."""
+        doc = _load_document(example_file("priorities-and-special-headings.org"))
+        comment_headings = [
+            heading for heading in doc.all_headings if heading.is_comment
+        ]
+        assert len(comment_headings) > 0
+        assert any(heading.title is not None for heading in comment_headings)
 
     def test_tags(self, example_file: Callable[[str], Path]) -> None:
         """heading_tags are extracted as a list of individual strings."""

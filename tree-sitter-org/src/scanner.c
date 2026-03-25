@@ -29,6 +29,7 @@ enum TokenType {
   TOKEN_STARS,
   TOKEN_HEADING_END,
   TOKEN_TODO_KW,
+  TOKEN_COMMENT_TOKEN,
   TOKEN_BLOCK_END_MATCH,
   TOKEN_GBLOCK_NAME,
   TOKEN_MARKUP_OPEN_BOLD,
@@ -725,6 +726,18 @@ static bool scan_todo_kw(Scanner *s, TSLexer *lexer, const bool *valid_symbols) 
     return false;
   }
 
+  // 'COMMENT' is the org-mode heading comment indicator, not a TODO keyword.
+  // The lexer has already advanced past the 7 characters, so emit the
+  // COMMENT token directly instead of returning false (which would rewind).
+  if (strcmp(word, "COMMENT") == 0 && valid_symbols[TOKEN_COMMENT_TOKEN]) {
+    while (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+      advance(lexer);
+    }
+    lexer->result_symbol = TOKEN_COMMENT_TOKEN;
+    mark_end(lexer);
+    return true;
+  }
+
   // Not a TODO keyword but we consumed uppercase letters.
   // Emit as plain text to avoid corrupting lexer state.
   // Continue consuming plain text up to the next object boundary.
@@ -767,6 +780,34 @@ static bool scan_todo_kw(Scanner *s, TSLexer *lexer, const bool *valid_symbols) 
   }
 
   return false;
+}
+
+// _COMMENT_TOKEN: match exactly 'COMMENT' followed by a word boundary
+// (space, tab, newline, or EOF).  Sets prev_char = ' ' like scan_todo_kw so
+// that markup-open scanners see the correct PRE context for the title content
+// that follows.
+static bool scan_comment_token(Scanner *s, TSLexer *lexer) {
+  // The grammar's $._S before this position consumed a space but did not
+  // update prev_char; set it now so subsequent markup scanners are correct.
+  s->prev_char = ' ';
+
+  const char *KW = "COMMENT";
+  mark_end(lexer);  // reset point: return false rewinds to here
+  for (int i = 0; i < 7; i++) {
+    if (eof(lexer) || lookahead(lexer) != KW[i]) return false;
+    advance(lexer);
+  }
+  // Must end at a word boundary
+  int32_t after = lookahead(lexer);
+  if (!eof(lexer) && after != ' ' && after != '\t' && after != '\n') {
+    return false;
+  }
+  while (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+    advance(lexer);
+  }
+  lexer->result_symbol = TOKEN_COMMENT_TOKEN;
+  mark_end(lexer);
+  return true;
 }
 
 // _GBLOCK_NAME: block name that is NOT a lesser block name
@@ -3210,6 +3251,14 @@ bool tree_sitter_org_external_scanner_scan(
   // --- TODO_KW ---
   if (valid_symbols[TOKEN_TODO_KW]) {
     if (scan_todo_kw(s, lexer, valid_symbols)) return true;
+  }
+
+  // --- COMMENT_TOKEN ---
+  // Runs after scan_todo_kw so that a user-defined TODO keyword named COMMENT
+  // is matched by scan_todo_kw first (TOKEN_TODO_KW wins).  When COMMENT is
+  // not a TODO keyword, scan_todo_kw bails out and we handle it here.
+  if (valid_symbols[TOKEN_COMMENT_TOKEN]) {
+    if (scan_comment_token(s, lexer)) return true;
   }
 
   // --- GBLOCK_NAME ---

@@ -120,6 +120,7 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
 
     heading.level = 3
     heading.todo = "TODO"
+    heading.is_comment = True
     heading.priority = "A"
     heading.title = RichText("Heading")
     heading.counter = CompletionCounter("1/2")
@@ -159,6 +160,7 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
 
     assert heading.level == 3
     assert heading.todo == "TODO"
+    assert heading.is_comment is True
     assert heading.priority == "A"
     assert heading.title == "Heading"
     assert heading.counter == CompletionCounter("1/2")

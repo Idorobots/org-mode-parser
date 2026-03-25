@@ -5054,43 +5054,65 @@ The =h= character below causes an error. Any single-character, indented paragrap
   - foo
 #+end_example
 
-* Error recovery overhaul
-It would be nice to report parse errors for some of the obviously broken constructions.
-
-- [ ] unclosed markup should report a missing close on end of line
-- [ ] misaligned drawer start/end markers
-- [ ] trailing bits after drawer start/end markers
-- [ ] misaligned CLOCK
-- [ ] malformed CLOCK lines
-- [ ] misalign PLANNING
-- [ ] malformed PLANNING
-- [ ] malformed timestamps
-- [ ] misaligned block start/end markers
-- [ ] tailing bits after block start/end markers
-- [ ] malformed org tables
-- [ ] malformed special keyword values
-
 * Bugfixes
-** Comment headings
-COMMENT doesn't parse as an element of the heading line.
+** DONE Comment headings
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-25 Wed 14:14]
+:END:
+The =COMMENT= token in headings doesn't parse as the comment indicator but rather a plain text string
 
 #+begin_example
-,* TODO [#A] COMMENT Title :tag:a2%:
+,* COMMENT Title
+,* [#A] COMMENT Title
+,* [#A] COMMENT Title :tag:foo:
+,* TODO [#A] COMMENT Title :tag:foo:
 ,* TODO [#A] COMMENT Title
 ,* TODO [#A] COMMENT
 ,* TODO COMMENT
 ,* COMMENT
 #+end_example
 
-** Tags on list items with counters/checkboxes
+All of the above should be marked as comment headings on the tree-sitter heading node.
+
+Update the Python wrapper to also expect the comment indicator. The =Heading= class should have a mutable field =is_comment= that returns the comment indicator and is able to set it.
+
+** TODO Tags on list items
+
+List items can have an optional tag associated with them:
+
 #+begin_example
+- tag :: item contents
+- longer tag :: item contents
 + [-] tag :: item contents
+1. [@5] tag :: item contents
 #+end_example
 
-** Lower-case CLOCK items.
+All of the above should parse with a leading tag.
+
+** CANCELLED Lower-case CLOCK items.
+:LOGBOOK:
+- State "CANCELLED"  from              [2026-03-25 Wed 12:55] \\
+  Org-Mode in Emacs doesn't recognize these even though it's documented in https://orgmode.org/worg/org-syntax.html
+:END:
 #+begin_example
 clock: [2024-10-12]
 #+end_example
+
+* Error recovery overhaul
+It would be nice to report parse errors for some of the obviously broken constructions.
+
+- [X] unclosed markup should report a missing close on end of line
+- [ ] misaligned drawer start/end markers
+- [X] trailing bits after drawer start/end markers
+- [ ] misaligned CLOCK
+- [X] malformed CLOCK lines
+- [ ] misalign PLANNING
+- [X] malformed PLANNING
+- [X] malformed timestamps
+- [ ] misaligned block start/end markers
+- [X] tailing bits after block start/end markers
+- [X] malformed org tables
+- [ ] malformed special keyword values
 
 * Release
 ** DONE Supported syntax in the README.org

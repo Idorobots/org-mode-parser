@@ -66,6 +66,7 @@ class Heading:
         document: The root :class:`Document` that contains this heading.
         parent: The parent :class:`Heading` or :class:`Document`.
         todo: The TODO keyword (e.g. ``"TODO"``, ``"DONE"``), or *None*.
+        is_comment: Whether this heading uses the ``COMMENT`` marker.
         priority: The priority letter or number (e.g. ``"A"``, ``"1"``), or
             *None*.
         title: The heading title as :class:`RichText`, or *None*.
@@ -84,6 +85,7 @@ class Heading:
         document: Document,
         parent: Heading | Document,
         todo: str | None = None,
+        is_comment: bool = False,
         priority: str | None = None,
         title: RichText | None = None,
         counter: CompletionCounter | None = None,
@@ -102,6 +104,7 @@ class Heading:
         self._document = document
         self._parent = parent
         self._todo = todo
+        self._is_comment = is_comment
         self._priority = priority
         self._title = title
         self._counter = counter
@@ -182,6 +185,7 @@ class Heading:
         """
         level = _extract_level(node, document)
         todo = _extract_todo(node, document)
+        is_comment = _extract_is_comment(node)
         priority = _extract_priority(node, document)
         title_nodes = node.children_by_field_name("title")
         title = RichText.from_nodes(title_nodes, document=document)
@@ -194,6 +198,7 @@ class Heading:
             document=document,
             parent=parent,
             todo=todo,
+            is_comment=is_comment,
             priority=priority,
             title=title,
             counter=counter,
@@ -279,6 +284,17 @@ class Heading:
     def priority(self, value: str | None) -> None:
         """Set the priority value and mark this heading as dirty."""
         self._priority = value
+        self.mark_dirty()
+
+    @property
+    def is_comment(self) -> bool:
+        """Whether this heading is marked with the ``COMMENT`` keyword."""
+        return self._is_comment
+
+    @is_comment.setter
+    def is_comment(self, value: bool) -> None:
+        """Set heading ``COMMENT`` marker state and mark this heading dirty."""
+        self._is_comment = value
         self.mark_dirty()
 
     @property
@@ -742,6 +758,7 @@ class Heading:
         parts = [f"level={self._level!r}"]
         optional_parts = [
             ("todo", self._todo),
+            ("is_comment", self._is_comment if self._is_comment else None),
             ("priority", self._priority),
             ("title", self._title),
             ("counter", self._counter),
@@ -812,6 +829,11 @@ def _extract_priority(node: tree_sitter.Node, document: Document) -> str | None:
     if value_node is None:
         return None
     return document.source_for(value_node).decode() or None
+
+
+def _extract_is_comment(node: tree_sitter.Node) -> bool:
+    """Return whether the heading has a ``comment`` field."""
+    return node.child_by_field_name("comment") is not None
 
 
 def _extract_counter(
@@ -1077,6 +1099,9 @@ def _render_heading_dirty(heading: Heading) -> str:
 
     if heading.priority:
         line_parts.append(f"[#{heading.priority}]")
+
+    if heading.is_comment:
+        line_parts.append("COMMENT")
 
     if heading.title is not None:
         line_parts.append(str(heading.title))

@@ -33,6 +33,7 @@ module.exports = grammar({
     $.stars,              // Heading stars at column 0 (e.g. "***")
     $._HEADING_END,      // Close heading on same/higher-level stars or EOI
     $._TODO_KW,          // Match current TODO keyword set
+    $._COMMENT_TOKEN,    // Match 'COMMENT' heading indicator at word boundary
     $._BLOCK_END_MATCH,  // Verify #+end_NAME matches #+begin_NAME
     $._GBLOCK_NAME,      // Block name not a lesser block name
     $._MARKUP_OPEN_BOLD,
@@ -114,7 +115,7 @@ module.exports = grammar({
       $._S,
       optional(field('todo', $.todo_keyword)),
       optional(field('priority', $.priority)),
-      optional(field('is_comment', $._COMMENT_TOKEN)),
+      optional(field('comment', $.comment_keyword)),
       optional(field('title', $._heading_title)),
       optional(field('tags', $.tags)),
       $._NL,
@@ -134,6 +135,8 @@ module.exports = grammar({
       $._S,
     ),
 
+    comment_keyword: $ => $._COMMENT_TOKEN,
+
     priority: $ => seq(
       '[#',
       field('value', $.priority_value),
@@ -142,8 +145,6 @@ module.exports = grammar({
     ),
 
     priority_value: _ => /[a-zA-Z0-9]+/,
-
-    _COMMENT_TOKEN: _ => 'COMMENT',
 
     _heading_title: $ => repeat1($._object_nolb),
 
