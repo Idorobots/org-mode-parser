@@ -82,6 +82,7 @@ module.exports = grammar({
     [$.heading, $._section_element],
     [$.heading, $._affiliatable_no_block],
     [$._object, $._object_min],
+    [$._object, $._object_nofn],
     [$.regular_link, $._PROP_REST_OF_LINE],
     [$.regular_link, $._DRAWER_KV_REST],
     [$.drawer, $._affiliatable_no_drawer],
@@ -552,6 +553,17 @@ module.exports = grammar({
       optional(field('counter_set', $.counter_set)),
       optional(field('checkbox', $.checkbox)),
       choice(
+        prec(2, seq(
+          field('tag', $.item_tag),
+          field('first_line', $._item_first_line_target_end),
+          field('first_line', alias($._TRAILING, $.plain_text)),
+          $._NL,
+        )),
+        prec(2, seq(
+          field('first_line', $._item_first_line_target_end),
+          field('first_line', alias($._TRAILING, $.plain_text)),
+          $._NL,
+        )),
         prec(1, seq(
           field('tag', $.item_tag),
           optional(field('first_line', $._item_first_line)),
@@ -569,6 +581,31 @@ module.exports = grammar({
     ),
 
     _item_first_line: $ => repeat1($._object),
+
+    _item_first_line_target_end: $ => prec.right(3, seq(
+      repeat($._object_nofn),
+      choice(
+        $.code,
+        $.verbatim,
+        $.bold,
+        $.italic,
+        $.underline,
+        $.strike_through,
+        $.regular_link,
+        $.angle_link,
+        $.timestamp,
+        $.completion_counter,
+        $.entity,
+        $.macro,
+        $.target,
+        $.radio_target,
+        $.export_snippet,
+        $.footnote_reference,
+        $.citation,
+        $.inline_source_block,
+        $.inline_babel_call,
+      ),
+    )),
 
     _bullet: $ => choice(
       $.unordered_bullet,

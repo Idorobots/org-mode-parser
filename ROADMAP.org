@@ -5149,6 +5149,64 @@ I'd like indented block bodies not to include the indent in their body lines:
 
 Here the whole source block should be wrapped in an =indent= and each line of the source block should only capture the content excluding the indent. Please follow the same approach that is done to the bodies of the =quote_block= and =center_block=. Apply the same logic to the other blocks, ideally the indent is part of the =indent= and the indented blocks exclude it from their bodies.
 
+** DONE Fuzzing issue
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-27 Fri 23:05]
+:END:
+The =tree-sitter fuzz= complains that one of the tests is failing:
+The "List items with inline code and trailing whitespace" sometimes results in:
+
+#+begin_example
+  0. org - corpus - lists - List items with inline code and trailing whitespace
+- ~org-todo-keywords-1~ 
+- ~org-link-parameters~
+
+
+- ~org-todo-keywords-1~ 
+
+
+- ~org-todo-keywords-1~ 
+- ~org-link-parameters~
+
+
+Incorrect parse for org - corpus - lists - List items with inline code and trailing whitespace - seed 12824655214275249307
+
+correct / expected / unexpected
+(document (zeroth_section (list item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content)) first_line: (plain_text)) item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))))))
+(document (zeroth_section (list item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))) item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))))))
+#+end_example
+
+The full command invocation is:
+
+#+begin_example
+TREE_SITTER_SEED=12824655214275249307 tree-sitter fuzz -i "List items with inline code and trailing whitespace" --iterations 1 --edits 1 --log-graphs
+#+end_example
+
+You can use it to reproduce and validate the fix.
+
+** DONE Inconsistent trailing whitespace treatment
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-27 Fri 23:31]
+:END:
+There are 7 remaining trailing-whitespace inconsistencies in list first lines:
+
+- =target=
+- =radio_target=
+- =export_snippet=
+- =footnote_reference=
+- =citation=
+- =inline_source_block=
+- =inline_babel_call=
+
+Pattern is the same as before: for a list item ending with one of those objects plus trailing spaces, a full parse and an incremental edit/undo parse disagree (=inc= adds =first_line: (plain_text)= while =full= doesn’t).
+
+Where this still reproduces:
+- Untagged list items (=- ... =)
+- Ordered list items (=1. ... =)
+- Checkbox list items (=- [ ] ... =)
+
+Make sure that the Python wrapper supports the extended first_line on list items.
+
 * DONE Error recovery overhaul
 :LOGBOOK:
 - State "DONE"       from              [2026-03-27 Fri 12:30]
@@ -5284,6 +5342,14 @@ In the above example, the first line should be a plaintext paragraph, while the 
 :END:
 The =__repr__= implementations are pretty useful, but they could be made more useful by introducing pretty printing - each subnode sholud be displayed on a separate line with the right amount of indentation so that the structure of the nodes is apparent.
 
+** TODO Set up tree-sitter fuzz
+Set up =tree-sitter fuzz= in the CI workflow, use 1000 for the iterations.
+
+* TreeSitter parser release
+** Tree-Sitter parser pulled into a separate repository
+** CI workflow using generic tree-sitter actions
+** Python, C, Rust, Go, JS bindings
+** Updated highlights queries
 * Release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:
@@ -5304,6 +5370,5 @@ _This_ /parser/ *supports* =the= ~following~ +inline+ markup^{objects}.
 All of the above are supported in the Tree-Sitter grammar as well as in the Python wrapper.
 #+end_example
 
-** Tree-Sitter parser pulled into a separate repository
 ** Semantic node documentation
 ** Library release
