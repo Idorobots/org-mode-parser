@@ -24,8 +24,7 @@
     "*.wasm"
   ],
   "dependencies": {
-    "node-addon-api": "^8.0.0",
-    "node-gyp-build": "^4.8.0"
+    "node-addon-api": "^8.0.0"
   },
   "devDependencies": {
     "tree-sitter-cli": "^0.26.0",
@@ -40,11 +39,10 @@
     }
   },
   "scripts": {
-    "build": "tree-sitter generate && node-gyp build",
+    "build": "tree-sitter generate && tree-sitter build",
     "generate": "tree-sitter generate",
     "test": "tree-sitter test",
-    "parse": "tree-sitter parse",
-    "install": "node-gyp-build"
+    "parse": "tree-sitter parse"
   },
   "tree-sitter": [
     {
