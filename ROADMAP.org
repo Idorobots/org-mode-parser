@@ -5383,6 +5383,10 @@ The initial line and anything past the "Incorrect parse for" can be ignored. The
 
 The script should accept this format, parse the edits and apply them in order to reproduce the issue.
 
+** DONE Fuzz step in CI should fail the build if it finds something
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-28 Sat 00:24]
+:END:
 * TreeSitter parser release
 ** Tree-Sitter parser pulled into a separate repository
 ** CI workflow using generic tree-sitter actions
