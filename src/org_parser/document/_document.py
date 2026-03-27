@@ -28,6 +28,7 @@ from org_parser.element import (
 )
 from org_parser.element._element import (
     Element,
+    build_semantic_repr,
     element_from_error_or_unknown,
 )
 from org_parser.element._keyword import Keyword
@@ -608,34 +609,26 @@ class Document:
 
     def __repr__(self) -> str:
         """Return a tree-oriented representation for debugging."""
-        parts = [f"filename={self._filename!r}"]
-        title = self.title
-        if title is not None:
-            parts.append(f"title={title!r}")
-        author = self.author
-        if author is not None:
-            parts.append(f"author={author!r}")
-        category = self.category
-        if category is not None:
-            parts.append(f"category={category!r}")
-        description = self.description
-        if description is not None:
-            parts.append(f"description={description!r}")
-        todo = self.todo
-        if todo is not None:
-            parts.append(f"todo={todo!r}")
         extra_kws = [kw for kw in self._keywords if kw.key not in _DEDICATED_KEYS]
-        if extra_kws:
-            parts.append(f"keywords={extra_kws!r}")
-        if self._properties is not None:
-            parts.append(f"properties={self._properties!r}")
-        if self._logbook is not None:
-            parts.append(f"logbook={self._logbook!r}")
-        if self._body:
-            parts.append(f"body={self._body!r}")
-        if self._children:
-            parts.append(f"children={self._children!r}")
-        return f"Document({', '.join(parts)})"
+        title = self.title
+        author = self.author
+        category = self.category
+        description = self.description
+        todo = self.todo
+        return build_semantic_repr(
+            "Document",
+            filename=self._filename,
+            title=title,
+            author=author,
+            category=category,
+            description=description,
+            todo=todo,
+            keywords=extra_kws,
+            properties=self._properties,
+            logbook=self._logbook,
+            body=self._body,
+            children=self._children,
+        )
 
     def __iter__(self) -> Iterator[Heading]:
         """Iterate over all headings in file-definition order."""

@@ -1,0 +1,154 @@
+#+TITLE: Parser Showcase
+#+AUTHOR: Example Author
+#+DATE: <2026-03-27 Fri>
+#+TODO: TODO WAIT | DONE CANCEL
+
+# This is a comment line in the zeroth section.
+
+A paragraph in the zeroth section with a plain link https://example.com,
+an angle link <mailto:user@example.com> and a regular link [[https://orgmode.org][Org Mode]].
+
+* TODO [#A] Heading with Priority and Tags                         :foo:bar:
+  SCHEDULED: <2026-04-01 Wed> DEADLINE: <2026-04-15 Wed>
+  :PROPERTIES:
+  :ID:       abc123
+  :CUSTOM_ID: showcase
+  :END:
+
+  A paragraph under a heading.  Inline markup: *bold*, /italic/,
+  _underline_, +strikethrough+, =verbatim=, ~code~.
+
+  Hard line break here.\\
+  Continued after break.
+
+  Superscript: E=mc^{2}.  Subscript: H_{2}O.  Entity: \alpha{}.
+
+  Export snippet: @@html:<em>hi</em>@@.  Macro: {{{title}}}.
+
+  Footnote reference [fn:1] and anonymous inline footnote [fn::text here].
+
+** DONE [1/3] Sub-heading with Completion Cookie                   :child:
+   CLOSED: [2026-03-20 Fri 10:00]
+   :LOGBOOK:
+   CLOCK: [2026-03-20 Fri 09:00]--[2026-03-20 Fri 10:00] =>  1:00
+   :END:
+
+   - [ ] Unchecked item
+   - [X] Checked item
+   - [-] Partial item
+
+*** COMMENT Level-3 COMMENT heading
+
+    Fixed-width area:
+    : line one
+    : line two
+
+    -----
+
+* Lists
+
+  Unordered:
+  - first
+  - second
+    + nested item
+      * more nesting
+  - third
+
+  Ordered:
+  1. one
+  2. two
+  3. [@5] three
+
+  Descriptive:
+  - term :: definition text
+
+* Tables
+
+  #+CAPTION: Table description
+  #+PLOT: title "Table"
+  #+TBLNAME: my-table
+  | Name  | Score |
+  |-------+-------|
+  | Alice |    42 |
+  | Bob   |    17 |
+  #+TBLFM: $2=$2*1
+
+* Blocks
+
+  #+begin_src scheme :results output
+  (display "hello")
+  (newline)
+  #+end_src
+
+  #+RESULTS:
+  : hello
+
+  #+begin_example
+  verbatim example text
+  #+end_example
+
+  #+begin_quote
+  A quoted passage.
+  #+end_quote
+
+  #+begin_center
+  Centered text.
+  #+end_center
+
+  #+begin_verse
+  Line one.
+  Line two.
+  #+end_verse
+
+  #+begin_comment
+  Hidden comment block.
+  #+end_comment
+
+  #+begin_export html
+  <p>Raw HTML export.</p>
+  #+end_export
+
+  #+begin_special
+  Custom special block.
+  #+end_special
+
+* Drawers and Dynamic Blocks
+
+  :MY-DRAWER:
+  drawer contents
+  :END:
+
+  #+begin: clocktable :scope file
+  dynamic block contents
+  #+end:
+
+* Timestamps
+
+  Active: <2026-03-27 Fri>
+  Active with time: <2026-03-27 Fri 09:00>
+  Same-day range: <2026-03-27 Fri 09:00-10:00>
+  Active range: <2026-03-27 Fri>--<2026-03-28 Sat>
+  Inactive: [2026-03-27 Fri]
+  Inactive range: [2026-03-27 Fri]--[2026-03-28 Sat]
+  Repeating: <2026-03-27 Fri +1w>
+  With delay: <2026-03-27 Fri -2d>
+
+* WAIT Misc elements
+  :LOGBOOK:
+  - State "WAIT"     from "TODO"     [2026-03-20 Fri 10:00] \\
+    Note
+  :END:
+
+  Inline source: src_python{1 + 1}.
+  Inline babel call: call_identity(x=1).
+
+  Regular babel call:
+  #+call: my-function(arg=1)
+
+  Target: <<my-target>>.  Radio target: <<<radio>>>.
+
+  Citation: [cite: @key2026].
+
+* Footnotes
+
+[fn:1] This is the footnote definition body.

@@ -5277,6 +5277,13 @@ foo|bar|baz|
 
 In the above example, the first line should be a plaintext paragraph, while the second should be marked as missing the =|= character.
 
+* Easier debugging
+** DONE Pretty-printed repr
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-27 Fri 19:28]
+:END:
+The =__repr__= implementations are pretty useful, but they could be made more useful by introducing pretty printing - each subnode sholud be displayed on a separate line with the right amount of indentation so that the structure of the nodes is apparent.
+
 * Release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:

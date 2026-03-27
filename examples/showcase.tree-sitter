@@ -1,0 +1,549 @@
+(document
+  (zeroth_section
+    (special_keyword
+      key: (keyword_key)
+      value: (keyword_value))
+    (special_keyword
+      key: (keyword_key)
+      value: (keyword_value))
+    (special_keyword
+      key: (keyword_key)
+      value: (keyword_value))
+    (special_keyword
+      key: (keyword_key)
+      value: (keyword_value))
+    (blank_line)
+    (comment)
+    (blank_line)
+    (paragraph
+      (plain_text)
+      (newline)
+      (plain_text)
+      (angle_link
+        type: (link_type)
+        path: (link_path))
+      (plain_text)
+      (regular_link
+        path: (link_path)
+        description: (plain_text))
+      (plain_text)
+      (newline))
+    (blank_line))
+  (heading
+    stars: (stars)
+    todo: (todo_keyword)
+    priority: (priority
+      value: (priority_value))
+    title: (plain_text)
+    tags: (tags
+      (tag)
+      (tag))
+    planning: (planning
+      keyword: (planning_keyword)
+      value: (timestamp
+        year: (ts_year)
+        month: (ts_month)
+        day: (ts_day)
+        dayname: (ts_dayname))
+      keyword: (planning_keyword)
+      value: (timestamp
+        year: (ts_year)
+        month: (ts_month)
+        day: (ts_day)
+        dayname: (ts_dayname)))
+    body: (section
+      (indent
+        indent: (whitespace)
+        body: (property_drawer
+          (node_property
+            name: (property_name)
+            value: (property_value))
+          (node_property
+            name: (property_name)
+            value: (property_value))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (bold
+            body: (plain_text))
+          (plain_text)
+          (italic
+            body: (plain_text))
+          (plain_text)
+          (newline)
+          (underline
+            body: (plain_text))
+          (plain_text)
+          (strike_through
+            body: (plain_text))
+          (plain_text)
+          (verbatim
+            body: (verbatim_content))
+          (plain_text)
+          (code
+            body: (code_content))
+          (plain_text)
+          (newline)))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (line_break)
+          (newline))
+        body: (paragraph
+          (plain_text)
+          (newline)))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (superscript
+            body: (script_text))
+          (plain_text)
+          (subscript
+            body: (script_text))
+          (plain_text)
+          (entity)
+          (plain_text)
+          (newline)))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (export_snippet
+            backend: (snippet_backend)
+            value: (snippet_value))
+          (plain_text)
+          (macro
+            name: (macro_name))
+          (plain_text)
+          (newline)))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (footnote_reference
+            label: (fn_label))
+          (plain_text)
+          (footnote_reference
+            definition: (plain_text))
+          (plain_text)
+          (newline)))
+      (blank_line))
+    (heading
+      stars: (stars)
+      todo: (todo_keyword)
+      title: (completion_counter
+        value: (completion_counter_value))
+      title: (plain_text)
+      tags: (tags
+        (tag))
+      planning: (planning
+        keyword: (planning_keyword)
+        value: (timestamp
+          year: (ts_year)
+          month: (ts_month)
+          day: (ts_day)
+          dayname: (ts_dayname)
+          time: (ts_time)))
+      body: (section
+        (indent
+          indent: (whitespace)
+          body: (logbook_drawer
+            body: (clock
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time)
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time))))
+        (blank_line)
+        (indent
+          indent: (whitespace)
+          body: (list
+            item: (list_item
+              bullet: (unordered_bullet)
+              checkbox: (checkbox)
+              first_line: (plain_text))
+            item: (list_item
+              bullet: (unordered_bullet)
+              checkbox: (checkbox)
+              first_line: (plain_text))
+            item: (list_item
+              bullet: (unordered_bullet)
+              checkbox: (checkbox)
+              first_line: (plain_text))))
+        (blank_line))
+      (heading
+        stars: (stars)
+        comment: (comment_keyword)
+        title: (plain_text)
+        (blank_line)
+        body: (section
+          (indent
+            indent: (whitespace)
+            body: (paragraph
+              (plain_text)
+              (newline))
+            body: (fixed_width
+              value: (fixed_width_value))
+            body: (fixed_width
+              value: (fixed_width_value)))
+          (blank_line)
+          (indent
+            indent: (whitespace)
+            body: (horizontal_rule))
+          (blank_line)))))
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    (blank_line)
+    body: (section
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (newline))
+        body: (list
+          item: (list_item
+            bullet: (unordered_bullet)
+            first_line: (plain_text))
+          item: (list_item
+            bullet: (unordered_bullet)
+            first_line: (plain_text)
+            body: (list
+              item: (list_item
+                bullet: (unordered_bullet)
+                first_line: (plain_text)
+                body: (list
+                  item: (list_item
+                    bullet: (unordered_bullet)
+                    first_line: (plain_text))))))
+          item: (list_item
+            bullet: (unordered_bullet)
+            first_line: (plain_text))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (newline))
+        body: (list
+          item: (list_item
+            counter: (counter)
+            first_line: (plain_text))
+          item: (list_item
+            counter: (counter)
+            first_line: (plain_text))
+          item: (list_item
+            counter: (counter)
+            counter_set: (counter_set)
+            first_line: (plain_text))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (newline))
+        body: (list
+          item: (list_item
+            bullet: (unordered_bullet)
+            tag: (item_tag
+              (plain_text))
+            first_line: (plain_text))))
+      (blank_line)))
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    (blank_line)
+    body: (section
+      (indent
+        indent: (whitespace)
+        body: (caption_keyword
+          value: (plain_text))
+        body: (plot_keyword
+          value: (plain_text))
+        body: (tblname_keyword
+          value: (plain_text))
+        body: (org_table
+          (table_row
+            (table_cell
+              (plain_text))
+            (table_cell
+              (plain_text)))
+          (table_row
+            rule: (table_rule))
+          (table_row
+            (table_cell
+              (plain_text))
+            (table_cell
+              (plain_text)))
+          (table_row
+            (table_cell
+              (plain_text))
+            (table_cell
+              (plain_text)))
+          (tblfm_line)))
+      (blank_line)))
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    (blank_line)
+    body: (section
+      (indent
+        indent: (whitespace)
+        body: (src_block
+          language: (language)
+          switches: (src_switches)
+          body: (src_block_body
+            (src_line)
+            (src_line))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (results_keyword)
+        body: (fixed_width
+          value: (fixed_width_value)))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (example_block
+          body: (example_block_body
+            (example_line))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (quote_block
+          body: (paragraph
+            (plain_text)
+            (newline))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (center_block
+          body: (paragraph
+            (plain_text)
+            (newline))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (verse_block
+          body: (paragraph
+            (plain_text)
+            (newline))
+          body: (paragraph
+            (plain_text)
+            (newline))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (comment_block
+          body: (comment_block_body
+            (comment_line))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (export_block
+          backend: (export_backend)
+          body: (export_block_body
+            (export_line))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (special_block
+          body: (paragraph
+            (plain_text)
+            (newline))))
+      (blank_line)))
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    (blank_line)
+    body: (section
+      (indent
+        indent: (whitespace)
+        body: (drawer
+          name: (drawer_name)
+          body: (paragraph
+            (plain_text)
+            (newline))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (dynamic_block
+          name: (dynamic_block_name)
+          body: (paragraph
+            (plain_text)
+            (newline))))
+      (blank_line)))
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    (blank_line)
+    body: (section
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (newline)
+          (plain_text)
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time: (ts_time))
+          (newline))
+        body: (paragraph
+          (plain_text)
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            time_start: (ts_time)
+            time_end: (ts_time))
+          (newline)
+          (plain_text)
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (newline)
+          (plain_text)
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (newline)
+          (plain_text)
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname))
+          (newline)
+          (plain_text)
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            mark: (repeater_mark)
+            unit: (time_unit))
+          (newline)
+          (plain_text)
+          (timestamp
+            year: (ts_year)
+            month: (ts_month)
+            day: (ts_day)
+            dayname: (ts_dayname)
+            mark: (delay_mark)
+            unit: (time_unit))
+          (newline)))
+      (blank_line)))
+  (heading
+    stars: (stars)
+    todo: (todo_keyword)
+    title: (plain_text)
+    body: (section
+      (indent
+        indent: (whitespace)
+        body: (logbook_drawer
+          body: (list
+            item: (list_item
+              bullet: (unordered_bullet)
+              first_line: (plain_text)
+              first_line: (timestamp
+                year: (ts_year)
+                month: (ts_month)
+                day: (ts_day)
+                dayname: (ts_dayname)
+                time: (ts_time))
+              first_line: (plain_text)
+              first_line: (line_break)
+              body: (paragraph
+                (plain_text)
+                (newline))))))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (inline_source_block
+            language: (inline_language)
+            body: (inline_body))
+          (plain_text)
+          (newline)
+          (plain_text)
+          (inline_babel_call
+            name: (call_name)
+            arguments: (call_arguments))
+          (plain_text)
+          (newline)))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (newline))
+        body: (babel_call
+          name: (call_name)
+          arguments: (call_arguments)))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (target
+            value: (target_text))
+          (plain_text)
+          (radio_target
+            body: (plain_text))
+          (plain_text)
+          (newline)))
+      (blank_line)
+      (indent
+        indent: (whitespace)
+        body: (paragraph
+          (plain_text)
+          (citation
+            body: (citation_body))
+          (plain_text)
+          (newline)))
+      (blank_line)))
+  (heading
+    stars: (stars)
+    title: (plain_text)
+    body: (section
+      (blank_line)
+      (paragraph
+        (footnote_reference
+          label: (fn_label))
+        (plain_text)
+        (newline)))))

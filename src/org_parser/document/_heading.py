@@ -35,6 +35,7 @@ from org_parser.element import (
 )
 from org_parser.element._element import (
     Element,
+    build_semantic_repr,
     element_from_error_or_unknown,
 )
 from org_parser.element._structure_recovery import (
@@ -755,32 +756,25 @@ class Heading:
 
     def __repr__(self) -> str:
         """Return a tree-oriented representation for debugging."""
-        parts = [f"level={self._level!r}"]
-        optional_parts = [
-            ("todo", self._todo),
-            ("is_comment", self._is_comment if self._is_comment else None),
-            ("priority", self._priority),
-            ("title", self._title),
-            ("counter", self._counter),
-            ("scheduled", self._scheduled),
-            ("deadline", self._deadline),
-            ("closed", self._closed),
-            ("properties", self._properties),
-            ("logbook", self._logbook),
-        ]
-        parts.extend(
-            f"{name}={value!r}" for name, value in optional_parts if value is not None
+        return build_semantic_repr(
+            "Heading",
+            level=self._level,
+            todo=self._todo,
+            is_comment=self._is_comment if self._is_comment else None,
+            priority=self._priority,
+            title=self._title,
+            counter=self._counter,
+            scheduled=self._scheduled,
+            deadline=self._deadline,
+            closed=self._closed,
+            properties=self._properties,
+            logbook=self._logbook,
+            heading_tags=self._heading_tags,
+            repeated_tasks=self._repeated_tasks,
+            clock_entries=self._clock_entries,
+            body=self._body,
+            children=self._children,
         )
-
-        list_parts = [
-            ("heading_tags", self._heading_tags),
-            ("repeated_tasks", self._repeated_tasks),
-            ("clock_entries", self._clock_entries),
-            ("body", self._body),
-            ("children", self._children),
-        ]
-        parts.extend(f"{name}={value!r}" for name, value in list_parts if value)
-        return f"Heading({', '.join(parts)})"
 
     def __iter__(self) -> Iterator[Heading]:
         """Iterate over direct child headings."""
