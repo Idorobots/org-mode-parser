@@ -5344,6 +5344,41 @@ The =__repr__= implementations are pretty useful, but they could be made more us
 
 ** TODO Set up tree-sitter fuzz
 Set up =tree-sitter fuzz= in the CI workflow, use 1000 for the iterations.
+** DONE Easier fuzz reproduction
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-27 Fri 23:49]
+:END:
+Expand the fuzz.py script to accept a "log" from the tree-sitter fuzz command that will apply the edits as listed in the log in an attempt to reproduce the issue in a controlled manner. Ideally, the script wolud be used as follows:
+
+#+begin_src bash
+cat fuzz_input.log | python fuzz.py
+#+end_src
+
+The input log will be formatted as follows:
+
+#+begin_example
+  0. org - corpus - lists - List items with inline code and trailing whitespace
+- ~org-todo-keywords-1~ 
+- ~org-link-parameters~
+
+
+- ~org-todo-keywords-1~ 
+
+
+- ~org-todo-keywords-1~ 
+- ~org-link-parameters~
+
+
+Incorrect parse for org - corpus - lists - List items with inline code and trailing whitespace - seed 12824655214275249307
+
+correct / expected / unexpected
+(document (zeroth_section (list item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content)) first_line: (plain_text)) item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))))))
+(document (zeroth_section (list item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))) item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))))))
+#+end_example
+
+The initial line and anything past the "Incorrect parse for" can be ignored. The remaining lines should be interpreted as the input & edits - the first set is the original input, then each edit is separated by two consecutive blank lines.
+
+The script should accept this format, parse the edits and apply them in order to reproduce the issue.
 
 * TreeSitter parser release
 ** Tree-Sitter parser pulled into a separate repository
