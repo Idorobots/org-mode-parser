@@ -5054,7 +5054,10 @@ The =h= character below causes an error. Any single-character, indented paragrap
   - foo
 #+end_example
 
-* Bugfixes
+* DONE Bugfixes
+:LOGBOOK:
+- State "DONE"       from              [2026-03-27 Fri 12:29]
+:END:
 ** DONE Comment headings
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-03-25 Wed 14:14]
@@ -5124,7 +5127,10 @@ Here the collon causes an error in the list item body parsing. It's the same fai
 clock: [2024-10-12]
 #+end_example
 
-* Error recovery overhaul
+* DONE Error recovery overhaul
+:LOGBOOK:
+- State "DONE"       from              [2026-03-27 Fri 12:30]
+:END:
 It would be nice to report parse errors for some of the obviously broken constructions.
 
 - [X] unclosed markup should report a missing close on end of line
@@ -5132,7 +5138,7 @@ It would be nice to report parse errors for some of the obviously broken constru
 - [X] trailing bits after drawer start/end markers
 - [ ] misaligned CLOCK
 - [X] malformed CLOCK lines
-- [ ] misalign PLANNING
+- [ ] misaligne PLANNING
 - [X] malformed PLANNING
 - [X] malformed timestamps
 - [ ] misaligned block start/end markers
@@ -5143,7 +5149,7 @@ It would be nice to report parse errors for some of the obviously broken constru
 ** CANCELLED Malformed inline markup should report a missing close on end of line
 :LOGBOOK:
 - State "CANCELLED"  from "TODO"       [2026-03-26 Thu 21:20] \\
-  Proved to be too troublesome for genuinly useful cases (file paths, globs, etc).
+  Proved to be too troublesome for genuinely useful cases (file paths, globs, etc).
 :END:
 Ideally, the parse tree would point out the missing closing markup.
 
@@ -5173,11 +5179,15 @@ Ideally, the error would be limited to just the trailing text.
 
 In the above example, the two drawers should mostly parse fine with an error node attached to each around the trailing text.
 
-** TODO Trailing text after list item line-break =\\= should be marked as error
+** CANCELLED Trailing text after list item line-break =\\= should be marked as error
 Ideally, the item line would parse fine with a line break at the end and a trailing error node.
 
 #+begin_example
 :LOGBOOK:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-27 Fri 12:30] \\
+  This is consistent with what Org Mode does.
+:END:
 - State "DONE" from "TODO" [2025-02-10] \\ not acceptable
   Note
 :END:
@@ -5185,7 +5195,11 @@ Ideally, the item line would parse fine with a line break at the end and a trail
 
 In the above example the =not acceptable= string should be an error.
 
-** TODO Malformed CLOCK lines should be marked as errors
+** CANCELLED Malformed CLOCK lines should be marked as errors
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-27 Fri 10:01] \\
+  It already works pretty well.
+:END:
 Ideally, only the clock line would be marked as an error.
 
 #+begin_example
@@ -5211,7 +5225,11 @@ CLOSED: <
 
 In the above example, the SCHEDULED time value is not a timestamp, hence should be marked as an error. The two remaining lines contain malformed timestamps and also should be marked as errors.
 
-** TODO Trailing bits after block start/end markers should be marked as errors
+** CANCELLED Trailing bits after block start/end markers should be marked as errors
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-27 Fri 12:28] \\
+  Already works well-enough.
+:END:
 Ideally, the block would still parse as a block, with the error node attached to it marking the trailing text.
 #+begin_example
 ,#+begin_example
@@ -5222,14 +5240,18 @@ Not right
 In the above example, the =>= should be marked as an error.
 Ensure that blocks that do accept additional data on either line parse fine.
 
-** TODO Malformed org-tables should be marked as errors
+** CANCELLED Malformed org-tables should be marked as errors
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-27 Fri 12:28] \\
+  This is actually consistent with what Org-Mode does.
+:END:
 Tables that have a trailing text should result in an error on the parse tree. Leading text should cause the table not to parse as a table but plaintext.
 
-#+begin_example
+# #+begin_example
 foo|bar|baz|
 
 |foo | bar | baz
-#+end_example
+# #+end_example
 
 In the above example, the first line should be a plaintext paragraph, while the second should be marked as missing the =|= character.
 
