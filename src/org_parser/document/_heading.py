@@ -918,21 +918,25 @@ def _extract_planning(
     scheduled: Timestamp | None = None
     deadline: Timestamp | None = None
     closed: Timestamp | None = None
-    current_keyword: str | None = None
-
-    for child in planning_node.named_children:
-        if child.type == PLANNING_KEYWORD:
-            current_keyword = document.source_for(child).decode().upper()
-            continue
-        if child.type != TIMESTAMP or current_keyword is None:
+    children = planning_node.named_children
+    for index, child in enumerate(children):
+        if child.type != PLANNING_KEYWORD:
             continue
 
-        timestamp = Timestamp.from_node(child, document)
-        if current_keyword == SCHEDULED:
+        keyword = document.source_for(child).decode().upper()
+        if index + 1 >= len(children):
+            continue
+
+        value_child = children[index + 1]
+        if value_child.type != TIMESTAMP:
+            continue
+
+        timestamp = Timestamp.from_node(value_child, document)
+        if keyword == SCHEDULED:
             scheduled = timestamp
-        elif current_keyword == DEADLINE:
+        elif keyword == DEADLINE:
             deadline = timestamp
-        elif current_keyword == CLOSED:
+        elif keyword == CLOSED:
             closed = timestamp
 
     return scheduled, deadline, closed

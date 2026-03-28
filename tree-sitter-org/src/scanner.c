@@ -1706,6 +1706,29 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   while (!eof(lexer) && lookahead(lexer) != '\n') {
     int32_t ch = lookahead(lexer);
 
+    // Keep the list-tag separator " :: " out of preceding plain_text so the
+    // tag field does not inherit its leading separator space.
+    if (ch == ' ' && found_any && bol_shifted && !s->in_heading_line) {
+      int32_t last = ' ';
+      advance(lexer);  // probe leading space
+      if (lookahead(lexer) == ':') {
+        last = ':';
+        advance(lexer);  // probe first ':'
+        if (lookahead(lexer) == ':') {
+          advance(lexer);  // probe second ':'
+          if (lookahead(lexer) == ' ') {
+            break;
+          }
+          last = ':';
+        }
+      }
+
+      s->prev_char = last;
+      mark_end(lexer);
+      found_any = true;
+      continue;
+    }
+
     // Detect plain links (type:path) with word-boundary guards so they are
     // parsed as plain_link objects instead of being swallowed by plain_text.
     //

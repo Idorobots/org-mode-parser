@@ -601,8 +601,7 @@ def _extract_item_tag(
         return None
 
     if tag_node.named_child_count > 0:
-        rich_text = RichText.from_nodes(tag_node.named_children, document=document)
-        return RichText(str(rich_text).rstrip())
+        return RichText.from_nodes(tag_node.named_children, document=document)
 
     raw_tag = document.source_for(tag_node).decode()
     trimmed = raw_tag[:-4].rstrip() if raw_tag.endswith(" :: ") else raw_tag

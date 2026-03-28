@@ -40,6 +40,7 @@ jobs:
 
       - name: Run Tree-sitter fuzz (1000 iterations)
         run: |
+          set -o pipefail
           tree-sitter fuzz --iterations 1000 | tee /tmp/fuzz_output.txt
           ! grep -q "Incorrect parse for" /tmp/fuzz_output.txt
         working-directory: tree-sitter-org

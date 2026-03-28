@@ -5298,6 +5298,16 @@ Inline babel call: call_identity(x=1).
 Filename: /org-mode-parser/src/org_parser/element/_drawer.py
 #+end_example
 
+** TODO Additional issues
+
+- High: CI fuzz step can falsely pass if =tree-sitter fuzz= crashes because =.github/workflows/parser-checks.yml:43= pipes to =tee= without =pipefail=.
+
+- Medium: descriptive-list tag extraction drops inline semantics in =src/org_parser/element/_list.py:603= by rebuilding from =str(rich_text)=, which flattens objects to plain text.
+
+- Medium: malformed planning lines can still populate heading planning fields in =src/org_parser/document/_heading.py:923= because assignment is based on keyword+timestamp scan without validating entry integrity.
+
+- Python wrapper uses =begin_line= for various blocks. It would be nicer if it could use the tree sitter node fields such as =language= for the source block, etc.
+
 * DONE Error recovery overhaul
 :LOGBOOK:
 - State "DONE"       from              [2026-03-27 Fri 12:30]
@@ -5480,6 +5490,7 @@ The script should accept this format, parse the edits and apply them in order to
 :END:
 * TreeSitter parser release
 ** Tree-Sitter parser pulled into a separate repository
+** Grammar & scanner linters
 ** CI workflow using generic tree-sitter actions
 ** Python, C, Rust, Go, JS bindings
 ** Updated highlights queries
