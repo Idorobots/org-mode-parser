@@ -229,6 +229,30 @@ Result: call_double(n=2) is the answer.
       (newline))))
 
 ================
+Inline src and inline babel in adjacent lines
+================
+Inline source: src_python{1 + 1}.
+Inline babel call: call_identity(x=1).
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (inline_source_block
+        (inline_language)
+        (inline_body))
+      (plain_text)
+      (newline)
+      (plain_text)
+      (inline_babel_call
+        (call_name)
+        (call_arguments))
+      (plain_text)
+      (newline))))
+
+================
 Inline babel prefix without call syntax
 ================
 call_partial[header] just text

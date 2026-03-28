@@ -225,6 +225,8 @@ class ListItem(Element):
 
         if self._item_tag is not None:
             parts.append(f"{self._item_tag} ::")
+            if self._first_line is not None:
+                parts.append(f" {self._first_line}")
         elif self._first_line is not None:
             parts.append(str(self._first_line))
 
@@ -597,7 +599,13 @@ def _extract_item_tag(
     tag_node = node.child_by_field_name("tag")
     if tag_node is None:
         return None
-    return RichText.from_nodes(tag_node.named_children, document=document)
+
+    if tag_node.named_child_count > 0:
+        return RichText.from_nodes(tag_node.named_children, document=document)
+
+    raw_tag = document.source_for(tag_node).decode()
+    trimmed = raw_tag[:-4].rstrip() if raw_tag.endswith(" :: ") else raw_tag
+    return RichText(trimmed)
 
 
 def _extract_first_line(

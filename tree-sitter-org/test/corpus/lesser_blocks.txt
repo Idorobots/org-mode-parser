@@ -9,7 +9,9 @@ This is hidden.
 
 (document
   (zeroth_section
-    (comment_block)))
+    (comment_block
+      (comment_block_body
+        (comment_line)))))
 
 ================
 Example block
@@ -171,7 +173,9 @@ Indented lesser blocks
   (zeroth_section
     (indent
       (whitespace)
-      (comment_block))
+      (comment_block
+        (comment_block_body
+          (comment_line))))
     (blank_line)
     (indent
       (whitespace)
@@ -182,7 +186,9 @@ Indented lesser blocks
     (indent
       (whitespace)
       (export_block
-        (export_backend)))
+        (export_backend)
+        (export_block_body
+          (export_line))))
     (blank_line)
     (indent
       (whitespace)

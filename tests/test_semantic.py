@@ -212,6 +212,7 @@ class TestHeadingManual:
         assert h.level == 1
         assert h.parent is doc
         assert h.todo is None
+        assert h.is_comment is False
         assert h.priority is None
         assert h.title is None
         assert h.counter is None
@@ -426,6 +427,15 @@ class TestHeadingFields:
         assert "A" in priorities
         assert "B" in priorities
 
+    def test_comment_marker(self, example_file: Callable[[str], Path]) -> None:
+        """COMMENT heading marker is extracted as a boolean field."""
+        doc = _load_document(example_file("priorities-and-special-headings.org"))
+        comment_headings = [
+            heading for heading in doc.all_headings if heading.is_comment
+        ]
+        assert len(comment_headings) > 0
+        assert any(heading.title is not None for heading in comment_headings)
+
     def test_tags(self, example_file: Callable[[str], Path]) -> None:
         """heading_tags are extracted as a list of individual strings."""
         doc = _load_document(example_file("priorities-and-special-headings.org"))
@@ -512,6 +522,25 @@ class TestHeadingFields:
         assert all_three_heading.scheduled is not None
         assert all_three_heading.deadline is not None
         assert all_three_heading.closed is not None
+
+    def test_malformed_planning_entry_does_not_populate_field(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """Malformed planning entries do not leak partial timestamps."""
+        org = tmp_path / "malformed-planning.org"
+        org.write_bytes(
+            b"* Test\n"
+            b"DEADLINE: [2024-02-02]--<2025-02-02>\n"
+            b"SCHEDULED: <2025-03-01 Sat>\n"
+        )
+
+        doc = _load_document(org)
+        heading = doc.children[0]
+
+        assert heading.deadline is None
+        assert heading.scheduled is not None
+        assert str(heading.scheduled) == "<2025-03-01 Sat>"
 
 
 # ===================================================================

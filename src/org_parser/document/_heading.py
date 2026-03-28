@@ -35,6 +35,7 @@ from org_parser.element import (
 )
 from org_parser.element._element import (
     Element,
+    build_semantic_repr,
     element_from_error_or_unknown,
 )
 from org_parser.element._structure_recovery import (
@@ -66,6 +67,7 @@ class Heading:
         document: The root :class:`Document` that contains this heading.
         parent: The parent :class:`Heading` or :class:`Document`.
         todo: The TODO keyword (e.g. ``"TODO"``, ``"DONE"``), or *None*.
+        is_comment: Whether this heading uses the ``COMMENT`` marker.
         priority: The priority letter or number (e.g. ``"A"``, ``"1"``), or
             *None*.
         title: The heading title as :class:`RichText`, or *None*.
@@ -84,6 +86,7 @@ class Heading:
         document: Document,
         parent: Heading | Document,
         todo: str | None = None,
+        is_comment: bool = False,
         priority: str | None = None,
         title: RichText | None = None,
         counter: CompletionCounter | None = None,
@@ -102,6 +105,7 @@ class Heading:
         self._document = document
         self._parent = parent
         self._todo = todo
+        self._is_comment = is_comment
         self._priority = priority
         self._title = title
         self._counter = counter
@@ -182,6 +186,7 @@ class Heading:
         """
         level = _extract_level(node, document)
         todo = _extract_todo(node, document)
+        is_comment = _extract_is_comment(node)
         priority = _extract_priority(node, document)
         title_nodes = node.children_by_field_name("title")
         title = RichText.from_nodes(title_nodes, document=document)
@@ -194,6 +199,7 @@ class Heading:
             document=document,
             parent=parent,
             todo=todo,
+            is_comment=is_comment,
             priority=priority,
             title=title,
             counter=counter,
@@ -279,6 +285,17 @@ class Heading:
     def priority(self, value: str | None) -> None:
         """Set the priority value and mark this heading as dirty."""
         self._priority = value
+        self.mark_dirty()
+
+    @property
+    def is_comment(self) -> bool:
+        """Whether this heading is marked with the ``COMMENT`` keyword."""
+        return self._is_comment
+
+    @is_comment.setter
+    def is_comment(self, value: bool) -> None:
+        """Set heading ``COMMENT`` marker state and mark this heading dirty."""
+        self._is_comment = value
         self.mark_dirty()
 
     @property
@@ -739,31 +756,25 @@ class Heading:
 
     def __repr__(self) -> str:
         """Return a tree-oriented representation for debugging."""
-        parts = [f"level={self._level!r}"]
-        optional_parts = [
-            ("todo", self._todo),
-            ("priority", self._priority),
-            ("title", self._title),
-            ("counter", self._counter),
-            ("scheduled", self._scheduled),
-            ("deadline", self._deadline),
-            ("closed", self._closed),
-            ("properties", self._properties),
-            ("logbook", self._logbook),
-        ]
-        parts.extend(
-            f"{name}={value!r}" for name, value in optional_parts if value is not None
+        return build_semantic_repr(
+            "Heading",
+            level=self._level,
+            todo=self._todo,
+            is_comment=self._is_comment if self._is_comment else None,
+            priority=self._priority,
+            title=self._title,
+            counter=self._counter,
+            scheduled=self._scheduled,
+            deadline=self._deadline,
+            closed=self._closed,
+            properties=self._properties,
+            logbook=self._logbook,
+            heading_tags=self._heading_tags,
+            repeated_tasks=self._repeated_tasks,
+            clock_entries=self._clock_entries,
+            body=self._body,
+            children=self._children,
         )
-
-        list_parts = [
-            ("heading_tags", self._heading_tags),
-            ("repeated_tasks", self._repeated_tasks),
-            ("clock_entries", self._clock_entries),
-            ("body", self._body),
-            ("children", self._children),
-        ]
-        parts.extend(f"{name}={value!r}" for name, value in list_parts if value)
-        return f"Heading({', '.join(parts)})"
 
     def __iter__(self) -> Iterator[Heading]:
         """Iterate over direct child headings."""
@@ -812,6 +823,11 @@ def _extract_priority(node: tree_sitter.Node, document: Document) -> str | None:
     if value_node is None:
         return None
     return document.source_for(value_node).decode() or None
+
+
+def _extract_is_comment(node: tree_sitter.Node) -> bool:
+    """Return whether the heading has a ``comment`` field."""
+    return node.child_by_field_name("comment") is not None
 
 
 def _extract_counter(
@@ -902,21 +918,25 @@ def _extract_planning(
     scheduled: Timestamp | None = None
     deadline: Timestamp | None = None
     closed: Timestamp | None = None
-    current_keyword: str | None = None
-
-    for child in planning_node.named_children:
-        if child.type == PLANNING_KEYWORD:
-            current_keyword = document.source_for(child).decode().upper()
-            continue
-        if child.type != TIMESTAMP or current_keyword is None:
+    children = planning_node.named_children
+    for index, child in enumerate(children):
+        if child.type != PLANNING_KEYWORD:
             continue
 
-        timestamp = Timestamp.from_node(child, document)
-        if current_keyword == SCHEDULED:
+        keyword = document.source_for(child).decode().upper()
+        if index + 1 >= len(children):
+            continue
+
+        value_child = children[index + 1]
+        if value_child.type != TIMESTAMP:
+            continue
+
+        timestamp = Timestamp.from_node(value_child, document)
+        if keyword == SCHEDULED:
             scheduled = timestamp
-        elif current_keyword == DEADLINE:
+        elif keyword == DEADLINE:
             deadline = timestamp
-        elif current_keyword == CLOSED:
+        elif keyword == CLOSED:
             closed = timestamp
 
     return scheduled, deadline, closed
@@ -1077,6 +1097,9 @@ def _render_heading_dirty(heading: Heading) -> str:
 
     if heading.priority:
         line_parts.append(f"[#{heading.priority}]")
+
+    if heading.is_comment:
+        line_parts.append("COMMENT")
 
     if heading.title is not None:
         line_parts.append(str(heading.title))

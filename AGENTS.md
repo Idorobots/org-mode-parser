@@ -1,116 +1,122 @@
 # AGENTS.md
-Guidance for coding agents in `org-mode-parser`.
+Guidance for coding agents working in `org-mode-parser`.
+
+## Scope and Structure
+- Monorepo with two primary parts:
+  - Tree-sitter grammar package: `tree-sitter-org/`
+  - Python wrapper library: `src/org_parser/`, tests in `tests/`
+- Root helpers:
+  - Parse checks: `check.py`, `leaf_errors.py`
+  - Project config: `pyproject.toml`, `pyrightconfig.json`
 
 ## Repository Map
-
-### Tree-sitter grammar package (`tree-sitter-org/`)
 - Grammar source: `tree-sitter-org/grammar.js`
-- External scanner source: `tree-sitter-org/src/scanner.c`
-- Syntax highlighting query: `tree-sitter-org/queries/highlights.scm`
-- Corpus tests: `tree-sitter-org/test/corpus/*.txt`
-- Example fixtures: `examples/*.org`
-- Parse helper scripts: `check.py`, `leaf_errors.py`
+- External scanner: `tree-sitter-org/src/scanner.c`
+- Tree-sitter corpus tests: `tree-sitter-org/test/corpus/*.txt`
+- Tree-sitter query files: `tree-sitter-org/queries/*.scm`
+- Python package root: `src/org_parser/`
+- Document loader API: `src/org_parser/document/` (exposes `load_raw()`)
+- Examples/fixtures: `examples/*.org`
+- Python tests: `tests/*.py`
 
-### Python library (`src/`, `tests/`)
-- Package root: `src/org_parser/`
-- Language/parser singleton: `src/org_parser/_lang.py`
-- Document parsing: `src/org_parser/document/` — exposes `load_raw()`
-- Element stubs: `src/org_parser/element/`
-- Text/markup stubs: `src/org_parser/text/`
-- Test suite: `tests/`
-- Project config (Poetry, ruff, mypy, pytest): `pyproject.toml`
-- Pyright LSP config: `pyrightconfig.json`
-
-## Toolchain (CI-aligned)
+## Toolchain (CI-Aligned)
 - Node.js: `20`
 - Python: `3.12`
-- Tree-sitter CLI: `0.26.6`
-- Poetry: `2.3.2`
+- Tree-sitter CLI: `0.26.x`
+- Poetry: `2.3.x`
+- Python QA stack: `ruff`, `mypy`, `pytest`, `pytest-cov`, `pyright`
 
 ## Setup
-
-### Tree-sitter grammar
-Run inside `tree-sitter-org/`:
+### Tree-sitter grammar setup (run inside `tree-sitter-org/`)
 ```bash
 npm install
-npm run generate   # only when parser artifacts need regeneration
+npm run generate
 ```
 
-### Python library
-Run from the repository root:
+### Python setup (run from repo root)
 ```bash
 poetry install
 ```
 
 ## Build Commands
-
-### Tree-sitter grammar
-From `tree-sitter-org/`:
+### Tree-sitter grammar (`tree-sitter-org/`)
 ```bash
-npm run build       # tree-sitter generate && node-gyp build
-tree-sitter generate
-node-gyp build
-tree-sitter build   # compile org.so (required by the Python library)
-tree-sitter parse ../examples/simple.org
+npm run build          # tree-sitter generate && tree-sitter build
+npm run generate       # regenerate parser artifacts only
+tree-sitter build      # produces tree-sitter-org/org.so
+npm run parse -- ../examples/simple.org
 ```
 
-`org.so` (the shared library loaded by the Python library) is produced by
-`tree-sitter build`. It is **gitignored** and must be rebuilt whenever
-`grammar.js` or `scanner.c` changes.
+Notes:
+- `org.so` is required by the Python package at runtime.
+- Rebuild `org.so` after edits to `grammar.js` or `src/scanner.c`.
 
-## Test Commands
-
-### Tree-sitter grammar
-From `tree-sitter-org/`:
+## Lint / Type / Test Commands
+### Tree-sitter grammar (`tree-sitter-org/`)
 ```bash
 npm test
-# or: tree-sitter test
+tree-sitter test
 tree-sitter test --file-name test/corpus/headings.txt
 tree-sitter test --file-name test/corpus/headings.txt --include "Level 1 heading"
 tree-sitter test --exclude "TODO"
-tree-sitter test --update   # intentional expected-tree updates only
+tree-sitter test --update   # only when intentionally updating expected trees
 ```
 
-### Python library
-From the repository root, use taskipy tasks via Poetry:
+### Python library (repo root)
+Use taskipy tasks from `pyproject.toml`:
 ```bash
-poetry run task check         # full quality gate: format · lint · types · tests
-poetry run task test          # pytest with branch coverage
-poetry run task lint          # ruff lint check
-poetry run task lint-fix      # ruff lint with auto-fix
-poetry run task format-check  # verify ruff formatting (dry-run)
-poetry run task format        # apply ruff formatting
-poetry run task type          # mypy strict type check
+poetry run task format-check
+poetry run task lint
+poetry run task type
+poetry run task test
+poetry run task check        # format-check + lint + type + test
+poetry run task lint-fix
+poetry run task format
 ```
 
-## Parse-Check Commands
-From repo root:
+### Running a single Python test (important)
+```bash
+poetry run pytest tests/test_document.py::TestLoadRaw::test_simple_org_returns_tree -q
+poetry run pytest tests/test_document.py::TestLoadRaw -q
+poetry run pytest tests/test_document.py -q
+poetry run pytest -k "simple_org and not recovery" -q
+```
+
+## Parse-Check Utilities (repo root)
 ```bash
 python3 check.py "examples/*.org" "*.org"
 python3 check.py examples/simple.org
 python3 leaf_errors.py examples/simple.org --context 2
 ```
+- `check.py` can be slow; allow extended timeout (~300s).
 
-## Linting / Formatting
+## Fuzz Sanity Checks
+Use fuzzing when parser edits touch incremental parsing behavior or recovery.
 
-### Tree-sitter grammar
-No dedicated lint config. Preserve existing style in touched files.
-
-### Python library
-All configuration lives in `pyproject.toml`. The full quality gate is:
+### `tree-sitter fuzz` quick pass (`tree-sitter-org/`)
 ```bash
-poetry run task check
+tree-sitter fuzz --iterations 10 --edits 3
 ```
+- Mutates corpus inputs and compares incremental parse behavior against full reparse behavior.
+- Use `--include` / `--exclude` to target a corpus test title subset.
 
-Tool responsibilities:
-- **ruff** — formatting (replaces black) and linting (replaces flake8/isort).
-  Selected rule groups: `E W F I N D UP ANN B C4 SIM TCH PERF RUF PL`.
-- **mypy** — strict static type checking (`strict = true`).
-- **pyright** — editor LSP server; `typeCheckingMode = "strict"` in
-  `pyrightconfig.json`.
-- **pytest** — test runner with branch coverage via `pytest-cov`.
+### Capture replayable failing snapshots
+```bash
+tree-sitter fuzz --log-graphs --iterations 50 --edits 5 --include "heading"
+```
+- `--log-graphs` prints per-edit input snapshots to stdout.
+- If fuzz reports an incorrect parse, copy the logged block for replay.
 
-## Generated Files (Do Not Hand-Edit)
+### Replay with `fuzz.py` (repo root)
+```bash
+# Paste a single fuzz log block into fuzz_input.log first
+python3 fuzz.py < fuzz_input.log
+python3 fuzz.py --lib-path tree-sitter-org/org.so < fuzz_input.log
+```
+- `fuzz.py` parses snapshot logs, computes contiguous edits, replays incremental parsing, and compares S-expressions against full parses at each step.
+- Exit code `0` means all steps matched, `1` means mismatch detected, `2` means malformed input/usage error.
+
+## Generated Files (Do Not Hand-Edit nor read)
 - `tree-sitter-org/src/parser.c`
 - `tree-sitter-org/src/grammar.json`
 - `tree-sitter-org/src/node-types.json`
@@ -118,101 +124,68 @@ Tool responsibilities:
 - `tree-sitter-org/org.so`
 - `tree-sitter-org/tree-sitter-org.wasm`
 
-After grammar/scanner edits, regenerate with `npm run build` or `npm run generate`.
+Regenerate generated artifacts with `npm run build` or `npm run generate`.
 
-## Code Style: `grammar.js`
+## Code Style and Conventions
+### General
+- Keep diffs focused; avoid unrelated refactors.
+- Follow existing naming and module boundaries.
+- Preserve parser recovery behavior unless intentionally improving it.
+
+### `grammar.js` style (`tree-sitter-org/grammar.js`)
 - 2-space indentation.
-- Semicolons are required.
+- Semicolons required.
 - Prefer single-quoted strings.
-- Keep trailing commas in multiline literals where already used.
-- Keep helper functions small and near top-level.
-- Use comments only for non-obvious grammar/scanner interactions.
-- Public grammar rules: `snake_case` (e.g., `plain_list`).
-- Internal grammar rules: leading underscore (e.g., `_object`, `_S`, `_NL`).
+- Keep helpers small and near top-level.
+- Use comments only for non-obvious scanner/grammar interactions.
+- Public rules: `snake_case` (e.g., `plain_list`).
+- Internal rules: leading underscore (e.g., `_object`, `_NL`).
 - Token-like internals may use upper snake (`_TODO_KW`, `_PLAN_KW`).
 - Use `field(...)` for meaningful named children.
-- Use `prec(...)` only where ambiguity requires it.
+- Use `prec(...)` only where ambiguity needs it.
 
-## Code Style: `src/scanner.c`
-- Keep external token enum order aligned with `externals` in `grammar.js`.
+### Scanner style (`tree-sitter-org/src/scanner.c`)
+- Keep token enum order aligned with `externals` in `grammar.js`.
 - Prefer `static` helpers and `bool` predicates.
 - Use fixed-width integer state (`uint8_t`, `uint16_t`, `int32_t`).
 - Constants/macros in `UPPER_SNAKE_CASE`.
-- Preserve bounds and serialization limits (`MAX_*`, `SERIALIZE_BUF_SIZE`).
-- Avoid dynamic allocation unless unavoidable.
-- Document subtle lexer invariants and state transitions.
+- Preserve bounds/serialization guards (`MAX_*`, `SERIALIZE_BUF_SIZE`).
+- Avoid dynamic allocation unless truly necessary.
+- Document subtle state-machine invariants where needed.
 
-## Code Style: Python scripts (`check.py`, `leaf_errors.py`)
-- PEP8-like formatting with 4-space indentation.
-- Keep imports tidy and stdlib-first (currently stdlib-only).
-- Prefer `Path` for filesystem paths.
-- Use precise type hints (`list[str]`, `tuple[...]`, `Path`).
-- Use `@dataclass` for structured results.
-- Return exit codes from `main()` and call `SystemExit(main())`.
-- Send usage/errors to `stderr`.
+### Python style (`src/org_parser/`, `tests/`)
+- `from __future__ import annotations` at top of each module.
+- Ruff formatting rules apply; line length is `88`.
+- Quote style is double quotes (ruff formatter).
+- Google-style docstrings are required in library modules.
+- Type annotations required for library function signatures.
+- Use `TYPE_CHECKING` imports for type-only dependencies.
+- Keep imports sorted (ruff/isort behavior).
+- Define `__all__` in public modules.
+- Internal modules/helpers should use leading underscore.
+- Prefer precise types (`Path`, `list[str]`, `tuple[...]`).
+- Avoid `Any` unless unavoidable (ctypes interop is an accepted exception).
 
-## Code Style: Python library (`src/org_parser/`)
-- `from __future__ import annotations` at the top of every module.
-- 88-character line length (ruff default).
-- Google-style docstrings on all public and private functions, classes, and
-  modules. Docstrings are enforced by ruff's `D` rule group.
-- Type annotations are required on every function signature (ruff `ANN`
-  rules). Use `TYPE_CHECKING` guards for imports used only in annotations.
-- Runtime imports that are only referenced in type annotations must be moved
-  into `if TYPE_CHECKING:` blocks (ruff `TCH` rule).
-- `__all__` must be defined on every public module.
-- Internal modules and helpers use a leading underscore (e.g., `_lang.py`,
-  `_loader.py`).
-- Avoid `Any` except where unavoidable for ctypes interop (ruff `ANN401` is
-  ignored for this reason).
-- `no_implicit_reexport = true` in mypy: symbols must be explicitly listed in
-  `__all__` or re-exported with `import X as X` to be part of the public API.
+### Naming
+- Grammar/AST node names: `snake_case`
+- Scanner helpers: verb-oriented lower snake (`scan_*`, `is_*`)
+- Python functions/variables: `snake_case`
+- Python classes/dataclasses: `PascalCase`
+- Prefer domain-specific names over generic placeholders
 
-## Naming Conventions
-- Grammar and AST node names: `snake_case`.
-- Scanner helpers: lower snake, verb-oriented (`scan_*`, `is_*`, `extract_*`).
-- Python functions: lower snake case.
-- Python classes/dataclasses: PascalCase.
-- Python internal modules/helpers: leading underscore prefix.
-- Prefer domain terms over generic names.
+### Error handling
+- Prefer resilient parsing and recovery over hard-fail behavior.
+- Python file loading should raise `FileNotFoundError` for missing paths.
+- Let tree-sitter parse/loader errors propagate unless there is a clear recovery path.
+- Script diagnostics should be actionable and directed to stderr when appropriate.
 
-## Error Handling Expectations
-- Favor resilient parsing and recovery over hard-fail behavior.
-- Preserve existing recovery semantics unless intentionally improving them.
-- For scripts, handle missing tools/files with actionable diagnostics.
-- Avoid uncaught exceptions for common user input errors.
-- In the Python library, raise `FileNotFoundError` (not a custom type) for
-  missing files; let tree-sitter errors propagate unchanged.
-
-## Corpus Test Authoring
-- Corpus file format is:
-  1) `====` title block
-  2) Org input
-  3) `---` separator
-  4) expected S-expression
-- Keep test titles specific; `--include` matches these titles.
-- Add focused regression tests near the affected syntax area.
-
-## Recommended Agent Workflow
-- Read nearby grammar/scanner code and relevant corpus files first.
-- Run focused tests (`--file-name`, then `--include`) only when debugging issues.
-- Keep diffs minimal; avoid unrelated refactors.
-- For Python library changes, run `poetry run task check` before finishing.
-
-## Pre-Completion Checklist
-
-### Grammar / scanner changes
-- If you changed `grammar.js` or `src/scanner.c`, rebuild parser artifacts:
-  `npm run build` (inside `tree-sitter-org/`) and `tree-sitter build` (to
-  refresh `org.so` for the Python library).
-- Run full `tree-sitter test` before final handoff.
-- Run `python3 check.py "examples/*.org" "*.org"` from repo root.
-- Ensure no generated-file edits were made manually.
-- Keep commit scope focused on one syntax concern where possible.
-
-### Python library changes
-- Run `poetry run task check` from the repository root. All four stages must
-  pass: `format-check`, `lint`, `type`, `test`.
-- If `grammar.js` or `scanner.c` was also changed, rebuild `org.so` first
-  (`tree-sitter build` inside `tree-sitter-org/`) before running Python tests.
-- Ensure no changes to generated files were made manually.
+## Agent Workflow
+- Read nearby grammar/scanner/library code before editing.
+- Run the narrowest relevant test first (single file/test/title), then broaden.
+- For grammar/scanner changes:
+  - Rebuild: `npm run build` (in `tree-sitter-org/`)
+  - Run grammar tests: `tree-sitter test`
+  - Run parse checks: `python3 check.py "examples/*.org" "*.org"`
+- For Python library changes:
+  - Run: `poetry run task check`
+  - If grammar changed, rebuild `org.so` before Python tests.

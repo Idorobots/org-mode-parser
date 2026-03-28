@@ -8,7 +8,8 @@ drawer, etc.).  Concrete subclasses add per-element semantic fields;
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from collections.abc import Mapping, Sequence
+from typing import TYPE_CHECKING, TypeVar, cast
 
 from org_parser._node import node_source
 
@@ -25,15 +26,166 @@ _ElementT = TypeVar("_ElementT", bound="Element")
 
 
 def build_semantic_repr(class_name: str, /, **fields: object) -> str:
-    """Build a compact repr omitting ``None`` and empty-list fields."""
-    parts = [
-        f"{name}={value!r}"
-        for name, value in fields.items()
-        if value is not None and not (isinstance(value, list) and not value)
-    ]
-    if not parts:
+    """Build a semantic repr omitting ``None`` and empty-list fields.
+
+    The representation stays compact for leaf values and automatically switches
+    to a multiline format when a field contains nested semantic structure.
+    """
+    normalized_fields: dict[str, object] = dict(fields)
+    visible_fields: list[tuple[str, object]] = []
+    for name, value in normalized_fields.items():
+        if _is_omitted_repr_field(value):
+            continue
+        visible_fields.append((name, value))
+    if not visible_fields:
         return f"{class_name}()"
-    return f"{class_name}({', '.join(parts)})"
+
+    rendered_fields = [
+        (name, _format_repr_value(value, indent_level=1))
+        for name, value in visible_fields
+    ]
+    multiline = any("\n" in rendered for _, rendered in rendered_fields)
+    if not multiline:
+        parts = [f"{name}={rendered}" for name, rendered in rendered_fields]
+        return f"{class_name}({', '.join(parts)})"
+
+    lines = [f"{class_name}("]
+    for name, rendered in rendered_fields:
+        lines.extend(_format_repr_field(name, rendered, indent_level=1))
+    lines.append(")")
+    return "\n".join(lines)
+
+
+def _format_repr_field(name: str, rendered: str, *, indent_level: int) -> list[str]:
+    """Return formatted repr lines for one named field."""
+    indent = _repr_indent(indent_level)
+    value_lines = rendered.splitlines()
+    if len(value_lines) == 1:
+        return [f"{indent}{name}={value_lines[0]},"]
+
+    lines = [f"{indent}{name}={value_lines[0]}"]
+    lines.extend(f"{indent}{line}" for line in value_lines[1:])
+    lines[-1] = f"{lines[-1]},"
+    return lines
+
+
+def _format_repr_value(value: object, *, indent_level: int) -> str:
+    """Return a repr string for *value* with nested indentation."""
+    if isinstance(value, list):
+        return _format_repr_sequence(
+            "[",
+            "]",
+            cast(list[object], value),
+            indent_level=indent_level,
+        )
+    if isinstance(value, tuple):
+        return _format_repr_sequence(
+            "(",
+            ")",
+            cast(tuple[object, ...], value),
+            indent_level=indent_level,
+        )
+    if isinstance(value, set):
+        set_value = cast(set[object], value)
+        if not set_value:
+            return "set()"
+        ordered = sorted(set_value, key=repr)
+        return _format_repr_sequence("{", "}", ordered, indent_level=indent_level)
+    if isinstance(value, Mapping):
+        return _format_repr_mapping(
+            cast(Mapping[object, object], value), indent_level=indent_level
+        )
+    return repr(value)
+
+
+def _format_repr_sequence(
+    opening: str,
+    closing: str,
+    values: Sequence[object],
+    *,
+    indent_level: int,
+) -> str:
+    """Return a repr for a sequence with optional multiline expansion."""
+    if not values:
+        return f"{opening}{closing}"
+
+    rendered_items = [
+        _format_repr_value(value, indent_level=indent_level + 1) for value in values
+    ]
+    multiline = any("\n" in rendered for rendered in rendered_items) or any(
+        _is_semantic_object(value) for value in values
+    )
+    if not multiline:
+        return f"{opening}{', '.join(rendered_items)}{closing}"
+
+    inner_indent = _repr_indent(indent_level + 1)
+    closing_indent = _repr_indent(indent_level)
+    lines = [opening]
+    for rendered in rendered_items:
+        lines.extend(_indent_repr_lines(rendered, prefix=inner_indent))
+        lines[-1] = f"{lines[-1]},"
+    lines.append(f"{closing_indent}{closing}")
+    return "\n".join(lines)
+
+
+def _format_repr_mapping(
+    values: Mapping[object, object],
+    *,
+    indent_level: int,
+) -> str:
+    """Return a repr for a mapping with optional multiline expansion."""
+    if not values:
+        return "{}"
+
+    rendered_entries = [
+        (
+            repr(key),
+            _format_repr_value(value, indent_level=indent_level + 1),
+            key,
+            value,
+        )
+        for key, value in values.items()
+    ]
+    multiline = any("\n" in rendered for _, rendered, _, _ in rendered_entries) or any(
+        _is_semantic_object(key) or _is_semantic_object(value)
+        for _, _, key, value in rendered_entries
+    )
+    if not multiline:
+        compact_entries = [
+            f"{key}: {rendered}" for key, rendered, _, _ in rendered_entries
+        ]
+        return f"{{{', '.join(compact_entries)}}}"
+
+    inner_indent = _repr_indent(indent_level + 1)
+    closing_indent = _repr_indent(indent_level)
+    lines = ["{"]
+    for key, rendered, _, _ in rendered_entries:
+        value_lines = rendered.splitlines()
+        lines.append(f"{inner_indent}{key}: {value_lines[0]}")
+        lines.extend(f"{inner_indent}{line}" for line in value_lines[1:])
+        lines[-1] = f"{lines[-1]},"
+    lines.append(f"{closing_indent}}}")
+    return "\n".join(lines)
+
+
+def _indent_repr_lines(rendered: str, *, prefix: str) -> list[str]:
+    """Return *rendered* split into lines and prefixed by *prefix*."""
+    return [f"{prefix}{line}" for line in rendered.splitlines()]
+
+
+def _repr_indent(level: int) -> str:
+    """Return indentation for one repr nesting *level*."""
+    return "  " * level
+
+
+def _is_semantic_object(value: object) -> bool:
+    """Return whether *value* is one of this package's semantic objects."""
+    return value.__class__.__module__.startswith("org_parser.")
+
+
+def _is_omitted_repr_field(value: object) -> bool:
+    """Return whether *value* should be omitted from semantic repr output."""
+    return value is None or (isinstance(value, list) and not value)
 
 
 class Element:

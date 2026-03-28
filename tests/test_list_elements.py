@@ -12,7 +12,7 @@ from org_parser.element import (
     Paragraph,
     QuoteBlock,
 )
-from org_parser.text import RichText
+from org_parser.text import Bold, RichText
 
 
 def test_document_body_parses_plain_list_with_item_features() -> None:
@@ -69,6 +69,74 @@ def test_list_item_mutation_marks_list_and_document_dirty() -> None:
     assert parsed.dirty is True
     assert document.dirty is True
     assert str(parsed) == "- new\n"
+
+
+def test_list_item_parses_tag_and_contents_on_same_line() -> None:
+    """Descriptive items may include both tag and first-line contents."""
+    document = loads("- tag :: item contents\n")
+
+    assert isinstance(document.body[0], List)
+    item = document.body[0].items[0]
+    assert item.item_tag is not None
+    assert str(item.item_tag) == "tag"
+    assert item.first_line is not None
+    assert str(item.first_line) == "item contents"
+
+
+def test_dirty_list_item_renders_tag_and_first_line_contents() -> None:
+    """Dirty list rendering preserves content after descriptive tags."""
+    document = loads("- tag :: item contents\n")
+
+    assert isinstance(document.body[0], List)
+    item = document.body[0].items[0]
+    item.first_line = RichText("updated")
+
+    assert str(item) == "- tag :: updated\n"
+
+
+def test_list_item_tags_support_checkbox_and_counter_set() -> None:
+    """Tag parsing preserves checkbox/counter-set metadata on mixed items."""
+    document = loads(
+        "- tag :: item contents\n"
+        "- longer tag :: item contents\n"
+        "+ [-] tag :: item contents\n"
+        "1. [@5] tag :: item contents\n"
+    )
+
+    assert isinstance(document.body[0], List)
+    items = document.body[0].items
+    assert len(items) == 4
+
+    assert items[0].item_tag is not None
+    assert items[1].item_tag is not None
+    assert str(items[0].item_tag) == "tag"
+    assert str(items[1].item_tag) == "longer tag"
+    assert items[2].checkbox == "-"
+    assert items[2].item_tag is not None
+    assert str(items[2].item_tag) == "tag"
+    assert items[3].ordered_counter == "1"
+    assert items[3].counter_set == "5"
+    assert items[3].item_tag is not None
+    assert str(items[3].item_tag) == "tag"
+
+    assert [str(item.first_line) for item in items] == [
+        "item contents",
+        "item contents",
+        "item contents",
+        "item contents",
+    ]
+
+
+def test_descriptive_list_tag_keeps_inline_objects_when_trimming() -> None:
+    """Tag extraction trims trailing space without flattening inline objects."""
+    document = loads("- *tag* :: item contents\n")
+
+    assert isinstance(document.body[0], List)
+    item = document.body[0].items[0]
+    assert item.item_tag is not None
+    assert str(item.item_tag) == "*tag*"
+    assert len(item.item_tag.parts) == 1
+    assert isinstance(item.item_tag.parts[0], Bold)
 
 
 def test_indented_paragraph_mutation_dirties_owner_list_item() -> None:

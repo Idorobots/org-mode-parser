@@ -277,6 +277,10 @@ OTA updates: https://fota.pintracview.com/fota/T9/check_update.php?carrier=<CARR
   (zeroth_section
     (paragraph
       (plain_text)
+      (plain_link
+        (link_type)
+        (link_path))
+      (plain_text)
       (newline))))
 
 ================

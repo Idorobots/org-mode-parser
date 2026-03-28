@@ -29,6 +29,7 @@ enum TokenType {
   TOKEN_STARS,
   TOKEN_HEADING_END,
   TOKEN_TODO_KW,
+  TOKEN_COMMENT_TOKEN,
   TOKEN_BLOCK_END_MATCH,
   TOKEN_GBLOCK_NAME,
   TOKEN_MARKUP_OPEN_BOLD,
@@ -119,7 +120,12 @@ static bool is_markup_open_pre_for_marker(int32_t prev, int32_t marker) {
 
 static bool is_markup_post_for_marker(int32_t marker, int32_t ch) {
   if (is_markup_post(ch)) return true;
-  if (is_markup_marker(ch) && ch != marker) return true;
+  if (is_markup_marker(ch) && ch != marker) {
+    // Avoid treating path-like '/.../_name' as italic by disallowing '/'
+    // closes immediately before '_' markup markers.
+    if (marker == '/' && ch == '_') return false;
+    return true;
+  }
   return false;
 }
 
@@ -197,6 +203,10 @@ typedef struct {
 
   // Drawer nesting depth (custom/property/logbook).
   uint8_t drawer_depth;
+
+  // True when we just left column 0 via grammar/internal tokens (for example,
+  // list bullets). Used to detect list-item tag separators in first-line text.
+  bool bol_shifted_by_grammar;
 } Scanner;
 
 // ---------------------------------------------------------------------------
@@ -363,6 +373,7 @@ void *tree_sitter_org_external_scanner_create(void) {
     scanner->plain_lbracket_depth = 0;
     scanner->suppress_block_begin_on_end_line = false;
     scanner->drawer_depth = 0;
+    scanner->bol_shifted_by_grammar = false;
     reset_markup_open_state(scanner);
   }
   return scanner;
@@ -423,8 +434,8 @@ unsigned tree_sitter_org_external_scanner_serialize(
   // prev_char, consecutive_blank_lines, in_table, last_column,
   // plain_lbracket_depth,
   // markup-open flags, in_heading_line, suppress_block_begin_on_end_line,
-  // drawer_depth
-  if (pos + 19 > SERIALIZE_BUF_SIZE) return 0;
+  // drawer_depth, bol_shifted_by_grammar
+  if (pos + 20 > SERIALIZE_BUF_SIZE) return 0;
   buffer[pos++] = (char)((s->prev_char >> 24) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 16) & 0xFF);
   buffer[pos++] = (char)((s->prev_char >> 8) & 0xFF);
@@ -444,6 +455,7 @@ unsigned tree_sitter_org_external_scanner_serialize(
   buffer[pos++] = (char)(s->in_heading_line ? 1 : 0);
   buffer[pos++] = (char)(s->suppress_block_begin_on_end_line ? 1 : 0);
   buffer[pos++] = (char)s->drawer_depth;
+  buffer[pos++] = (char)(s->bol_shifted_by_grammar ? 1 : 0);
 
   return pos;
 }
@@ -466,6 +478,7 @@ void tree_sitter_org_external_scanner_deserialize(
   s->in_heading_line = false;
   s->suppress_block_begin_on_end_line = false;
   s->drawer_depth = 0;
+  s->bol_shifted_by_grammar = false;
   reset_markup_open_state(s);
 
   for (int i = 0; i < NUM_DEFAULT_TODO_KWS; i++) {
@@ -516,7 +529,7 @@ void tree_sitter_org_external_scanner_deserialize(
   // prev_char, consecutive_blank_lines, in_table, last_column,
   // plain_lbracket_depth,
   // markup-open flags, in_heading_line, suppress_block_begin_on_end_line,
-  // drawer_depth
+  // drawer_depth, bol_shifted_by_grammar
   if (pos + 5 <= length) {
     s->prev_char = ((int32_t)(uint8_t)buffer[pos] << 24) |
                    ((int32_t)(uint8_t)buffer[pos + 1] << 16) |
@@ -562,6 +575,9 @@ void tree_sitter_org_external_scanner_deserialize(
   }
   if (pos < length) {
     s->drawer_depth = (uint8_t)buffer[pos++];
+  }
+  if (pos < length) {
+    s->bol_shifted_by_grammar = (bool)buffer[pos++];
   }
 }
 
@@ -725,6 +741,22 @@ static bool scan_todo_kw(Scanner *s, TSLexer *lexer, const bool *valid_symbols) 
     return false;
   }
 
+  // 'COMMENT' is the org-mode heading comment indicator, not a TODO keyword.
+  // Emit it only when followed by a word boundary; otherwise treat it as
+  // plain title text (e.g. "COMMENT:Title").
+  if (strcmp(word, "COMMENT") == 0 && valid_symbols[TOKEN_COMMENT_TOKEN]) {
+    int32_t after = lookahead(lexer);
+    if (!eof(lexer) && after != ' ' && after != '\t' && after != '\n') {
+      return false;
+    }
+    while (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+      advance(lexer);
+    }
+    lexer->result_symbol = TOKEN_COMMENT_TOKEN;
+    mark_end(lexer);
+    return true;
+  }
+
   // Not a TODO keyword but we consumed uppercase letters.
   // Emit as plain text to avoid corrupting lexer state.
   // Continue consuming plain text up to the next object boundary.
@@ -767,6 +799,34 @@ static bool scan_todo_kw(Scanner *s, TSLexer *lexer, const bool *valid_symbols) 
   }
 
   return false;
+}
+
+// _COMMENT_TOKEN: match exactly 'COMMENT' followed by a word boundary
+// (space, tab, newline, or EOF).  Sets prev_char = ' ' like scan_todo_kw so
+// that markup-open scanners see the correct PRE context for the title content
+// that follows.
+static bool scan_comment_token(Scanner *s, TSLexer *lexer) {
+  // The grammar's $._S before this position consumed a space but did not
+  // update prev_char; set it now so subsequent markup scanners are correct.
+  s->prev_char = ' ';
+
+  const char *KW = "COMMENT";
+  mark_end(lexer);  // reset point: return false rewinds to here
+  for (int i = 0; i < 7; i++) {
+    if (eof(lexer) || lookahead(lexer) != KW[i]) return false;
+    advance(lexer);
+  }
+  // Must end at a word boundary
+  int32_t after = lookahead(lexer);
+  if (!eof(lexer) && after != ' ' && after != '\t' && after != '\n') {
+    return false;
+  }
+  while (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+    advance(lexer);
+  }
+  lexer->result_symbol = TOKEN_COMMENT_TOKEN;
+  mark_end(lexer);
+  return true;
 }
 
 // _GBLOCK_NAME: block name that is NOT a lesser block name
@@ -943,7 +1003,7 @@ static bool scan_fndef_end(Scanner *s, TSLexer *lexer) {
 }
 
 // _ITEM_TAG_END: find ' :: '
-static bool scan_item_tag_end(TSLexer *lexer) {
+static bool scan_item_tag_end(Scanner *s, TSLexer *lexer) {
   if (lookahead(lexer) == ' ') {
     advance(lexer);
     if (lookahead(lexer) == ':') {
@@ -959,6 +1019,20 @@ static bool scan_item_tag_end(TSLexer *lexer) {
       }
     }
   }
+
+  if (lookahead(lexer) == ':' && s->prev_char == ' ') {
+    advance(lexer);
+    if (lookahead(lexer) == ':') {
+      advance(lexer);
+      if (lookahead(lexer) == ' ') {
+        advance(lexer);
+        lexer->result_symbol = TOKEN_ITEM_TAG_END;
+        mark_end(lexer);
+        return true;
+      }
+    }
+  }
+
   return false;
 }
 
@@ -1012,6 +1086,124 @@ static bool is_ascii_alpha(int32_t ch) {
 
 static bool is_ascii_digit(int32_t ch) {
   return ch >= '0' && ch <= '9';
+}
+
+static bool is_word_constituent(int32_t ch) {
+  return is_ascii_alpha(ch) || is_ascii_digit(ch);
+}
+
+static bool is_plain_link_type_initial(int32_t ch) {
+  return ch == 's' || ch == 'n' || ch == 'm' ||
+         ch == 'h' || ch == 'f' || ch == 'e';
+}
+
+static bool is_plain_link_path_char(int32_t ch) {
+  return ch != ' ' && ch != '\t' && ch != '\n' &&
+         ch != '[' && ch != ']' && ch != '<' && ch != '>' &&
+         ch != '(' && ch != ')' && ch != 0;
+}
+
+// Match a short literal at the current cursor and advance on matched chars.
+//
+// Returns true when the full literal matched. Returns false on the first
+// mismatch, potentially after consuming a prefix. The caller decides whether
+// to keep consumed chars as plain_text fallback.
+static bool match_literal_and_advance(
+  TSLexer *lexer,
+  const char *literal,
+  bool *consumed_any,
+  int32_t *last_consumed
+) {
+  for (const char *p = literal; *p != '\0'; p++) {
+    if (lookahead(lexer) != *p) return false;
+    advance(lexer);
+    *consumed_any = true;
+    *last_consumed = *p;
+  }
+
+  return true;
+}
+
+// Match the remainder of a supported plain-link type after the first letter
+// has already been consumed.
+static bool match_plain_link_type_suffix(
+  TSLexer *lexer,
+  int32_t first,
+  bool *consumed_any,
+  int32_t *last_consumed
+) {
+  switch (first) {
+    case 's':
+      return match_literal_and_advance(lexer, "hell", consumed_any, last_consumed);
+    case 'n':
+      return match_literal_and_advance(lexer, "ews", consumed_any, last_consumed);
+    case 'm':
+      return match_literal_and_advance(lexer, "ailto", consumed_any, last_consumed);
+    case 'e':
+      return match_literal_and_advance(lexer, "lisp", consumed_any, last_consumed);
+    case 'h':
+      if (match_literal_and_advance(lexer, "ttp", consumed_any, last_consumed)) {
+        if (lookahead(lexer) == 's') {
+          advance(lexer);
+          *consumed_any = true;
+          *last_consumed = 's';
+        }
+        return true;
+      }
+      return match_literal_and_advance(lexer, "elp", consumed_any, last_consumed);
+    case 'f':
+      if (match_literal_and_advance(lexer, "tp", consumed_any, last_consumed)) {
+        return true;
+      }
+      return match_literal_and_advance(lexer, "ile", consumed_any, last_consumed);
+    default:
+      return false;
+  }
+}
+
+// Probe and consume a plain-link candidate starting at the current cursor.
+//
+// Returns true if at least one character was consumed. `*matched` is set when
+// the consumed run satisfies plain-link shape and word-post boundary:
+//   LINK_TYPE ':' PATH  where PATH has at least one char.
+//
+// On failure, consumed characters are left consumed so the caller can keep
+// them as plain_text. Callers rely on tree-sitter rewind behavior when they
+// intentionally return false/break after a successful probe.
+static bool scan_plain_link_candidate(TSLexer *lexer, bool *matched, int32_t *last_consumed) {
+  *matched = false;
+  *last_consumed = 0;
+
+  int32_t ch = lookahead(lexer);
+  if (!is_plain_link_type_initial(ch)) return false;
+
+  bool consumed = false;
+
+  // Parse one of the allowed lowercase link types.
+  // shell, news, mailto, https, http, ftp, help, file, elisp
+  advance(lexer);
+  consumed = true;
+  *last_consumed = ch;
+  if (!match_plain_link_type_suffix(lexer, ch, &consumed, last_consumed)) {
+    return consumed;
+  }
+
+  if (lookahead(lexer) != ':') return consumed;
+  advance(lexer);
+  *last_consumed = ':';
+
+  if (!is_plain_link_path_char(lookahead(lexer))) return consumed;
+  while (is_plain_link_path_char(lookahead(lexer))) {
+    *last_consumed = lookahead(lexer);
+    advance(lexer);
+  }
+
+  int32_t post = lookahead(lexer);
+  if (post == '\n' || eof(lexer) || !is_word_constituent(post)) {
+    *matched = true;
+  }
+
+  return consumed;
 }
 
 static bool is_angle_email_char(int32_t ch) {
@@ -1505,6 +1697,7 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
   }
 
   bool found_any = false;
+  bool bol_shifted = s->bol_shifted_by_grammar;
   uint32_t plain_lbracket_depth = s->plain_lbracket_depth;
   bool saw_plain_lbracket = plain_lbracket_depth > 0;
   bool maybe_clock_kw = (get_column(lexer) == 0 || s->prev_char == 0);
@@ -1512,6 +1705,95 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
 
   while (!eof(lexer) && lookahead(lexer) != '\n') {
     int32_t ch = lookahead(lexer);
+
+    // Keep the list-tag separator " :: " out of preceding plain_text so the
+    // tag field does not inherit its leading separator space.
+    if (ch == ' ' && found_any && bol_shifted && !s->in_heading_line) {
+      int32_t last = ' ';
+      advance(lexer);  // probe leading space
+      if (lookahead(lexer) == ':') {
+        last = ':';
+        advance(lexer);  // probe first ':'
+        if (lookahead(lexer) == ':') {
+          advance(lexer);  // probe second ':'
+          if (lookahead(lexer) == ' ') {
+            break;
+          }
+          last = ':';
+        }
+      }
+
+      s->prev_char = last;
+      mark_end(lexer);
+      found_any = true;
+      continue;
+    }
+
+    // Detect plain links (type:path) with word-boundary guards so they are
+    // parsed as plain_link objects instead of being swallowed by plain_text.
+    //
+    // _WORD_PRE: previous char is non-word or BOL
+    // _WORD_POST: following char is non-word or EOL
+    if (is_plain_link_type_initial(ch) &&
+        (s->prev_char == 0 || !is_word_constituent(s->prev_char))) {
+      bool plain_link_matched = false;
+      int32_t last_plain_link_char = 0;
+      bool consumed_plain_link_probe = scan_plain_link_candidate(
+        lexer,
+        &plain_link_matched,
+        &last_plain_link_char
+      );
+
+      if (plain_link_matched) {
+        if (!found_any) return false;
+        break;
+      }
+
+      if (consumed_plain_link_probe) {
+        // Keep inline source starts reachable when plain-link probing consumes
+        // only the initial 's' and the actual text is a real `src_LANG{...}`
+        // sequence. Do not split for unrelated `sr...` text (e.g. file paths
+        // containing `/src/` or words like `shrug`).
+        if (found_any && ch == 's' && last_plain_link_char == 's' &&
+            lookahead(lexer) == 'r' && valid_symbols[TOKEN_INLINE_SRC_START]) {
+          advance(lexer);  // consume 'r'
+          if (lookahead(lexer) != 'c') {
+            s->prev_char = 'r';
+            mark_end(lexer);
+            found_any = true;
+            maybe_clock_kw = false;
+            continue;
+          }
+
+          advance(lexer);  // consume 'c'
+          if (lookahead(lexer) != '_') {
+            s->prev_char = 'c';
+            mark_end(lexer);
+            found_any = true;
+            maybe_clock_kw = false;
+            continue;
+          }
+
+          advance(lexer);  // consume '_'
+          int32_t probe_last = '_';
+          if (probe_inline_src_after_prefix(lexer, &probe_last)) {
+            break;
+          }
+
+          s->prev_char = probe_last;
+          mark_end(lexer);
+          found_any = true;
+          maybe_clock_kw = false;
+          continue;
+        }
+        s->prev_char = last_plain_link_char;
+        mark_end(lexer);
+        found_any = true;
+        maybe_clock_kw = false;
+        consumed_len++;
+        continue;
+      }
+    }
 
     // ---------------------------------------------------------------------------
     // Alpha-bullet guard: when scan_inline_babel_start or scan_inline_src_start
@@ -1777,6 +2059,28 @@ static bool scan_plain_text(Scanner *s, TSLexer *lexer, const bool *valid_symbol
       }
 
       if (ch == ':') {
+        if (bol_shifted && !s->in_heading_line && s->prev_char == ' ') {
+          advance(lexer);  // probe first ':'
+          if (lookahead(lexer) == ':') {
+            advance(lexer);  // probe second ':'
+            if (lookahead(lexer) == ' ') {
+              if (!found_any) {
+                if (valid_symbols[TOKEN_ITEM_TAG_END]) return false;
+                s->prev_char = ':';
+                mark_end(lexer);
+                found_any = true;
+                continue;
+              }
+              break;
+            }
+          }
+
+          s->prev_char = ':';
+          mark_end(lexer);
+          found_any = true;
+          continue;
+        }
+
         // Preserve a leading CLOCK: token for the clock element rule.
         if (maybe_clock_kw && consumed_len == 5) {
           if (!found_any) return false;
@@ -3097,6 +3401,7 @@ bool tree_sitter_org_external_scanner_scan(
     s->prev_char = 0;
     s->plain_lbracket_depth = 0;
     s->in_heading_line = false;
+    s->bol_shifted_by_grammar = false;
     reset_markup_open_state(s);
 
     // Keep table state in sync across element boundaries even when
@@ -3117,6 +3422,7 @@ bool tree_sitter_org_external_scanner_scan(
     s->prev_char = s->section_block_depth > 0 ? 0 : ' ';
     s->plain_lbracket_depth = 0;
     s->in_heading_line = false;
+    s->bol_shifted_by_grammar = true;
   } else if (col > 0 && s->last_column == 0 && s->prev_char == 0) {
     // We left column 0 via grammar/internal tokens only (for example list
     // bullets/spaces or heading stars/space). No external scanner token has
@@ -3127,6 +3433,9 @@ bool tree_sitter_org_external_scanner_scan(
     } else if (s->section_block_depth == 0) {
       s->prev_char = ' ';
     }
+    s->bol_shifted_by_grammar = true;
+  } else {
+    s->bol_shifted_by_grammar = false;
   }
 
   s->last_column = (uint16_t)(col > 0xFFFF ? 0xFFFF : col);
@@ -3212,6 +3521,14 @@ bool tree_sitter_org_external_scanner_scan(
     if (scan_todo_kw(s, lexer, valid_symbols)) return true;
   }
 
+  // --- COMMENT_TOKEN ---
+  // Runs after scan_todo_kw so that a user-defined TODO keyword named COMMENT
+  // is matched by scan_todo_kw first (TOKEN_TODO_KW wins).  When COMMENT is
+  // not a TODO keyword, scan_todo_kw bails out and we handle it here.
+  if (valid_symbols[TOKEN_COMMENT_TOKEN]) {
+    if (scan_comment_token(s, lexer)) return true;
+  }
+
   // --- GBLOCK_NAME ---
   if (valid_symbols[TOKEN_GBLOCK_NAME]) {
     if (scan_gblock_name(s, lexer)) return true;
@@ -3224,7 +3541,7 @@ bool tree_sitter_org_external_scanner_scan(
 
   // --- ITEM_TAG_END ---
   if (valid_symbols[TOKEN_ITEM_TAG_END]) {
-    if (scan_item_tag_end(lexer)) return true;
+    if (scan_item_tag_end(s, lexer)) return true;
   }
 
   // --- Markup close tokens ---

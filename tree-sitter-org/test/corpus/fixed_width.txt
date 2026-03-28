@@ -7,7 +7,8 @@ Single fixed-width line
 
 (document
   (zeroth_section
-    (fixed_width)))
+    (fixed_width
+      (fixed_width_value))))
 
 ================
 Empty fixed-width line (colon alone)
@@ -31,9 +32,12 @@ Multiple consecutive fixed-width lines each produce their own node
 
 (document
   (zeroth_section
-    (fixed_width)
-    (fixed_width)
-    (fixed_width)))
+    (fixed_width
+      (fixed_width_value))
+    (fixed_width
+      (fixed_width_value))
+    (fixed_width
+      (fixed_width_value))))
 
 ================
 Indented fixed-width line
@@ -46,7 +50,8 @@ Indented fixed-width line
   (zeroth_section
     (indent
       (whitespace)
-      (fixed_width))))
+      (fixed_width
+        (fixed_width_value)))))
 
 ================
 Indented empty fixed-width line
@@ -73,8 +78,10 @@ This is a paragraph.
 
 (document
   (zeroth_section
-    (fixed_width)
-    (fixed_width)
+    (fixed_width
+      (fixed_width_value))
+    (fixed_width
+      (fixed_width_value))
     (blank_line)
     (paragraph
       (plain_text)

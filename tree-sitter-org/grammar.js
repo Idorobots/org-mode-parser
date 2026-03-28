@@ -33,6 +33,7 @@ module.exports = grammar({
     $.stars,              // Heading stars at column 0 (e.g. "***")
     $._HEADING_END,      // Close heading on same/higher-level stars or EOI
     $._TODO_KW,          // Match current TODO keyword set
+    $._COMMENT_TOKEN,    // Match 'COMMENT' heading indicator at word boundary
     $._BLOCK_END_MATCH,  // Verify #+end_NAME matches #+begin_NAME
     $._GBLOCK_NAME,      // Block name not a lesser block name
     $._MARKUP_OPEN_BOLD,
@@ -81,6 +82,7 @@ module.exports = grammar({
     [$.heading, $._section_element],
     [$.heading, $._affiliatable_no_block],
     [$._object, $._object_min],
+    [$._object, $._object_nofn],
     [$.regular_link, $._PROP_REST_OF_LINE],
     [$.regular_link, $._DRAWER_KV_REST],
     [$.drawer, $._affiliatable_no_drawer],
@@ -114,7 +116,7 @@ module.exports = grammar({
       $._S,
       optional(field('todo', $.todo_keyword)),
       optional(field('priority', $.priority)),
-      optional(field('is_comment', $._COMMENT_TOKEN)),
+      optional(field('comment', $.comment_keyword)),
       optional(field('title', $._heading_title)),
       optional(field('tags', $.tags)),
       $._NL,
@@ -134,6 +136,8 @@ module.exports = grammar({
       $._S,
     ),
 
+    comment_keyword: $ => $._COMMENT_TOKEN,
+
     priority: $ => seq(
       '[#',
       field('value', $.priority_value),
@@ -142,8 +146,6 @@ module.exports = grammar({
     ),
 
     priority_value: _ => /[a-zA-Z0-9]+/,
-
-    _COMMENT_TOKEN: _ => 'COMMENT',
 
     _heading_title: $ => repeat1($._object_nolb),
 
@@ -551,7 +553,23 @@ module.exports = grammar({
       optional(field('counter_set', $.counter_set)),
       optional(field('checkbox', $.checkbox)),
       choice(
-        seq(field('tag', $.item_tag), $._NL),
+        prec(2, seq(
+          field('tag', $.item_tag),
+          field('first_line', $._item_first_line_target_end),
+          field('first_line', alias($._TRAILING, $.plain_text)),
+          $._NL,
+        )),
+        prec(2, seq(
+          field('first_line', $._item_first_line_target_end),
+          field('first_line', alias($._TRAILING, $.plain_text)),
+          $._NL,
+        )),
+        prec(1, seq(
+          field('tag', $.item_tag),
+          optional(field('first_line', $._item_first_line)),
+          optional($._TRAILING),
+          $._NL,
+        )),
         seq(optional(field('first_line', $._item_first_line)), optional($._TRAILING), $._NL),
       ),
       optional(prec.dynamic(5, $._list_item_body)),
@@ -563,6 +581,32 @@ module.exports = grammar({
     ),
 
     _item_first_line: $ => repeat1($._object),
+
+    _item_first_line_target_end: $ => prec.right(3, seq(
+      repeat($._object_nofn),
+      choice(
+        $.code,
+        $.verbatim,
+        $.bold,
+        $.italic,
+        $.underline,
+        $.strike_through,
+        $.regular_link,
+        $.angle_link,
+        $.plain_link,
+        $.timestamp,
+        $.completion_counter,
+        $.entity,
+        $.macro,
+        $.target,
+        $.radio_target,
+        $.export_snippet,
+        $.footnote_reference,
+        $.citation,
+        $.inline_source_block,
+        $.inline_babel_call,
+      ),
+    )),
 
     _bullet: $ => choice(
       $.unordered_bullet,
@@ -710,7 +754,7 @@ module.exports = grammar({
     table_cell: $ => choice(
       seq($._S, $._table_cell_objects, optional($._S)),
       seq(optional($._S), $._table_cell_objects, optional($._S)),
-      $._S,
+      alias($._S, $.plain_text),
     ),
 
     _table_cell_objects: $ => repeat1($._object_table),
@@ -742,7 +786,7 @@ module.exports = grammar({
       token(prec(2, ci('#+begin_comment'))),
       optional($._TRAILING),
       $._NL,
-      field('body', optional($._raw_block_body)),
+      field('body', optional($.comment_block_body)),
       token(prec(3, /[ \t]*#\+end_comment/i)),
       optional($._TRAILING),
       $._NL,
@@ -762,19 +806,27 @@ module.exports = grammar({
 
     example_line: _ => seq(/[^\n]*/, '\n'),
 
+    comment_block_body: $ => repeat1($.comment_line),
+
+    comment_line: _ => seq(/[^\n]*/, '\n'),
+
     export_block: $ => seq(
       token(prec(2, ci('#+begin_export'))),
       $._S,
       field('backend', alias($._EXPORT_BACKEND, $.export_backend)),
       optional(field('parameters', seq($._S, $._REST_OF_LINE))),
       $._NL,
-      field('body', optional($._raw_block_body)),
+      field('body', optional($.export_block_body)),
       token(prec(3, /[ \t]*#\+end_export/i)),
       optional($._TRAILING),
       $._NL,
     ),
 
     _EXPORT_BACKEND: _ => /[^ \t\n]+/,
+
+    export_block_body: $ => repeat1($.export_line),
+
+    export_line: _ => seq(/[^\n]*/, '\n'),
 
     src_block: $ => seq(
       token(prec(2, ci('#+begin_src'))),
@@ -810,10 +862,6 @@ module.exports = grammar({
       $._PARAGRAPH_CONTINUE,
       repeat1($._object),
     ),
-
-    _raw_block_body: $ => repeat1($._raw_line),
-
-    _raw_line: _ => seq(/[^\n]*/, '\n'),
 
     _verse_body: $ => repeat1($._verse_line),
 
@@ -851,20 +899,12 @@ module.exports = grammar({
     // --- 7.4 Planning ---
     planning: $ => prec(2, repeat1($._planning_line)),
 
-    _planning_line: $ => choice(
-      prec(1, seq(
-        optional($._INDENT),
-        $._planning_entry,
-        repeat(seq($._S, $._planning_entry)),
-        optional($._TRAILING),
-        $._NL,
-      )),
-      prec(0, seq(
-        optional($._INDENT),
-        $._planning_entry_text,
-        optional($._TRAILING),
-        $._NL,
-      )),
+    _planning_line: $ => seq(
+      optional($._INDENT),
+      $._planning_entry,
+      repeat(seq($._S, $._planning_entry)),
+      optional($._TRAILING),
+      $._NL,
     ),
 
     _planning_entry: $ => seq(
@@ -874,21 +914,7 @@ module.exports = grammar({
       field('value', $.timestamp),
     ),
 
-    _planning_entry_text: $ => seq(
-      field('keyword', alias($._PLAN_KW, $.planning_keyword)),
-      ':',
-      $._S,
-      field('value', alias($._PLANNING_VALUE_TEXT, $.plain_text)),
-    ),
-
     _PLAN_KW: $ => $._PLAN_KW_EXT,
-
-    _PLANNING_VALUE_TEXT: _ => choice(
-      /\.[^\n]+/,
-      /<[^>\n]* [0-9]:[0-9]{2}[^>\n]*>/,
-      /\[[^\]\n]*\+\+[0-9]+[A-Za-z]{2,}[^\]\n]*\]/,
-      /[^\n<\[][^\n]*/,
-    ),
 
     // --- 7.5 Comments ---
     comment: $ => prec(1, repeat1($._comment_line)),
@@ -908,7 +934,7 @@ module.exports = grammar({
     // positioning with prev_char == 0). It consumes the optional leading
     // indentation and the ':' itself.
     _fixed_width_line: $ => choice(
-      seq($._FIXED_WIDTH_COLON, ' ', optional(field('value', /[^\n]*/)), $._NL),
+      seq($._FIXED_WIDTH_COLON, ' ', optional(field('value', alias(/[^\n]*/, $.fixed_width_value))), $._NL),
       seq($._FIXED_WIDTH_COLON, $._NL),
     ),
 

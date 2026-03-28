@@ -617,6 +617,37 @@ Indented LOGBOOK drawer with note line
                 (newline)))))))))
 
 ================
+LOGBOOK note keeps single-colon text
+================
+:LOGBOOK:
+   - State "CANCELLED"  from "TODO"       [2021-01-18 Mon 20:18] \\
+     No need to. :(
+:END:
+
+---
+
+(document
+  (zeroth_section
+    (logbook_drawer
+      body: (indent
+        indent: (whitespace)
+        body: (list
+          item: (list_item
+            bullet: (unordered_bullet)
+            first_line: (plain_text)
+            first_line: (timestamp
+              year: (ts_year)
+              month: (ts_month)
+              day: (ts_day)
+              dayname: (ts_dayname)
+              time: (ts_time))
+            first_line: (plain_text)
+            first_line: (line_break)
+            body: (paragraph
+              (plain_text)
+              (newline))))))))
+
+================
 Unindented LOGBOOK drawer with continuation note
 ================
 * H

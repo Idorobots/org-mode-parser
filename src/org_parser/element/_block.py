@@ -206,6 +206,14 @@ class CenterBlock(_ContainerBlock):
         self._begin_line = _render_begin_line("center", self._parameters)
         self.mark_dirty()
 
+    def __repr__(self) -> str:
+        """Return a semantic representation for debugging."""
+        return build_semantic_repr(
+            self.__class__.__name__,
+            parameters=self._parameters,
+            body=self._body,
+        )
+
 
 class QuoteBlock(_ContainerBlock):
     """``#+begin_quote`` block with mutable nested element contents."""
@@ -256,6 +264,14 @@ class QuoteBlock(_ContainerBlock):
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_begin_line("quote", self._parameters)
         self.mark_dirty()
+
+    def __repr__(self) -> str:
+        """Return a semantic representation for debugging."""
+        return build_semantic_repr(
+            self.__class__.__name__,
+            parameters=self._parameters,
+            body=self._body,
+        )
 
 
 class SpecialBlock(_ContainerBlock):
@@ -326,6 +342,15 @@ class SpecialBlock(_ContainerBlock):
         self._begin_line = _render_begin_line(self._name, self._parameters)
         self.mark_dirty()
 
+    def __repr__(self) -> str:
+        """Return a semantic representation for debugging."""
+        return build_semantic_repr(
+            self.__class__.__name__,
+            name=self._name,
+            parameters=self._parameters,
+            body=self._body,
+        )
+
 
 class DynamicBlock(_ContainerBlock):
     """``#+begin:`` dynamic block with mutable nested element contents."""
@@ -394,6 +419,15 @@ class DynamicBlock(_ContainerBlock):
         self._begin_line = _render_dynamic_begin_line(self._name, self._parameters)
         self.mark_dirty()
 
+    def __repr__(self) -> str:
+        """Return a semantic representation for debugging."""
+        return build_semantic_repr(
+            self.__class__.__name__,
+            name=self._name,
+            parameters=self._parameters,
+            body=self._body,
+        )
+
 
 class VerseBlock(_ContainerBlock):
     """``#+begin_verse`` block with mutable nested element contents."""
@@ -428,6 +462,10 @@ class VerseBlock(_ContainerBlock):
         block._document = document
         return block
 
+    def __repr__(self) -> str:
+        """Return a semantic representation for debugging."""
+        return build_semantic_repr(self.__class__.__name__, body=self._body)
+
 
 class CommentBlock(_TextBlock):
     """``#+begin_comment`` block with mutable raw text contents."""
@@ -454,14 +492,17 @@ class CommentBlock(_TextBlock):
         parent: Document | Heading | Element | None = None,
     ) -> CommentBlock:
         """Create a :class:`CommentBlock` from a ``comment_block`` node."""
-        source_text = node_source(node, document)
         block = cls(
-            body=_extract_block_body_text(source_text),
+            body=_extract_optional_field_text(node, document, "body") or "",
             parent=parent,
         )
         block._node = node
         block._document = document
         return block
+
+    def __repr__(self) -> str:
+        """Return a semantic representation for debugging."""
+        return build_semantic_repr(self.__class__.__name__, body=self._body)
 
 
 class ExampleBlock(_TextBlock):
@@ -495,7 +536,8 @@ class ExampleBlock(_TextBlock):
         block = cls(
             parameters=_extract_optional_field_text(node, document, "parameters")
             or _extract_begin_parameters(source_text, "#+begin_example"),
-            body=_extract_block_body_text(source_text),
+            body=_extract_optional_field_text(node, document, "body")
+            or _extract_block_body_text(source_text),
             parent=parent,
         )
         block._node = node
@@ -513,6 +555,14 @@ class ExampleBlock(_TextBlock):
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_begin_line("example", self._parameters)
         self.mark_dirty()
+
+    def __repr__(self) -> str:
+        """Return a semantic representation for debugging."""
+        return build_semantic_repr(
+            self.__class__.__name__,
+            parameters=self._parameters,
+            body=self._body,
+        )
 
 
 class ExportBlock(_TextBlock):
@@ -551,7 +601,7 @@ class ExportBlock(_TextBlock):
             backend=parsed_backend if backend is None else backend,
             parameters=_extract_optional_field_text(node, document, "parameters")
             or parsed_parameters,
-            body=_extract_block_body_text(source_text),
+            body=_extract_optional_field_text(node, document, "body") or "",
             parent=parent,
         )
         block._node = node
@@ -581,6 +631,15 @@ class ExportBlock(_TextBlock):
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_export_begin_line(self._backend, self._parameters)
         self.mark_dirty()
+
+    def __repr__(self) -> str:
+        """Return a semantic representation for debugging."""
+        return build_semantic_repr(
+            self.__class__.__name__,
+            backend=self._backend,
+            parameters=self._parameters,
+            body=self._body,
+        )
 
 
 class SourceBlock(_TextBlock):
@@ -619,7 +678,8 @@ class SourceBlock(_TextBlock):
             or parsed_language,
             switches=_extract_optional_field_text(node, document, "switches")
             or parsed_switches,
-            body=_extract_block_body_text(source_text),
+            body=_extract_optional_field_text(node, document, "body")
+            or _extract_block_body_text(source_text),
             parent=parent,
         )
         block._node = node
@@ -650,6 +710,15 @@ class SourceBlock(_TextBlock):
         self._begin_line = _render_source_begin_line(self._language, self._switches)
         self.mark_dirty()
 
+    def __repr__(self) -> str:
+        """Return a semantic representation for debugging."""
+        return build_semantic_repr(
+            self.__class__.__name__,
+            language=self._language,
+            switches=self._switches,
+            body=self._body,
+        )
+
 
 class FixedWidthBlock(Element):
     """Fixed-width area line with mutable content text."""
@@ -672,9 +741,8 @@ class FixedWidthBlock(Element):
         parent: Document | Heading | Element | None = None,
     ) -> FixedWidthBlock:
         """Create a :class:`FixedWidthBlock` from a ``fixed_width`` node."""
-        source_text = node_source(node, document)
         block = cls(
-            body=_extract_fixed_width_contents(source_text),
+            body=_extract_optional_field_text(node, document, "value") or "",
             parent=parent,
         )
         block._node = node
@@ -782,18 +850,6 @@ def _extract_block_body_text(source_text: str) -> str:
     if len(lines) <= 2:
         return ""
     return "".join(lines[1:-1])
-
-
-def _extract_fixed_width_contents(source_text: str) -> str:
-    """Return fixed-width content text without leading prefix markers."""
-    line = source_text.rstrip("\n")
-    trimmed = line.lstrip(" \t")
-    if not trimmed.startswith(":"):
-        return ""
-    content = trimmed[1:]
-    if content.startswith(" "):
-        content = content[1:]
-    return content
 
 
 def _extract_begin_parameters(source_text: str, prefix: str) -> str | None:

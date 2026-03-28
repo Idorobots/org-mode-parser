@@ -207,10 +207,16 @@ List items with URLs ending in slash
     (list
       item: (list_item
         bullet: (unordered_bullet)
-        first_line: (plain_text))
+        first_line: (plain_text)
+        first_line: (plain_link
+          type: (link_type)
+          path: (link_path)))
       item: (list_item
         bullet: (unordered_bullet)
-        first_line: (plain_text)))))
+        first_line: (plain_text)
+        first_line: (plain_link
+          type: (link_type)
+          path: (link_path))))))
 
 ================
 List items with inline code and trailing whitespace
@@ -226,11 +232,150 @@ List items with inline code and trailing whitespace
       item: (list_item
         bullet: (unordered_bullet)
         first_line: (code
-          body: (code_content)))
+          body: (code_content))
+        first_line: (plain_text))
       item: (list_item
         bullet: (unordered_bullet)
         first_line: (code
           body: (code_content))))))
+
+================
+List items with targeted trailing whitespace as plain text
+================
+- ~code~ 
+- =verbatim= 
+- *bold* 
+- /italic/ 
+- _underline_ 
+- +strike+ 
+- [[https://example.com][desc]] 
+- <https://example.org> 
+- https://example.net/ 
+- [2025-03-14 Fri] 
+- [1/2] 
+- \alpha 
+- {{{name}}} 
+- <<target>> 
+- <<<radio target>>> 
+- @@html:<b>hi</b>@@ 
+- [fn:1] 
+- [cite:@doe] 
+- src_python{42} 
+- call_foo()[bar] 
+
+---
+
+(document
+  (zeroth_section
+    (list
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (code
+          body: (code_content))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (verbatim
+          body: (verbatim_content))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (bold
+          body: (plain_text))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (italic
+          body: (plain_text))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (underline
+          body: (plain_text))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (strike_through
+          body: (plain_text))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (regular_link
+          path: (link_path)
+          description: (plain_text))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (angle_link
+          type: (link_type)
+          path: (link_path))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (plain_link
+          type: (link_type)
+          path: (link_path))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (timestamp
+          year: (ts_year)
+          month: (ts_month)
+          day: (ts_day)
+          dayname: (ts_dayname))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (completion_counter
+          value: (completion_counter_value))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (entity)
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (macro
+          name: (macro_name))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (target
+          value: (target_text))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (radio_target
+          body: (plain_text))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (export_snippet
+          backend: (snippet_backend)
+          value: (snippet_value))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (footnote_reference
+          label: (fn_label))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (citation
+          body: (citation_body))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (inline_source_block
+          language: (inline_language)
+          body: (inline_body))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (inline_babel_call
+          name: (call_name)
+          outside_header: (call_outside_header))
+        first_line: (plain_text)))))
 
 ================
 Plus sign in list item text is not a new bullet
@@ -319,6 +464,24 @@ Drawer-like tail stays plain text in list items
       item: (list_item
         bullet: (unordered_bullet)
         first_line: (plain_text)))))
+
+================
+List item body keeps single-colon text
+================
+- Item
+  Test :hurr: durr
+
+---
+
+(document
+  (zeroth_section
+    (list
+      item: (list_item
+        bullet: (unordered_bullet)
+        first_line: (plain_text)
+        body: (paragraph
+          (plain_text)
+          (newline))))))
 
 ================
 Drawer-like tails with inline verbatim in list items
@@ -464,7 +627,8 @@ Indented fixed-width starts after list item
       item: (list_item
         bullet: (unordered_bullet)
         first_line: (plain_text)
-        body: (fixed_width)))))
+        body: (fixed_width
+          value: (fixed_width_value))))))
 
 ================
 Indented nested item drawer starts after list
@@ -514,7 +678,8 @@ Indented nested fixed-width starts after list
           item: (list_item
             bullet: (unordered_bullet)
             first_line: (plain_text)
-            body: (fixed_width))))
+            body: (fixed_width
+              value: (fixed_width_value)))))
       item: (list_item
         bullet: (unordered_bullet)
         first_line: (plain_text)))))
@@ -634,6 +799,42 @@ Ordered list cookie with apostrophe text
       item: (list_item
         counter: (counter)
         counter_set: (counter_set)
+        first_line: (plain_text)))))
+
+================
+List items with leading tags and contents
+================
+- tag :: item contents
+- longer tag :: item contents
++ [-] tag :: item contents
+1. [@5] tag :: item contents
+
+---
+
+(document
+  (zeroth_section
+    (list
+      item: (list_item
+        bullet: (unordered_bullet)
+        tag: (item_tag
+          (plain_text))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        tag: (item_tag
+          (plain_text))
+        first_line: (plain_text))
+      item: (list_item
+        bullet: (unordered_bullet)
+        checkbox: (checkbox)
+        tag: (item_tag
+          (plain_text))
+        first_line: (plain_text))
+      item: (list_item
+        counter: (counter)
+        counter_set: (counter_set)
+        tag: (item_tag
+          (plain_text))
         first_line: (plain_text)))))
 
 ================

@@ -112,6 +112,18 @@ def test_heading_str_dirty_includes_planning_line(
     ) in rendered
 
 
+def test_heading_str_dirty_includes_comment_marker(
+    example_file: Callable[[str], Path],
+) -> None:
+    """Dirty heading rendering includes COMMENT marker when enabled."""
+    document = load(str(example_file("nested-headings-basic.org")))
+    heading = document.children[0]
+    heading.is_comment = True
+
+    rendered = str(heading)
+    assert rendered.startswith("* COMMENT First top-level heading\n")
+
+
 def test_document_str_dirty_preserves_repeated_todo_keywords(tmp_path: Path) -> None:
     """Dirty document rendering preserves repeated dedicated TODO keywords."""
     path = tmp_path / "multi-todo.org"

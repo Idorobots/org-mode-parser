@@ -516,6 +516,89 @@ COMMENT heading
 (document
   (heading
     (stars)
+    (comment_keyword)
+    (plain_text)))
+
+================
+COMMENT marker combinations
+================
+* COMMENT Title
+* [#A] COMMENT Title
+* [#A] COMMENT Title :tag:foo:
+* TODO [#A] COMMENT Title :tag:foo:
+* TODO [#A] COMMENT Title
+* TODO [#A] COMMENT
+* TODO COMMENT
+* COMMENT
+
+---
+
+(document
+  (heading
+    (stars)
+    (comment_keyword)
+    (plain_text))
+  (heading
+    (stars)
+    (priority
+      (priority_value))
+    (comment_keyword)
+    (plain_text))
+  (heading
+    (stars)
+    (priority
+      (priority_value))
+    (comment_keyword)
+    (plain_text)
+    (tags
+      (tag)
+      (tag)))
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority
+      (priority_value))
+    (comment_keyword)
+    (plain_text)
+    (tags
+      (tag)
+      (tag)))
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority
+      (priority_value))
+    (comment_keyword)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
+    (priority
+      (priority_value))
+    (comment_keyword))
+  (heading
+    (stars)
+    (todo_keyword)
+    (comment_keyword))
+  (heading
+    (stars)
+    (comment_keyword)))
+
+================
+COMMENT marker requires word boundary
+================
+* COMMENT:Title
+* TODO COMMENT:Title
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text))
+  (heading
+    (stars)
+    (todo_keyword)
     (plain_text)))
 
 ================

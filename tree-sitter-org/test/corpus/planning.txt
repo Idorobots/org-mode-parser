@@ -63,7 +63,7 @@ DEADLINE: <2024-01-15 Mon 13:00>
         (ts_time)))))
 
 ================
-Planning lines with invalid timestamps fallback to plain text
+Planning lines with invalid timestamps are errors
 ================
 * DONE Timestamps
    DEADLINE: <2013-02-25 8:00>
@@ -79,11 +79,27 @@ Planning lines with invalid timestamps fallback to plain text
     (plain_text)
     (planning
       (planning_keyword)
-      (plain_text)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ERROR))
       (planning_keyword)
-      (plain_text)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)
+        (repeater_mark)
+        (time_unit)
+        (ERROR))
       (planning_keyword)
-      (plain_text))))
+      (ERROR)
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)
+        (ts_dayname)))))
 
 ================
 Heading with SCHEDULED time range and repeater
@@ -209,3 +225,58 @@ CLOSED: [2026-02-28 Sat 12:00]
         (ts_day)
         (ts_dayname)
         (ts_time)))))
+
+================
+Planning line with non-timestamp value is an error
+================
+* Test
+SCHEDULED: hurr
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (ERROR
+      (planning_keyword)
+      (keyword_key))
+    (blank_line)))
+
+================
+Planning line with mixed-bracket range is an error
+================
+* Test
+DEADLINE: [2024-02-02]--<2025-02-02>
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (planning
+      (planning_keyword)
+      (ERROR
+        (ts_year)
+        (ts_month)
+        (ts_day))
+      (timestamp
+        (ts_year)
+        (ts_month)
+        (ts_day)))))
+
+================
+Planning line with incomplete timestamp is an error
+================
+* Test
+CLOSED: <
+
+---
+
+(document
+  (heading
+    (stars)
+    (plain_text)
+    (ERROR
+      (planning_keyword))))

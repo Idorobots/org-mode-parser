@@ -190,6 +190,19 @@ This doesn't work. :shrug:
       (newline))))
 
 ================
+Raw file path stays plain text
+================
+Filename: /org-mode-parser/src/org_parser/element/_drawer.py
+
+---
+
+(document
+  (zeroth_section
+    (paragraph
+      (plain_text)
+      (newline))))
+
+================
 Paragraph keeps unicode text as plain text
 ================
 body → unit
@@ -254,6 +267,10 @@ Report issues to mailto:bugs@example.org or via the issue tracker.
 (document
   (zeroth_section
     (paragraph
+      (plain_text)
+      (plain_link
+        (link_type)
+        (link_path))
       (plain_text)
       (newline))))
 

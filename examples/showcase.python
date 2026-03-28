@@ -1,0 +1,467 @@
+Document(
+  filename='examples/showcase.org',
+  title=RichText('Parser Showcase'),
+  author=RichText('Example Author'),
+  category=RichText('showcase'),
+  todo=RichText('TODO WAIT | DONE CANCEL'),
+  keywords=[
+      Keyword(key='DATE', value=RichText('<2026-03-27 Fri>')),
+    ],
+  body=[
+      BlankLine(),
+      Comment(text='This is a comment line in the zeroth section.'),
+      BlankLine(),
+      Paragraph(body=RichText('A paragraph in the zeroth section with a plain link https://example.com,\nan angle link <mailto:user@example.com> and a regular link [[https://orgmode.org][Org Mode]].\n')),
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='A',
+        title=RichText('Heading with Priority and Tags                         '),
+        scheduled=Timestamp(raw='<2026-04-01 Wed>', is_active=True, start_year=2026, start_month=4, start_day=1, start_dayname='Wed', start_hour=None, start_minute=None, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
+        deadline=Timestamp(raw='<2026-04-15 Wed>', is_active=True, start_year=2026, start_month=4, start_day=15, start_dayname='Wed', start_hour=None, start_minute=None, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
+        heading_tags=['foo', 'bar'],
+        body=[
+            Indent(
+              body=[
+                  {
+                        'ID': RichText('abc123'),
+                        'CUSTOM_ID': RichText('showcase'),
+                      },
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  Paragraph(body=RichText('A paragraph under a heading.  Inline markup: *bold*, /italic/,\n  _underline_, +strikethrough+, =verbatim=, ~code~.\n')),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Hard line break here.\\\\\n')),
+                  Paragraph(body=RichText('Continued after break.\n')),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Superscript: E=mc^{2}.  Subscript: H_{2}O.  Entity: \\alpha{}.\n')),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Export snippet: @@html:<em>hi</em>@@.  Macro: {{{title}}}.\n')),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Footnote reference [fn:1] and anonymous inline footnote [fn::text here].\n')),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              todo='DONE',
+              title=RichText('[1/3] Sub-heading with Completion Cookie                   '),
+              counter=CompletionCounter(value='1/3'),
+              closed=Timestamp(raw='[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
+              heading_tags=['child'],
+              clock_entries=[
+                  Clock(timestamp=Timestamp(raw='[2026-03-20 Fri 09:00]--[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2026, end_month=3, end_day=20, end_dayname='Fri', end_hour=10, end_minute=0), duration='1:00'),
+                ],
+              body=[
+                  Indent(
+                    body=[
+                        Logbook(
+                          body=[
+                              Clock(timestamp=Timestamp(raw='[2026-03-20 Fri 09:00]--[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2026, end_month=3, end_day=20, end_dayname='Fri', end_hour=10, end_minute=0), duration='1:00'),
+                            ],
+                          clock_entries=[
+                              Clock(timestamp=Timestamp(raw='[2026-03-20 Fri 09:00]--[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2026, end_month=3, end_day=20, end_dayname='Fri', end_hour=10, end_minute=0), duration='1:00'),
+                            ],
+                        ),
+                      ],
+                    indent='   ',
+                  ),
+                  BlankLine(),
+                  Indent(
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='-', checkbox=' ', first_line=RichText('Unchecked item')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Checked item')),
+                              ListItem(bullet='-', checkbox='-', first_line=RichText('Partial item')),
+                            ],
+                        ),
+                      ],
+                    indent='   ',
+                  ),
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    is_comment=True,
+                    title=RichText('Level-3 COMMENT heading'),
+                    body=[
+                        Indent(
+                          body=[
+                              Paragraph(body=RichText('Fixed-width area:\n')),
+                              FixedWidthBlock(body='line one'),
+                              FixedWidthBlock(body='line two'),
+                            ],
+                          indent='    ',
+                        ),
+                        BlankLine(),
+                        Indent(
+                          body=[
+                              HorizontalRule(rule='-----'),
+                            ],
+                          indent='    ',
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Lists'),
+        body=[
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Unordered:\n')),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('first')),
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('second'),
+                          body=[
+                              List(
+                                items=[
+                                    ListItem(
+                                      bullet='+',
+                                      first_line=RichText('nested item'),
+                                      body=[
+                                          List(
+                                            items=[
+                                                ListItem(bullet='*', first_line=RichText('more nesting')),
+                                              ],
+                                          ),
+                                        ],
+                                    ),
+                                  ],
+                              ),
+                            ],
+                        ),
+                        ListItem(bullet='-', first_line=RichText('third')),
+                      ],
+                  ),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Ordered:\n')),
+                  List(
+                    items=[
+                        ListItem(bullet='.', first_line=RichText('one')),
+                        ListItem(bullet='.', first_line=RichText('two')),
+                        ListItem(bullet='.', counter_set='5', first_line=RichText('three')),
+                      ],
+                  ),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Descriptive:\n')),
+                  List(
+                    items=[
+                        ListItem(bullet='-', item_tag=RichText('term'), first_line=RichText('definition text')),
+                      ],
+                  ),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Tables'),
+        body=[
+            Indent(
+              body=[
+                  CaptionKeyword(value='Table description'),
+                  PlotKeyword(value='title "Table"'),
+                  TblnameKeyword(value='my-table'),
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('Name  ')),
+                              TableCell(value=RichText(' Score ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|-------+-------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('Alice ')),
+                              TableCell(value=RichText('    42 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('Bob   ')),
+                              TableCell(value=RichText('    17 ')),
+                            ],
+                        ),
+                      ],
+                    formulas=['#+TBLFM: $2=$2*1'],
+                  ),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Blocks'),
+        body=[
+            Indent(
+              body=[
+                  SourceBlock(language='scheme', switches=':results output', body='  (display "hello")\n  (newline)\n'),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  ResultsKeyword(value=None),
+                  FixedWidthBlock(body='hello'),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  ExampleBlock(body='  verbatim example text\n'),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  QuoteBlock(
+                    body=[
+                        Paragraph(body=RichText('A quoted passage.\n')),
+                      ],
+                  ),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  CenterBlock(
+                    body=[
+                        Paragraph(body=RichText('Centered text.\n')),
+                      ],
+                  ),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  VerseBlock(
+                    body=[
+                        Paragraph(body=RichText('Line one.\n')),
+                        Paragraph(body=RichText('Line two.\n')),
+                      ],
+                  ),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  CommentBlock(body='  Hidden comment block.\n'),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  ExportBlock(backend='html', body='  <p>Raw HTML export.</p>\n'),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  SpecialBlock(
+                    name='special',
+                    body=[
+                        Paragraph(body=RichText('Custom special block.\n')),
+                      ],
+                  ),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Drawers and Dynamic Blocks'),
+        body=[
+            Indent(
+              body=[
+                  Drawer(
+                    name='MY-DRAWER',
+                    body=[
+                        Paragraph(body=RichText('drawer contents\n')),
+                      ],
+                  ),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  DynamicBlock(
+                    name='clocktable',
+                    parameters=':scope file',
+                    body=[
+                        Paragraph(body=RichText('dynamic block contents\n')),
+                      ],
+                  ),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Timestamps'),
+        body=[
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Active: <2026-03-27 Fri>\n  Active with time: <2026-03-27 Fri 09:00>\n')),
+                  Paragraph(body=RichText('Same-day range: <2026-03-27 Fri 09:00-10:00>\n  Active range: <2026-03-27 Fri>--<2026-03-28 Sat>\n  Inactive: [2026-03-27 Fri]\n  Inactive range: [2026-03-27 Fri]--[2026-03-28 Sat]\n  Repeating: <2026-03-27 Fri +1w>\n  With delay: <2026-03-27 Fri -2d>\n')),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='WAIT',
+        title=RichText('Misc elements'),
+        repeated_tasks=[
+            Repeat(
+              after='WAIT',
+              before='TODO',
+              timestamp=Timestamp(raw='[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
+              body=[
+                  Paragraph(body=RichText('Note\n')),
+                ],
+            ),
+          ],
+        body=[
+            Indent(
+              body=[
+                  Logbook(
+                    body=[
+                        List(
+                          items=[
+                              Repeat(
+                                after='WAIT',
+                                before='TODO',
+                                timestamp=Timestamp(raw='[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
+                                body=[
+                                    Paragraph(body=RichText('Note\n')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                    repeats=[
+                        Repeat(
+                          after='WAIT',
+                          before='TODO',
+                          timestamp=Timestamp(raw='[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
+                          body=[
+                              Paragraph(body=RichText('Note\n')),
+                            ],
+                        ),
+                      ],
+                  ),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Inline source: src_python{1 + 1}.\n  Inline babel call: call_identity(x=1).\n')),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Regular babel call:\n')),
+                  BabelCall(name='my-function', arguments='arg=1'),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Target: <<my-target>>.  Radio target: <<<radio>>>.\n')),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+            Indent(
+              body=[
+                  Paragraph(body=RichText('Citation: [cite: @key2026].\n')),
+                ],
+              indent='  ',
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Footnotes'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('[fn:1] This is the footnote definition body.\n')),
+          ],
+      ),
+    ],
+)

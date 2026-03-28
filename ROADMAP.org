@@ -5054,44 +5054,446 @@ The =h= character below causes an error. Any single-character, indented paragrap
   - foo
 #+end_example
 
-* Error recovery overhaul
-It would be nice to report parse errors for some of the obviously broken constructions.
-
-- [ ] unclosed markup should report a missing close on end of line
-- [ ] misaligned drawer start/end markers
-- [ ] trailing bits after drawer start/end markers
-- [ ] misaligned CLOCK
-- [ ] malformed CLOCK lines
-- [ ] misalign PLANNING
-- [ ] malformed PLANNING
-- [ ] malformed timestamps
-- [ ] misaligned block start/end markers
-- [ ] tailing bits after block start/end markers
-- [ ] malformed org tables
-- [ ] malformed special keyword values
-
-* Bugfixes
-** Comment headings
-COMMENT doesn't parse as an element of the heading line.
+* DONE Bugfixes
+:LOGBOOK:
+- State "DONE"       from              [2026-03-27 Fri 12:29]
+:END:
+** DONE Comment headings
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-25 Wed 14:14]
+:END:
+The =COMMENT= token in headings doesn't parse as the comment indicator but rather a plain text string
 
 #+begin_example
-,* TODO [#A] COMMENT Title :tag:a2%:
+,* COMMENT Title
+,* [#A] COMMENT Title
+,* [#A] COMMENT Title :tag:foo:
+,* TODO [#A] COMMENT Title :tag:foo:
 ,* TODO [#A] COMMENT Title
 ,* TODO [#A] COMMENT
 ,* TODO COMMENT
 ,* COMMENT
 #+end_example
 
-** Tags on list items with counters/checkboxes
+All of the above should be marked as comment headings on the tree-sitter heading node.
+
+Update the Python wrapper to also expect the comment indicator. The =Heading= class should have a mutable field =is_comment= that returns the comment indicator and is able to set it.
+
+** DONE Tags on list items
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-25 Wed 17:43]
+:END:
+
+List items can have an optional tag associated with them:
+
 #+begin_example
+- tag :: item contents
+- longer tag :: item contents
 + [-] tag :: item contents
+1. [@5] tag :: item contents
 #+end_example
 
-** Lower-case CLOCK items.
+All of the above should parse with a leading tag.
+
+*** DONE Regressions
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-25 Wed 17:43]
+:END:
+
+It looks like text now splits around single =:= characters. This should work without issues, only =::= should be considered a list item tag separator.
+
+There are numerous regressions because of that:
+
+#+begin_example
+- Item
+  Test :hurr: durr
+#+end_example
+
+Here the collon causes an error in the list item body parsing. It's the same failure as here:
+
+#+begin_example
+:LOGBOOK:
+   - State "CANCELLED"  from "TODO"       [2021-01-18 Mon 20:18] \\
+     No need to. :(
+:END:
+#+end_example
+
+** CANCELLED Lower-case CLOCK items.
+:LOGBOOK:
+- State "CANCELLED"  from              [2026-03-25 Wed 12:55] \\
+  Org-Mode in Emacs doesn't recognize these even though it's documented in https://orgmode.org/worg/org-syntax.html
+:END:
 #+begin_example
 clock: [2024-10-12]
 #+end_example
 
+** DONE Block bodies
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-27 Fri 17:07]
+:END:
+Expose =export_block= and =comment_block= bodies in the parse tree. These can be just paragraphs of plaintext.
+Similarly, expose the body of the fixed-width line in the parse tree.
+
+** CANCELLED Block indents
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-27 Fri 18:44] \\
+  Proved too difficult for the AI to implement, both Claude and Codex failed misserably.
+:END:
+I'd like indented block bodies not to include the indent in their body lines:
+
+#+begin_example
+  #+begin_src python
+  print("hello")
+  #+end_src
+#+end_example
+
+Here the whole source block should be wrapped in an =indent= and each line of the source block should only capture the content excluding the indent. Please follow the same approach that is done to the bodies of the =quote_block= and =center_block=. Apply the same logic to the other blocks, ideally the indent is part of the =indent= and the indented blocks exclude it from their bodies.
+
+** DONE Fuzzing issue
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-27 Fri 23:05]
+:END:
+The =tree-sitter fuzz= complains that one of the tests is failing:
+The "List items with inline code and trailing whitespace" sometimes results in:
+
+#+begin_example
+  0. org - corpus - lists - List items with inline code and trailing whitespace
+- ~org-todo-keywords-1~ 
+- ~org-link-parameters~
+
+
+- ~org-todo-keywords-1~ 
+
+
+- ~org-todo-keywords-1~ 
+- ~org-link-parameters~
+
+
+Incorrect parse for org - corpus - lists - List items with inline code and trailing whitespace - seed 12824655214275249307
+
+correct / expected / unexpected
+(document (zeroth_section (list item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content)) first_line: (plain_text)) item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))))))
+(document (zeroth_section (list item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))) item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))))))
+#+end_example
+
+The full command invocation is:
+
+#+begin_example
+TREE_SITTER_SEED=12824655214275249307 tree-sitter fuzz -i "List items with inline code and trailing whitespace" --iterations 1 --edits 1 --log-graphs
+#+end_example
+
+You can use it to reproduce and validate the fix.
+
+** DONE Inconsistent trailing whitespace treatment
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-27 Fri 23:31]
+:END:
+There are 7 remaining trailing-whitespace inconsistencies in list first lines:
+
+- =target=
+- =radio_target=
+- =export_snippet=
+- =footnote_reference=
+- =citation=
+- =inline_source_block=
+- =inline_babel_call=
+
+Pattern is the same as before: for a list item ending with one of those objects plus trailing spaces, a full parse and an incremental edit/undo parse disagree (=inc= adds =first_line: (plain_text)= while =full= doesn’t).
+
+Where this still reproduces:
+- Untagged list items (=- ... =)
+- Ordered list items (=1. ... =)
+- Checkbox list items (=- [ ] ... =)
+
+Make sure that the Python wrapper supports the extended first_line on list items.
+
+** DONE Another fuzzing issue
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-28 Sat 10:53]
+:END:
+
+#+begin_example
+  0. org - corpus - tables - Table with indented TBLFM formula line
+ |    *Total* |              |            |                 |                |              150 |
+ #+TBLFM: @>$6=vsum(@2$6..@>>$6)
+
+
+ |    *Total* |     
+          |            |      zsrow28k (                |              150 beTFM: @>$6=vsum(@2$6..@>>$6)
+CT6R
+
+
+ |    *Total* |              |            |                 |                |              150 |
+ #+TBLFM: @>$6=vsum(@2$6..@>>$6)
+
+
+Incorrect parse for org - corpus - tables - Table with indented TBLFM formula line - seed 12219355399008411731
+
+correct / expected / unexpected
+(document (zeroth_section (indent indent: (whitespace) body: (org_table (table_row (table_cell (bold body: (plain_text)) (plain_text)) (table_cell (plain_text)) (table_cell) (table_cell (plain_text)) (table_cell (plain_text)) (table_cell (plain_text))) (tblfm_line)))))
+(document (zeroth_section (indent indent: (whitespace) body: (org_table (table_row (table_cell (bold body: (plain_text)) (plain_text)) (table_cell (plain_text)) (table_cell (plain_text)) (table_cell (plain_text)) (table_cell (plain_text)) (table_cell (plain_text))) (tblfm_line)))))
+
+
+1 org corpus tests failed fuzzing
+#+end_example
+
+Please analyze and attempt to fix the root cause.
+
+You can reproduce the issue with:
+
+#+begin_example
+TREE_SITTER_SEED=12219355399008411731 tree-sitter fuzz -i "Table with indented TBLFM formula line" --iterations 1000 --edits 1 --log-graphs
+#+end_example
+
+The issue is likely similar to the list item trailing whitespace handling. It's OK to fix it the same way - always take the whitespace into account as the table cell value.
+
+** DONE Plain link in list items
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-28 Sat 11:54]
+:END:
+
+List items whose first line ends with a =plain_link= (e.g. =- see https://example.com=) do not match =_item_first_line_target_end= and fall back to =_item_first_line=. The consequence is that any trailing-whitespace =plain_text= node that =_item_first_line_target_end= is designed to handle is silently dropped or mis-attributed for those items.
+
+=plain_link= appears in =_object_nofn= (the prefix =repeat=) but is absent from the terminal =choice(...)= list at =grammar.js:587-607=, unlike every other inline object type (=regular_link=, =angle_link=, etc.).
+
+Either add =$.plain_link= to the terminal choice list and add a corpus test covering a list item ending with a plain link, or add a comment explaining why =plain_link= is intentionally excluded.
+
+*** DONE Plain link support
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-28 Sat 11:24]
+:END:
+It appears that plain links are not actually produced by the parser at all. Pleas make sure that plain links are indeed parsed correctly.
+*** DONE tree-sitter-org/src/scanner.c
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-28 Sat 11:37]
+:END:
+
+In file tree-sitter-org/src/scanner.c around line 1122, near the ~static bool is_ascii_digit(int32_t ch) {~
+
+#+begin_example
++  // Parse one of the allowed lowercase link types.
++  // shell, news, mailto, https, http, ftp, help, file, elisp
++  switch (ch) {
+#+end_example
+
+Can this be replaced with a 1 or more alphanum characters followed by a =:= and then at least one alphanum character?
+
+Abstract the lexer lookahead into a function that accepts a short string and does the match, so that =scan_plain_link_candidate= can instead call that function for each of the supported link types.
+
+*** DONE Inline SRC block regression
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-28 Sat 11:54]
+:END:
+
+#+begin_example
+Inline source: src_python{1 + 1}.
+Inline babel call: call_identity(x=1).
+#+end_example
+*** DONE Raw file path regression
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-28 Sat 12:03]
+:END:
+
+#+begin_example
+Filename: /org-mode-parser/src/org_parser/element/_drawer.py
+#+end_example
+
+** TODO Additional issues
+
+- High: CI fuzz step can falsely pass if =tree-sitter fuzz= crashes because =.github/workflows/parser-checks.yml:43= pipes to =tee= without =pipefail=.
+
+- Medium: descriptive-list tag extraction drops inline semantics in =src/org_parser/element/_list.py:603= by rebuilding from =str(rich_text)=, which flattens objects to plain text.
+
+- Medium: malformed planning lines can still populate heading planning fields in =src/org_parser/document/_heading.py:923= because assignment is based on keyword+timestamp scan without validating entry integrity.
+
+- Python wrapper uses =begin_line= for various blocks. It would be nicer if it could use the tree sitter node fields such as =language= for the source block, etc.
+
+* DONE Error recovery overhaul
+:LOGBOOK:
+- State "DONE"       from              [2026-03-27 Fri 12:30]
+:END:
+It would be nice to report parse errors for some of the obviously broken constructions.
+
+- [X] unclosed markup should report a missing close on end of line
+- [ ] misaligned drawer start/end markers
+- [X] trailing bits after drawer start/end markers
+- [ ] misaligned CLOCK
+- [X] malformed CLOCK lines
+- [ ] misaligne PLANNING
+- [X] malformed PLANNING
+- [X] malformed timestamps
+- [ ] misaligned block start/end markers
+- [X] tailing bits after block start/end markers
+- [X] malformed org tables
+- [ ] malformed special keyword values
+
+** CANCELLED Malformed inline markup should report a missing close on end of line
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-26 Thu 21:20] \\
+  Proved to be too troublesome for genuinely useful cases (file paths, globs, etc).
+:END:
+Ideally, the parse tree would point out the missing closing markup.
+
+#+begin_example
+*not bold
+ /not italic
+not ~code
+not strikethrough+
+,* Not _underline
+#+end_example
+
+All of the above lines should contain an error.
+
+** CANCELLED Trailing text after drawer start/end markers should be marked as errors
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-26 Thu 22:16] \\
+  Didn't work very well, either full drawer is text, or special "semantic error" nodes need to be introduced.
+:END:
+Ideally, the error would be limited to just the trailing text.
+
+#+begin_example
+:LOGBOOK: <<<<<<<<<<<<
+:END:
+:PROPERTIES:
+:END: >
+#+end_example
+
+In the above example, the two drawers should mostly parse fine with an error node attached to each around the trailing text.
+
+** CANCELLED Trailing text after list item line-break =\\= should be marked as error
+Ideally, the item line would parse fine with a line break at the end and a trailing error node.
+
+#+begin_example
+:LOGBOOK:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-27 Fri 12:30] \\
+  This is consistent with what Org Mode does.
+:END:
+- State "DONE" from "TODO" [2025-02-10] \\ not acceptable
+  Note
+:END:
+#+end_example
+
+In the above example the =not acceptable= string should be an error.
+
+** CANCELLED Malformed CLOCK lines should be marked as errors
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-27 Fri 10:01] \\
+  It already works pretty well.
+:END:
+Ideally, only the clock line would be marked as an error.
+
+#+begin_example
+CLOCK: => foo:bar
+CLOCK: <2025-12-12
+CLOCK: [2023-07-03 Mon 09:45]--<2023-07-03 Mon 14:10> =>  4:25
+#+end_example
+
+In the above example, each line should be marked as an error - first line due to the malformed duration, the remaining two because of the malformed timestamps.
+
+** DONE Malformed planning lines should be marked as errors
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-26 Thu 22:47]
+:END:
+Ideally, just the planning value that contains the error should be marked as such with the remaining, well-formed, planning items parsed fine.
+
+#+begin_example
+,* Test
+SCHEDULED: hurr
+DEADLINE: [2024-02-02]--<2025-02-02>
+CLOSED: <
+#+end_example
+
+In the above example, the SCHEDULED time value is not a timestamp, hence should be marked as an error. The two remaining lines contain malformed timestamps and also should be marked as errors.
+
+** CANCELLED Trailing bits after block start/end markers should be marked as errors
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-27 Fri 12:28] \\
+  Already works well-enough.
+:END:
+Ideally, the block would still parse as a block, with the error node attached to it marking the trailing text.
+#+begin_example
+,#+begin_example
+Not right
+,#+end_example>
+#+end_example
+
+In the above example, the =>= should be marked as an error.
+Ensure that blocks that do accept additional data on either line parse fine.
+
+** CANCELLED Malformed org-tables should be marked as errors
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-03-27 Fri 12:28] \\
+  This is actually consistent with what Org-Mode does.
+:END:
+Tables that have a trailing text should result in an error on the parse tree. Leading text should cause the table not to parse as a table but plaintext.
+
+# #+begin_example
+foo|bar|baz|
+
+|foo | bar | baz
+# #+end_example
+
+In the above example, the first line should be a plaintext paragraph, while the second should be marked as missing the =|= character.
+
+* Easier debugging
+** DONE Pretty-printed repr
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-27 Fri 19:28]
+:END:
+The =__repr__= implementations are pretty useful, but they could be made more useful by introducing pretty printing - each subnode sholud be displayed on a separate line with the right amount of indentation so that the structure of the nodes is apparent.
+
+** DONE Set up tree-sitter fuzz
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-28 Sat 00:03]
+:END:
+Set up =tree-sitter fuzz= in the CI workflow, use 1000 for the iterations.
+** DONE Easier fuzz reproduction
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-27 Fri 23:49]
+:END:
+Expand the fuzz.py script to accept a "log" from the tree-sitter fuzz command that will apply the edits as listed in the log in an attempt to reproduce the issue in a controlled manner. Ideally, the script wolud be used as follows:
+
+#+begin_src bash
+cat fuzz_input.log | python fuzz.py
+#+end_src
+
+The input log will be formatted as follows:
+
+#+begin_example
+  0. org - corpus - lists - List items with inline code and trailing whitespace
+- ~org-todo-keywords-1~ 
+- ~org-link-parameters~
+
+
+- ~org-todo-keywords-1~ 
+
+
+- ~org-todo-keywords-1~ 
+- ~org-link-parameters~
+
+
+Incorrect parse for org - corpus - lists - List items with inline code and trailing whitespace - seed 12824655214275249307
+
+correct / expected / unexpected
+(document (zeroth_section (list item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content)) first_line: (plain_text)) item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))))))
+(document (zeroth_section (list item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))) item: (list_item bullet: (unordered_bullet) first_line: (code body: (code_content))))))
+#+end_example
+
+The initial line and anything past the "Incorrect parse for" can be ignored. The remaining lines should be interpreted as the input & edits - the first set is the original input, then each edit is separated by two consecutive blank lines.
+
+The script should accept this format, parse the edits and apply them in order to reproduce the issue.
+
+** DONE Fuzz step in CI should fail the build if it finds something
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-28 Sat 00:24]
+:END:
+* TreeSitter parser release
+** Tree-Sitter parser pulled into a separate repository
+** Grammar & scanner linters
+** CI workflow using generic tree-sitter actions
+** Python, C, Rust, Go, JS bindings
+** Updated highlights queries
 * Release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:
@@ -5112,6 +5514,5 @@ _This_ /parser/ *supports* =the= ~following~ +inline+ markup^{objects}.
 All of the above are supported in the Tree-Sitter grammar as well as in the Python wrapper.
 #+end_example
 
-** Tree-Sitter parser pulled into a separate repository
 ** Semantic node documentation
 ** Library release
