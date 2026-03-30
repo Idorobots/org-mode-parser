@@ -23,6 +23,244 @@ SCHEDULED: <2025-12-12, at some point>
 
 The timestamp is parsed with an error, but it's not available in =document.errors= property.
 
+** TODO Keyword stringification issue
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_document.py
+
+#+begin_example
+>>> from org_parser.element import Logbook
+>>> from org_parser.time import Clock
+>>> document = loads("#+TITLE: Logbook")
+>>> document.logbook = Logbook()
+>>> document.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
+>>> print(str(document))
+#+TITLE: Logbook:LOGBOOK:
+CLOCK: [2025-10-10]
+:END:
+#+end_example
+
+The format of the stringified document is invalid, the LOGBOOK drawer should appear on a new line.
+
+** TODO src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+
+In file src/org_parser/document/_document.py around line 452, near the ~class Document:~
+
+#+begin_example
++            >>> document = loads("#+TITLE: Properties")
++            >>> document.properties = Properties()
+
+#+end_example
+
+Alternatively, =Document.properties= could be set by default to an empty instance of =Properties=.
+Same with =Document.logbook=.
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::keywords: list\[Keyword\] | None = None,
+ properties: Properties | None = None,
+ logbook: Logbook | None = None,
+ body: list\[Element\] | None = None,
+ children: list\[Heading\] | None = None,]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_document.py
+
+#+begin_example
+        keywords: list[Keyword] | None = None,
+        properties: Properties | None = None,
+        logbook: Logbook | None = None,
+        body: list[Element] | None = None,
+        children: list[Heading] | None = None,
+
+#+end_example
+
+Keywords, body and children should be empty lists by default.
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_heading.py::heading_tags: list\[str\] | None = None,
+ scheduled: Timestamp | None = None,
+ closed: Timestamp | None = None,
+ deadline: Timestamp | None = None,
+ properties: Properties | None = None,
+ logbook: Logbook | None = None,
+ repeated_tasks: list\[Repeat\] | None = None,
+ clock_entries: list\[Clock\] | None = None,
+ body: list\[Element\] | None = None,
+ children: list\[Heading\] | None = None,]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_heading.py
+
+#+begin_example
+        heading_tags: list[str] | None = None,
+        scheduled: Timestamp | None = None,
+        closed: Timestamp | None = None,
+        deadline: Timestamp | None = None,
+        properties: Properties | None = None,
+        logbook: Logbook | None = None,
+        repeated_tasks: list[Repeat] | None = None,
+        clock_entries: list[Clock] | None = None,
+        body: list[Element] | None = None,
+        children: list[Heading] | None = None,
+
+#+end_example
+
+Properties & logbook can be set to their respective classes by default and omitted from dirty  stringification when empty.
+Heading tags, repeated tasks, clock entries, body and children should be empty lists by default.
+Repeated tasks should be renamed to =repeats=.
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_heading.py]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_heading.py
+
+#+begin_example
+def _render_heading_dirty(heading: Heading) -> str:
+    """Render a dirty heading from semantic fields only."""
+    line_parts: list[str] = ["*" * heading.level]
+
+    if heading.todo:
+        line_parts.append(heading.todo)
+
+    if heading.priority:
+        line_parts.append(f"[#{heading.priority}]")
+
+    if heading.is_comment:
+        line_parts.append("COMMENT")
+
+    if heading.title is not None:
+        line_parts.append(str(heading.title))
+
+    headline = " ".join(line_parts)
+
+    if heading.heading_tags:
+        space = "" if headline.endswith(" ") else " "
+        headline = f"{headline}{space}:{':'.join(heading.heading_tags)}:"
+
+    parts = [f"{headline}\n"]
+    planning_entries: list[str] = []
+    if heading.scheduled is not None:
+        planning_entries.append(f"SCHEDULED: {heading.scheduled}")
+    if heading.deadline is not None:
+        planning_entries.append(f"DEADLINE: {heading.deadline}")
+    if heading.closed is not None:
+        planning_entries.append(f"CLOSED: {heading.closed}")
+    if planning_entries:
+        parts.append(f"{' '.join(planning_entries)}\n")
+
+    if heading.properties is not None:
+        parts.append(str(heading.properties))
+    if heading.logbook is not None:
+        parts.append(str(heading.logbook))
+
+    parts.extend(str(element) for element in heading.body)
+    return "".join(parts)
+
+#+end_example
+
+
+This should add the completion counter if set.
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_list.py::>>> document.body\[0\].items.append(ListItem(bullet="-", first_line=RichText("Item 1")))]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_list.py
+
+#+begin_example
+        >>> document.body[0].items.append(ListItem(bullet="-", first_line=RichText("Item 1")))
+
+#+end_example
+
+It's impossible to create a =ListItem= with =ListItem.from_source("- item")= as that creates a =List= instance.
+** DONE Code review comment
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-31 Tue 01:10]
+:END:
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_paragraph.py::body: Parsed paragraph body rich text.
+ indent: Leading indentation of the first paragraph line, if present.
+ parent: Optional parent owner object.]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_paragraph.py
+
+#+begin_example
+        body: Parsed paragraph body rich text.
+        indent: Leading indentation of the first paragraph line, if present.
+        parent: Optional parent owner object.
+
+#+end_example
+
+Paragraph no longer needs the indent, it's handled by =Indent= class.
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_structure.py]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_structure.py
+
+#+begin_example
+        indent_node = node.child_by_field_name("indent")
+        indent_text = node_source(indent_node, document)
+        indent = indent_text if indent_text != "" else None
+        block = cls(
+            body=[
+                child_factory(child, document, parent=parent)
+                for child in node.children_by_field_name("body")
+                if child.is_named
+            ],
+            indent=indent,
+        )
+        block.attach_source(node, document)
+        return block
+
+#+end_example
+
+This should extract the indent from the =whitespace= property of the parse tree.
+* Dev Ex
+** TODO Any method that accepts RichText should also accept raw strings.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:10]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+** TODO Document.properties should accept a dictionary when setting.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:12]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+** TODO Properties constructor should accept a dictionary.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:13]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+** TODO Any body setter should accept a list of elements, a single element and a raw string.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:13]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_keyword.py::>>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
+ >>> document.mark_dirty()]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_keyword.py
+
+#+begin_example
+        >>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
+        >>> document.mark_dirty()
+
+#+end_example
+
+Mark dirty is required for the append to take effect - could use a custom list wrapper that automatically handles it.
 * Initial release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:
@@ -73,44 +311,3 @@ Do not use =obj == obj= as an example? That's super lazy. Please redo all the ex
 
 ** Automated tests based on the example files.
 ** Library release
-* TODO Code review comment
-:PROPERTIES:
-:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py]]
-:END:
-
-Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_document.py
-
-#+begin_example
->>> from org_parser.element import Logbook
->>> from org_parser.time import Clock
->>> document = loads("#+TITLE: Logbook")
->>> document.logbook = Logbook()
->>> document.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
->>> print(str(document))
-#+TITLE: Logbook:LOGBOOK:
-CLOCK: [2025-10-10]
-:END:
-#+end_example
-
-
-The format of the stringified document is invalid, the LOGBOOK drawer should appear on a new line.
-* TODO Any method that accepts RichText should also accept raw strings.
-:PROPERTIES:
-:capture_time: [2026-03-30 Mon 15:10]
-:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
-:END:
-* TODO Document.properties should accept a dictionary when setting.
-:PROPERTIES:
-:capture_time: [2026-03-30 Mon 15:12]
-:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
-:END:
-* TODO Properties constructor should accept a dictionary.
-:PROPERTIES:
-:capture_time: [2026-03-30 Mon 15:13]
-:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
-:END:
-* TODO Any body setter should accept a list of elements, a single element and a raw string.
-:PROPERTIES:
-:capture_time: [2026-03-30 Mon 15:13]
-:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
-:END:
