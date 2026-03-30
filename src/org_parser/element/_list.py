@@ -192,13 +192,6 @@ class ListItem(Element):
         """Stringified text of all list body elements."""
         return "".join(str(element) for element in self._body)
 
-    def append_body(self, element: Element, *, mark_dirty: bool = True) -> None:
-        """Append one body element with optional dirty propagation."""
-        element.parent = self
-        self._body.append(element)
-        if mark_dirty:
-            self.mark_dirty()
-
     def reformat(self) -> None:
         """Mark all child content and this item dirty."""
         if self._item_tag is not None:

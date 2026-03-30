@@ -21,7 +21,6 @@ class Paragraph(Element):
 
     Args:
         body: Parsed paragraph body rich text.
-        indent: Leading indentation of the first paragraph line, if present.
         parent: Optional parent owner object.
 
     Example::
@@ -36,12 +35,10 @@ class Paragraph(Element):
         self,
         *,
         body: RichText,
-        indent: str | None = None,
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self._body = body
-        self._indent = indent
         self._body.parent = self
 
     @classmethod
@@ -62,23 +59,11 @@ class Paragraph(Element):
         """
         paragraph = cls(
             body=RichText.from_node(node, document=document),
-            indent=_extract_indent(node, document),
             parent=parent,
         )
         paragraph._node = node
         paragraph._document = document
         return paragraph
-
-    @property
-    def indent(self) -> str | None:
-        """Leading indentation of the first paragraph line, if present."""
-        return self._indent
-
-    @indent.setter
-    def indent(self, value: str | None) -> None:
-        """Set paragraph indentation and mark the paragraph as dirty."""
-        self._indent = value
-        self.mark_dirty()
 
     @property
     def body(self) -> RichText:
@@ -114,13 +99,4 @@ class Paragraph(Element):
 
     def __repr__(self) -> str:
         """Return a developer-friendly representation."""
-        return build_semantic_repr("Paragraph", body=self._body, indent=self._indent)
-
-
-def _extract_indent(node: tree_sitter.Node, document: Document) -> str | None:
-    """Return paragraph first-line indentation from parse field, if present."""
-    field_node = node.child_by_field_name("indent")
-    if field_node is None:
-        return None
-    value = document.source_for(field_node).decode()
-    return value if value != "" else None
+        return build_semantic_repr("Paragraph", body=self._body)
