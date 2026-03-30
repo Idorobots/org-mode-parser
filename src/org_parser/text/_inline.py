@@ -96,21 +96,21 @@ class LineBreak(_InlineBase):
 class InlineEntity(_InlineBase):
     r"""Org entity inline object.
 
-    Represents named entities (e.g. ``\alpha``, ``\Rightarrow``) and the
-    non-breaking-space form ``\_ `` (backslash-underscore followed by one or
+    Represents named entities (e.g. ``\alpha``, ``\\Rightarrow``) and the
+    non-breaking-space form ``\\_ `` (backslash-underscore followed by one or
     more spaces).
 
     For named entities ``has_braces`` indicates whether the ``{}`` suffix was
     written (``\alpha{}``), which prevents the entity name from merging with
     adjacent text in some export backends.
 
-    The ``\_ `` form is represented with ``name="_"``.  Its ``__str__``
+    The ``\\_ `` form is represented with ``name="_"``.  Its ``__str__``
     always emits a single trailing space; round-trip fidelity for multiple
     trailing spaces relies on the parse-tree-backed source slice in
     :class:`~org_parser.text.RichText`.
 
     Args:
-        name: Entity name (e.g. ``"alpha"``) or ``"_"`` for the ``\_ `` form.
+        name: Entity name (e.g. ``"alpha"``) or ``"_"`` for the ``\\_ `` form.
         has_braces: Whether the ``{}`` suffix was written (named entities only).
     """
 
@@ -127,7 +127,16 @@ class InlineEntity(_InlineBase):
 
 @dataclass(frozen=True, slots=True)
 class CompletionCounter(_InlineBase):
-    """Completion counter object, e.g. ``[1/3]`` or ``[50%]``."""
+    """Completion counter object, e.g. ``[1/3]`` or ``[50%]``.
+
+    Example::
+
+        >>> from org_parser.text import CompletionCounter
+        >>> document = loads("* Heading")
+        >>> document[0].counter = CompletionCounter("1/3")
+        >>> print(str(document))
+        * [1/3] Heading
+    """
 
     value: str
 

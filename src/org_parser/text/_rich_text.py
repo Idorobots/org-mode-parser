@@ -89,6 +89,13 @@ class RichText:
     Args:
         text_or_parts: Initial content as a plain string or an explicit list of
             inline object abstractions.
+
+    Example::
+
+        >>> from org_parser.text import RichText
+        >>> text = RichText.from_source("Use *bold* text")
+        >>> text.parts[1].raw
+        '*bold*'
     """
 
     def __init__(
@@ -108,17 +115,36 @@ class RichText:
 
     @property
     def parts(self) -> list[InlineObject]:
-        """Inline object parts in source order."""
+        """Inline object parts in source order.
+
+        Example::
+
+            >>> from org_parser.text import RichText
+            >>> text = RichText.from_source("Use *bold* text")
+            >>> len(text.parts)
+            4
+        """
         return self._parts
 
     @property
     def text(self) -> str:
-        """Textual representation of this rich text."""
+        """Textual representation of this rich text.
+
+        Example::
+
+            >>> from org_parser.text import RichText
+            >>> text = RichText.from_source("Use *bold* text")
+            >>> text.text
+            'Use *bold* text'
+            >>> text.text = "updated"
+            >>> text.text
+            'updated'
+        """
         return str(self)
 
     @text.setter
     def text(self, value: str) -> None:
-        """Replace content with plain text and mark rich text as dirty."""
+        """Replace content with plain text."""
         self._parts = [PlainText(value)]
         self.mark_dirty()
 
@@ -154,17 +180,44 @@ class RichText:
         self.mark_dirty()
 
     def append(self, part: InlineObject | str) -> None:
-        """Append content and mark rich text as dirty."""
+        """Append content.
+
+        Example::
+
+            >>> from org_parser.text import RichText
+            >>> text = RichText("A")
+            >>> text.append("B")
+            >>> text.text
+            'AB'
+        """
         self._parts.append(_coerce_inline_object(part))
         self.mark_dirty()
 
     def prepend(self, part: InlineObject | str) -> None:
-        """Prepend content and mark rich text as dirty."""
+        """Prepend content.
+
+        Example::
+
+            >>> from org_parser.text import RichText
+            >>> text = RichText("B")
+            >>> text.prepend("A")
+            >>> text.text
+            'AB'
+        """
         self._parts.insert(0, _coerce_inline_object(part))
         self.mark_dirty()
 
     def insert(self, index: int, part: InlineObject | str) -> None:
-        """Insert content at *index* and mark rich text as dirty."""
+        """Insert content at *index*.
+
+        Example::
+
+            >>> from org_parser.text import RichText, PlainText
+            >>> text = RichText("AC")
+            >>> text.insert(0, "B")
+            >>> text.text
+            'BAC'
+        """
         self._parts.insert(index, _coerce_inline_object(part))
         self.mark_dirty()
 
@@ -321,9 +374,7 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
         return CompletionCounter(node_source(value_node, document))
 
     if node_type == BOLD:
-        return Bold(
-            body=_parse_inline_nodes(node.children_by_field_name("body"), document)
-        )
+        return Bold(body=_parse_inline_nodes(node.children_by_field_name("body"), document))
 
     if node_type == ITALIC:
         return Italic(
@@ -357,11 +408,7 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
     if node_type == FOOTNOTE_REFERENCE:
         label_node = node.child_by_field_name("label")
         definition_nodes = node.children_by_field_name("definition")
-        definition = (
-            _parse_inline_nodes(definition_nodes, document)
-            if definition_nodes
-            else None
-        )
+        definition = _parse_inline_nodes(definition_nodes, document) if definition_nodes else None
         label = node_source(label_node, document) if label_node is not None else None
         return FootnoteReference(label=label, definition=definition)
 
@@ -397,9 +444,7 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
         # the user-visible API does not distinguish them.
         return Macro(
             name=node_source(name_node, document),
-            arguments=node_source(args_node, document)
-            if args_node is not None
-            else None,
+            arguments=node_source(args_node, document) if args_node is not None else None,
         )
 
     if node_type == INLINE_BABEL_CALL:
@@ -409,12 +454,8 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
         outside_node = node.child_by_field_name("outside_header")
         return InlineBabelCall(
             name=node_source(name_node, document),
-            arguments=node_source(args_node, document)
-            if args_node is not None
-            else None,
-            inside_header=node_source(inside_node, document)
-            if inside_node is not None
-            else None,
+            arguments=node_source(args_node, document) if args_node is not None else None,
+            inside_header=node_source(inside_node, document) if inside_node is not None else None,
             outside_header=node_source(outside_node, document)
             if outside_node is not None
             else None,
@@ -438,13 +479,9 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
         path_node = node.child_by_field_name("path")
         description_nodes = node.children_by_field_name("description")
         description = (
-            _parse_inline_nodes(description_nodes, document)
-            if description_nodes
-            else None
+            _parse_inline_nodes(description_nodes, document) if description_nodes else None
         )
-        return RegularLink(
-            path=node_source(path_node, document), description=description
-        )
+        return RegularLink(path=node_source(path_node, document), description=description)
 
     if node_type == TARGET:
         value_node = node.child_by_field_name("value")
@@ -472,13 +509,9 @@ def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
         if source_text.startswith("^*"):
             return Superscript(body=[PlainText("*")], form="*")
         if source_text.startswith("^{") and source_text.endswith("}"):
-            return Superscript(
-                body=_parse_inline_fragment(source_text[2:-1]), form="{}"
-            )
+            return Superscript(body=_parse_inline_fragment(source_text[2:-1]), form="{}")
         if source_text.startswith("^(") and source_text.endswith(")"):
-            return Superscript(
-                body=_parse_inline_fragment(source_text[2:-1]), form="()"
-            )
+            return Superscript(body=_parse_inline_fragment(source_text[2:-1]), form="()")
         return PlainText(source_text)
 
     if node_type == ENTITY:

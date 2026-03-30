@@ -61,7 +61,7 @@ class _ContainerBlock(Element):
 
     @body.setter
     def body(self, value: list[Element]) -> None:
-        """Set block contents and mark this block as dirty."""
+        """Set block contents."""
         self._body = value
         self._adopt_body(self._body)
         self.mark_dirty()
@@ -136,7 +136,7 @@ class _TextBlock(Element):
 
     @body.setter
     def body(self, value: str) -> None:
-        """Set block contents text and mark this block as dirty."""
+        """Set block contents text."""
         self._body = value
         self.mark_dirty()
 
@@ -157,7 +157,21 @@ class _TextBlock(Element):
 
 
 class CenterBlock(_ContainerBlock):
-    """``#+begin_center`` block with mutable nested element contents."""
+    r"""``#+begin_center`` block with mutable nested element contents.
+
+    Example::
+
+        >>> from org_parser.element import CenterBlock
+        >>> b = CenterBlock.from_source('''\
+        ... #+begin_center :width 60
+        ... content
+        ... #+end_center
+        ... ''')
+        >>> b.parameters
+        ':width 60'
+        >>> b.body_text
+        'content\n'
+    """
 
     def __init__(
         self,
@@ -201,7 +215,7 @@ class CenterBlock(_ContainerBlock):
 
     @parameters.setter
     def parameters(self, value: str | None) -> None:
-        """Set begin-line parameters and mark this block as dirty."""
+        """Set begin-line parameters."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_begin_line("center", self._parameters)
         self.mark_dirty()
@@ -216,7 +230,21 @@ class CenterBlock(_ContainerBlock):
 
 
 class QuoteBlock(_ContainerBlock):
-    """``#+begin_quote`` block with mutable nested element contents."""
+    r"""``#+begin_quote`` block with mutable nested element contents.
+
+    Example::
+
+        >>> from org_parser.element import QuoteBlock
+        >>> b = QuoteBlock.from_source('''\
+        ... #+begin_quote :left
+        ... content
+        ... #+end_quote
+        ... ''')
+        >>> b.parameters
+        ':left'
+        >>> b.body_text
+        'content\n'
+    """
 
     def __init__(
         self,
@@ -260,7 +288,7 @@ class QuoteBlock(_ContainerBlock):
 
     @parameters.setter
     def parameters(self, value: str | None) -> None:
-        """Set begin-line parameters and mark this block as dirty."""
+        """Set begin-line parameters."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_begin_line("quote", self._parameters)
         self.mark_dirty()
@@ -275,7 +303,23 @@ class QuoteBlock(_ContainerBlock):
 
 
 class SpecialBlock(_ContainerBlock):
-    """``#+begin_<name>`` block with mutable nested element contents."""
+    r"""``#+begin_<name>`` block with mutable nested element contents.
+
+    Example::
+
+        >>> from org_parser.element import SpecialBlock
+        >>> b = SpecialBlock.from_source('''\
+        ... #+begin_NOTE :notes
+        ... content
+        ... #+end_NOTE
+        ... ''')
+        >>> b.name
+        'NOTE'
+        >>> b.parameters
+        ':notes'
+        >>> b.body_text
+        'content\n'
+    """
 
     def __init__(
         self,
@@ -324,7 +368,7 @@ class SpecialBlock(_ContainerBlock):
 
     @name.setter
     def name(self, value: str) -> None:
-        """Set block name and mark this block as dirty."""
+        """Set block name."""
         self._name = value
         self._begin_line = _render_begin_line(self._name, self._parameters)
         self._end_line = f"#+end_{self._name}"
@@ -337,7 +381,7 @@ class SpecialBlock(_ContainerBlock):
 
     @parameters.setter
     def parameters(self, value: str | None) -> None:
-        """Set begin-line parameters and mark this block as dirty."""
+        """Set begin-line parameters."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_begin_line(self._name, self._parameters)
         self.mark_dirty()
@@ -353,7 +397,23 @@ class SpecialBlock(_ContainerBlock):
 
 
 class DynamicBlock(_ContainerBlock):
-    """``#+begin:`` dynamic block with mutable nested element contents."""
+    r"""``#+begin:`` dynamic block with mutable nested element contents.
+
+    Example::
+
+        >>> from org_parser.element import DynamicBlock
+        >>> b = DynamicBlock.from_source('''\
+        ... #+begin: notes :value
+        ... content
+        ... #+end:
+        ... ''')
+        >>> b.name
+        'notes'
+        >>> b.parameters
+        ':value'
+        >>> b.body_text
+        'content\n'
+    """
 
     def __init__(
         self,
@@ -402,7 +462,7 @@ class DynamicBlock(_ContainerBlock):
 
     @name.setter
     def name(self, value: str) -> None:
-        """Set dynamic block name and mark this block as dirty."""
+        """Set dynamic block name."""
         self._name = value
         self._begin_line = _render_dynamic_begin_line(self._name, self._parameters)
         self.mark_dirty()
@@ -414,7 +474,7 @@ class DynamicBlock(_ContainerBlock):
 
     @parameters.setter
     def parameters(self, value: str | None) -> None:
-        """Set begin-line parameters and mark this block as dirty."""
+        """Set begin-line parameters."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_dynamic_begin_line(self._name, self._parameters)
         self.mark_dirty()
@@ -430,7 +490,19 @@ class DynamicBlock(_ContainerBlock):
 
 
 class VerseBlock(_ContainerBlock):
-    """``#+begin_verse`` block with mutable nested element contents."""
+    r"""``#+begin_verse`` block with mutable nested element contents.
+
+    Example::
+
+        >>> from org_parser.element import VerseBlock
+        >>> b = VerseBlock.from_source('''\
+        ... #+begin_verse
+        ... content
+        ... #+end_verse
+        ... ''')
+        >>> b.body_text
+        'content\n'
+    """
 
     def __init__(
         self,
@@ -468,7 +540,19 @@ class VerseBlock(_ContainerBlock):
 
 
 class CommentBlock(_TextBlock):
-    """``#+begin_comment`` block with mutable raw text contents."""
+    r"""``#+begin_comment`` block with mutable raw text contents.
+
+    Example::
+
+        >>> from org_parser.element import CommentBlock
+        >>> b = CommentBlock.from_source('''\
+        ... #+begin_comment
+        ... content
+        ... #+end_comment
+        ... ''')
+        >>> b.body
+        'content\n'
+    """
 
     def __init__(
         self,
@@ -506,7 +590,21 @@ class CommentBlock(_TextBlock):
 
 
 class ExampleBlock(_TextBlock):
-    """``#+begin_example`` block with mutable raw text contents."""
+    r"""``#+begin_example`` block with mutable raw text contents.
+
+    Example::
+
+        >>> from org_parser.element import ExampleBlock
+        >>> b = ExampleBlock.from_source('''\
+        ... #+begin_example :param
+        ... content
+        ... #+end_example
+        ... ''')
+        >>> b.body
+        'content\n'
+        >>> b.parameters
+        ':param'
+    """
 
     def __init__(
         self,
@@ -551,7 +649,7 @@ class ExampleBlock(_TextBlock):
 
     @parameters.setter
     def parameters(self, value: str | None) -> None:
-        """Set begin-line parameters and mark this block as dirty."""
+        """Set begin-line parameters."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_begin_line("example", self._parameters)
         self.mark_dirty()
@@ -566,7 +664,23 @@ class ExampleBlock(_TextBlock):
 
 
 class ExportBlock(_TextBlock):
-    """``#+begin_export`` block with mutable raw text contents."""
+    r"""``#+begin_export`` block with mutable raw text contents.
+
+    Example::
+
+        >>> from org_parser.element import ExportBlock
+        >>> b = ExportBlock.from_source('''\
+        ... #+begin_export  markdown:gfm
+        ... # content
+        ... #+end_export
+        ... ''')
+        >>> b.body
+        '# content\n'
+        >>> b.parameters
+        ':gfm'
+        >>> b.backend
+        'markdown'
+    """
 
     def __init__(
         self,
@@ -615,7 +729,7 @@ class ExportBlock(_TextBlock):
 
     @backend.setter
     def backend(self, value: str) -> None:
-        """Set export backend and mark this block as dirty."""
+        """Set export backend."""
         self._backend = value
         self._begin_line = _render_export_begin_line(self._backend, self._parameters)
         self.mark_dirty()
@@ -627,7 +741,7 @@ class ExportBlock(_TextBlock):
 
     @parameters.setter
     def parameters(self, value: str | None) -> None:
-        """Set begin-line parameters and mark this block as dirty."""
+        """Set begin-line parameters."""
         self._parameters = _normalize_optional_text(value)
         self._begin_line = _render_export_begin_line(self._backend, self._parameters)
         self.mark_dirty()
@@ -643,7 +757,23 @@ class ExportBlock(_TextBlock):
 
 
 class SourceBlock(_TextBlock):
-    """``#+begin_src`` block with mutable source text contents."""
+    r"""``#+begin_src`` block with mutable source text contents.
+
+    Example::
+
+        >>> from org_parser.element import SourceBlock
+        >>> b = SourceBlock.from_source('''\
+        ... #+begin_src  python :export stdout
+        ... print("Hello world!")
+        ... #+end_src
+        ... ''')
+        >>> b.body
+        '# print("Hello world!")\n'
+        >>> b.switches
+        ':export stdout'
+        >>> b.language
+        'python'
+    """
 
     def __init__(
         self,
@@ -674,10 +804,8 @@ class SourceBlock(_TextBlock):
         source_text = node_source(node, document)
         parsed_language, parsed_switches = _extract_source_begin_data(source_text)
         block = cls(
-            language=_extract_optional_field_text(node, document, "language")
-            or parsed_language,
-            switches=_extract_optional_field_text(node, document, "switches")
-            or parsed_switches,
+            language=_extract_optional_field_text(node, document, "language") or parsed_language,
+            switches=_extract_optional_field_text(node, document, "switches") or parsed_switches,
             body=_extract_optional_field_text(node, document, "body")
             or _extract_block_body_text(source_text),
             parent=parent,
@@ -693,7 +821,7 @@ class SourceBlock(_TextBlock):
 
     @language.setter
     def language(self, value: str | None) -> None:
-        """Set source language and mark this block as dirty."""
+        """Set source language."""
         self._language = _normalize_optional_text(value)
         self._begin_line = _render_source_begin_line(self._language, self._switches)
         self.mark_dirty()
@@ -705,7 +833,7 @@ class SourceBlock(_TextBlock):
 
     @switches.setter
     def switches(self, value: str | None) -> None:
-        """Set source switches and mark this block as dirty."""
+        """Set source switches."""
         self._switches = _normalize_optional_text(value)
         self._begin_line = _render_source_begin_line(self._language, self._switches)
         self.mark_dirty()
@@ -721,7 +849,15 @@ class SourceBlock(_TextBlock):
 
 
 class FixedWidthBlock(Element):
-    """Fixed-width area line with mutable content text."""
+    r"""Fixed-width area line with mutable content text.
+
+    Example::
+
+        >>> from org_parser.element import FixedWidthBlock
+        >>> b = FixedWidthBlock.from_source(": content\n")
+        >>> b.body
+        'content\n'
+    """
 
     def __init__(
         self,
@@ -756,7 +892,7 @@ class FixedWidthBlock(Element):
 
     @body.setter
     def body(self, value: str) -> None:
-        """Set fixed-width content text and mark this block as dirty."""
+        """Set fixed-width content text."""
         self._body = value
         self.mark_dirty()
 
@@ -826,9 +962,7 @@ def _extract_indent(
     parent: Document | Heading | Element | None = None,
 ) -> Indent:
     """Build one nested :class:`Indent` from an ``indent`` node."""
-    return Indent.from_node(
-        node, document, parent=parent, child_factory=_extract_nested_element
-    )
+    return Indent.from_node(node, document, parent=parent, child_factory=_extract_nested_element)
 
 
 def _extract_optional_field_text(

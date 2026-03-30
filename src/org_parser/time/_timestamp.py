@@ -53,6 +53,13 @@ class Timestamp:
         end_dayname: Optional end day name token.
         end_hour: Optional end hour.
         end_minute: Optional end minute.
+
+    Example::
+
+        >>> from org_parser.time import Timestamp
+        >>> timestamp = Timestamp.from_source("<2026-03-29 Sun 10:00>")
+        >>> timestamp.start.year
+        2026
     """
 
     raw: str
@@ -120,9 +127,7 @@ class Timestamp:
         start_month = int(document.source_for(month_nodes[0]).decode())
         start_day = int(document.source_for(day_nodes[0]).decode())
         start_dayname = (
-            document.source_for(dayname_nodes[0]).decode()
-            if len(dayname_nodes) >= 1
-            else None
+            document.source_for(dayname_nodes[0]).decode() if len(dayname_nodes) >= 1 else None
         )
 
         start_hour, start_minute = (None, None)
@@ -177,14 +182,30 @@ class Timestamp:
 
     @property
     def start(self) -> datetime:
-        """Return the start value as :class:`datetime`."""
+        """Return the start value as :class:`datetime`.
+
+        Example::
+
+            >>> from org_parser.time import Timestamp
+            >>> timestamp = Timestamp.from_source("<2026-03-29 Sun 10:00>")
+            >>> timestamp.start.year
+            2026
+        """
         hour = self.start_hour if self.start_hour is not None else 0
         minute = self.start_minute if self.start_minute is not None else 0
         return datetime(self.start_year, self.start_month, self.start_day, hour, minute)
 
     @property
     def end(self) -> datetime | None:
-        """Return the end value as :class:`datetime`, if available."""
+        """Return the end value as :class:`datetime`, if available.
+
+        Example::
+
+            >>> from org_parser.time import Timestamp
+            >>> timestamp = Timestamp.from_source("<2026-03-29 Sun 10:00-20:00>")
+            >>> timestamp.end is not None
+            True
+        """
         if self.end_year is None or self.end_month is None or self.end_day is None:
             return None
         hour = self.end_hour if self.end_hour is not None else 0
@@ -192,7 +213,15 @@ class Timestamp:
         return datetime(self.end_year, self.end_month, self.end_day, hour, minute)
 
     def to_datetime(self) -> datetime:
-        """Return this timestamp as :class:`datetime` using ``start``."""
+        """Return this timestamp as :class:`datetime` using ``start``.
+
+        Example::
+
+            >>> from org_parser.time import Timestamp
+            >>> timestamp = Timestamp.from_source("<2026-03-29 Sun 10:00>")
+            >>> timestamp.to_datetime()
+            datetime.datetime(2026, 3, 29, 10, 0)
+        """
         return self.start
 
     def __str__(self) -> str:

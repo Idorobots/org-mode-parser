@@ -107,8 +107,7 @@ def test_heading_str_dirty_includes_planning_line(
 
     rendered = str(heading)
     assert (
-        "SCHEDULED: <2025-01-01 Wed> DEADLINE: <2025-01-10 Fri> "
-        "CLOSED: [2025-01-08 Wed 14:23]\n"
+        "SCHEDULED: <2025-01-01 Wed> DEADLINE: <2025-01-10 Fri> " "CLOSED: [2025-01-08 Wed 14:23]\n"
     ) in rendered
 
 

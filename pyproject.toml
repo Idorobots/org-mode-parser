@@ -42,7 +42,7 @@ check = "task format-check && task lint && task type && task test"
 # ---------------------------------------------------------------------------
 
 [tool.ruff]
-line-length = 88
+line-length = 100
 target-version = "py312"
 src = ["src", "tests"]
 

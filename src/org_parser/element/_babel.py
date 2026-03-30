@@ -42,6 +42,15 @@ class BabelCall(Element):
         inside_header: Optional header string inside the first ``[…]``.
         outside_header: Optional header string inside the second ``[…]``.
         parent: Optional parent owner object.
+
+    Example::
+
+        >>> from org_parser.element import BabelCall
+        >>> c = BabelCall.from_source("#+call: foo(bar)")
+        >>> c.name
+        'foo'
+        >>> c.arguments
+        'bar'
     """
 
     def __init__(
@@ -83,9 +92,7 @@ class BabelCall(Element):
             name=node_source(name_node, document) if name_node else "",
             arguments=node_source(args_node, document) if args_node else None,
             inside_header=node_source(inside_node, document) if inside_node else None,
-            outside_header=node_source(outside_node, document)
-            if outside_node
-            else None,
+            outside_header=node_source(outside_node, document) if outside_node else None,
             parent=parent,
         )
         elem.attach_source(node, document)
@@ -100,7 +107,7 @@ class BabelCall(Element):
 
     @name.setter
     def name(self, value: str) -> None:
-        """Set the called function name and mark this element as dirty."""
+        """Set the called function name."""
         self._name = value
         self.mark_dirty()
 
@@ -111,7 +118,7 @@ class BabelCall(Element):
 
     @arguments.setter
     def arguments(self, value: str | None) -> None:
-        """Set the argument string and mark this element as dirty."""
+        """Set the argument string."""
         self._arguments = value
         self.mark_dirty()
 
@@ -122,7 +129,7 @@ class BabelCall(Element):
 
     @inside_header.setter
     def inside_header(self, value: str | None) -> None:
-        """Set the inside-header string and mark this element as dirty."""
+        """Set the inside-header string."""
         self._inside_header = value
         self.mark_dirty()
 
@@ -133,7 +140,7 @@ class BabelCall(Element):
 
     @outside_header.setter
     def outside_header(self, value: str | None) -> None:
-        """Set the outside-header string and mark this element as dirty."""
+        """Set the outside-header string."""
         self._outside_header = value
         self.mark_dirty()
 
@@ -149,9 +156,7 @@ class BabelCall(Element):
             return node_source(self._node, self._document)
         inside = f"[{self._inside_header}]" if self._inside_header is not None else ""
         args = self._arguments if self._arguments is not None else ""
-        outside = (
-            f"[{self._outside_header}]" if self._outside_header is not None else ""
-        )
+        outside = f"[{self._outside_header}]" if self._outside_header is not None else ""
         return f"#+call: {self._name}{inside}({args}){outside}\n"
 
     def __repr__(self) -> str:

@@ -73,6 +73,13 @@ class Comment(Element):
     Args:
         text: The comment body text, excluding the leading ``#`` marker and
             optional following space.
+
+    Example::
+
+        >>> from org_parser import loads
+        >>> document = loads("# comment")
+        >>> document.body[0].text
+        'comment'
     """
 
     def __init__(
@@ -111,7 +118,7 @@ class Comment(Element):
 
     @text.setter
     def text(self, value: str) -> None:
-        """Set comment body text and mark this element as dirty."""
+        """Set comment body text."""
         self._text = value
         self.mark_dirty()
 
@@ -165,7 +172,7 @@ class HorizontalRule(Element):
 
     @rule.setter
     def rule(self, value: str) -> None:
-        """Set the rule text and mark this element as dirty."""
+        """Set the rule text."""
         self._rule = value
         self.mark_dirty()
 
@@ -249,7 +256,7 @@ class Indent(Element):
 
     @indent.setter
     def indent(self, value: str | None) -> None:
-        """Set block indentation text and mark this block as dirty."""
+        """Set block indentation text."""
         self._indent = value
         self.mark_dirty()
 
@@ -260,7 +267,7 @@ class Indent(Element):
 
     @body.setter
     def body(self, value: list[Element]) -> None:
-        """Set nested elements and mark this block dirty."""
+        """Set nested elements."""
         self._body = value
         self._adopt_body(self._body)
         self.mark_dirty()

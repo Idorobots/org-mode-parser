@@ -24,6 +24,15 @@ class Clock(Element):
         timestamp: Parsed clock timestamp, if present.
         duration: Optional ``H:MM`` duration value.
         parent: Optional parent owner object.
+
+    Example::
+
+        >>> from org_parser.time import Clock, Timestamp
+        >>> clock = Clock(timestamp=Timestamp.from_source("<2026-03-29 Sun 10:00-11:00>"))
+        >>> clock.duration
+        '1:00'
+        >>> clock.timestamp.start.year
+        2026
     """
 
     def __init__(
@@ -57,7 +66,15 @@ class Clock(Element):
 
     @property
     def timestamp(self) -> Timestamp | None:
-        """Clock timestamp value, when present."""
+        """Clock timestamp value, when present.
+
+        Example::
+
+            >>> from org_parser.time import Clock, Timestamp
+            >>> clock = Clock(timestamp=Timestamp.from_source("[2026-03-29 Sun 10:00-11:00]"))
+            >>> clock.timestamp.start.year
+            2026
+        """
         return self._timestamp
 
     @timestamp.setter
@@ -72,20 +89,26 @@ class Clock(Element):
 
     @property
     def duration(self) -> str | None:
-        """Clock duration text in ``H:MM`` format, when present."""
+        """Clock duration text in ``H:MM`` format, when present.
+
+        Example::
+
+            >>> from org_parser.time import Clock, Timestamp
+            >>> clock = Clock(timestamp=Timestamp.from_source("[2026-03-29 Sun 10:00-11:00]"))
+            >>> clock.duration
+            '1:00'
+        """
         return self._duration
 
     @duration.setter
     def duration(self, value: str | None) -> None:
-        """Set duration text and mark this clock element as dirty."""
+        """Set duration text."""
         self._duration = _normalize_duration(value)
         self.mark_dirty()
 
     def __repr__(self) -> str:
         """Return a developer-friendly representation."""
-        return build_semantic_repr(
-            "Clock", timestamp=self._timestamp, duration=self._duration
-        )
+        return build_semantic_repr("Clock", timestamp=self._timestamp, duration=self._duration)
 
     def reformat(self) -> None:
         """Mark timestamp and this clock dirty for scratch-built rendering."""

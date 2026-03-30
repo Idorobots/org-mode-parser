@@ -61,10 +61,7 @@ def test_repeat_uses_entire_item_body_as_note_payload() -> None:
 def test_repeat_mutation_bubbles_to_list_logbook_and_heading() -> None:
     """Mutating repeat fields marks owning list/logbook/heading dirty."""
     document = loads(
-        "* H\n"
-        ":LOGBOOK:\n"
-        '- State "DONE" from "TODO" [2026-03-08 Sun 17:59]\n'
-        ":END:\n"
+        "* H\n" ":LOGBOOK:\n" '- State "DONE" from "TODO" [2026-03-08 Sun 17:59]\n' ":END:\n"
     )
 
     heading = document.children[0]
@@ -199,10 +196,7 @@ def test_non_logbook_lists_do_not_convert_items_to_repeats() -> None:
 def test_repeat_parse_requires_plain_item_shape() -> None:
     """Items with checkbox/counter metadata are not converted to repeats."""
     document = loads(
-        "* H\n"
-        ":LOGBOOK:\n"
-        '- [X] State "DONE" from "TODO" [2026-03-08 Sun 17:59]\n'
-        ":END:\n"
+        "* H\n" ":LOGBOOK:\n" '- [X] State "DONE" from "TODO" [2026-03-08 Sun 17:59]\n' ":END:\n"
     )
     heading = document.children[0]
     assert heading.logbook is not None
@@ -213,9 +207,7 @@ def test_repeat_parse_requires_plain_item_shape() -> None:
 
 def test_heading_body_lists_are_recovered_for_repeats() -> None:
     """Heading body list items that match repeat syntax are recovered."""
-    document = loads(
-        "* H\n" '- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
-    )
+    document = loads("* H\n" '- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n')
 
     heading = document.children[0]
     assert isinstance(heading.body[0], List)
@@ -227,9 +219,7 @@ def test_heading_body_lists_are_recovered_for_repeats() -> None:
 def test_heading_body_nested_lists_are_not_recovered_for_repeats() -> None:
     """Only top-level heading body lists are scanned for repeat recovery."""
     document = loads(
-        "* H\n"
-        "- parent\n"
-        '  - State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+        "* H\n" "- parent\n" '  - State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
     )
 
     heading = document.children[0]
@@ -273,9 +263,7 @@ def test_heading_clock_cache_extracts_nested_body_clock_entries() -> None:
 def test_heading_clock_cache_ignores_clocks_in_nested_list_bodies() -> None:
     """Only top-level lists contribute clock extraction for heading cache."""
     document = loads(
-        "* H\n"
-        "- parent\n"
-        "  CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+        "* H\n" "- parent\n" "  CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
     )
 
     heading = document.children[0]

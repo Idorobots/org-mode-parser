@@ -78,5 +78,4 @@ def report_internal_parse_errors(node: tree_sitter.Node, document: Document) -> 
         if current_is_error and not has_error_ancestor:
             document.report_error(current)
         child_has_error_ancestor = has_error_ancestor or current_is_error
-        for child in reversed(current.children):
-            stack.append((child, child_has_error_ancestor))
+        stack.extend((child, child_has_error_ancestor) for child in reversed(current.children))

@@ -47,7 +47,70 @@ All of the above are supported in the Tree-Sitter grammar as well as in the Pyth
 :LOGBOOK:
 - State "DONE"       from              [2026-03-28 Sat 17:48]
 :END:
-** TODO Usage documentation in the README
+** DONE Usage documentation in the README
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-29 Sun 21:51]
+:END:
+** TODO Examples in docstrings
+Please update all docstrigns of =Document=, =Heading=, =Element= subclasses, text and timestamp objects to contain a simple instructive example of how these can be used. Do so for each public method. For getters/setters only include one docstring that contains example of setting and getting the value. Please also do this for the `load` and `dump` (and variants) functions.
+
+Dunder and underscore methods should not be included. You can update the existing content to update it or make it shorter/more useful. Specifically, the "and mark object as dirty" parts can be removed as they aren't very useful.
+
+This will be used for Sphinx documentation generation, so please adhere to the Sphinx style.
+
+Please don't use =...= in the docstrings to omit parts of the examples. Please also don't use the =print(x)= for all usage examples, that's lazy. Use the following format:
+
+#+begin_example
+>>> {line of python code}
+{ result of the line}
+>>> { more code and results }
+...
+#+end_example
+
+Do not use =obj == obj= as an example? That's super lazy. Please redo all the examples to be meaningful. One example per docstring. You can use =load= and =loads= functions to initialize a simple document for each example. Don't assign stuff like =obj.author = obj.author= that doesn't show anything useful. If you need to, run the examples in python before adding them in the docstrings. You can ommit very obvious examples that don't bring much to the table. Do not use =isinstance(X, T)= in the examples. Instead of =* TODO Ship docs= use a more generic heading example like =* TODO Heading 1=. You can use nested headings too.
+
+** TODO Semantic node API documentation
+
 ** Automated tests based on the example files.
-** Semantic node API documentation
 ** Library release
+* TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_document.py
+
+#+begin_example
+>>> from org_parser.element import Logbook
+>>> from org_parser.time import Clock
+>>> document = loads("#+TITLE: Logbook")
+>>> document.logbook = Logbook()
+>>> document.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
+>>> print(str(document))
+#+TITLE: Logbook:LOGBOOK:
+CLOCK: [2025-10-10]
+:END:
+#+end_example
+
+
+The format of the stringified document is invalid, the LOGBOOK drawer should appear on a new line.
+* TODO Any method that accepts RichText should also accept raw strings.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:10]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+* TODO Document.properties should accept a dictionary when setting.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:12]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+* TODO Properties constructor should accept a dictionary.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:13]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+* TODO Any body setter should accept a list of elements, a single element and a raw string.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:13]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:

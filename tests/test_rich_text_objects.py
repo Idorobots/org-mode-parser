@@ -73,9 +73,7 @@ def _find_first_heading_title_node_with_type(
     raise AssertionError(f"Heading title node of type {target_type!r} not found")
 
 
-def _find_first_node_with_type(
-    root: tree_sitter.Node, target_type: str
-) -> tree_sitter.Node:
+def _find_first_node_with_type(root: tree_sitter.Node, target_type: str) -> tree_sitter.Node:
     """Find the first node in the tree with *target_type*."""
     stack: list[tree_sitter.Node] = [root]
     while stack:
@@ -126,9 +124,7 @@ def test_rich_text_clean_str_is_verbatim_source(
     source = path.read_bytes()
     document = load(str(path))
     tree = load_raw(path)
-    paragraph = _find_first_paragraph_with_prefix(
-        tree.root_node, source, "An inline foot"
-    )
+    paragraph = _find_first_paragraph_with_prefix(tree.root_node, source, "An inline foot")
     rich_text = RichText.from_node(paragraph, document=document)
     expected = source[paragraph.start_byte : paragraph.end_byte].decode()
     assert str(rich_text) == expected
@@ -167,9 +163,7 @@ def test_paragraph_plain_text_children_keep_trailing_newlines(tmp_path: Path) ->
 
     assert str(rich_text) == content
     newline_parts = [
-        part
-        for part in rich_text.parts
-        if isinstance(part, PlainText) and str(part) == "\n"
+        part for part in rich_text.parts if isinstance(part, PlainText) and str(part) == "\n"
     ]
     assert len(newline_parts) == 3
 
@@ -334,9 +328,7 @@ def test_macro_from_node_with_arguments(
             macro_nodes.append(node)
         stack.extend(reversed(node.children))
 
-    args_macro_node = next(
-        n for n in macro_nodes if n.child_by_field_name("arguments") is not None
-    )
+    args_macro_node = next(n for n in macro_nodes if n.child_by_field_name("arguments") is not None)
     rt = RichText.from_node(args_macro_node, document=document)
 
     assert len(rt.parts) == 1
@@ -455,9 +447,7 @@ def test_entity_nbsp_str() -> None:
 
 def test_entity_included_in_programmatic_richtext() -> None:
     """InlineEntity instances can be added to RichText programmatically."""
-    rt = RichText(
-        [InlineEntity(name="alpha"), PlainText(" and "), InlineEntity(name="_")]
-    )
+    rt = RichText([InlineEntity(name="alpha"), PlainText(" and "), InlineEntity(name="_")])
     assert "\\alpha" in str(rt)
     assert "\\_ " in str(rt)
 
@@ -504,12 +494,8 @@ def test_script_star_forms_parse(tmp_path: Path) -> None:
     paragraph = _find_first_node_with_type(tree.root_node, "paragraph")
     rich_text = RichText.from_node(paragraph, document=document)
 
-    assert any(
-        isinstance(part, Subscript) and part.form == "*" for part in rich_text.parts
-    )
-    assert any(
-        isinstance(part, Superscript) and part.form == "*" for part in rich_text.parts
-    )
+    assert any(isinstance(part, Subscript) and part.form == "*" for part in rich_text.parts)
+    assert any(isinstance(part, Superscript) and part.form == "*" for part in rich_text.parts)
 
 
 def test_caret_non_script_stays_plain_text(tmp_path: Path) -> None:

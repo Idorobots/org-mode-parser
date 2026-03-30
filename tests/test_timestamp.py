@@ -63,10 +63,7 @@ def test_repr_omits_raw_and_none_fields() -> None:
         start_day=12,
         start_dayname=None,
     )
-    assert (
-        repr(ts)
-        == "Timestamp(is_active=True, start_year=2025, start_month=12, start_day=12)"
-    )
+    assert repr(ts) == "Timestamp(is_active=True, start_year=2025, start_month=12, start_day=12)"
 
 
 def test_repr_includes_only_present_optional_fields() -> None:
@@ -329,9 +326,7 @@ def test_str_dirty_same_day_time_range_still_works_after_fix() -> None:
         (999, 6, 9, "<0999-06-09 Mon>"),
     ],
 )
-def test_str_dirty_date_zero_padding(
-    year: int, month: int, day: int, expected: str
-) -> None:
+def test_str_dirty_date_zero_padding(year: int, month: int, day: int, expected: str) -> None:
     """Year, month, and day are always zero-padded in dirty rendering."""
     ts = _make_ts(raw="<stale>", start_year=year, start_month=month, start_day=day)
     ts.mark_dirty()

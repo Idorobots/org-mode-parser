@@ -23,6 +23,13 @@ class Paragraph(Element):
         body: Parsed paragraph body rich text.
         indent: Leading indentation of the first paragraph line, if present.
         parent: Optional parent owner object.
+
+    Example::
+
+        >>> from org_parser.element import Paragraph
+        >>> paragraph = Paragraph.from_source("Paragraph text")
+        >>> paragraph.body_text
+        'Paragraph text'
     """
 
     def __init__(
@@ -80,7 +87,7 @@ class Paragraph(Element):
 
     @body.setter
     def body(self, value: RichText) -> None:
-        """Set body rich text and mark this paragraph as dirty."""
+        """Set body rich text."""
         self._body = value
         self._body.parent = self
         self.mark_dirty()

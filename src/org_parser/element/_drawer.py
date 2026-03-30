@@ -32,12 +32,25 @@ __all__ = ["Drawer", "Logbook", "Properties"]
 
 
 class Drawer(Element):
-    """Generic drawer element with a mutable name and body.
+    r"""Generic drawer element with a mutable name and body.
 
     Args:
         name: Drawer name without surrounding colons.
         body: Parsed child elements contained in the drawer.
         parent: Optional parent owner object.
+
+    Example::
+
+        >>> from org_parser.element import Drawer
+        >>> d = Drawer.from_source('''\
+        ... :DRAWER:
+        ... some content
+        ... :END:
+        ... ''')
+        >>> d.name
+        'DRAWER'
+        >>> d.body_text
+        'some content\n'
     """
 
     def __init__(
@@ -84,7 +97,7 @@ class Drawer(Element):
 
     @name.setter
     def name(self, value: str) -> None:
-        """Set drawer name and mark the drawer as dirty."""
+        """Set drawer name."""
         self._name = value
         self.mark_dirty()
 
@@ -95,7 +108,7 @@ class Drawer(Element):
 
     @body.setter
     def body(self, value: list[Element]) -> None:
-        """Set drawer body and mark the drawer as dirty."""
+        """Set drawer body."""
         self._body = value
         self._adopt_body(self._body)
         self.mark_dirty()
@@ -121,9 +134,7 @@ class Drawer(Element):
         if not self.dirty and self._node is not None and self._document is not None:
             return node_source(self._node, self._document)
 
-        body_text = "".join(
-            ensure_trailing_newline(str(element)) for element in self._body
-        )
+        body_text = "".join(ensure_trailing_newline(str(element)) for element in self._body)
         return f":{self._name}:\n{body_text}:END:\n"
 
     def __repr__(self) -> str:
@@ -144,7 +155,24 @@ class Drawer(Element):
 
 
 class Logbook(Drawer):
-    """Specialized drawer for ``:LOGBOOK:`` entries."""
+    """Specialized drawer for ``:LOGBOOK:`` entries.
+
+    Example::
+
+        >>> from org_parser.element import Logbook
+        >>> d = Logbook.from_source('''\
+        ... :LOGBOOK:
+        ... CLOCK: [2025-10-10]
+        ... - State "DONE"       from "TODO"       <2025-10-10>
+        ... :END:
+        ... ''')
+        >>> d.name
+        'LOGBOOK'
+        >>> len(d.clock_entries)
+        1
+        >>> len(d.repeats)
+        1
+    """
 
     def __init__(
         self,
@@ -175,9 +203,7 @@ class Logbook(Drawer):
         """Set drawer body and synchronize extracted logbook entry caches."""
         self._body = value
         self._adopt_body(self._body)
-        self._clock_entries = [
-            element for element in self._body if isinstance(element, Clock)
-        ]
+        self._clock_entries = [element for element in self._body if isinstance(element, Clock)]
         self._repeats = _extract_existing_logbook_repeats(self._body)
         self.mark_dirty()
 
@@ -214,7 +240,7 @@ class Logbook(Drawer):
 
     @clock_entries.setter
     def clock_entries(self, value: list[Clock]) -> None:
-        """Set logbook clock entries and mark the drawer as dirty."""
+        """Set logbook clock entries."""
         self._clock_entries = value
         self._adopt_body(self._clock_entries)
         self._sync_clock_entries_into_body()
@@ -227,7 +253,7 @@ class Logbook(Drawer):
 
     @repeats.setter
     def repeats(self, value: list[Repeat]) -> None:
-        """Set logbook repeat entries and mark the drawer as dirty."""
+        """Set logbook repeat entries."""
         self._repeats = value
         _sync_logbook_repeat_list(self, self._repeats, mark_dirty=True)
         self.mark_dirty()
@@ -254,16 +280,10 @@ class Logbook(Drawer):
     def _sync_clock_entries_into_body(self) -> None:
         """Synchronize explicit clock entries into concrete logbook body order."""
         first_clock_index = next(
-            (
-                index
-                for index, element in enumerate(self._body)
-                if isinstance(element, Clock)
-            ),
+            (index for index, element in enumerate(self._body) if isinstance(element, Clock)),
             None,
         )
-        body_without_clocks = [
-            element for element in self._body if not isinstance(element, Clock)
-        ]
+        body_without_clocks = [element for element in self._body if not isinstance(element, Clock)]
 
         if not self._clock_entries:
             self._body = body_without_clocks
@@ -295,7 +315,21 @@ class Logbook(Drawer):
 
 
 class Properties(Element, MutableMapping[str, RichText]):
-    """Property drawer element with dictionary-like mutable access."""
+    """Property drawer element with dictionary-like mutable access.
+
+    Example::
+
+        >>> from org_parser.element import Properties
+        >>> d = Properties.from_source('''\
+        ... :PROPERTIES:
+        ... :key: Value
+        ... :END:
+        ... ''')
+        >>> d.name
+        'PROPERTIES'
+        >>> d["key"]
+        'Value
+    """
 
     def __init__(
         self,
@@ -357,11 +391,11 @@ class Properties(Element, MutableMapping[str, RichText]):
         return self._properties[key]
 
     def __setitem__(self, key: str, value: RichText | str) -> None:
-        """Set one property value and mark drawer as dirty."""
+        """Set one property value."""
         self._set_property(key, _coerce_rich_text(value), mark_dirty=True)
 
     def __delitem__(self, key: str) -> None:
-        """Delete one property key and mark drawer as dirty."""
+        """Delete one property key."""
         del self._properties[key]
         self.mark_dirty()
 

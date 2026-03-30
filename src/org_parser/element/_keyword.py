@@ -44,7 +44,6 @@ __all__ = [
     "TblnameKeyword",
 ]
 
-
 # ---------------------------------------------------------------------------
 # Special keyword (zeroth-section)
 # ---------------------------------------------------------------------------
@@ -57,6 +56,13 @@ class Keyword(Element):
         key: Upper-cased keyword key.
         value: Keyword value rich text.
         parent: Optional parent owner object.
+
+    Example::
+        >>> from org_parser import loads
+        >>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
+        >>> document.mark_dirty()
+        >>> print(str(document))
+        #+TITLE: Document
     """
 
     def __init__(
@@ -108,7 +114,7 @@ class Keyword(Element):
 
     @key.setter
     def key(self, value: str) -> None:
-        """Set keyword key and mark as dirty."""
+        """Set keyword key."""
         self._key = value.upper()
         self.mark_dirty()
 
@@ -119,7 +125,7 @@ class Keyword(Element):
 
     @value.setter
     def value(self, value: RichText) -> None:
-        """Set keyword value and mark as dirty."""
+        """Set keyword value."""
         self._value = value
         self._value.parent = self
         self.mark_dirty()
@@ -165,6 +171,21 @@ class AffiliatedKeyword(Element):
 
     Args:
         value: Optional plain-text value following the keyword.
+
+    Example::
+
+        >>> from org_parser.element import CaptionKeyword
+        >>> document = loads("|table|")
+        >>> c = CaptionKeyword.from_source("#+CAPTION: Some table")
+        >>> document.body[0].attach_keyword(c)
+        >>> len(document.body[0].keywords)
+        1
+        >>> print(str(document))
+
+        >>> document.body = [c, document.body[0]]
+        >>> print(str(document))
+        #+CAPTION: Some table
+        |table|
     """
 
     _keyword: str = ""  # overridden by each concrete subclass as a class variable
@@ -193,12 +214,23 @@ class AffiliatedKeyword(Element):
 
     @property
     def value(self) -> str | None:
-        """Optional plain-text value following the keyword, or ``None``."""
+        """Optional plain-text value following the keyword, or ``None``.
+
+        Example::
+
+            >>> from org_parser.element import AffiliatedKeyword
+            >>> obj = AffiliatedKeyword(value="Figure 1")
+            >>> type(obj).__name__
+            'AffiliatedKeyword'
+            >>> obj.value = "updated"
+            >>> obj.value
+            'updated'
+        """
         return self._value
 
     @value.setter
     def value(self, v: str | None) -> None:
-        """Set the keyword value and mark this element as dirty."""
+        """Set the keyword value."""
         self._value = v
         self.mark_dirty()
 
@@ -254,10 +286,7 @@ class CaptionKeyword(AffiliatedKeyword):
     ) -> CaptionKeyword:
         """Create a :class:`CaptionKeyword` from a ``caption_keyword`` node."""
         optval_node = node.child_by_field_name("optval")
-        if optval_node is None:
-            short = None
-        else:
-            short = document.source_for(optval_node).decode()
+        short = None if optval_node is None else document.source_for(optval_node).decode()
         elem = cls(
             value=cls._value_from_node(node, document),
             short=short,
@@ -273,7 +302,7 @@ class CaptionKeyword(AffiliatedKeyword):
 
     @short.setter
     def short(self, value: str | None) -> None:
-        """Set the short caption and mark this element as dirty."""
+        """Set the short caption."""
         self._short = value
         self.mark_dirty()
 

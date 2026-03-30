@@ -41,8 +41,7 @@ def build_semantic_repr(class_name: str, /, **fields: object) -> str:
         return f"{class_name}()"
 
     rendered_fields = [
-        (name, _format_repr_value(value, indent_level=1))
-        for name, value in visible_fields
+        (name, _format_repr_value(value, indent_level=1)) for name, value in visible_fields
     ]
     multiline = any("\n" in rendered for _, rendered in rendered_fields)
     if not multiline:
@@ -92,9 +91,7 @@ def _format_repr_value(value: object, *, indent_level: int) -> str:
         ordered = sorted(set_value, key=repr)
         return _format_repr_sequence("{", "}", ordered, indent_level=indent_level)
     if isinstance(value, Mapping):
-        return _format_repr_mapping(
-            cast(Mapping[object, object], value), indent_level=indent_level
-        )
+        return _format_repr_mapping(cast(Mapping[object, object], value), indent_level=indent_level)
     return repr(value)
 
 
@@ -109,9 +106,7 @@ def _format_repr_sequence(
     if not values:
         return f"{opening}{closing}"
 
-    rendered_items = [
-        _format_repr_value(value, indent_level=indent_level + 1) for value in values
-    ]
+    rendered_items = [_format_repr_value(value, indent_level=indent_level + 1) for value in values]
     multiline = any("\n" in rendered for rendered in rendered_items) or any(
         _is_semantic_object(value) for value in values
     )
@@ -151,9 +146,7 @@ def _format_repr_mapping(
         for _, _, key, value in rendered_entries
     )
     if not multiline:
-        compact_entries = [
-            f"{key}: {rendered}" for key, rendered, _, _ in rendered_entries
-        ]
+        compact_entries = [f"{key}: {rendered}" for key, rendered, _, _ in rendered_entries]
         return f"{{{', '.join(compact_entries)}}}"
 
     inner_indent = _repr_indent(indent_level + 1)
@@ -245,8 +238,7 @@ class Element:
         semantic_node: Element = semantic_nodes[0]
         if not isinstance(semantic_node, cls):
             raise ValueError(
-                f"Parsed element is {semantic_node.__class__.__name__}, "
-                f"expected {cls.__name__}"
+                f"Parsed element is {semantic_node.__class__.__name__}, " f"expected {cls.__name__}"
             )
         return semantic_node
 
@@ -288,6 +280,16 @@ class Element:
 
         The keywords remain as independent elements in the containing body
         list and are not duplicated in the serialised output of this element.
+
+        Example::
+
+            >>> from org_parser.element import CaptionKeyword
+            >>> document = loads('''
+            ... #+CAPTION: Some Table
+            ... |table|
+            ... ''')
+            >>> document.body[0].keywords[0].value
+            'Some Table'
         """
         return self._keywords if self._keywords is not None else []
 
@@ -301,6 +303,21 @@ class Element:
 
         Args:
             keyword: The affiliated keyword to attach.
+
+        Example::
+
+            >>> from org_parser.element import CaptionKeyword
+            >>> document = loads("|table|")
+            >>> c = CaptionKeyword.from_source("#+CAPTION: Some table")
+            >>> document.body[0].attach_keyword(c)
+            >>> len(document.body[0].keywords)
+            1
+            >>> print(str(document))
+
+            >>> document.body = [c, document.body[0]]
+            >>> print(str(document))
+            #+CAPTION: Some table
+            |table|
         """
         if self._keywords is None:
             self._keywords = []

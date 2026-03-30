@@ -333,9 +333,7 @@ class TestInlineBabelCallParsing:
 
     def test_full_form(self) -> None:
         """call_double[:exports none](n=4)[:results value] captures all fields."""
-        ibc = _first_inline_babel_call(
-            "call_double[:exports none](n=4)[:results value]\n"
-        )
+        ibc = _first_inline_babel_call("call_double[:exports none](n=4)[:results value]\n")
         assert ibc.name == "double"
         assert ibc.inside_header == ":exports none"
         assert ibc.arguments == "n=4"

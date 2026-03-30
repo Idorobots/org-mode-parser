@@ -120,9 +120,7 @@ class TestParagraph:
         path.write_text("    continuation\n")
         doc = _load_document(path)
 
-        indent = next(
-            (element for element in doc.body if isinstance(element, Indent)), None
-        )
+        indent = next((element for element in doc.body if isinstance(element, Indent)), None)
 
         assert indent is not None
         assert len(indent.body) == 1
@@ -311,9 +309,7 @@ class TestDocumentFromTreeKeywords:
         assert "TODO" in str(doc.todo)
         assert "DONE" in str(doc.todo)
 
-    def test_non_dedicated_keywords_in_dict(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_non_dedicated_keywords_in_dict(self, example_file: Callable[[str], Path]) -> None:
         """Non-dedicated keywords land in the keywords list."""
         doc = _load_document(example_file("special-keywords-basic.org"))
         # DATE and LANGUAGE are not dedicated properties
@@ -430,9 +426,7 @@ class TestHeadingFields:
     def test_comment_marker(self, example_file: Callable[[str], Path]) -> None:
         """COMMENT heading marker is extracted as a boolean field."""
         doc = _load_document(example_file("priorities-and-special-headings.org"))
-        comment_headings = [
-            heading for heading in doc.all_headings if heading.is_comment
-        ]
+        comment_headings = [heading for heading in doc.all_headings if heading.is_comment]
         assert len(comment_headings) > 0
         assert any(heading.title is not None for heading in comment_headings)
 
@@ -462,9 +456,7 @@ class TestHeadingFields:
         assert any(isinstance(e, Paragraph) for e in first.body)
         assert all(e.parent is first for e in first.body)
 
-    def test_heading_body_excludes_subheadings(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_heading_body_excludes_subheadings(self, example_file: Callable[[str], Path]) -> None:
         """Body elements do not include sub-headings."""
         from org_parser.document import Heading as HeadingType
 
@@ -530,9 +522,7 @@ class TestHeadingFields:
         """Malformed planning entries do not leak partial timestamps."""
         org = tmp_path / "malformed-planning.org"
         org.write_bytes(
-            b"* Test\n"
-            b"DEADLINE: [2024-02-02]--<2025-02-02>\n"
-            b"SCHEDULED: <2025-03-01 Sat>\n"
+            b"* Test\n" b"DEADLINE: [2024-02-02]--<2025-02-02>\n" b"SCHEDULED: <2025-03-01 Sat>\n"
         )
 
         doc = _load_document(org)
@@ -684,9 +674,7 @@ class TestTagInheritance:
         assert parent.heading_tags == ["parent_tag"]
         assert parent.tags == ["filetag1", "filetag2", "parent_tag"]
 
-    def test_child_inherits_parent_and_filetags(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_child_inherits_parent_and_filetags(self, example_file: Callable[[str], Path]) -> None:
         """Child heading tags = FILETAGS + parent's heading_tags + own."""
         doc = _load_document(example_file("inherited-tags.org"))
         child = doc.children[0].children[0]  # ** Child Heading :child_tag:
@@ -717,18 +705,14 @@ class TestTagInheritance:
         # parent_tag already came from the grandparent; first occurrence wins.
         assert dup.tags == ["filetag1", "filetag2", "parent_tag", "child_tag"]
 
-    def test_heading_without_own_tags(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_heading_without_own_tags(self, example_file: Callable[[str], Path]) -> None:
         """A heading with no own tags still gets FILETAGS."""
         doc = _load_document(example_file("inherited-tags.org"))
         no_tags = doc.children[1]  # * Heading Without Own Tags
         assert no_tags.heading_tags == []
         assert no_tags.tags == ["filetag1", "filetag2"]
 
-    def test_child_deduplicates_filetag(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_child_deduplicates_filetag(self, example_file: Callable[[str], Path]) -> None:
         """Own tag that duplicates a FILETAG keeps only the first occurrence."""
         doc = _load_document(example_file("inherited-tags.org"))
         # ** Child With Filetag Duplicate :filetag1:
@@ -737,9 +721,7 @@ class TestTagInheritance:
         # filetag1 already came from FILETAGS; deduplicated.
         assert child.tags == ["filetag1", "filetag2"]
 
-    def test_heading_tags_excludes_inherited(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_heading_tags_excludes_inherited(self, example_file: Callable[[str], Path]) -> None:
         """heading_tags only contains the tags found on this heading line."""
         doc = _load_document(example_file("inherited-tags.org"))
         child = doc.children[0].children[0]
@@ -975,9 +957,7 @@ class TestHeadingCategory:
     def test_category_inherits_from_parent_heading(self, tmp_path: Path) -> None:
         """Child heading inherits CATEGORY from its parent heading's drawer."""
         path = tmp_path / "h.org"
-        path.write_bytes(
-            b"* Parent\n:PROPERTIES:\n:CATEGORY: parent-cat\n:END:\n** Child\n"
-        )
+        path.write_bytes(b"* Parent\n:PROPERTIES:\n:CATEGORY: parent-cat\n:END:\n** Child\n")
         doc = _load_document(path)
         parent = doc.children[0]
         child = parent.children[0]
@@ -1001,9 +981,7 @@ class TestHeadingCategory:
     def test_category_full_chain(self, tmp_path: Path) -> None:
         """Full chain: grandchild inherits through parent to document."""
         path = tmp_path / "h.org"
-        path.write_bytes(
-            b"#+CATEGORY: doc-cat\n" b"* Parent\n" b"** Child\n" b"*** Grandchild\n"
-        )
+        path.write_bytes(b"#+CATEGORY: doc-cat\n" b"* Parent\n" b"** Child\n" b"*** Grandchild\n")
         doc = _load_document(path)
         parent = doc.children[0]
         child = parent.children[0]
@@ -1043,9 +1021,7 @@ class TestDocumentConvenienceFields:
         doc.children = [Heading(level=1, document=doc, parent=doc)]
         assert doc.is_leaf is False
 
-    def test_todo_state_groups_from_todo_keyword(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_todo_state_groups_from_todo_keyword(self, example_file: Callable[[str], Path]) -> None:
         """TODO state convenience lists are parsed from #+TODO:."""
         doc = _load_document(example_file("todo-and-done.org"))
         assert doc.todo_states == ["TODO", "IN-PROGRESS", "WAITING"]
@@ -1074,16 +1050,12 @@ class TestDocumentConvenienceFields:
 
     def test_todo_state_groups_support_done_only_definition(self) -> None:
         """TODO definitions can declare only done states after ``|``."""
-        doc = Document(
-            filename="x.org", todo=RichText("| CANCELLED(c@/!) REWORKED(r@/!)")
-        )
+        doc = Document(filename="x.org", todo=RichText("| CANCELLED(c@/!) REWORKED(r@/!)"))
         assert doc.todo_states == []
         assert doc.done_states == ["CANCELLED", "REWORKED"]
         assert doc.all_states == ["CANCELLED", "REWORKED"]
 
-    def test_todo_state_groups_across_multiple_todo_keywords(
-        self, tmp_path: Path
-    ) -> None:
+    def test_todo_state_groups_across_multiple_todo_keywords(self, tmp_path: Path) -> None:
         """State groups aggregate across multiple ``#+TODO:`` keywords."""
         path = tmp_path / "multi-todo.org"
         path.write_bytes(
@@ -1195,9 +1167,7 @@ class TestHeadingConvenienceFields:
             closed=closed,
             deadline=deadline,
             logbook=Logbook(
-                repeats=[
-                    Repeat(after="DONE", before="TODO", timestamp=repeat_timestamp)
-                ],
+                repeats=[Repeat(after="DONE", before="TODO", timestamp=repeat_timestamp)],
                 clock_entries=[Clock(timestamp=clock_timestamp)],
             ),
         )

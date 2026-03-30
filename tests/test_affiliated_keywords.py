@@ -234,13 +234,7 @@ class TestAttachmentInHeadingBody:
 
     def test_multiple_headings_independent(self) -> None:
         """Keyword attachment in one heading does not bleed into another."""
-        doc = loads(
-            "* First\n"
-            "#+CAPTION: for first\n"
-            "| a | b |\n"
-            "* Second\n"
-            "| x | y |\n"
-        )
+        doc = loads("* First\n" "#+CAPTION: for first\n" "| a | b |\n" "* Second\n" "| x | y |\n")
         h1_body = _non_blank(doc.children[0].body)
         h2_body = _non_blank(doc.children[1].body)
         first_table = h1_body[1]

@@ -37,6 +37,16 @@ class TableCell:
     Args:
         value: Cell value rich text.
         table: Owning table.
+
+    Example::
+
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... | 1 | 2 |
+        ... | 3 | 4 |
+        ... ''')
+        >>> document.body[0].rows[1].cells[1]
+        '4'
     """
 
     def __init__(self, *, value: RichText, table: Table) -> None:
@@ -51,7 +61,7 @@ class TableCell:
 
     @value.setter
     def value(self, value: RichText) -> None:
-        """Set cell value and mark the owning table as dirty."""
+        """Set cell value."""
         self._value = value
         self._value.parent = self._table
         self._table.mark_dirty()
@@ -76,6 +86,16 @@ class TableRow:
     Args:
         cells: Row cells.
         table: Owning table.
+
+    Example::
+
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... | 1 | 2 |
+        ... | 3 | 4 |
+        ... ''')
+        >>> len(document.body[0].rows[1])
+        2
     """
 
     def __init__(self, *, cells: list[TableCell], table: Table) -> None:
@@ -90,7 +110,7 @@ class TableRow:
 
     @cells.setter
     def cells(self, value: list[TableCell]) -> None:
-        """Set row cells and mark the owning table as dirty."""
+        """Set row cells."""
         self._cells = value
         self._adopt_cells()
         self._table.mark_dirty()
@@ -124,7 +144,7 @@ class TableRow:
         return self._cells[index].value
 
     def __setitem__(self, index: int, value: RichText | str) -> None:
-        """Set one column value and mark the owning table as dirty."""
+        """Set one column value."""
         self._cells[index].value = _coerce_rich_text(value)
 
 
@@ -137,6 +157,14 @@ class TableRuleRow:
     Args:
         raw: Raw source text of the rule row (e.g. ``|---+---|``).
         table: Owning table.
+
+    Example::
+
+        >>> from org_parser.element import Table, TableRuleRow
+        >>> table = Table(rows=[])
+        >>> obj = TableRuleRow(raw="|---|")
+        >>> type(obj).__name__
+        'TableRuleRow'
     """
 
     def __init__(self, *, raw: str, table: Table) -> None:
@@ -164,6 +192,18 @@ class Table(Element):
         rows: Mutable table rows (data rows and rule rows).
         formulas: Table formulas without ``#+TBLFM:`` prefix.
         parent: Optional parent owner object.
+
+    Example::
+
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... | 1 | 2 |
+        ... | 3 | 4 |
+        ... ''')
+        >>> document.body[0][1][1] = 5
+        >>> print(str(document))
+        | 1 | 2 |
+        | 3 | 5 |
     """
 
     def __init__(
@@ -217,19 +257,31 @@ class Table(Element):
 
     @rows.setter
     def rows(self, value: list[TableRow | TableRuleRow]) -> None:
-        """Set rows and mark table dirty."""
+        """Set rows."""
         self._rows = value
         self._adopt_rows()
         self.mark_dirty()
 
     @property
     def formulas(self) -> list[str]:
-        """Mutable table formulas without ``#+TBLFM:`` prefix."""
+        """Mutable table formulas without ``#+TBLFM:`` prefix.
+
+        Example::
+
+            >>> from org_parser import loads
+            >>> document = loads('''
+            ... | 1 | 2 |
+            ... | 3 | 4 |
+            ... #+TBLFM: @1$1=5
+            ... ''')
+            >>> document.body[0].formulas
+            ['@1$1=5']
+        """
         return self._formulas
 
     @formulas.setter
     def formulas(self, value: list[str]) -> None:
-        """Set formulas and mark table dirty."""
+        """Set formulas."""
         self._formulas = value
         self.mark_dirty()
 
@@ -272,7 +324,7 @@ class Table(Element):
         return self._rows[index]
 
     def __setitem__(self, index: int, value: TableRow | TableRuleRow) -> None:
-        """Replace one table row and mark this table as dirty."""
+        """Replace one table row."""
         self._rows[index] = value
         value.set_table(self)
         self.mark_dirty()
