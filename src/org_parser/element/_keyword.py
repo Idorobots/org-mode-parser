@@ -168,9 +168,8 @@ class AffiliatedKeyword(Element):
     [org_parser.element.CaptionKeyword][], [org_parser.element.TblnameKeyword][],
     [org_parser.element.ResultsKeyword][], and [org_parser.element.PlotKeyword][].
 
-    Subclasses set [org_parser.element.AffiliatedKeyword._keyword][] to the
-    canonical upper-cased keyword string used for rendering
-    (e.g. ``"CAPTION"``, ``"TBLNAME"``).
+    Subclasses set `_keyword` to the canonical upper-cased keyword string used for
+    rendering (e.g. ``"CAPTION"``, ``"TBLNAME"``).
 
     Args:
         value: Optional plain-text value following the keyword.

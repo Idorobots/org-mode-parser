@@ -1,6 +1,6 @@
 """Implementation of table semantic abstractions.
 
-This module provides [org_parser.elements.Table][] for Org tables,
+This module provides [org_parser.element.Table][] for Org tables,
 [org_parser.element.TableEl][] for Table.el grids, and dedicated row/cell
 abstractions for Org table rows.
 """
@@ -160,15 +160,6 @@ class TableRuleRow:
     Args:
         raw: Raw source text of the rule row (e.g. ``|---+---|``).
         table: Owning table.
-
-    Example:
-    ```python
-    >>> from org_parser.element import Table, TableRuleRow
-    >>> table = Table(rows=[])
-    >>> obj = TableRuleRow(raw="|---|")
-    >>> type(obj).__name__
-    'TableRuleRow'
-    ```
     """
 
     def __init__(self, *, raw: str, table: Table) -> None:

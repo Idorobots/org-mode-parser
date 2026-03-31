@@ -184,7 +184,7 @@ class Timestamp(InlineObject):
 
     @property
     def start(self) -> datetime:
-        """Return the start value as [datetime.datetime][].
+        """Return the start value as `datetime.datetime`.
 
         Example:
         ```python
@@ -200,7 +200,7 @@ class Timestamp(InlineObject):
 
     @property
     def end(self) -> datetime | None:
-        """Return the end value as [datetime.datetime][], if available.
+        """Return the end value as `datetime.datetime`, if available.
 
         Example:
         ```python
@@ -217,7 +217,7 @@ class Timestamp(InlineObject):
         return datetime(self.end_year, self.end_month, self.end_day, hour, minute)
 
     def to_datetime(self) -> datetime:
-        """Return this timestamp as [datetime.datetime][] using ``start``.
+        """Return this timestamp as `datetime.datetime` using ``start``.
 
         Example:
         ```python

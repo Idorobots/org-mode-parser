@@ -186,7 +186,7 @@ class Document:
         """Build a [org_parser.document.Document][] from a tree-sitter parse tree.
 
         Args:
-            tree: The [tree_sitter.Tree][] returned by the parser.
+            tree: The `tree_sitter.Tree` returned by the parser.
             filename: The filename of the source document.
             source: The raw source bytes that were parsed.
 

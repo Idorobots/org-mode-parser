@@ -310,7 +310,10 @@ Please don't use =...= in the docstrings to omit parts of the examples. Please a
 
 Do not use =obj == obj= as an example? That's super lazy. Please redo all the examples to be meaningful. One example per docstring. You can use =load= and =loads= functions to initialize a simple document for each example. Don't assign stuff like =obj.author = obj.author= that doesn't show anything useful. If you need to, run the examples in python before adding them in the docstrings. You can ommit very obvious examples that don't bring much to the table. Do not use =isinstance(X, T)= in the examples. Instead of =* TODO Ship docs= use a more generic heading example like =* TODO Heading 1=. You can use nested headings too.
 
-** TODO Semantic node API documentation
+** DONE Semantic node API documentation
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-31 Tue 21:45]
+:END:
 Add a documentation scaffold using =mkdocs=. The index file should be in =docs/index.md= and it should use the =mkdocstrings= to pull the documentation of the Python library objects.
 I would like the documentation to organized as follows:
 - Index with basic usage examples,
