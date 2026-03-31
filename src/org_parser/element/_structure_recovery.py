@@ -19,7 +19,7 @@ def attach_affiliated_keywords(body: list[Element]) -> None:
     Each affiliated keyword (``#+CAPTION:``, ``#+TBLNAME:``, ``#+PLOT:``,
     ``#+RESULTS:``) found in *body* is attached to the next
     non-affiliated-keyword element via
-    :meth:`~org_parser.element._element.Element.attach_keyword`. If a trailing
+    [org_parser.element.Element.attach_keyword][]. If a trailing
     sequence of affiliated keywords has no following element they are left
     unattached. Keywords are **not** removed from *body*.
 

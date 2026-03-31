@@ -30,11 +30,7 @@ def test_org_table_parses_rows_cells_and_formulas() -> None:
 
 def test_tableel_table_is_supported_in_body() -> None:
     """Table.el fragments are represented as opaque table elements."""
-    source = (
-        "+----------+----------+\n"
-        "| Column A | Column B |\n"
-        "+----------+----------+\n"
-    )
+    source = "+----------+----------+\n" "| Column A | Column B |\n" "+----------+----------+\n"
     document = loads(source)
 
     assert isinstance(document.body[0], TableEl)
@@ -58,9 +54,7 @@ def test_dirty_table_renders_as_aligned_org_table() -> None:
 
 def test_degenerate_tableel_grid_stays_opaque() -> None:
     """Degenerate Table.el grids do not expose synthetic row/cell structure."""
-    source = (
-        "+-----+-----+\n| foo | bar |\n+-----+-----+\n| faz | baz |\n+-----+-----+\n"
-    )
+    source = "+-----+-----+\n| foo | bar |\n+-----+-----+\n| faz | baz |\n+-----+-----+\n"
     document = loads(source)
     assert isinstance(document.body[0], TableEl)
     tableel = document.body[0]

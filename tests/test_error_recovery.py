@@ -199,16 +199,12 @@ class TestDocumentErrorsClean:
         with pytest.raises(ValueError):
             RichText.from_node(node, document=doc)
 
-    def test_from_tree_simple_org_has_no_errors(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_from_tree_simple_org_has_no_errors(self, example_file: Callable[[str], Path]) -> None:
         """simple.org parses without any recorded errors."""
         doc = _load_document(example_file("simple.org"))
         assert doc.errors == []
 
-    def test_from_tree_empty_org_has_no_errors(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_from_tree_empty_org_has_no_errors(self, example_file: Callable[[str], Path]) -> None:
         """empty.org parses without any recorded errors."""
         doc = _load_document(example_file("empty.org"))
         assert doc.errors == []
@@ -229,9 +225,7 @@ def _make_doc_with_source(source_bytes: bytes) -> Document:
     """Return a minimal parse-backed :class:`Document` for *source_bytes*."""
     from org_parser._lang import PARSER
 
-    parse_source = (
-        source_bytes if source_bytes.endswith(b"\n") else source_bytes + b"\n"
-    )
+    parse_source = source_bytes if source_bytes.endswith(b"\n") else source_bytes + b"\n"
     tree = PARSER.parse(parse_source)
     return Document.from_tree(tree, "<test>", parse_source)
 
@@ -408,3 +402,17 @@ class TestZerothSectionErrorRecovery:
         doc = _parse_source("#+TITLE: Doc\n<<unclosed\n* Heading\n")
         assert doc.title is not None
         assert str(doc.title) == "Doc"
+
+
+class TestObjectInternalErrorPercolation:
+    """Errors nested inside semantic objects are reported on document."""
+
+    def test_invalid_planning_timestamp_reports_document_error(self) -> None:
+        """Planning timestamps with internal parse errors percolate to document."""
+        doc = _parse_source("* Heading\nSCHEDULED: <2025-12-12, at some point>\n")
+        assert any(error.text == ", at some point" for error in doc.errors)
+
+    def test_invalid_clock_timestamp_reports_document_error(self) -> None:
+        """Clock timestamps with internal parse errors percolate to document."""
+        doc = _parse_source("CLOCK: [2025-12-12, at some point]\n")
+        assert any(error.text == ", at some point" for error in doc.errors)

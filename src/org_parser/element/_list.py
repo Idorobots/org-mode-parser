@@ -29,14 +29,28 @@ if TYPE_CHECKING:
 
 __all__ = ["List", "ListItem", "Repeat"]
 
-
 _REPEAT_HEADER_PREFIX_PATTERN = re.compile(
     r'^State\s+"(?P<after>[^"]+)"\s+from\s+"(?P<before>[^"]+)"\s+$'
 )
 
 
 class ListItem(Element):
-    """One mutable plain-list item with all item-level metadata."""
+    r"""One mutable plain-list item with all item-level metadata.
+
+    Example:
+    ```python
+    >>> from org_parser.element import ListItem
+    >>> from org_parser.text import RichText
+    >>> from org_parser import loads
+    >>> document = loads("- Item 0\n")
+    >>> document.body[0].items.append(ListItem(bullet="-", first_line=RichText("Item 1")))
+    >>> document.body[0][0].checkbox = "X"
+    >>> document.body[0][1].bullet = '+'
+    >>> print(str(document))
+    - [X] Item 0
+    + Item 1
+    ```
+    """
 
     def __init__(
         self,
@@ -73,7 +87,7 @@ class ListItem(Element):
         *,
         parent: Document | Heading | Element | None = None,
     ) -> ListItem:
-        """Create one :class:`ListItem` from a ``list_item`` parse node."""
+        """Create one [org_parser.element.ListItem][] from a ``list_item`` parse node."""
         item = cls(
             bullet=_extract_bullet(node, document),
             ordered_counter=_extract_optional_field_text(node, document, "counter"),
@@ -99,7 +113,7 @@ class ListItem(Element):
 
     @bullet.setter
     def bullet(self, value: str) -> None:
-        """Set bullet marker and mark item dirty."""
+        """Set bullet marker."""
         self._bullet = value
         self.mark_dirty()
 
@@ -110,7 +124,7 @@ class ListItem(Element):
 
     @ordered_counter.setter
     def ordered_counter(self, value: str | None) -> None:
-        """Set ordered-list counter value and mark item dirty."""
+        """Set ordered-list counter value."""
         self._ordered_counter = value
         self.mark_dirty()
 
@@ -121,7 +135,7 @@ class ListItem(Element):
 
     @counter_set.setter
     def counter_set(self, value: str | None) -> None:
-        """Set counter-set cookie value and mark item dirty."""
+        """Set counter-set cookie value."""
         self._counter_set = value
         self.mark_dirty()
 
@@ -132,7 +146,7 @@ class ListItem(Element):
 
     @checkbox.setter
     def checkbox(self, value: str | None) -> None:
-        """Set checkbox status and mark item dirty."""
+        """Set checkbox status."""
         self._checkbox = value
         self.mark_dirty()
 
@@ -143,7 +157,7 @@ class ListItem(Element):
 
     @item_tag.setter
     def item_tag(self, value: RichText | None) -> None:
-        """Set item tag and mark item dirty."""
+        """Set item tag."""
         self._item_tag = value
         if self._item_tag is not None:
             self._item_tag.parent = self
@@ -156,7 +170,7 @@ class ListItem(Element):
 
     @first_line.setter
     def first_line(self, value: RichText | None) -> None:
-        """Set first-line rich text and mark item dirty."""
+        """Set first-line rich text."""
         self._first_line = value
         if self._first_line is not None:
             self._first_line.parent = self
@@ -169,7 +183,7 @@ class ListItem(Element):
 
     @body.setter
     def body(self, value: list[Element]) -> None:
-        """Set body elements and mark item dirty."""
+        """Set body elements."""
         self._body = value
         self._adopt_body(self._body)
         self.mark_dirty()
@@ -178,13 +192,6 @@ class ListItem(Element):
     def body_text(self) -> str:
         """Stringified text of all list body elements."""
         return "".join(str(element) for element in self._body)
-
-    def append_body(self, element: Element, *, mark_dirty: bool = True) -> None:
-        """Append one body element with optional dirty propagation."""
-        element.parent = self
-        self._body.append(element)
-        if mark_dirty:
-            self.mark_dirty()
 
     def reformat(self) -> None:
         """Mark all child content and this item dirty."""
@@ -263,7 +270,23 @@ class ListItem(Element):
 
 
 class Repeat(ListItem):
-    """Repeated-task logbook entry represented as a specialized list item."""
+    """Repeated-task logbook entry represented as a specialized list item.
+
+    Example:
+    ```python
+    >>> from org_parser import loads
+    >>> from org_parser.element import Repeat
+    >>> from org_parser.time import Timestamp
+    >>> heading = loads("* TODO Heading 1").children[0]
+    >>> ts = Timestamp.from_source("<2025-10-10>")
+    >>> heading.add_repeated_task(Repeat(after="DONE", before="TODO", timestamp=ts))
+    >>> print(str(heading))
+    * TODO Heading 1
+    :LOGBOOK:
+    - State "DONE"       from "TODO"       <2025-10-10>
+    :END:
+    ```
+    """
 
     state_alignment_space = 12
 
@@ -298,7 +321,7 @@ class Repeat(ListItem):
 
     @classmethod
     def from_list_item(cls, item: ListItem, document: Document) -> Repeat | None:
-        """Build a :class:`Repeat` from one list item when pattern-matched."""
+        """Build a [org_parser.element.Repeat][] from one list item when pattern-matched."""
         if (
             item.item_tag is not None
             or item.counter_set is not None
@@ -345,7 +368,7 @@ class Repeat(ListItem):
 
     @after.setter
     def after(self, value: str) -> None:
-        """Set the after-state and mark repeat entry dirty."""
+        """Set the after-state."""
         self._after = value
         self.mark_dirty()
 
@@ -356,7 +379,7 @@ class Repeat(ListItem):
 
     @before.setter
     def before(self, value: str) -> None:
-        """Set the before-state and mark repeat entry dirty."""
+        """Set the before-state."""
         self._before = value
         self.mark_dirty()
 
@@ -367,7 +390,7 @@ class Repeat(ListItem):
 
     @timestamp.setter
     def timestamp(self, value: Timestamp) -> None:
-        """Set repeat timestamp and mark repeat entry dirty."""
+        """Set repeat timestamp."""
         self._timestamp = value
         self.mark_dirty()
 
@@ -427,7 +450,23 @@ class Repeat(ListItem):
 
 
 class List(Element):
-    """Plain list element containing mutable :class:`ListItem` instances."""
+    r"""Plain list element containing mutable [org_parser.element.ListItem][] instances.
+
+    Example:
+    ```python
+    >>> from org_parser.element import ListItem
+    >>> from org_parser import loads
+    >>> document = loads('''
+    ... - Item 0
+    ... - Item 1
+    ... ''')
+    >>> document.body[0][0].checkbox = "X"
+    >>> document.body[0][1].bullet = '+'
+    >>> print(str(document))
+    - [X] Item 0
+    + Item 1
+    ```
+    """
 
     def __init__(
         self,
@@ -447,7 +486,7 @@ class List(Element):
         *,
         parent: Document | Heading | Element | None = None,
     ) -> List:
-        """Create a :class:`List` from a ``list`` node."""
+        """Create a [org_parser.element.List][] from a ``list`` node."""
         items = [
             ListItem.from_node(child, document, parent=None)
             for child in node.named_children
@@ -465,7 +504,7 @@ class List(Element):
 
     @items.setter
     def items(self, value: list[ListItem]) -> None:
-        """Set list items and mark list dirty."""
+        """Set list items."""
         self.set_items(value)
 
     def set_items(self, value: list[ListItem], *, mark_dirty: bool = True) -> None:
@@ -483,7 +522,7 @@ class List(Element):
             self.mark_dirty()
 
     def insert_item(self, index: int, item: ListItem) -> None:
-        """Insert one list item at *index* and mark list dirty."""
+        """Insert one list item at *index*."""
         item.parent = self
         self._items.insert(index, item)
         self.mark_dirty()
@@ -613,9 +652,7 @@ def _extract_first_line(
     document: Document,
 ) -> RichText | None:
     """Return first-line rich text composed from all ``first_line`` objects."""
-    return RichText.from_nodes(
-        node.children_by_field_name("first_line"), document=document
-    )
+    return RichText.from_nodes(node.children_by_field_name("first_line"), document=document)
 
 
 def _indent_non_empty_lines(value: str, prefix: str) -> str:
@@ -641,9 +678,7 @@ def _parse_repeat_first_line(
     prefix_part = first_line.parts[0]
     timestamp_part = first_line.parts[1]
 
-    if not isinstance(prefix_part, PlainText) or not isinstance(
-        timestamp_part, Timestamp
-    ):
+    if not isinstance(prefix_part, PlainText) or not isinstance(timestamp_part, Timestamp):
         return None
 
     matched = _REPEAT_HEADER_PREFIX_PATTERN.match(prefix_part.text)
@@ -697,7 +732,5 @@ def _extract_indent(
     *,
     parent: Document | Heading | Element | None = None,
 ) -> Indent:
-    """Build one :class:`Indent` for a list-item body ``indent`` node."""
-    return Indent.from_node(
-        node, document, parent=parent, child_factory=_extract_list_body_element
-    )
+    """Build one [org_parser.element.Indent][] for a list-item body ``indent`` node."""
+    return Indent.from_node(node, document, parent=parent, child_factory=_extract_list_body_element)

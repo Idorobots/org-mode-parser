@@ -1,6 +1,266 @@
 #+TITLE: A Python parser for Org Mode nodes
 #+ARCHIVE: ./docs/plans/ROADMAP_ARCHIVE.org::
 
+* Bugfixes
+** DONE Timestamp repr should omit None values
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-29 Sun 20:33]
+:END:
+#+begin_example
+Timestamp(raw='<2025-12-12, at some point>', is_active=True, start_year=2025, start_month=12, start_day=12, start_dayname=None, start_hour=None, start_minute=None, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None)
+#+end_example
+
+Ideally, the representation would mimic what is done for the other elements - omit the =raw= portion and any fields that are =None=.
+
+** DONE Object-internal errors don't percolate to the document
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-29 Sun 20:45]
+:END:
+#+begin_example
+,* Heading
+SCHEDULED: <2025-12-12, at some point>
+#+end_example
+
+The timestamp is parsed with an error, but it's not available in =document.errors= property.
+
+** TODO Keyword stringification issue
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_document.py
+
+#+begin_example
+>>> from org_parser.element import Logbook
+>>> from org_parser.time import Clock
+>>> document = loads("#+TITLE: Logbook")
+>>> document.logbook = Logbook()
+>>> document.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
+>>> print(str(document))
+#+TITLE: Logbook:LOGBOOK:
+CLOCK: [2025-10-10]
+:END:
+#+end_example
+
+The format of the stringified document is invalid, the LOGBOOK drawer should appear on a new line.
+
+** TODO src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+
+In file src/org_parser/document/_document.py around line 452, near the ~class Document:~
+
+#+begin_example
++            >>> document = loads("#+TITLE: Properties")
++            >>> document.properties = Properties()
+
+#+end_example
+
+Alternatively, =Document.properties= could be set by default to an empty instance of =Properties=.
+Same with =Document.logbook=.
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::keywords: list\[Keyword\] | None = None,
+ properties: Properties | None = None,
+ logbook: Logbook | None = None,
+ body: list\[Element\] | None = None,
+ children: list\[Heading\] | None = None,]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_document.py
+
+#+begin_example
+        keywords: list[Keyword] | None = None,
+        properties: Properties | None = None,
+        logbook: Logbook | None = None,
+        body: list[Element] | None = None,
+        children: list[Heading] | None = None,
+
+#+end_example
+
+Keywords, body and children should be empty lists by default.
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_heading.py::heading_tags: list\[str\] | None = None,
+ scheduled: Timestamp | None = None,
+ closed: Timestamp | None = None,
+ deadline: Timestamp | None = None,
+ properties: Properties | None = None,
+ logbook: Logbook | None = None,
+ repeated_tasks: list\[Repeat\] | None = None,
+ clock_entries: list\[Clock\] | None = None,
+ body: list\[Element\] | None = None,
+ children: list\[Heading\] | None = None,]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_heading.py
+
+#+begin_example
+        heading_tags: list[str] | None = None,
+        scheduled: Timestamp | None = None,
+        closed: Timestamp | None = None,
+        deadline: Timestamp | None = None,
+        properties: Properties | None = None,
+        logbook: Logbook | None = None,
+        repeated_tasks: list[Repeat] | None = None,
+        clock_entries: list[Clock] | None = None,
+        body: list[Element] | None = None,
+        children: list[Heading] | None = None,
+
+#+end_example
+
+Properties & logbook can be set to their respective classes by default and omitted from dirty  stringification when empty.
+Heading tags, repeated tasks, clock entries, body and children should be empty lists by default.
+Repeated tasks should be renamed to =repeats=.
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_heading.py]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_heading.py
+
+#+begin_example
+def _render_heading_dirty(heading: Heading) -> str:
+    """Render a dirty heading from semantic fields only."""
+    line_parts: list[str] = ["*" * heading.level]
+
+    if heading.todo:
+        line_parts.append(heading.todo)
+
+    if heading.priority:
+        line_parts.append(f"[#{heading.priority}]")
+
+    if heading.is_comment:
+        line_parts.append("COMMENT")
+
+    if heading.title is not None:
+        line_parts.append(str(heading.title))
+
+    headline = " ".join(line_parts)
+
+    if heading.heading_tags:
+        space = "" if headline.endswith(" ") else " "
+        headline = f"{headline}{space}:{':'.join(heading.heading_tags)}:"
+
+    parts = [f"{headline}\n"]
+    planning_entries: list[str] = []
+    if heading.scheduled is not None:
+        planning_entries.append(f"SCHEDULED: {heading.scheduled}")
+    if heading.deadline is not None:
+        planning_entries.append(f"DEADLINE: {heading.deadline}")
+    if heading.closed is not None:
+        planning_entries.append(f"CLOSED: {heading.closed}")
+    if planning_entries:
+        parts.append(f"{' '.join(planning_entries)}\n")
+
+    if heading.properties is not None:
+        parts.append(str(heading.properties))
+    if heading.logbook is not None:
+        parts.append(str(heading.logbook))
+
+    parts.extend(str(element) for element in heading.body)
+    return "".join(parts)
+
+#+end_example
+
+
+This should add the completion counter if set.
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_list.py::>>> document.body\[0\].items.append(ListItem(bullet="-", first_line=RichText("Item 1")))]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_list.py
+
+#+begin_example
+        >>> document.body[0].items.append(ListItem(bullet="-", first_line=RichText("Item 1")))
+
+#+end_example
+
+It's impossible to create a =ListItem= with =ListItem.from_source("- item")= as that creates a =List= instance.
+** DONE Code review comment
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-31 Tue 01:10]
+:END:
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_paragraph.py::body: Parsed paragraph body rich text.
+ indent: Leading indentation of the first paragraph line, if present.
+ parent: Optional parent owner object.]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_paragraph.py
+
+#+begin_example
+        body: Parsed paragraph body rich text.
+        indent: Leading indentation of the first paragraph line, if present.
+        parent: Optional parent owner object.
+
+#+end_example
+
+Paragraph no longer needs the indent, it's handled by =Indent= class.
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_structure.py]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_structure.py
+
+#+begin_example
+        indent_node = node.child_by_field_name("indent")
+        indent_text = node_source(indent_node, document)
+        indent = indent_text if indent_text != "" else None
+        block = cls(
+            body=[
+                child_factory(child, document, parent=parent)
+                for child in node.children_by_field_name("body")
+                if child.is_named
+            ],
+            indent=indent,
+        )
+        block.attach_source(node, document)
+        return block
+
+#+end_example
+
+This should extract the indent from the =whitespace= property of the parse tree.
+* Dev Ex
+** TODO Any method that accepts RichText should also accept raw strings.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:10]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+** TODO Document.properties should accept a dictionary when setting.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:12]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+** TODO Properties constructor should accept a dictionary.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:13]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+** TODO Any body setter should accept a list of elements, a single element and a raw string.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:13]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+
+** TODO Code review comment
+:PROPERTIES:
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_keyword.py::>>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
+ >>> document.mark_dirty()]]
+:END:
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_keyword.py
+
+#+begin_example
+        >>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
+        >>> document.mark_dirty()
+
+#+end_example
+
+Mark dirty is required for the append to take effect - could use a custom list wrapper that automatically handles it.
 * Initial release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:
@@ -25,6 +285,43 @@ All of the above are supported in the Tree-Sitter grammar as well as in the Pyth
 :LOGBOOK:
 - State "DONE"       from              [2026-03-28 Sat 17:48]
 :END:
+** DONE Usage documentation in the README
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-29 Sun 21:51]
+:END:
+** DONE Examples in docstrings
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-31 Tue 12:12]
+:END:
+Please update all docstrigns of =Document=, =Heading=, =Element= subclasses, text and timestamp objects to contain a simple instructive example of how these can be used. Do so for each public method. For getters/setters only include one docstring that contains example of setting and getting the value. Please also do this for the `load` and `dump` (and variants) functions.
+
+Dunder and underscore methods should not be included. You can update the existing content to update it or make it shorter/more useful. Specifically, the "and mark object as dirty" parts can be removed as they aren't very useful.
+
+This will be used for Sphinx documentation generation, so please adhere to the Sphinx style.
+
+Please don't use =...= in the docstrings to omit parts of the examples. Please also don't use the =print(x)= for all usage examples, that's lazy. Use the following format:
+
+#+begin_example
+>>> {line of python code}
+{ result of the line}
+>>> { more code and results }
+...
+#+end_example
+
+Do not use =obj == obj= as an example? That's super lazy. Please redo all the examples to be meaningful. One example per docstring. You can use =load= and =loads= functions to initialize a simple document for each example. Don't assign stuff like =obj.author = obj.author= that doesn't show anything useful. If you need to, run the examples in python before adding them in the docstrings. You can ommit very obvious examples that don't bring much to the table. Do not use =isinstance(X, T)= in the examples. Instead of =* TODO Ship docs= use a more generic heading example like =* TODO Heading 1=. You can use nested headings too.
+
+** DONE Semantic node API documentation
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-03-31 Tue 21:45]
+:END:
+Add a documentation scaffold using =mkdocs=. The index file should be in =docs/index.md= and it should use the =mkdocstrings= to pull the documentation of the Python library objects.
+I would like the documentation to organized as follows:
+- Index with basic usage examples,
+- Document structure with API docs for =Document= and =Heading=,
+- Elements with API docs for =Element= subclasses, including =Clock=,
+- Rich text with API docs for =RichText=, subclasses of =InlineObject= and =Timestamp=.
+
+Add the required dependencies, tasks for building the documentation and the documentation scaffold itself.
+
 ** Automated tests based on the example files.
-** Semantic node documentation
 ** Library release

@@ -1,7 +1,6 @@
-"""Shared body-extraction helpers for :class:`Document` and :class:`Heading`.
+"""Shared body-extraction helpers.
 
-These functions are factored out to avoid duplication between
-:mod:`org_parser.document._document` and :mod:`org_parser.document._heading`.
+Used mostly by [org_parser.document.Document][] and [org_parser.document.Heading][].
 """
 
 from __future__ import annotations
@@ -43,11 +42,11 @@ def merge_properties_drawers(
     """Merge repeated properties drawers into one object.
 
     Args:
-        drawers: All collected :class:`Properties` drawers in source order.
+        drawers: All collected [org_parser.element.Properties][] drawers in source order.
         parent: Owner object to assign to the merged drawer.
 
     Returns:
-        A single merged :class:`Properties`, or ``None`` when *drawers* is
+        A single merged [org_parser.element.Properties][], or ``None`` when *drawers* is
         empty. Later drawers override earlier entries for the same key.
     """
     if not drawers:
@@ -69,11 +68,11 @@ def merge_logbook_drawers(
     """Merge repeated logbook drawers into one object.
 
     Args:
-        drawers: All collected :class:`Logbook` drawers in source order.
+        drawers: All collected [org_parser.element.Logbook][] drawers in source order.
         parent: Owner object to assign to the merged drawer.
 
     Returns:
-        A single merged :class:`Logbook`, or ``None`` when *drawers* is empty.
+        A single merged [org_parser.element.Logbook][], or ``None`` when *drawers* is empty.
     """
     if not drawers:
         return None
@@ -106,11 +105,11 @@ def extract_body_element(
     Args:
         node: A tree-sitter child node from a section or zeroth-section.
         parent: Owner heading or document.
-        document: The owning :class:`Document`.
+        document: The owning [org_parser.document.Document][].
 
     Returns:
-        A semantic :class:`Element` subclass matching *node.type*, or a
-        recovered :class:`~org_parser.element._paragraph.Paragraph` for
+        A semantic [org_parser.element.Element][] subclass matching *node.type*, or a
+        recovered [org_parser.element.Paragraph][] for
         error and unrecognised nodes.
     """
     if is_error_node(node):
@@ -131,15 +130,15 @@ def extract_indent(
     *,
     parent: Heading | Document,
 ) -> Indent:
-    """Build one :class:`Indent` with recursively parsed body nodes.
+    """Build one [org_parser.element.Indent][] with recursively parsed body nodes.
 
     Args:
         node: A tree-sitter ``indent`` node.
-        document: The owning :class:`Document`.
+        document: The owning [org_parser.document.Document][].
         parent: Owner heading or document.
 
     Returns:
-        An :class:`Indent` whose body elements are recursively parsed.
+        An [org_parser.element.Indent][] whose body elements are recursively parsed.
     """
     indent_node = node.child_by_field_name("indent")
     indent_text = node_source(indent_node, document)

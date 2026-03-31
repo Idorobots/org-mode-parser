@@ -1,4 +1,4 @@
-"""Implementation of :class:`Document` — a full Org Mode document."""
+"""Implementation of [org_parser.document.Document][] — a full Org Mode document."""
 
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ class ParseError:
 class Document:
     """Representation of a full Org Mode document.
 
-    A :class:`Document` exposes the zeroth-section body elements, top-level
+    A [org_parser.document.Document][] exposes the zeroth-section body elements, top-level
     headings, and well-known keyword properties (``TITLE``, ``AUTHOR``,
     ``FILETAGS``, etc.) parsed from the file.
 
@@ -80,7 +80,7 @@ class Document:
         description: The value of the ``#+DESCRIPTION:`` keyword, or *None*.
         todo: The value of the ``#+TODO:`` keyword, or *None*.
         keywords: All special keywords as an ordered list of
-            :class:`Keyword` objects.  Keywords in this list that share a
+            [org_parser.element.Keyword][] objects.  Keywords in this list that share a
             key with one of the dedicated parameters above will override the
             dedicated value (last-write-wins).
         properties: Merged zeroth-section ``PROPERTIES`` drawer, or *None*.
@@ -88,6 +88,20 @@ class Document:
         body: Zeroth-section elements (excluding headings and special
             keywords and dedicated drawers).
         children: Top-level headings.
+
+    Example:
+    ```python
+    >>> from org_parser import loads
+    >>> document = loads('''
+    ... * TODO Heading 1
+    ... ** TODO Heading 2
+    ... *** TODO Heading 3
+    ... ''')
+    >>> document[0].title_text
+    'Heading 1'
+    >>> document[1].heading_text
+    '** TODO Heading 2'
+    ```
     """
 
     def __init__(
@@ -138,17 +152,25 @@ class Document:
 
     @classmethod
     def from_source(cls, source: str, *, filename: str = "") -> Document:
-        """Build a :class:`Document` from Org source text.
+        """Build a [org_parser.document.Document][] from Org source text.
 
         Args:
             source: Org source text to parse.
             filename: Optional filename assigned to the parsed document.
 
         Returns:
-            A fully populated parse-backed :class:`Document`.
+            A fully populated parse-backed [org_parser.document.Document][].
 
         Raises:
             ValueError: If the source contains parse errors.
+
+        Example:
+        ```python
+        >>> from org_parser import Document
+        >>> document = Document.from_source("* TODO Heading 1")
+        >>> document.children[0].todo
+        'TODO'
+        ```
         """
         from org_parser._from_source import parse_document_from_source
 
@@ -161,16 +183,27 @@ class Document:
         filename: str,
         source: bytes,
     ) -> Document:
-        """Build a :class:`Document` from a tree-sitter parse tree.
+        """Build a [org_parser.document.Document][] from a tree-sitter parse tree.
 
         Args:
-            tree: The :class:`~tree_sitter.Tree` returned by the parser.
+            tree: The `tree_sitter.Tree` returned by the parser.
             filename: The filename of the source document.
             source: The raw source bytes that were parsed.
 
         Returns:
-            A fully populated :class:`Document` with headings built
+            A fully populated [org_parser.document.Document][] with headings built
             recursively.
+
+        Example:
+        ```python
+        >>> from org_parser import Document
+        >>> from org_parser._lang import PARSER
+        >>> source = "* TODO Heading 1".encode()
+        >>> tree = PARSER.parse(source)
+        >>> document = Document.from_tree(tree, "notes.org", source)
+        >>> document.children[0].todo
+        'TODO'
+        ```
         """
         # Lazy import to break the circular dependency with _heading.py.
         from org_parser.document._heading import Heading
@@ -212,35 +245,69 @@ class Document:
 
     @property
     def filename(self) -> str:
-        """The filename of the document file."""
+        """The filename of the document file.
+
+        Example:
+        ```python
+        >>> from org_parser import dump, loads
+        >>> document = loads("* TODO Heading 1")
+        >>> document.filename = "file.org"
+        >>> dump(document)
+        ```
+        """
         return self._filename
 
     @filename.setter
     def filename(self, value: str) -> None:
-        """Set the filename and mark the document as dirty."""
+        """Set the filename."""
         self._filename = value
         self.mark_dirty()
 
     @property
     def title(self) -> RichText | None:
-        """The ``#+TITLE:`` value, or *None*."""
+        """The ``#+TITLE:`` value, or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser.text import RichText
+        >>> from org_parser import loads
+        >>> document = loads("* TODO Heading 1")
+        >>> document.title = RichText("Updated")
+        >>> document
+        #+TITLE: Updated
+        * TODO Heading 1
+        ```
+        """
         kw = self._find_last_keyword(TITLE)
         return kw.value if kw is not None else None
 
     @title.setter
     def title(self, value: RichText | None) -> None:
-        """Set the ``#+TITLE:`` value and mark the document as dirty."""
+        """Set the ``#+TITLE:`` value."""
         self._set_keyword_value(TITLE, value)
 
     @property
     def author(self) -> RichText | None:
-        """The ``#+AUTHOR:`` value, or *None*."""
+        """The ``#+AUTHOR:`` value, or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser.text import RichText
+        >>> from org_parser import loads
+        >>> document = loads("* TODO Heading 1")
+        >>> document.children[0].todo
+        'TODO'
+        >>> document.author = RichText("Updated")
+        >>> document.author.raw
+        'Updated'
+        ```
+        """
         kw = self._find_last_keyword(AUTHOR)
         return kw.value if kw is not None else None
 
     @author.setter
     def author(self, value: RichText | None) -> None:
-        """Set the ``#+AUTHOR:`` value and mark the document as dirty."""
+        """Set the ``#+AUTHOR:`` value."""
         self._set_keyword_value(AUTHOR, value)
 
     @property
@@ -248,9 +315,22 @@ class Document:
         """The effective category for this document.
 
         Returns the ``#+CATEGORY:`` keyword value when present.  Otherwise
-        falls back to the stem of :attr:`filename` (the basename without its
-        file extension), which matches Org Mode's own default-category
-        behaviour.  Returns *None* when no filename is known (empty string).
+        falls back to the stem of [org_parser.document.Document.filename][]
+        (the basename without its file extension), which matches Org Mode's
+        own default-category behaviour.  Returns *None* when no filename
+        is known (empty string).
+
+        Example:
+        ```python
+        >>> from org_parser.text import RichText
+        >>> from org_parser import loads
+        >>> document = loads("* TODO Heading 1")
+        >>> document.children[0].category is None
+        True
+        >>> document.category = RichText("Updated")
+        >>> document.children[0].category
+        RichText("Updated")
+        ```
         """
         kw = self._find_last_keyword(CATEGORY)
         if kw is not None:
@@ -260,7 +340,7 @@ class Document:
 
     @category.setter
     def category(self, value: RichText | None) -> None:
-        """Set the ``#+CATEGORY:`` value and mark the document as dirty."""
+        """Set the ``#+CATEGORY:`` value."""
         self._set_keyword_value(CATEGORY, value)
 
     @property
@@ -271,18 +351,29 @@ class Document:
 
     @description.setter
     def description(self, value: RichText | None) -> None:
-        """Set the ``#+DESCRIPTION:`` value and mark the document as dirty."""
+        """Set the ``#+DESCRIPTION:`` value."""
         self._set_keyword_value(DESCRIPTION, value)
 
     @property
     def todo(self) -> RichText | None:
-        """The ``#+TODO:`` value, or *None*."""
+        """The ``#+TODO:`` value, or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser.text import RichText
+        >>> from org_parser import loads
+        >>> document = loads("* TODO Heading 1")
+        >>> document.todo = RichText("TODO WAITING | DONE")
+        >>> document.todo_states
+        ['TODO', ''WAITING']
+        ```
+        """
         kw = self._find_last_keyword(TODO)
         return kw.value if kw is not None else None
 
     @todo.setter
     def todo(self, value: RichText | None) -> None:
-        """Set the ``#+TODO:`` value and mark the document as dirty."""
+        """Set the ``#+TODO:`` value."""
         self._set_keyword_value(TODO, value)
 
     @property
@@ -292,6 +383,18 @@ class Document:
         Returns an empty list when no ``#+FILETAGS:`` keyword is present.
         Multiple ``#+FILETAGS:`` lines are aggregated in keyword-list order.
         The returned list is a fresh copy; mutate via the setter.
+
+        Example:
+        ```python
+        >>> from org_parser.text import RichText
+        >>> from org_parser import loads
+        >>> document = loads("* TODO Heading 1")
+        >>> document.children[0].tags
+        []
+        >>> document.tags = ["tag1", "tag2"]
+        >>> document.children[0].tags
+        ['tag1', 'tag2']
+        ```
         """
         tags: list[str] = []
         for kw in self._keywords:
@@ -321,63 +424,135 @@ class Document:
 
     @property
     def keywords(self) -> list[Keyword]:
-        """All special keywords as an ordered list."""
+        """All special keywords as an ordered list.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads("#+OTHER: foo")
+        >>> document.keywords
+        [Keyword(key='OTHER', value=RichText('foo'))]
+        >>> document.keywords = []
+        >>> len(document.keywords)
+        0
+        ```
+        """
         return self._keywords
 
     @keywords.setter
     def keywords(self, value: list[Keyword]) -> None:
-        """Set the keywords list and mark the document as dirty."""
+        """Set the keywords list."""
         self._keywords = value
         self._adopt_keywords(self._keywords)
         self.mark_dirty()
 
     @property
     def properties(self) -> Properties | None:
-        """Merged zeroth-section ``PROPERTIES`` drawer, or *None*."""
+        """Merged zeroth-section ``PROPERTIES`` drawer, or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> from org_parser.element import Properties
+        >>> document = loads("#+TITLE: Properties")
+        >>> document.properties = Properties()
+        >>> document.properties["key"] = RichText("Value")
+        >>> print(str(document))
+        #+TITLE: Properties
+        :PROPERTIES:
+        :key: Value
+        :END:
+        ```
+        """
         return self._properties
 
     @properties.setter
     def properties(self, value: Properties | None) -> None:
-        """Set merged ``PROPERTIES`` drawer and mark the document dirty."""
+        """Set merged ``PROPERTIES`` drawer."""
         self._properties = value
         self._adopt_element(self._properties)
         self.mark_dirty()
 
     @property
     def logbook(self) -> Logbook | None:
-        """Merged zeroth-section ``LOGBOOK`` drawer, or *None*."""
+        """Merged zeroth-section ``LOGBOOK`` drawer, or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser.element import Logbook
+        >>> from org_parser.time import Clock
+        >>> document = loads("#+TITLE: Logbook")
+        >>> document.logbook = Logbook()
+        >>> document.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
+        >>> print(str(document))
+        #+TITLE: Logbook
+        :LOGBOOK:
+        CLOCK: [2025-10-10]
+        :END:
+        ```
+        """
         return self._logbook
 
     @logbook.setter
     def logbook(self, value: Logbook | None) -> None:
-        """Set merged ``LOGBOOK`` drawer and mark the document dirty."""
+        """Set merged ``LOGBOOK`` drawer."""
         self._logbook = value
         self._adopt_element(self._logbook)
         self.mark_dirty()
 
     @property
     def body(self) -> list[Element]:
-        """Zeroth-section body elements (excludes keywords and headings)."""
+        """Zeroth-section body elements (excludes keywords and headings).
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads("")
+        >>> document.body = [Paragraph.from_source("Add some body text")]
+        >>> print(str(document))
+        Add some body text
+        ```
+        """
         return self._body
 
     @body.setter
     def body(self, value: list[Element]) -> None:
-        """Set zeroth-section body elements and mark the document as dirty."""
+        """Set zeroth-section body elements."""
         self._body = value
         self._adopt_elements(self._body)
         self.mark_dirty()
 
     @property
+    def body_text(self) -> str:
+        """Stringified text for all zeroth-section body elements."""
+        return "".join(str(element) for element in self._body)
+
+    @property
     def children(self) -> list[Heading]:
-        """Top-level headings."""
+        """Top-level headings.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... * Heading 1
+        ... ** Heading 2
+        ... *** Heading 3
+        ... ''')
+        >>> document.children[0].children = document.children[0].children[0].children
+        >>> print(document.render())
+        * Heading 1
+        *** Heading 3
+        ```
+        """
         return self._children
 
     @children.setter
     def children(self, value: list[Heading]) -> None:
-        """Set top-level headings, enforce minimum level, and mark dirty.
+        """Set top-level headings and enforce minimum level.
 
         Each heading is adopted (parent set to this document) and then checked:
-        if its :attr:`~org_parser.document._heading.Heading.level` is zero or
+        if its [org_parser.document.Heading.level][] is zero or
         negative it is shifted — along with its entire descendant subtree — to
         level 1.  Only headings whose level is actually changed are marked
         dirty.
@@ -392,41 +567,98 @@ class Document:
         self.mark_dirty()
 
     @property
+    def all_headings(self) -> list[Heading]:
+        """All headings in file-definition order across the full document tree.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... * Heading 1
+        ... ** Heading 2
+        ... ''')
+        >>> len(document.all_headings)
+        2
+        >>> len(document[:])
+        2
+        ```
+        """
+        ordered: list[Heading] = []
+        _collect_heading_subtree(self._children, ordered)
+        return ordered
+
+    @property
     def is_root(self) -> bool:
-        """Whether this node is the root of a parsed document tree."""
+        """Whether this node is the root of a parsed document tree.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads("* TODO Heading 1")
+        >>> document.is_root
+        True
+        ```
+        """
         return True
 
     @property
     def is_leaf(self) -> bool:
-        """Whether this document has no top-level headings."""
+        """Whether this document has no top-level headings.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads("* TODO Heading 1")
+        >>> document.is_leaf
+        False
+        >>> document = loads("No headings")
+        >>> document.is_leaf
+        True
+        ```
+        """
         return not self._children
 
     @property
     def all_states(self) -> list[str]:
-        """All discovered TODO keyword states from the ``#+TODO:`` definition."""
+        """All discovered TODO keyword states from the ``#+TODO:`` definition.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads("#+TODO: TODO WAITING | DONE CANCELLED")
+        >>> document.all_states
+        ['TODO', 'WAITING', 'DONE', 'CANCELLED']
+        ```
+        """
         return _parse_todo_states(self._todo_keyword_values())[0]
 
     @property
     def todo_states(self) -> list[str]:
-        """Discovered non-completed TODO states from the ``#+TODO:`` definition."""
+        """Discovered non-completed TODO states from the ``#+TODO:`` definition.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads("#+TODO: TODO WAITING | DONE CANCELLED")
+        >>> document.todo_states
+        ['TODO', 'WAITING']
+        ```
+        """
         return _parse_todo_states(self._todo_keyword_values())[1]
 
     @property
     def done_states(self) -> list[str]:
-        """Discovered completed TODO states from the ``#+TODO:`` definition."""
+        """Discovered completed TODO states from the ``#+TODO:`` definition.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads("#+TODO: TODO WAITING | DONE CANCELLED")
+        >>> document.todo_states
+        ['DONE', 'CANCELLED']
+        ```
+        """
         return _parse_todo_states(self._todo_keyword_values())[2]
-
-    @property
-    def body_text(self) -> str:
-        """Stringified text for all zeroth-section body elements."""
-        return "".join(str(element) for element in self._body)
-
-    @property
-    def all_headings(self) -> list[Heading]:
-        """All headings in file-definition order across the full document tree."""
-        ordered: list[Heading] = []
-        _collect_heading_subtree(self._children, ordered)
-        return ordered
 
     def source_for(self, node: tree_sitter.Node) -> bytes:
         """Return source bytes for one node span.
@@ -451,10 +683,25 @@ class Document:
 
     @property
     def errors(self) -> list[ParseError]:
-        """Parse errors captured during :meth:`from_tree` construction.
+        """Parse errors captured during [org_parser.document.Document.from_tree][] construction.
 
         Returns an empty list for programmatically constructed documents.
         The list is read-only: do not mutate it directly.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... * Heading
+        ... SCHEDULED: yesterday
+        ... ''')
+        >>> document.errors
+        [ParseError(
+            start_point=Point(row=2, column=0),
+            end_point=Point(row=2, column=20),
+            text='SCHEDULED: yesterday'
+        )]
+        ```
         """
         return self._errors
 
@@ -462,7 +709,7 @@ class Document:
         """Record a parse error for *node*.
 
         Extracts the verbatim source text for the node and appends a
-        :class:`ParseError` to the internal errors list.
+        [org_parser.document.ParseError][] to the internal errors list.
 
         Args:
             node: The tree-sitter ``ERROR`` or missing node to record.
@@ -482,15 +729,47 @@ class Document:
     def mark_dirty(self) -> None:
         """Mark this document as dirty.
 
-        This public helper is intended for nested objects that need to bubble
-        mutation state up to the owning document.
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... Some text.
+        ... #+TITLE: Title
+        ... More text
+        ... ''')
+        >>> document.mark_dirty()
+        >>> document.dirty
+        True
+        >>> print(str(document))
+        #+TITLE: Title
+
+        Some text.
+        More text
+        ```
         """
         if self._dirty:
             return
         self._dirty = True
 
     def reformat(self) -> None:
-        """Recursively mark document descendants dirty, then self dirty."""
+        """Reformat the entire document.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... * Heading 1
+        ... ** Heading 2
+        ... CLOSED: <2025-10-10>
+        ... SCHEDULED: <2025-10-10>
+        ... ''')
+        >>> document.reformat()
+        >>> print(document.render())
+        * Heading 1
+        ** Heading 2
+        SCHEDULED: <2025-10-10> CLOSED: <2025-10-10>
+        ```
+        """
         for keyword in self._keywords:
             keyword.reformat()
         if self._properties is not None:
@@ -575,7 +854,7 @@ class Document:
         """Return the complete Org Mode text for a document including headings.
 
         For clean (unmodified) parse-backed documents the original source bytes are
-        returned verbatim, preserving all whitespace and formatting.  For dirty
+        returned verbatim, preserving all whitespace and formatting. For dirty
         documents, or documents built without a backing source, the zeroth section
         and every heading subtree are reconstructed from their semantic fields via
         :func:`str`.
@@ -639,7 +918,7 @@ class Document:
         return len(self.all_headings)
 
     def __getitem__(self, index: int | slice) -> Heading | list[Heading]:
-        """Return one heading (or heading slice) from :attr:`all_headings`."""
+        """Return one (or slice) of headings from the document, including subheadings."""
         return self.all_headings[index]
 
 
@@ -657,7 +936,7 @@ def _parse_zeroth_section(
 
     Returns:
         A ``(keywords, properties, logbook, body)`` tuple. *keywords* is an
-        ordered list of :class:`Keyword` values in source order; duplicate
+        ordered list of [org_parser.element.Keyword][] values in source order; duplicate
         keys are preserved.  Dedicated drawer values are merged across
         repeated drawers. *body* contains non-keyword,
         non-dedicated-drawer elements.
@@ -682,17 +961,13 @@ def _parse_zeroth_section(
                 if sc.type == SPECIAL_KEYWORD:
                     keywords.append(_extract_keyword(sc, parent=parent))
                 elif sc.type == PROPERTY_DRAWER:
-                    property_drawers.append(
-                        Properties.from_node(sc, parent, parent=parent)
-                    )
+                    property_drawers.append(Properties.from_node(sc, parent, parent=parent))
                 elif sc.type == LOGBOOK_DRAWER:
                     logbook_drawers.append(Logbook.from_node(sc, parent, parent=parent))
                 elif sc.type == DRAWER:
                     body.append(Drawer.from_node(sc, parent, parent=parent))
                 else:
-                    body.append(
-                        extract_body_element(sc, parent=parent, document=parent)
-                    )
+                    body.append(extract_body_element(sc, parent=parent, document=parent))
             break  # only one zeroth section
 
     attach_affiliated_keywords(body)
@@ -709,7 +984,7 @@ def _extract_keyword(
     *,
     parent: Document,
 ) -> Keyword:
-    """Build and return a :class:`Keyword` for a single ``special_keyword`` node."""
+    """Build and return a [org_parser.element.Keyword][] for a single ``special_keyword`` node."""
     return Keyword.from_node(kw_node, parent, parent=parent)
 
 

@@ -1,6 +1,6 @@
 """Rich text and inline object representations.
 
-This subpackage exposes :class:`RichText` together with public inline object
+This subpackage exposes [org_parser.text.RichText][] together with public inline object
 abstractions used to construct or inspect rich text programmatically.
 """
 

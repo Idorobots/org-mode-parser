@@ -19,6 +19,11 @@ taskipy = "^1.14.1"
 pytest = "^8.3"
 pytest-cov = "^6.0"
 pyright = "^1.1"
+mkdocs = "^1.6"
+mkdocs-section-index = "^0.3"
+mkdocs-autorefs = "^1.4"
+mkdocs-material = "^9.7.6"
+mkdocstrings = { version = "^0.30", extras = ["python"] }
 
 [build-system]
 requires = ["poetry-core"]
@@ -35,6 +40,8 @@ lint-fix = "ruff check --fix src/ tests/"
 format-check = "ruff format --check src/ tests/"
 format = "ruff format src/ tests/"
 type = "mypy src/ tests"
+docs-build = "mkdocs build --strict"
+docs-serve = "mkdocs serve"
 check = "task format-check && task lint && task type && task test"
 
 # ---------------------------------------------------------------------------
@@ -42,7 +49,7 @@ check = "task format-check && task lint && task type && task test"
 # ---------------------------------------------------------------------------
 
 [tool.ruff]
-line-length = 88
+line-length = 100
 target-version = "py312"
 src = ["src", "tests"]
 

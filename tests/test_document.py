@@ -40,31 +40,23 @@ class TestLoadRaw:
         tree = load_raw(example_file("simple.org"))
         assert isinstance(tree, tree_sitter.Tree)
 
-    def test_simple_org_root_type_is_document(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_simple_org_root_type_is_document(self, example_file: Callable[[str], Path]) -> None:
         """The root node of simple.org has type 'document'."""
         tree = load_raw(example_file("simple.org"))
         assert tree.root_node.type == "document"
 
-    def test_simple_org_no_error_nodes(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_simple_org_no_error_nodes(self, example_file: Callable[[str], Path]) -> None:
         """simple.org parses without any ERROR nodes."""
         tree = load_raw(example_file("simple.org"))
         assert not _has_error_nodes(tree.root_node)
 
-    def test_empty_org_returns_valid_tree(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_empty_org_returns_valid_tree(self, example_file: Callable[[str], Path]) -> None:
         """Parsing an empty .org file returns a valid, non-None tree."""
         tree = load_raw(example_file("empty.org"))
         assert isinstance(tree, tree_sitter.Tree)
         assert tree.root_node.type == "document"
 
-    def test_large_org_root_is_document(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_large_org_root_is_document(self, example_file: Callable[[str], Path]) -> None:
         """The 1000-line large.org parses to a document node with children."""
         tree = load_raw(example_file("large.org"))
         assert tree.root_node.type == "document"
@@ -83,9 +75,7 @@ class TestLoadRaw:
         with pytest.raises(FileNotFoundError):
             load_raw(missing)
 
-    def test_headings_org_has_children(
-        self, example_file: Callable[[str], Path]
-    ) -> None:
+    def test_headings_org_has_children(self, example_file: Callable[[str], Path]) -> None:
         """heading-levels.org parses and the document has heading children."""
         tree = load_raw(example_file("heading-levels.org"))
         child_types = {child.type for child in tree.root_node.children}

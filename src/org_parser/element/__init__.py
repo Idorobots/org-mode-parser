@@ -5,9 +5,9 @@ corresponding to Org Mode *elements* — the structural building blocks of an
 org document such as paragraphs, plain lists, source blocks, drawers, and
 planning entries.
 
-The primary base type is :class:`Element`.  Concrete subclasses cover all
+The primary base type is [org_parser.element.Element][].  Concrete subclasses cover all
 known Org element node types; unknown or error nodes are recovered as a
-:class:`Paragraph` wrapping the verbatim source text.
+[org_parser.element.Paragraph][] wrapping the verbatim source text.
 """
 
 from org_parser.element._babel import BabelCall

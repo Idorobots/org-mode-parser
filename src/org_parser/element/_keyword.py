@@ -3,21 +3,21 @@
 This module covers all ``#+KEY:`` lines that appear in document and section
 bodies:
 
-* :class:`Keyword` — generic ``#+KEY: value`` special keyword
+* [org_parser.element.Keyword][] — generic ``#+KEY: value`` special keyword
   (``special_keyword`` node, e.g. ``#+TITLE:``, ``#+AUTHOR:``).
-* :class:`CaptionKeyword` — ``#+CAPTION:`` affiliated keyword.
-* :class:`TblnameKeyword` — ``#+TBLNAME:`` affiliated keyword.
-* :class:`ResultsKeyword` — ``#+RESULTS:`` affiliated keyword.
-* :class:`PlotKeyword` — ``#+PLOT:`` affiliated keyword.
+* [org_parser.element.CaptionKeyword][] — ``#+CAPTION:`` affiliated keyword.
+* [org_parser.element.TblnameKeyword][] — ``#+TBLNAME:`` affiliated keyword.
+* [org_parser.element.ResultsKeyword][] — ``#+RESULTS:`` affiliated keyword.
+* [org_parser.element.PlotKeyword][] — ``#+PLOT:`` affiliated keyword.
 
 The four affiliated keyword classes share a common base,
-:class:`_AffiliatedKeyword`, which handles the ``value`` field that all four
+[org_parser.element.AffiliatedKeyword][], which handles the ``value`` field that all four
 expose.
 
 .. note::
    The ``#+RESULTS[hash]:`` hash annotation is not yet implemented in the
    underlying tree-sitter grammar; ``#+RESULTS[hash]:`` currently parses as
-   an ``ERROR`` node.  :class:`ResultsKeyword` therefore exposes only the
+   an ``ERROR`` node.  [org_parser.element.ResultsKeyword][] therefore exposes only the
    ``value`` field.
 """
 
@@ -44,7 +44,6 @@ __all__ = [
     "TblnameKeyword",
 ]
 
-
 # ---------------------------------------------------------------------------
 # Special keyword (zeroth-section)
 # ---------------------------------------------------------------------------
@@ -57,6 +56,15 @@ class Keyword(Element):
         key: Upper-cased keyword key.
         value: Keyword value rich text.
         parent: Optional parent owner object.
+
+    Example:
+    ```python
+    >>> from org_parser import loads
+    >>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
+    >>> document.mark_dirty()
+    >>> print(str(document))
+    #+TITLE: Document
+    ```
     """
 
     def __init__(
@@ -79,11 +87,11 @@ class Keyword(Element):
         *,
         parent: Document | Heading | Element | None = None,
     ) -> Keyword:
-        """Create a :class:`Keyword` from a tree-sitter ``special_keyword`` node.
+        """Create a [org_parser.element.Keyword][] from a tree-sitter ``special_keyword`` node.
 
         Args:
             node: The ``special_keyword`` tree-sitter node.
-            document: The owning :class:`Document`.
+            document: The owning [org_parser.document.Document][].
             parent: Optional parent owner object.
         """
         key_node = node.child_by_field_name("key")
@@ -108,7 +116,7 @@ class Keyword(Element):
 
     @key.setter
     def key(self, value: str) -> None:
-        """Set keyword key and mark as dirty."""
+        """Set keyword key."""
         self._key = value.upper()
         self.mark_dirty()
 
@@ -119,7 +127,7 @@ class Keyword(Element):
 
     @value.setter
     def value(self, value: RichText) -> None:
-        """Set keyword value and mark as dirty."""
+        """Set keyword value."""
         self._value = value
         self._value.parent = self
         self.mark_dirty()
@@ -157,14 +165,30 @@ class AffiliatedKeyword(Element):
 
     Affiliated keywords annotate the element immediately following them in
     the document body.  The four concrete subclasses are
-    :class:`CaptionKeyword`, :class:`TblnameKeyword`,
-    :class:`ResultsKeyword`, and :class:`PlotKeyword`.
+    [org_parser.element.CaptionKeyword][], [org_parser.element.TblnameKeyword][],
+    [org_parser.element.ResultsKeyword][], and [org_parser.element.PlotKeyword][].
 
-    Subclasses set :attr:`_keyword` to the canonical upper-cased keyword
-    string used for rendering (e.g. ``"CAPTION"``, ``"TBLNAME"``).
+    Subclasses set `_keyword` to the canonical upper-cased keyword string used for
+    rendering (e.g. ``"CAPTION"``, ``"TBLNAME"``).
 
     Args:
         value: Optional plain-text value following the keyword.
+
+    Example:
+    ```python
+    >>> from org_parser.element import CaptionKeyword
+    >>> document = loads("|table|")
+    >>> c = CaptionKeyword.from_source("#+CAPTION: Some table")
+    >>> document.body[0].attach_keyword(c)
+    >>> len(document.body[0].keywords)
+    1
+    >>> print(str(document))
+
+    >>> document.body = [c, document.body[0]]
+    >>> print(str(document))
+    #+CAPTION: Some table
+    |table|
+    ```
     """
 
     _keyword: str = ""  # overridden by each concrete subclass as a class variable
@@ -198,7 +222,7 @@ class AffiliatedKeyword(Element):
 
     @value.setter
     def value(self, v: str | None) -> None:
-        """Set the keyword value and mark this element as dirty."""
+        """Set the keyword value."""
         self._value = v
         self.mark_dirty()
 
@@ -252,12 +276,9 @@ class CaptionKeyword(AffiliatedKeyword):
         *,
         parent: Document | Heading | Element | None = None,
     ) -> CaptionKeyword:
-        """Create a :class:`CaptionKeyword` from a ``caption_keyword`` node."""
+        """Create a [org_parser.element.CaptionKeyword][] from a ``caption_keyword`` node."""
         optval_node = node.child_by_field_name("optval")
-        if optval_node is None:
-            short = None
-        else:
-            short = document.source_for(optval_node).decode()
+        short = None if optval_node is None else document.source_for(optval_node).decode()
         elem = cls(
             value=cls._value_from_node(node, document),
             short=short,
@@ -273,7 +294,7 @@ class CaptionKeyword(AffiliatedKeyword):
 
     @short.setter
     def short(self, value: str | None) -> None:
-        """Set the short caption and mark this element as dirty."""
+        """Set the short caption."""
         self._short = value
         self.mark_dirty()
 
@@ -314,7 +335,7 @@ class TblnameKeyword(AffiliatedKeyword):
         *,
         parent: Document | Heading | Element | None = None,
     ) -> TblnameKeyword:
-        """Create a :class:`TblnameKeyword` from a ``tblname_keyword`` node."""
+        """Create a [org_parser.element.TblnameKeyword][] from a ``tblname_keyword`` node."""
         elem = cls(value=cls._value_from_node(node, document), parent=parent)
         elem.attach_source(node, document)
         return elem
@@ -347,7 +368,7 @@ class ResultsKeyword(AffiliatedKeyword):
         *,
         parent: Document | Heading | Element | None = None,
     ) -> ResultsKeyword:
-        """Create a :class:`ResultsKeyword` from a ``results_keyword`` node."""
+        """Create a [org_parser.element.ResultsKeyword][] from a ``results_keyword`` node."""
         elem = cls(value=cls._value_from_node(node, document), parent=parent)
         elem.attach_source(node, document)
         return elem
@@ -372,7 +393,7 @@ class PlotKeyword(AffiliatedKeyword):
         *,
         parent: Document | Heading | Element | None = None,
     ) -> PlotKeyword:
-        """Create a :class:`PlotKeyword` from a ``plot_keyword`` node."""
+        """Create a [org_parser.element.PlotKeyword][] from a ``plot_keyword`` node."""
         elem = cls(value=cls._value_from_node(node, document), parent=parent)
         elem.attach_source(node, document)
         return elem

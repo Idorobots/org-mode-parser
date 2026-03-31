@@ -10,9 +10,7 @@ from org_parser.text import PlainText, RichText
 
 def test_document_sequence_uses_all_headings_order() -> None:
     """Document sequence protocol traverses headings including descendants."""
-    document = loads(
-        "* Top\n" "** Child A\n" "** Child B\n" "*** Grandchild\n" "* Second\n"
-    )
+    document = loads("* Top\n" "** Child A\n" "** Child B\n" "*** Grandchild\n" "* Second\n")
 
     assert len(document) == 5
     assert [heading.title_text for heading in document] == [

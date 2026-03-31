@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     libtree-sitter-dev \
     build-essential \
+    mkdocstrings \
     && rm -rf /var/lib/apt/lists/*
 
 USER ubuntu

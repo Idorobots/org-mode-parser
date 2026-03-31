@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
     from org_parser.document._document import Document
 
-__all__ = ["is_error_node", "node_source"]
+__all__ = ["is_error_node", "node_source", "report_internal_parse_errors"]
 
 _ERROR_NODE_TYPE = "ERROR"
 
@@ -61,3 +61,21 @@ def node_source(node: tree_sitter.Node | None, document: Document | None) -> str
     if node is None or document is None:
         return ""
     return document.source_for(node).decode()
+
+
+def report_internal_parse_errors(node: tree_sitter.Node, document: Document) -> None:
+    """Report top-level parse-error descendants inside *node*.
+
+    This records ``ERROR`` and missing nodes nested within a semantic object's
+    parse subtree so object-internal parse issues propagate to
+    :attr:`Document.errors`. Only top-level error regions are reported to avoid
+    duplicate nested entries for the same malformed segment.
+    """
+    stack: list[tuple[tree_sitter.Node, bool]] = [(node, False)]
+    while stack:
+        current, has_error_ancestor = stack.pop()
+        current_is_error = is_error_node(current)
+        if current_is_error and not has_error_ancestor:
+            document.report_error(current)
+        child_has_error_ancestor = has_error_ancestor or current_is_error
+        stack.extend((child, child_has_error_ancestor) for child in reversed(current.children))

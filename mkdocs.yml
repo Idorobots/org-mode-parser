@@ -1,0 +1,91 @@
+site_name: org-parser
+site_description: Semantic Org-mode parser for Python
+site_url: "https://org-parser.github.io/"
+repo_url: "https://github.com/Idorobots/org-parser"
+repo_name: "Idorobots/org-parser"
+site_dir: "site"
+docs_dir: docs
+watch: [mkdocs.yml, README.org, docs]
+copyright: Copyright &copy; 2026 Kajetan Rzepecki
+edit_uri: edit/main/docs/
+
+
+theme:
+  name: material
+  navigation_depth: 4
+  features:
+  - announce.dismiss
+  - content.action.edit
+  - content.action.view
+  - content.code.annotate
+  - content.code.copy
+  - content.tooltips
+  - navigation.footer
+  - navigation.instant.preview
+  - navigation.path
+  - navigation.sections
+  - navigation.tabs
+  - navigation.tabs.sticky
+  - navigation.top
+  - search.highlight
+  - search.suggest
+  - toc.follow
+  palette:
+  - media: "(prefers-color-scheme)"
+    toggle:
+      icon: material/brightness-auto
+      name: Switch to light mode
+  - media: "(prefers-color-scheme: light)"
+    scheme: default
+    primary: teal
+    accent: purple
+    toggle:
+      icon: material/weather-sunny
+      name: Switch to dark mode
+  - media: "(prefers-color-scheme: dark)"
+    scheme: slate
+    primary: black
+    accent: lime
+    toggle:
+      icon: material/weather-night
+      name: Switch to system preference
+
+markdown_extensions:
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.highlight:
+      pygments_lang_class: true
+  - pymdownx.superfences
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home:
+    - Basic usage: index.md
+    - Document structure: document-structure.md
+    - Elements: elements.md
+    - Rich text: rich-text.md
+    - Time: time.md
+
+plugins:
+  - search
+  - autorefs
+  - section-index
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - src
+          options:
+            merge_init_into_class: true
+            inherited_members: true
+            separate_signature: true
+            show_root_full_path: false
+            show_signature_annotations: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_source: false
+            signature_crossrefs: true
+            summary: true

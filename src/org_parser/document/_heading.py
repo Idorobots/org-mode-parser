@@ -1,4 +1,4 @@
-"""Implementation of :class:`Heading` — an Org Mode heading / sub-heading."""
+"""Implementation of [org_parser.document.Heading][] — an Org Mode heading / sub-heading."""
 
 from __future__ import annotations
 
@@ -64,19 +64,29 @@ class Heading:
 
     Args:
         level: The heading level (count of leading ``*`` characters).
-        document: The root :class:`Document` that contains this heading.
-        parent: The parent :class:`Heading` or :class:`Document`.
+        document: The root [org_parser.document.Document][] that contains this heading.
+        parent: The parent [org_parser.document.Heading][] or [org_parser.document.Document][].
         todo: The TODO keyword (e.g. ``"TODO"``, ``"DONE"``), or *None*.
         is_comment: Whether this heading uses the ``COMMENT`` marker.
         priority: The priority letter or number (e.g. ``"A"``, ``"1"``), or
             *None*.
-        title: The heading title as :class:`RichText`, or *None*.
+        title: The heading title as [org_parser.text.RichText][], or *None*.
         counter: Completion counter object (e.g. ``[1/3]``), or *None*.
         heading_tags: A list of tag strings found on this heading line in source order.
         repeated_tasks: Repeated task entries extracted from ``LOGBOOK``.
         clock_entries: Clock entries extracted from ``LOGBOOK``.
         body: Body elements of the heading (excludes sub-headings).
         children: Direct sub-headings of this heading.
+
+    Example:
+    ```python
+    >>> from org_parser import loads
+    >>> heading = loads("* TODO Heading 1").children[0]
+    >>> heading.title_text
+    'Heading 1'
+    >>> heading.todo
+    'TODO'
+    ```
     """
 
     def __init__(
@@ -152,10 +162,18 @@ class Heading:
             source: Org source text containing exactly one heading.
 
         Returns:
-            The parsed :class:`Heading`.
+            The parsed [org_parser.document.Heading][].
 
         Raises:
             ValueError: If parsing fails or the structure is not one heading.
+
+        Example:
+        ```python
+        >>> from org_parser.document import Heading
+        >>> heading = Heading.from_source("* TODO Heading 1")
+        >>> heading.title_text
+        'Heading 1'
+        ```
         """
         from org_parser._from_source import parse_source_with_extractor
 
@@ -173,15 +191,15 @@ class Heading:
         document: Document,
         parent: Heading | Document,
     ) -> Heading:
-        """Build a :class:`Heading` (and its sub-tree) from a tree-sitter node.
+        """Build a [org_parser.document.Heading][] (and its sub-tree) from a tree-sitter node.
 
         Args:
             node: A tree-sitter node of type ``heading``.
             document: The root document that contains this heading.
-            parent: The parent :class:`Heading` or :class:`Document`.
+            parent: The parent [org_parser.document.Heading][] or [org_parser.document.Document][].
 
         Returns:
-            A fully populated :class:`Heading` with recursively built
+            A fully populated [org_parser.document.Heading][] with recursively built
             children.
         """
         level = _extract_level(node, document)
@@ -243,12 +261,24 @@ class Heading:
 
     @property
     def document(self) -> Document:
-        """The :class:`Document` that ultimately contains this heading."""
+        """The [org_parser.document.Document][] that ultimately contains this heading.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads("* TODO Heading 1")
+        >>> heading = documentt.children[0]
+        >>> heading.title_text
+        'Heading 1'
+        >>> heading.document is document
+        True
+        ```
+        """
         return self._document
 
     @document.setter
     def document(self, value: Document) -> None:
-        """Set the owning document and mark this heading as dirty."""
+        """Set the owning document."""
         self._document = value
         self._dirty = True
         self._parent.mark_dirty()
@@ -256,79 +286,165 @@ class Heading:
 
     @property
     def level(self) -> int:
-        """The heading level (count of leading ``*`` characters)."""
+        """The heading level (count of leading ``*`` characters).
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> heading = loads("* TODO Heading 1").children[0]
+        >>> heading.heading_text
+        '* TODO Heading 1'
+        >>> heading.level = 3
+        >>> heading.heading_text
+        '*** TODO Heading 1'
+        ```
+        """
         return self._level
 
     @level.setter
     def level(self, value: int) -> None:
-        """Set the heading level and mark this heading as dirty."""
+        """Set the heading level."""
         self._level = value
         self.mark_dirty()
 
     @property
     def todo(self) -> str | None:
-        """The TODO keyword, or *None* if absent."""
+        """The TODO keyword, or *None* if absent.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> heading = loads("* TODO Heading 1").children[0]
+        >>> heading.title_text
+        'Heading 1'
+        >>> heading.todo = "DONE"
+        >>> heading.todo
+        'DONE'
+        ```
+        """
         return self._todo
 
     @todo.setter
     def todo(self, value: str | None) -> None:
-        """Set the TODO keyword and mark this heading as dirty."""
+        """Set the TODO keyword."""
         self._todo = value
         self.mark_dirty()
 
     @property
     def priority(self) -> str | None:
-        """The priority value (e.g. ``"A"``, ``"1"``), or *None*."""
+        """The priority value (e.g. ``"A"``, ``"1"``), or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> heading = loads("* Heading 1").children[0]
+        >>> heading.heading_text
+        '* Heading 1'
+        >>> heading.priority = "A"
+        >>> heading.heading_text
+        '* [#A] Heading 1'
+        ```
+        """
         return self._priority
 
     @priority.setter
     def priority(self, value: str | None) -> None:
-        """Set the priority value and mark this heading as dirty."""
+        """Set the priority value."""
         self._priority = value
         self.mark_dirty()
 
     @property
     def is_comment(self) -> bool:
-        """Whether this heading is marked with the ``COMMENT`` keyword."""
+        """Whether this heading is marked with the ``COMMENT`` keyword.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> heading = loads("* Heading 1").children[0]
+        >>> heading.heading_text
+        '* Heading 1'
+        >>> heading.is_comment = True
+        >>> heading.heading_text
+        '* COMMENT Heading 1'
+        ```
+        """
         return self._is_comment
 
     @is_comment.setter
     def is_comment(self, value: bool) -> None:
-        """Set heading ``COMMENT`` marker state and mark this heading dirty."""
+        """Set heading ``COMMENT`` marker state."""
         self._is_comment = value
         self.mark_dirty()
 
     @property
     def title(self) -> RichText | None:
-        """The heading title as :class:`RichText`, or *None*."""
+        """The heading title as [org_parser.text.RichText][], or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser.text import RichText
+        >>> from org_parser import loads
+        >>> heading = loads("* TODO Heading 1").children[0]
+        >>> heading.title_text
+        'Heading 1'
+        >>> heading.title = RichText("Updated")
+        >>> heading.title_text
+        'Updated'
+        >>> heading.todo
+        'TODO'
+        ```
+        """
         return self._title
 
     @title.setter
     def title(self, value: RichText | None) -> None:
-        """Set the heading title and mark this heading as dirty."""
+        """Set the heading title."""
         self._title = value
         self._adopt_element(self._title)
         self.mark_dirty()
 
     @property
     def counter(self) -> CompletionCounter | None:
-        """The completion counter object, or *None* if absent."""
+        """The completion counter object, or *None* if absent.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> from org_parser.text import CompletionCounter
+        >>> heading = loads("* Heading 1").children[0]
+        >>> print(str(heading))
+        * Heading 1
+        >>> heading.counter = CompletionCounter("1/2")
+        >>> print(str(heading))
+        * [1/2] Heading 1
+        ```
+        """
         return self._counter
 
     @counter.setter
     def counter(self, value: CompletionCounter | None) -> None:
-        """Set the completion counter and mark this heading as dirty."""
+        """Set the completion counter."""
         self._counter = value
         self.mark_dirty()
 
     @property
     def heading_tags(self) -> list[str]:
-        """Tag strings found on this heading line, in source order."""
+        """Tag strings found on this heading line, in source order.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> heading = loads("* TODO Heading 1").children[0]
+        >>> heading.heading_tags = ["work", "docs"]
+        >>> heading.heading_tags
+        ['work', 'docs']
+        ```
+        """
         return self._heading_tags
 
     @heading_tags.setter
     def heading_tags(self, value: list[str]) -> None:
-        """Set tag strings on this heading line and mark it as dirty."""
+        """Set tag strings on this heading line."""
         self._heading_tags = value
         self.mark_dirty()
 
@@ -339,6 +455,19 @@ class Heading:
         Returns document FILETAGS, then each ancestor's ``heading_tags``
         (outermost first), then this heading's own ``heading_tags``.
         Duplicates are removed; the first occurrence is kept.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> heading = loads('''
+        ... #+FILETAGS: :tag1:
+        ... * TODO Heading 1    :tag2:
+        ... ''').children[0]
+        >>> heading.heading_tags
+        ['tag2']
+        >>> heading.tags
+        ['tag1', 'tag2']
+        ```
         """
         result: list[str] = []
         seen: set[str] = set()
@@ -353,10 +482,25 @@ class Heading:
     def heading_category(self) -> RichText | None:
         """The ``CATEGORY`` value from this heading's own ``PROPERTIES`` drawer.
 
-        Returns the :class:`RichText` value of the ``CATEGORY`` node property
+        Returns the [org_parser.text.RichText][] value of the ``CATEGORY`` node property
         when the heading has a ``PROPERTIES`` drawer containing that key, or
-        *None* otherwise.  Use :attr:`category` to get the fully-inherited
+        *None* otherwise.  Use [org_parser.document.Heading.category][] to get the fully-inherited
         effective category.
+
+        Example:
+        ```python
+        >>> from org_parser.text import RichText
+        >>> from org_parser import loads
+        >>> heading = loads('''
+        ... #+CATEGORY: Category
+        ... * TODO Heading 1
+        ... :PROPERTIES:
+        ... :CATEGORY: Heading
+        ... :END:
+        ... ''').children[0]
+        >>> heading.heading_category
+        'Heading'
+        ```
         """
         if self._properties is not None and "CATEGORY" in self._properties:
             return self._properties["CATEGORY"]
@@ -386,10 +530,25 @@ class Heading:
     def category(self) -> RichText | None:
         """The effective category for this heading.
 
-        Returns :attr:`heading_category` when it is set on this heading's own
-        ``PROPERTIES`` drawer.  Otherwise the value is inherited from the
-        parent :class:`Heading` or :class:`Document`, walking up the tree
-        until a category is found or the document level is reached.
+        Returns [org_parser.document.Heading.heading_category][] when it is set
+        on this heading's own ``PROPERTIES`` drawer.  Otherwise the value is
+        inherited from the parent [org_parser.document.Heading][] or
+        [org_parser.document.Document][], walking up the tree until a category
+        is found or the document level is reached.
+
+        Example:
+        ```python
+        >>> from org_parser.text import RichText
+        >>> from org_parser import loads
+        >>> heading = loads('''
+        ... #+CATEGORY: Category
+        ... * TODO Heading 1
+        ... ''').children[0]
+        >>> heading.heading_category
+        None
+        >>> heading.category
+        'Category'
+        ```
         """
         own = self.heading_category
         if own is not None:
@@ -398,42 +557,87 @@ class Heading:
 
     @property
     def scheduled(self) -> Timestamp | None:
-        """The ``SCHEDULED`` planning timestamp, or *None*."""
+        """The ``SCHEDULED`` planning timestamp, or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> heading = loads('''
+        ... * Heading 1
+        ... SCHEDULED: <2026-03-29>
+        ...''').children[0]
+        >>> heading.scheduled.start.year
+        2026
+        ```
+        """
         return self._scheduled
 
     @scheduled.setter
     def scheduled(self, value: Timestamp | None) -> None:
-        """Set the ``SCHEDULED`` planning timestamp and mark dirty."""
+        """Set the ``SCHEDULED`` planning timestamp."""
         self._set_planning_timestamp(SCHEDULED, value)
 
     @property
     def closed(self) -> Timestamp | None:
-        """The ``CLOSED`` planning timestamp, or *None*."""
+        """The ``CLOSED`` planning timestamp, or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser.time import Timestamp
+        >>> from org_parser import loads
+        >>> heading = loads("* Heading 1").children[0]
+        >>> heading.closed = Timestamp.from_source("<2026-03-29 Sun>")
+        >>> heading.closed.start.year
+        2026
+        ```
+        """
         return self._closed
 
     @closed.setter
     def closed(self, value: Timestamp | None) -> None:
-        """Set the ``CLOSED`` planning timestamp and mark dirty."""
+        """Set the ``CLOSED`` planning timestamp."""
         self._set_planning_timestamp(CLOSED, value)
 
     @property
     def deadline(self) -> Timestamp | None:
-        """The ``DEADLINE`` planning timestamp, or *None*."""
+        """The ``DEADLINE`` planning timestamp, or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser.time import Timestamp
+        >>> from org_parser import loads
+        >>> heading = loads("* Heading 1").children[0]
+        >>> heading.deadline = Timestamp.from_source("<2026-03-29 Sun 18:00 -5d>")
+        >>> heading.deadline.start.year
+        2026
+        ```
+        """
         return self._deadline
 
     @deadline.setter
     def deadline(self, value: Timestamp | None) -> None:
-        """Set the ``DEADLINE`` planning timestamp and mark dirty."""
+        """Set the ``DEADLINE`` planning timestamp."""
         self._set_planning_timestamp(DEADLINE, value)
 
     @property
     def body(self) -> list[Element]:
-        """Body elements (excludes sub-headings)."""
+        """Body elements (excludes sub-headings).
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> heading = loads("* TODO Heading 1").children[0]
+        >>> heading.body = [Paragraph.from_source("Add some body text")]
+        >>> print(str(heading))
+        * TODO Heading 1
+        Add some body text
+        ```
+        """
         return self._body
 
     @body.setter
     def body(self, value: list[Element]) -> None:
-        """Set body elements and mark this heading as dirty."""
+        """Set body elements."""
         self._body = value
         self._adopt_elements(self._body)
         self._sync_repeated_tasks()
@@ -442,24 +646,58 @@ class Heading:
 
     @property
     def properties(self) -> Properties | None:
-        """Merged heading ``PROPERTIES`` drawer, or *None*."""
+        """Merged heading ``PROPERTIES`` drawer, or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> from org_parser.element import Properties
+        >>> heading = loads("* TODO Heading 1").children[0]
+        >>> heading.properties = Properties()
+        >>> heading.properties["key"] = RichText("Value")
+        >>> print(str(heading))
+        * TODO Heading 1
+        :PROPERTIES:
+        :key: Value
+        :END:
+        ```
+        """
         return self._properties
 
     @properties.setter
     def properties(self, value: Properties | None) -> None:
-        """Set merged heading ``PROPERTIES`` drawer and mark dirty."""
+        """Set merged heading ``PROPERTIES`` drawer."""
         self._properties = value
         self._adopt_element(self._properties)
         self.mark_dirty()
 
     @property
     def logbook(self) -> Logbook | None:
-        """Merged heading ``LOGBOOK`` drawer, or *None*."""
+        """Merged heading ``LOGBOOK`` drawer, or *None*.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> from org_parser.element import Logbook, Repeat
+        >>> from org_parser.time import Clock, Timestamp
+        >>> heading = loads("* TODO Heading 1").children[0]
+        >>> heading.logbook = Logbook()
+        >>> heading.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
+        >>> ts = Timestamp.from_source("<2025-10-10>")
+        >>> heading.logbook.repeats = [Repeat(after="DONE", before="TODO", timestamp=ts)]
+        >>> print(str(heading))
+        * TODO Heading 1
+        :LOGBOOK:
+        CLOCK: [2025-10-10]
+        - State "DONE"       from "TODO"       <2025-10-10>
+        :END:
+        ```
+        """
         return self._logbook
 
     @logbook.setter
     def logbook(self, value: Logbook | None) -> None:
-        """Set merged heading ``LOGBOOK`` drawer and mark dirty."""
+        """Set merged heading ``LOGBOOK`` drawer."""
         self._logbook = value
         self._adopt_element(self._logbook)
         self._sync_repeated_tasks()
@@ -468,7 +706,23 @@ class Heading:
 
     @property
     def repeated_tasks(self) -> list[Repeat]:
-        """Repeated task entries extracted from this heading's logbook."""
+        """Repeated task entries extracted from this heading's logbook.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> from org_parser.element import Repeat
+        >>> from org_parser.time import Timestamp
+        >>> heading = loads("* TODO Heading 1").children[0]
+        >>> ts = Timestamp.from_source("<2025-10-10>")
+        >>> heading.repeated_tasks = [Repeat(after="DONE", before="TODO", timestamp=ts)]
+        >>> print(str(heading))
+        * TODO Heading 1
+        :LOGBOOK:
+        - State "DONE"       from "TODO"       <2025-10-10>
+        :END:
+        ```
+        """
         return self._repeated_tasks
 
     @repeated_tasks.setter
@@ -480,7 +734,23 @@ class Heading:
         self.mark_dirty()
 
     def add_repeated_task(self, repeat: Repeat) -> None:
-        """Append one repeated task and synchronize it into the logbook."""
+        """Append one repeated task and synchronize it into the logbook.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> from org_parser.element import Repeat
+        >>> from org_parser.time import Timestamp
+        >>> heading = loads("* TODO Heading 1").children[0]
+        >>> ts = Timestamp.from_source("<2025-10-10>")
+        >>> heading.add_repeated_task(Repeat(after="DONE", before="TODO", timestamp=ts))
+        >>> print(str(heading))
+        * TODO Heading 1
+        :LOGBOOK:
+        - State "DONE"       from "TODO"       <2025-10-10>
+        :END:
+        ```
+        """
         self._repeated_tasks = [*self._repeated_tasks, repeat]
         logbook = self._ensure_logbook()
         logbook.repeats = self._repeated_tasks
@@ -488,7 +758,21 @@ class Heading:
 
     @property
     def clock_entries(self) -> list[Clock]:
-        """Clock entries extracted from this heading's logbook."""
+        """Clock entries extracted from this heading's logbook.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> from org_parser.time import Clock
+        >>> heading = loads("* TODO Heading 1").children[0]
+        >>> heading.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
+        >>> print(str(heading))
+        * TODO Heading 1
+        :LOGBOOK:
+        CLOCK: [2025-10-10]
+        :END:
+        ```
+        """
         return self._clock_entries
 
     @clock_entries.setter
@@ -501,7 +785,19 @@ class Heading:
 
     @property
     def parent(self) -> Heading | Document:
-        """The parent :class:`Heading` or :class:`Document`."""
+        """The parent [org_parser.document.Heading][] or [org_parser.document.Document][].
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... * Heading 1
+        ... ** Heading 2
+        ... ''')
+        >>> document[1].parent.title_text
+        'Heading 1'
+        ```
+        """
         return self._parent
 
     @parent.setter
@@ -511,15 +807,27 @@ class Heading:
 
     @property
     def children(self) -> list[Heading]:
-        """Direct sub-headings."""
+        """Direct sub-headings.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... * Heading 1
+        ... ** Heading 2
+        ... ''')
+        >>> document[0].children[0].title_text
+        'Heading 2'
+        ```
+        """
         return self._children
 
     @children.setter
     def children(self, value: list[Heading]) -> None:
-        """Set direct sub-headings, adjust levels, and mark this heading dirty.
+        """Set direct sub-headings, adjust levels,.
 
         Each supplied child heading is adopted (parent set to ``self``) and
-        then checked: if its :attr:`level` is not strictly greater than
+        then checked: if its [org_parser.document.Heading.level][] is not strictly greater than
         ``self.level`` it is shifted — along with its entire descendant
         subtree — so that the invariant ``child.level > self.level`` holds.
         Only headings whose level is actually changed are marked dirty.
@@ -532,27 +840,96 @@ class Heading:
 
     @property
     def is_root(self) -> bool:
-        """Whether this heading is the root node of a document tree."""
+        """Whether this heading is the root node of a document tree.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> heading = loads("* TODO Heading 1").children[0]
+        >>> heading.is_root
+        False
+        ```
+        """
         return False
 
     @property
     def is_leaf(self) -> bool:
-        """Whether this heading has no direct sub-headings."""
+        """Whether this heading has no direct sub-headings.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... * Heading 1
+        ... ** Heading 2
+        ... ''')
+        >>> document[0].is_leaf
+        False
+        >>> document[1].is_leaf
+        True
+        ```
+        """
         return not self._children
 
     @property
     def is_completed(self) -> bool:
-        """Whether this heading's current TODO state is a done state."""
+        """Whether this heading's current TODO state is a done state.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... #+TODO: TODO WAITING | DONE
+        ... * TODO Heading 1
+        ... ** WAITING Heading 2
+        ... ** DONE Heading 3
+        ... ''')
+        >>> document[0].is_completed
+        False
+        >>> document[1].is_completed
+        False
+        >>> document[2].is_completed
+        True
+        ```
+        """
         return self._todo is not None and self._todo in self._document.done_states
 
     @property
     def has_timestamp(self) -> bool:
-        """Whether this heading has any planning, repeat, or clock timestamp."""
+        """Whether this heading has any planning, repeat, or clock timestamp.
+
+        Example:
+        ```python
+        >>> document = loads('''
+        ... * Heading 1
+        ... ** Heading 2
+        ... SCHEDULED: <2026-03-29>
+        ... ''')
+        >>> document[0].has_timestamp
+        False
+        >>> document[1].has_timestamp
+        True
+        ```
+        """
         return bool(self.timestamps)
 
     @property
     def timestamps(self) -> list[Timestamp]:
-        """All timestamps attached to this heading's planning and logbook data."""
+        """All timestamps attached to this heading's planning and logbook data.
+
+        Example:
+        ```python
+        >>> document = loads('''
+        ... * Heading 1
+        ... ** Heading 2
+        ... SCHEDULED: <2026-03-29>
+        ... ''')
+        >>> document[0].timestamps
+        []
+        >>> len(document[1].timestamps)
+        1
+        ```
+        """
         collected: list[Timestamp] = []
         collected.extend(
             planning
@@ -561,15 +938,24 @@ class Heading:
         )
         collected.extend(repeat.timestamp for repeat in self._repeated_tasks)
         collected.extend(
-            clock.timestamp
-            for clock in self._clock_entries
-            if clock.timestamp is not None
+            clock.timestamp for clock in self._clock_entries if clock.timestamp is not None
         )
         return collected
 
     @property
     def latest_timestamp(self) -> Timestamp | None:
-        """Latest timestamp across planning values and logbook-derived timestamps."""
+        """Latest timestamp across planning values and logbook-derived timestamps.
+
+        Example:
+        ```python
+        >>> document = loads('''
+        ... * Heading 1
+        ... SCHEDULED: <2026-03-29>
+        ... ''')
+        >>> document[0].latest_timestamp is document[0].scheduled
+        True
+        ```
+        """
         values = self.timestamps
         if not values:
             return None
@@ -580,7 +966,19 @@ class Heading:
 
     @property
     def earliest_timestamp(self) -> Timestamp | None:
-        """Earliest timestamp across planning values and logbook-derived timestamps."""
+        """Earliest timestamp across planning values and logbook-derived timestamps.
+
+        Example:
+        ```python
+        >>> document = loads('''
+        ... * Heading 1
+        ... CLOSED: <2026-03-29>
+        ... DEADLINE: <2026-03-10>
+        ... ''')
+        >>> document[0].earliest_timestamp is document[0].closed
+        False
+        ```
+        """
         values = self.timestamps
         if not values:
             return None
@@ -598,7 +996,18 @@ class Heading:
 
     @property
     def heading_text(self) -> str:
-        """Stringified heading line including stars and line-level fields."""
+        """Stringified heading line including stars and line-level fields.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> heading = loads("* TODO Heading 1  :tag:").children[0]
+        >>> heading.title_text
+        'Heading 1'
+        >>> heading.heading_text
+        '* TODO Heading 1  :tag:'
+        ```
+        """
         rendered = str(self)
         first_line, _, _ = rendered.partition("\n")
         return first_line
@@ -609,14 +1018,46 @@ class Heading:
         return self._dirty
 
     def mark_dirty(self) -> None:
-        """Mark this heading dirty and bubble to its parent chain."""
+        """Mark this heading dirty and bubble to its parent chain.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... * Heading 1
+        ... CLOSED: <2025-10-10>
+        ... SCHEDULED: <2025-10-10>
+        ... ''')
+        >>> document[0].mark_dirty()
+        >>> print(document.render())
+        * Heading 1
+        SCHEDULED: <2025-10-10> CLOSED: <2025-10-10>
+        ```
+        """
         if self._dirty:
             return
         self._dirty = True
         self._parent.mark_dirty()
 
     def reformat(self) -> None:
-        """Recursively mark heading descendants dirty, then self dirty."""
+        """Reformat heading descendants and this heading.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... * Heading 1
+        ... ** Heading 2
+        ... CLOSED: <2025-10-10>
+        ... SCHEDULED: <2025-10-10>
+        ... ''')
+        >>> document[0].reformat()
+        >>> print(document.render())
+        * Heading 1
+        ** Heading 2
+        SCHEDULED: <2025-10-10> CLOSED: <2025-10-10>
+        ```
+        """
         if self._title is not None:
             self._title.reformat()
         if self._counter is not None:
@@ -700,7 +1141,7 @@ class Heading:
         planning_keyword: str,
         value: Timestamp | None,
     ) -> None:
-        """Set one planning timestamp field and mark this heading as dirty."""
+        """Set one planning timestamp field."""
         if planning_keyword == SCHEDULED:
             self._scheduled = value
         elif planning_keyword == DEADLINE:
@@ -713,7 +1154,22 @@ class Heading:
 
     @property
     def siblings(self) -> list[Heading]:
-        """Other headings at the same level under the same parent."""
+        """Other headings at the same level under the same parent.
+
+        Example:
+        ```python
+        >>> from org_parser import loads
+        >>> document = loads('''
+        ... * Heading 1
+        ... ** Heading 2
+        ... ** Heading 3
+        ... ''')
+        >>> document[0].siblings
+        []
+        >>> document[1].siblings[0].title_text
+        'Heading 3'
+        ```
+        """
         return [h for h in self._parent.children if h is not self]
 
     def render(self) -> str:
@@ -874,9 +1330,7 @@ def _extract_body(
     body: list[Element] = []
     properties_node = node.child_by_field_name("properties")
     if properties_node is not None:
-        properties_drawers.append(
-            Properties.from_node(properties_node, document, parent=parent)
-        )
+        properties_drawers.append(Properties.from_node(properties_node, document, parent=parent))
 
     section_node = node.child_by_field_name("body")
     if section_node is None:
@@ -888,9 +1342,7 @@ def _extract_body(
 
     for child in section_node.named_children:
         if child.type == PROPERTY_DRAWER:
-            properties_drawers.append(
-                Properties.from_node(child, document, parent=parent)
-            )
+            properties_drawers.append(Properties.from_node(child, document, parent=parent))
         elif child.type == LOGBOOK_DRAWER:
             logbook_drawers.append(Logbook.from_node(child, document, parent=parent))
         elif child.type == DRAWER:
@@ -976,7 +1428,7 @@ def _recover_heading_body_lists_and_extract_clocks(
     This scans only the element classes where repeat/clock records are
     expected in heading bodies: ``List``, ``Logbook``, and custom ``Drawer``
     contents. Any list item that matches repeated-task syntax is converted
-    in-place to :class:`Repeat` without marking the tree dirty, mirroring
+    in-place to [org_parser.element.Repeat][] without marking the tree dirty, mirroring
     parse-time semantic recovery behavior.
 
     Args:
@@ -1075,7 +1527,7 @@ def shift_heading_subtree(heading: Heading, *, delta: int) -> None:
     """Add *delta* to *heading* level and all its descendants', marking each dirty.
 
     The parent chain of *heading* must already be set correctly before calling
-    this function so that :meth:`Heading.mark_dirty` propagates through the
+    this function so that [org_parser.document.Heading.mark_dirty][] propagates through the
     right owners.
 
     Args:

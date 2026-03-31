@@ -28,9 +28,7 @@ def test_rich_text_setter_marks_dirty() -> None:
 def test_rich_text_mutation_bubbles_to_heading_and_document() -> None:
     """Mutating heading title rich text marks heading and document dirty."""
     document = Document(filename="doc.org")
-    heading = Heading(
-        level=1, document=document, parent=document, title=RichText("Old")
-    )
+    heading = Heading(level=1, document=document, parent=document, title=RichText("Old"))
     assert document.dirty is False
     assert heading.dirty is False
     assert heading.title is not None

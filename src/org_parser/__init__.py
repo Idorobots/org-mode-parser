@@ -1,7 +1,7 @@
 """org_parser — Python bindings for the tree-sitter org-mode parser.
 
 This package provides convenience helpers for loading and dumping Org Mode
-documents as :class:`org_parser.document.Document` instances.
+documents as [org_parser.document.Document][] instances.
 """
 
 from __future__ import annotations
@@ -21,7 +21,15 @@ def load(filename: str) -> Document:
         filename: Path to the Org Mode file.
 
     Returns:
-        Parsed :class:`~org_parser.document.Document` instance.
+        Parsed [org_parser.document.Document][] instance.
+
+    Example:
+    ```python
+    >>> from org_parser import load
+    >>> document = load('path/to/file.org')
+    >>> document.children[0].title_text
+    'Some heading'
+    ```
     """
     path = Path(filename)
     source = path.read_bytes()
@@ -37,7 +45,15 @@ def loads(input: str, filename: str | None = None) -> Document:
         filename: Optional filename to assign to the parsed document.
 
     Returns:
-        Parsed :class:`~org_parser.document.Document` instance.
+        Parsed [org_parser.document.Document][] instance.
+
+    Example:
+    ```python
+    >>> from org_parser import loads
+    >>> document = loads("* TODO Heading 1")
+    >>> document.children[0].todo
+    'TODO'
+    ```
     """
     assigned_filename = filename if filename is not None else ""
     source = input.encode()
@@ -58,6 +74,14 @@ def dumps(document: Document) -> str:
 
     Returns:
         Full Org Mode source text.
+
+    Example:
+    ```python
+    >>> from org_parser import dumps, loads
+    >>> document = loads("* TODO Heading 1")
+    >>> dumps(document).startswith("* TODO")
+    True
+    ```
     """
     return document.render()
 
@@ -66,7 +90,7 @@ def dump(document: Document, filename: str | None = None) -> None:
     """Write a parsed document to disk.
 
     The output path is *filename* when provided; otherwise
-    :attr:`document.filename <org_parser.document.Document.filename>`.
+    [document.filename][org_parser.document.Document.filename].
 
     Args:
         document: Parsed document instance.
@@ -74,6 +98,17 @@ def dump(document: Document, filename: str | None = None) -> None:
 
     Raises:
         ValueError: If neither *filename* nor ``document.filename`` is set.
+
+    Example:
+    ```python
+    >>> from pathlib import Path
+    >>> from org_parser import dump, loads
+    >>> document = loads("* TODO Heading 1")
+    >>> dump(document, 'path/to/file.org')
+    >>> out = Path('path/to/file.org')
+    >>> out.read_text().startswith("* TODO")
+    True
+    ```
     """
     target = filename if filename is not None else document.filename
     if target == "":
