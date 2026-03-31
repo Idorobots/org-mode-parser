@@ -20,6 +20,7 @@ from org_parser._nodes import (
     TS_YEAR,
 )
 from org_parser.element._element import build_semantic_repr
+from org_parser.text import InlineObject
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -30,7 +31,7 @@ __all__ = ["Timestamp"]
 
 
 @dataclass(slots=True)
-class Timestamp:
+class Timestamp(InlineObject):
     """Parsed Org timestamp with component-level fields.
 
     All fields are mutable.  Mutating any field marks the instance dirty;

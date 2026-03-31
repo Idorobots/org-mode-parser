@@ -110,7 +110,7 @@ class InlineEntity(InlineObject):
 
 
 @dataclass(frozen=True, slots=True)
-class CompletionCounter(_InlineBase):
+class CompletionCounter(InlineObject):
     """Completion counter object, e.g. ``[1/3]`` or ``[50%]``.
 
     Example:
@@ -131,7 +131,7 @@ class CompletionCounter(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class Bold(_InlineBase):
+class Bold(InlineObject):
     """Bold inline markup object."""
 
     body: list[InlineObject]
@@ -142,7 +142,7 @@ class Bold(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class Italic(_InlineBase):
+class Italic(InlineObject):
     """Italic inline markup object."""
 
     body: list[InlineObject]
@@ -153,7 +153,7 @@ class Italic(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class Underline(_InlineBase):
+class Underline(InlineObject):
     """Underline inline markup object."""
 
     body: list[InlineObject]
@@ -164,7 +164,7 @@ class Underline(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class StrikeThrough(_InlineBase):
+class StrikeThrough(InlineObject):
     """Strike-through inline markup object."""
 
     body: list[InlineObject]
@@ -175,7 +175,7 @@ class StrikeThrough(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class Subscript(_InlineBase):
+class Subscript(InlineObject):
     """Subscript inline object."""
 
     body: list[InlineObject]
@@ -191,7 +191,7 @@ class Subscript(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class Superscript(_InlineBase):
+class Superscript(InlineObject):
     """Superscript inline object."""
 
     body: list[InlineObject]
@@ -207,7 +207,7 @@ class Superscript(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class Verbatim(_InlineBase):
+class Verbatim(InlineObject):
     """Verbatim inline markup object."""
 
     body: str
@@ -218,7 +218,7 @@ class Verbatim(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class Code(_InlineBase):
+class Code(InlineObject):
     """Inline code markup object."""
 
     body: str
@@ -229,7 +229,7 @@ class Code(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class ExportSnippet(_InlineBase):
+class ExportSnippet(InlineObject):
     """Export snippet object, e.g. ``@@html:<em>@@``."""
 
     backend: str
@@ -242,7 +242,7 @@ class ExportSnippet(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class FootnoteReference(_InlineBase):
+class FootnoteReference(InlineObject):
     """Footnote reference object."""
 
     label: str | None = None
@@ -261,7 +261,7 @@ class FootnoteReference(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class Citation(_InlineBase):
+class Citation(InlineObject):
     """Citation object."""
 
     body: str | None = None
@@ -275,7 +275,7 @@ class Citation(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class InlineSourceBlock(_InlineBase):
+class InlineSourceBlock(InlineObject):
     """Inline source block object."""
 
     language: str
@@ -290,7 +290,7 @@ class InlineSourceBlock(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class Macro(_InlineBase):
+class Macro(InlineObject):
     """Macro call object, e.g. ``{{{name}}}`` or ``{{{name(args)}}}``."""
 
     name: str
@@ -304,7 +304,7 @@ class Macro(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class InlineBabelCall(_InlineBase):
+class InlineBabelCall(InlineObject):
     """Inline babel call object, e.g. ``call_double[:exports none](n=4)``.
 
     Represents the inline form of an Org babel call that can appear inside
@@ -331,7 +331,7 @@ class InlineBabelCall(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class PlainLink(_InlineBase):
+class PlainLink(InlineObject):
     """Plain link object."""
 
     link_type: str
@@ -343,7 +343,7 @@ class PlainLink(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class AngleLink(_InlineBase):
+class AngleLink(InlineObject):
     """Angle link object."""
 
     path: str
@@ -357,7 +357,7 @@ class AngleLink(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class RegularLink(_InlineBase):
+class RegularLink(InlineObject):
     """Regular bracket link object."""
 
     path: str
@@ -371,7 +371,7 @@ class RegularLink(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class Target(_InlineBase):
+class Target(InlineObject):
     """Target object, e.g. ``<<name>>``."""
 
     value: str
@@ -382,7 +382,7 @@ class Target(_InlineBase):
 
 
 @dataclass(frozen=True, slots=True)
-class RadioTarget(_InlineBase):
+class RadioTarget(InlineObject):
     """Radio target object, e.g. ``<<<phrase>>>``."""
 
     body: list[InlineObject]
