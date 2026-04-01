@@ -18,8 +18,8 @@ def test_repeat_parses_logbook_item_without_note() -> None:
     )
 
     heading = document.children[0]
-    assert len(heading.repeated_tasks) == 1
-    repeat = heading.repeated_tasks[0]
+    assert len(heading.repeats) == 1
+    repeat = heading.repeats[0]
     assert isinstance(repeat, Repeat)
     assert repeat.after == "DONE"
     assert repeat.before == "TODO"
@@ -37,7 +37,7 @@ def test_invalid_repeat_with_trailing_chars() -> None:
         ":END:\n"
     )
 
-    assert len(document.children[0].repeated_tasks) == 0
+    assert len(document.children[0].repeats) == 0
     assert len(document.errors) == 1
 
 
@@ -51,7 +51,7 @@ def test_repeat_uses_entire_item_body_as_note_payload() -> None:
         ":END:\n"
     )
 
-    repeat = document.children[0].repeated_tasks[0]
+    repeat = document.children[0].repeats[0]
     assert len(repeat.body) == 1
     assert isinstance(repeat.body[0], Paragraph)
     assert str(repeat.body[0]) == "One note paragraph.\n"
@@ -64,7 +64,7 @@ def test_repeat_mutation_bubbles_to_list_logbook_and_heading() -> None:
     )
 
     heading = document.children[0]
-    repeat = heading.repeated_tasks[0]
+    repeat = heading.repeats[0]
 
     repeat.after = "CANCELLED"
     repeat.body = [Paragraph(body=RichText("not needed"), parent=repeat)]
@@ -76,13 +76,13 @@ def test_repeat_mutation_bubbles_to_list_logbook_and_heading() -> None:
     assert 'State "CANCELLED"' in str(heading.logbook)
 
 
-def test_repeated_tasks_setter_creates_logbook_when_missing() -> None:
-    """Assigning repeated tasks populates an initially empty heading logbook."""
+def test_repeats_setter_creates_logbook_when_missing() -> None:
+    """Assigning repeats populates an initially empty heading logbook."""
     document = loads("* H\nBody\n")
     heading = document.children[0]
     assert len(heading.logbook) == 0
 
-    heading.repeated_tasks = [
+    heading.repeats = [
         Repeat(
             after="DONE",
             before="TODO",
@@ -101,11 +101,11 @@ def test_repeated_tasks_setter_creates_logbook_when_missing() -> None:
 
     assert isinstance(heading.logbook, Logbook)
     assert len(heading.logbook.repeats) == 1
-    assert len(heading.repeated_tasks) == 1
+    assert len(heading.repeats) == 1
     assert 'State "DONE"' in str(heading.logbook)
 
 
-def test_repeated_tasks_append_creates_logbook_when_missing() -> None:
+def test_repeats_append_creates_logbook_when_missing() -> None:
     """Adding a task via ``add_repeated_task`` creates a logbook if absent."""
     document = loads("* H\n")
     heading = document.children[0]
@@ -128,7 +128,7 @@ def test_repeated_tasks_append_creates_logbook_when_missing() -> None:
     )
 
     assert isinstance(heading.logbook, Logbook)
-    assert len(heading.repeated_tasks) == 1
+    assert len(heading.repeats) == 1
     assert len(heading.logbook.repeats) == 1
 
 
@@ -209,7 +209,7 @@ def test_heading_body_lists_are_recovered_for_repeats() -> None:
     assert isinstance(heading.body[0], List)
     parsed = heading.body[0]
     assert isinstance(parsed.items[0], Repeat)
-    assert heading.repeated_tasks == [parsed.items[0]]
+    assert heading.repeats == [parsed.items[0]]
 
 
 def test_heading_body_nested_lists_are_not_recovered_for_repeats() -> None:
@@ -226,7 +226,7 @@ def test_heading_body_nested_lists_are_not_recovered_for_repeats() -> None:
     assert isinstance(outer.items[0].body[0], List)
     nested = outer.items[0].body[0]
     assert isinstance(nested.items[0], Repeat) is False
-    assert heading.repeated_tasks == []
+    assert heading.repeats == []
 
 
 def test_heading_clock_cache_ignores_non_drawer_body_clock_entries() -> None:

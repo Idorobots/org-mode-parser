@@ -273,7 +273,10 @@ Mark dirty is required for the append to take effect - could use a custom list w
 ** TODO Heading/Element .line and .column
 The line and column numbers are useful for sorting the nodes/elements. It makes sense to add these as attributes. They should delegate to the internal tree-sitter node start line and column if available or return =None= if not available.
 
-** TODO Rename Heading.repeated_tasks to repeats to match the logbook.
+** DONE Rename Heading.repeated_tasks to repeats to match the logbook.
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 19:08]
+:END:
 Update the heading class field name and tests. Make sure to update the documentation examples.
 
 * Initial release

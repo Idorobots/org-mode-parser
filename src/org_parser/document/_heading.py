@@ -74,7 +74,7 @@ class Heading:
         title: The heading title as [org_parser.text.RichText][], or *None*.
         counter: Completion counter object (e.g. ``[1/3]``), or *None*.
         heading_tags: A list of tag strings found on this heading line in source order.
-        repeated_tasks: Repeated task entries extracted from ``LOGBOOK``.
+        repeats: Repeated task entries extracted from ``LOGBOOK``.
         clock_entries: Clock entries extracted from ``LOGBOOK``.
         body: Body elements of the heading (excludes sub-headings).
         children: Direct sub-headings of this heading.
@@ -107,7 +107,7 @@ class Heading:
         deadline: Timestamp | None = None,
         properties: Properties | None = None,
         logbook: Logbook | None = None,
-        repeated_tasks: Sequence[Repeat] = (),
+        repeats: Sequence[Repeat] = (),
         clock_entries: Sequence[Clock] = (),
         body: Sequence[Element] = (),
         children: Sequence[Heading] = (),
@@ -126,7 +126,7 @@ class Heading:
         self._deadline = deadline
         self._properties = properties if properties is not None else Properties()
         self._logbook = logbook if logbook is not None else Logbook()
-        self._repeated_tasks: list[Repeat] = list(repeated_tasks)
+        self._repeats: list[Repeat] = list(repeats)
         self._clock_entries: list[Clock] = list(clock_entries)
         self._body: list[Element] = list(body)
         self._children: list[Heading] = list(children)
@@ -139,7 +139,7 @@ class Heading:
         self._adopt_element(self._logbook)
         self._adopt_elements(self._body)
         self._adopt_elements(self._children)
-        self._sync_repeated_tasks()
+        self._sync_repeats()
         self._sync_clock_entries()
 
     # -- factory method ------------------------------------------------------
@@ -232,7 +232,7 @@ class Heading:
         heading._adopt_element(heading._properties)
         heading._adopt_element(heading._logbook)
         heading._body = body
-        heading._sync_repeated_tasks()
+        heading._sync_repeats()
         heading._sync_clock_entries()
 
         # Recursively build sub-headings.
@@ -631,7 +631,7 @@ class Heading:
         """Set body elements."""
         self._body = value
         self._adopt_elements(self._body)
-        self._sync_repeated_tasks()
+        self._sync_repeats()
         self._sync_clock_entries()
         self.mark_dirty()
 
@@ -700,12 +700,12 @@ class Heading:
         """
         self._logbook = value if value is not None else Logbook(parent=self)
         self._adopt_element(self._logbook)
-        self._sync_repeated_tasks()
+        self._sync_repeats()
         self._sync_clock_entries()
         self.mark_dirty()
 
     @property
-    def repeated_tasks(self) -> list[Repeat]:
+    def repeats(self) -> list[Repeat]:
         """Repeated task entries extracted from this heading's logbook.
 
         Example:
@@ -715,7 +715,7 @@ class Heading:
         >>> from org_parser.time import Timestamp
         >>> heading = loads("* TODO Heading 1").children[0]
         >>> ts = Timestamp.from_source("<2025-10-10>")
-        >>> heading.repeated_tasks = [Repeat(after="DONE", before="TODO", timestamp=ts)]
+        >>> heading.repeats = [Repeat(after="DONE", before="TODO", timestamp=ts)]
         >>> print(str(heading))
         * TODO Heading 1
         :LOGBOOK:
@@ -723,14 +723,14 @@ class Heading:
         :END:
         ```
         """
-        return self._repeated_tasks
+        return self._repeats
 
-    @repeated_tasks.setter
-    def repeated_tasks(self, value: list[Repeat]) -> None:
-        """Set repeated tasks and synchronize them into the logbook drawer."""
-        self._repeated_tasks = value
+    @repeats.setter
+    def repeats(self, value: list[Repeat]) -> None:
+        """Set repeats and synchronize them into the logbook drawer."""
+        self._repeats = value
         logbook = self._ensure_logbook()
-        logbook.repeats = self._repeated_tasks
+        logbook.repeats = self._repeats
         self.mark_dirty()
 
     def add_repeated_task(self, repeat: Repeat) -> None:
@@ -751,9 +751,9 @@ class Heading:
         :END:
         ```
         """
-        self._repeated_tasks = [*self._repeated_tasks, repeat]
+        self._repeats = [*self._repeats, repeat]
         logbook = self._ensure_logbook()
-        logbook.repeats = self._repeated_tasks
+        logbook.repeats = self._repeats
         self.mark_dirty()
 
     @property
@@ -936,7 +936,7 @@ class Heading:
             for planning in (self._scheduled, self._closed, self._deadline)
             if planning is not None
         )
-        collected.extend(repeat.timestamp for repeat in self._repeated_tasks)
+        collected.extend(repeat.timestamp for repeat in self._repeats)
         collected.extend(
             clock.timestamp for clock in self._clock_entries if clock.timestamp is not None
         )
@@ -1070,7 +1070,7 @@ class Heading:
             self._closed.reformat()
         self._properties.reformat()
         self._logbook.reformat()
-        for repeat in self._repeated_tasks:
+        for repeat in self._repeats:
             repeat.reformat()
         for clock in self._clock_entries:
             clock.reformat()
@@ -1097,7 +1097,7 @@ class Heading:
         for value in values:
             self._adopt_element(value)
 
-    def _sync_repeated_tasks(self) -> None:
+    def _sync_repeats(self) -> None:
         """Synchronize repeated-task cache from logbook and heading body."""
         body_repeats, _ = _recover_heading_body_lists_and_extract_clocks(
             self._body,
@@ -1105,9 +1105,9 @@ class Heading:
         )
 
         if not body_repeats:
-            self._repeated_tasks = self._logbook.repeats
+            self._repeats = self._logbook.repeats
             return
-        self._repeated_tasks = [*self._logbook.repeats, *body_repeats]
+        self._repeats = [*self._logbook.repeats, *body_repeats]
 
     def _sync_clock_entries(self) -> None:
         """Synchronize clock cache from logbook and heading body."""
@@ -1215,7 +1215,7 @@ class Heading:
             properties=self._properties if _has_non_empty_properties(self._properties) else None,
             logbook=self._logbook if _has_non_empty_logbook(self._logbook) else None,
             heading_tags=self._heading_tags,
-            repeated_tasks=self._repeated_tasks,
+            repeats=self._repeats,
             clock_entries=self._clock_entries,
             body=self._body,
             children=self._children,
