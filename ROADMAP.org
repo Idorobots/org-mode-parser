@@ -105,9 +105,12 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_doc
 #+end_example
 
 Keywords, body and children should be empty lists by default.
-** TODO Dirty stringification omits completion counter
+** DONE Dirty stringification omits completion counter
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_heading.py]]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 14:27]
 :END:
 
 Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_heading.py
@@ -254,6 +257,7 @@ Mark dirty is required for the append to take effect - could use a custom list w
 ** TODO Heading/Element .line and .column
 The line and column numbers are useful for sorting the nodes/elements. It makes sense to add these as attributes. They should delegate to the internal tree-sitter node start line and column if available or return =None= if not available.
 
+** TODO Rename Heading.repeated_tasks to repeats to match the logbook.
 * Initial release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:

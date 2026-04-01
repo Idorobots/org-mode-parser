@@ -1530,6 +1530,8 @@ def shift_heading_subtree(heading: Heading, *, delta: int) -> None:
 def _render_heading_dirty(heading: Heading) -> str:
     """Render a dirty heading from semantic fields only."""
     line_parts: list[str] = ["*" * heading.level]
+    title_text = str(heading.title) if heading.title is not None else None
+    counter_text = str(heading.counter) if heading.counter is not None else None
 
     if heading.todo:
         line_parts.append(heading.todo)
@@ -1540,8 +1542,11 @@ def _render_heading_dirty(heading: Heading) -> str:
     if heading.is_comment:
         line_parts.append("COMMENT")
 
-    if heading.title is not None:
-        line_parts.append(str(heading.title))
+    if counter_text is not None and (title_text is None or counter_text not in title_text):
+        line_parts.append(counter_text)
+
+    if title_text is not None:
+        line_parts.append(title_text)
 
     headline = " ".join(line_parts)
 
