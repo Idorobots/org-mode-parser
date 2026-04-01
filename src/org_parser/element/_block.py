@@ -10,6 +10,7 @@ from org_parser.element._dispatch import body_element_factories
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
+    coerce_element_body,
     element_from_error_or_unknown,
     ensure_trailing_newline,
 )
@@ -60,9 +61,9 @@ class _ContainerBlock(Element):
         return self._body
 
     @body.setter
-    def body(self, value: list[Element]) -> None:
+    def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set block contents."""
-        self._body = value
+        self._body = coerce_element_body(value)
         self._adopt_body(self._body)
         self.mark_dirty()
 

@@ -216,6 +216,43 @@ def test_keyword_and_paragraph_setters_accept_raw_strings() -> None:
     assert str(paragraph.body) == "After\n"
 
 
+def test_document_body_setter_accepts_element_and_raw_string() -> None:
+    """Document body setter accepts one element and raw string input."""
+    document = Document(filename="x.org")
+    paragraph = Paragraph(body=RichText("Body\n"))
+
+    document.body = paragraph
+
+    assert document.body == [paragraph]
+    assert document.body[0].parent is document
+
+    document.body = "Raw body"
+
+    assert len(document.body) == 1
+    assert isinstance(document.body[0], Paragraph)
+    assert str(document.body[0]) == "Raw body"
+    assert document.body[0].parent is document
+
+
+def test_heading_body_setter_accepts_element_and_raw_string() -> None:
+    """Heading body setter accepts one element and raw string input."""
+    document = Document(filename="doc.org")
+    heading = Heading(level=1, document=document, parent=document)
+    paragraph = Paragraph(body=RichText("Body\n"))
+
+    heading.body = paragraph
+
+    assert heading.body == [paragraph]
+    assert heading.body[0].parent is heading
+
+    heading.body = "Raw body"
+
+    assert len(heading.body) == 1
+    assert isinstance(heading.body[0], Paragraph)
+    assert str(heading.body[0]) == "Raw body"
+    assert heading.body[0].parent is heading
+
+
 def test_heading_setters_mark_heading_and_document_dirty() -> None:
     """Heading setter mutations mark both heading and document dirty."""
     document = Document(filename="doc.org")

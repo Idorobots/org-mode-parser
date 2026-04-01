@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from org_parser import loads
-from org_parser.element import Drawer, List, Logbook, Properties, Repeat
+from org_parser.element import Drawer, List, Logbook, Paragraph, Properties, Repeat
 from org_parser.text import RichText
 from org_parser.time import Clock, Timestamp
 
@@ -315,3 +315,48 @@ def test_drawer_body_setter_marks_dirty() -> None:
     assert drawer.dirty is True
     assert document.dirty is True
     assert str(drawer) == ":NOTE:\n:END:\n"
+
+
+def test_drawer_body_setter_accepts_element_and_raw_string() -> None:
+    """Drawer body setter accepts one element and raw string input."""
+    document = loads(":NOTE:\nA\n:END:\n")
+
+    assert isinstance(document.body[0], Drawer)
+    drawer = document.body[0]
+    paragraph = Paragraph(body=RichText("Two\n"))
+
+    drawer.body = paragraph
+
+    assert drawer.body == [paragraph]
+    assert drawer.body[0].parent is drawer
+
+    drawer.body = "raw"
+
+    assert len(drawer.body) == 1
+    assert isinstance(drawer.body[0], Paragraph)
+    assert str(drawer.body[0]) == "raw"
+    assert drawer.body[0].parent is drawer
+    assert str(drawer) == ":NOTE:\nraw\n:END:\n"
+
+
+def test_logbook_body_setter_accepts_element_and_raw_string() -> None:
+    """Logbook body setter accepts one element and raw string input."""
+    document = loads("* H\n")
+    logbook = document.children[0].logbook
+    clock = Clock(duration="0:15")
+
+    logbook.body = clock
+
+    assert logbook.body == [clock]
+    assert logbook.clock_entries == [clock]
+    assert logbook.repeats == []
+    assert clock.parent is logbook
+
+    logbook.body = "plain"
+
+    assert len(logbook.body) == 1
+    assert isinstance(logbook.body[0], Paragraph)
+    assert str(logbook.body[0]) == "plain"
+    assert logbook.body[0].parent is logbook
+    assert logbook.clock_entries == []
+    assert logbook.repeats == []

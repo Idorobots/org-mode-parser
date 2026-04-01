@@ -10,6 +10,7 @@ from org_parser.element._dispatch import body_element_factories
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
+    coerce_element_body,
     element_from_error_or_unknown,
     ensure_trailing_newline,
     node_source,
@@ -108,9 +109,9 @@ class Drawer(Element):
         return self._body
 
     @body.setter
-    def body(self, value: list[Element]) -> None:
+    def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set drawer body."""
-        self._body = value
+        self._body = coerce_element_body(value)
         self._adopt_body(self._body)
         self.mark_dirty()
 
@@ -201,9 +202,9 @@ class Logbook(Drawer):
         return self._body
 
     @body.setter
-    def body(self, value: list[Element]) -> None:
+    def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set drawer body and synchronize extracted logbook entry caches."""
-        self._body = value
+        self._body = coerce_element_body(value)
         self._adopt_body(self._body)
         self._clock_entries = [element for element in self._body if isinstance(element, Clock)]
         self._repeats = _extract_existing_logbook_repeats(self._body)

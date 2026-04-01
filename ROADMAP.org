@@ -282,10 +282,13 @@ This is duplicated elsewhere, please refactor these into a common helper functio
 
 It should ensure that the values are all =RichText= - raw strings can be wrapped into =RichText=.
 
-** TODO Any body setter should accept a list of elements, a single element and a raw string.
+** DONE Any body setter should accept a list of elements, a single element and a raw string.
 :PROPERTIES:
 :capture_time: [2026-03-30 Mon 15:13]
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 00:15]
 :END:
 
 ** TODO Appending to any list should mark the object as dirty

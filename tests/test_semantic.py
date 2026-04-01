@@ -1327,6 +1327,24 @@ class TestElementConvenienceFields:
         )
         assert drawer.body_text == "one\ntwo\n"
 
+    def test_indent_body_setter_accepts_element_and_raw_string(self) -> None:
+        """Indent body setter accepts one element and raw string input."""
+        indent = Indent(indent="  ")
+        paragraph = Paragraph(body=RichText("line\n"))
+
+        indent.body = paragraph
+
+        assert indent.body == [paragraph]
+        assert indent.body[0].parent is indent
+
+        indent.body = "next line"
+
+        assert len(indent.body) == 1
+        assert isinstance(indent.body[0], Paragraph)
+        assert str(indent.body[0]) == "next line"
+        assert indent.body[0].parent is indent
+        assert str(indent) == "next line\n"
+
     def test_body_text_empty_when_body_missing(self) -> None:
         """Element.body_text is empty when no body attribute exists."""
         assert Element().body_text == ""

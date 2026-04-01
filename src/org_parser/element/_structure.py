@@ -17,6 +17,7 @@ from org_parser._node import node_source
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
+    coerce_element_body,
     ensure_trailing_newline,
 )
 
@@ -267,9 +268,9 @@ class Indent(Element):
         return self._body
 
     @body.setter
-    def body(self, value: list[Element]) -> None:
+    def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set nested elements."""
-        self._body = value
+        self._body = coerce_element_body(value)
         self._adopt_body(self._body)
         self.mark_dirty()
 

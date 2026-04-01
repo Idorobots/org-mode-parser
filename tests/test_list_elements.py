@@ -89,6 +89,25 @@ def test_list_item_rich_text_fields_accept_raw_strings() -> None:
     assert str(item.first_line) == "new line"
 
 
+def test_list_item_body_setter_accepts_element_and_raw_string() -> None:
+    """List item body setter accepts one element and raw string input."""
+    item = ListItem(bullet="-", first_line="line")
+    paragraph = Paragraph(body=RichText("detail\n"))
+
+    item.body = paragraph
+
+    assert item.body == [paragraph]
+    assert item.body[0].parent is item
+
+    item.body = "raw detail"
+
+    assert len(item.body) == 1
+    assert isinstance(item.body[0], Paragraph)
+    assert str(item.body[0]) == "raw detail"
+    assert item.body[0].parent is item
+    assert str(item) == "- line\n  raw detail\n"
+
+
 def test_list_item_parses_tag_and_contents_on_same_line() -> None:
     """Descriptive items may include both tag and first-line contents."""
     document = loads("- tag :: item contents\n")

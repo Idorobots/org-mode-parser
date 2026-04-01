@@ -375,6 +375,23 @@ class Element:
         return "Element()"
 
 
+def coerce_element_body(value: Sequence[Element] | Element | str) -> list[Element]:
+    """Return *value* as a mutable list of semantic elements.
+
+    Raw strings are wrapped in a single
+    [org_parser.element.Paragraph][] element.
+    """
+    if isinstance(value, str):
+        from org_parser.element._paragraph import Paragraph
+
+        return [Paragraph(body=value)]
+    if isinstance(value, Element):
+        return [value]
+    if isinstance(value, list):
+        return value
+    return list(value)
+
+
 # ---------------------------------------------------------------------------
 # Shared node utilities
 # ---------------------------------------------------------------------------

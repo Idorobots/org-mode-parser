@@ -129,6 +129,28 @@ def test_container_block_contents_are_mutable_and_adopt_parents() -> None:
     assert str(block) == "#+begin_quote\ntwo\n#+end_quote\n"
 
 
+def test_container_block_body_setter_accepts_element_and_raw_string() -> None:
+    """Container block body setter accepts one element and raw string input."""
+    document = loads("#+begin_quote\none\n#+end_quote\n")
+
+    assert isinstance(document.body[0], QuoteBlock)
+    block = document.body[0]
+    paragraph = Paragraph(body=RichText("two\n"))
+
+    block.body = paragraph
+
+    assert block.body == [paragraph]
+    assert block.body[0].parent is block
+
+    block.body = "three"
+
+    assert len(block.body) == 1
+    assert isinstance(block.body[0], Paragraph)
+    assert str(block.body[0]) == "three"
+    assert block.body[0].parent is block
+    assert str(block) == "#+begin_quote\nthree\n#+end_quote\n"
+
+
 def test_nested_container_content_mutation_bubbles_dirty_state() -> None:
     """Mutating nested content marks the owning block and document dirty."""
     document = loads("#+begin_quote\nold\n#+end_quote\n")
