@@ -97,6 +97,12 @@ class TestParagraph:
         assert isinstance(paragraph, Paragraph)
         assert str(paragraph.body) == "Hello world.\n"
 
+    def test_construction_accepts_raw_string_body(self) -> None:
+        """Paragraph constructor accepts raw strings and stores RichText."""
+        paragraph = Paragraph(body="Hello world.\n")
+        assert isinstance(paragraph.body, RichText)
+        assert str(paragraph.body) == "Hello world.\n"
+
     def test_body_setter_marks_dirty(self) -> None:
         paragraph = Paragraph(body=RichText("Before\n"))
         assert paragraph.dirty is False
@@ -169,6 +175,27 @@ class TestDocumentManual:
         assert any(kw.key == "TODO" for kw in doc.keywords)
         assert len(doc.body) == 1
 
+    def test_constructor_accepts_raw_string_dedicated_keyword_values(self) -> None:
+        """Document constructor accepts raw strings for dedicated keyword values."""
+        doc = Document(
+            filename="full.org",
+            title="My Title",
+            author="An Author",
+            category="work",
+            description="A description.",
+            todo="TODO | DONE",
+        )
+        assert isinstance(doc.title, RichText)
+        assert isinstance(doc.author, RichText)
+        assert isinstance(doc.category, RichText)
+        assert isinstance(doc.description, RichText)
+        assert isinstance(doc.todo, RichText)
+        assert str(doc.title) == "My Title"
+        assert str(doc.author) == "An Author"
+        assert str(doc.category) == "work"
+        assert str(doc.description) == "A description."
+        assert str(doc.todo) == "TODO | DONE"
+
     def test_repr(self) -> None:
         doc = Document(filename="x.org")
         r = repr(doc)
@@ -208,6 +235,14 @@ class TestHeadingManual:
         assert h.closed is None
         assert h.body == []
         assert h.children == []
+
+    def test_constructor_accepts_raw_string_title(self) -> None:
+        """Heading constructor accepts raw string titles."""
+        doc = Document(filename="t.org")
+        heading = Heading(level=1, document=doc, parent=doc, title="My heading")
+        assert isinstance(heading.title, RichText)
+        assert heading.title is not None
+        assert str(heading.title) == "My heading"
 
     def test_document_property_direct_parent(self) -> None:
         doc = Document(filename="t.org")

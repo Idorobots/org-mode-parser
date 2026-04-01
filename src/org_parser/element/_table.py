@@ -19,7 +19,7 @@ from org_parser._nodes import (
     TBLFM_LINE,
 )
 from org_parser.element._element import Element, build_semantic_repr
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_rich_text
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -51,8 +51,8 @@ class TableCell:
     ```
     """
 
-    def __init__(self, *, value: RichText, table: Table) -> None:
-        self._value = value
+    def __init__(self, *, value: RichText | str, table: Table) -> None:
+        self._value = coerce_rich_text(value)
         self._table = table
         self._value.parent = table
 
@@ -62,9 +62,9 @@ class TableCell:
         return self._value
 
     @value.setter
-    def value(self, value: RichText) -> None:
+    def value(self, value: RichText | str) -> None:
         """Set cell value."""
-        self._value = value
+        self._value = coerce_rich_text(value)
         self._value.parent = self._table
         self._table.mark_dirty()
 
@@ -148,7 +148,7 @@ class TableRow:
 
     def __setitem__(self, index: int, value: RichText | str) -> None:
         """Set one column value."""
-        self._cells[index].value = _coerce_rich_text(value)
+        self._cells[index].value = coerce_rich_text(value)
 
 
 class TableRuleRow:
@@ -388,13 +388,6 @@ def _extract_tblfm_formula(
     if line.upper().startswith(prefix.upper()):
         return line[len(prefix) :].strip()
     return line.strip()
-
-
-def _coerce_rich_text(value: RichText | str) -> RichText:
-    """Return *value* as [org_parser.text.RichText][]."""
-    if isinstance(value, RichText):
-        return value
-    return RichText(value)
 
 
 def _render_org_table(rows: list[TableRow | TableRuleRow], formulas: list[str]) -> str:

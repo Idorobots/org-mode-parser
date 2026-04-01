@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from org_parser import loads
-from org_parser.element import Table, TableEl, TableRow, TableRuleRow
+from org_parser.element import Table, TableCell, TableEl, TableRow, TableRuleRow
 from org_parser.text import RichText
 
 
@@ -73,3 +73,16 @@ def test_table_row_mutation_marks_table_dirty() -> None:
     row0.cells[0].value = RichText("Z")
 
     assert table.dirty is True
+
+
+def test_table_cell_constructor_and_setter_accept_raw_strings() -> None:
+    """TableCell accepts raw strings and stores RichText values."""
+    table = Table(rows=[])
+    cell = TableCell(value="A", table=table)
+
+    assert isinstance(cell.value, RichText)
+    assert str(cell.value) == "A"
+
+    cell.value = "B"
+    assert isinstance(cell.value, RichText)
+    assert str(cell.value) == "B"

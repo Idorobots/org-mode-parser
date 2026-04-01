@@ -17,7 +17,7 @@ from org_parser.element._element import (
 from org_parser.element._list import List, ListItem, Repeat
 from org_parser.element._structure import Indent
 from org_parser.element._structure_recovery import attach_affiliated_keywords
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_rich_text
 from org_parser.time import Clock
 
 if TYPE_CHECKING:
@@ -344,7 +344,7 @@ class Properties(Element, MutableMapping[str, RichText]):
         self._properties: dict[str, RichText] = {}
         if properties is not None:
             for key, value in properties.items():
-                self._set_property(key, _coerce_rich_text(value), mark_dirty=False)
+                self._set_property(key, coerce_rich_text(value), mark_dirty=False)
 
     @classmethod
     def from_node(
@@ -395,7 +395,7 @@ class Properties(Element, MutableMapping[str, RichText]):
 
     def __setitem__(self, key: str, value: RichText | str) -> None:
         """Set one property value."""
-        self._set_property(key, _coerce_rich_text(value), mark_dirty=True)
+        self._set_property(key, coerce_rich_text(value), mark_dirty=True)
 
     def __delitem__(self, key: str) -> None:
         """Delete one property key."""
@@ -451,13 +451,6 @@ def _extract_drawer_body_element(
     if factory is None:
         return element_from_error_or_unknown(node, document, parent=parent)
     return factory(node, document, parent=parent)
-
-
-def _coerce_rich_text(value: RichText | str) -> RichText:
-    """Return *value* as [org_parser.text.RichText][]."""
-    if isinstance(value, RichText):
-        return value
-    return RichText(value)
 
 
 def _extract_indent(

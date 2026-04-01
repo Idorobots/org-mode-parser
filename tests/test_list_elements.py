@@ -71,6 +71,24 @@ def test_list_item_mutation_marks_list_and_document_dirty() -> None:
     assert str(parsed) == "- new\n"
 
 
+def test_list_item_rich_text_fields_accept_raw_strings() -> None:
+    """ListItem constructor/setters accept raw strings for rich text fields."""
+    item = ListItem(bullet="-", item_tag="tag", first_line="line")
+
+    assert isinstance(item.item_tag, RichText)
+    assert isinstance(item.first_line, RichText)
+    assert str(item.item_tag) == "tag"
+    assert str(item.first_line) == "line"
+
+    item.item_tag = "new tag"
+    item.first_line = "new line"
+
+    assert isinstance(item.item_tag, RichText)
+    assert isinstance(item.first_line, RichText)
+    assert str(item.item_tag) == "new tag"
+    assert str(item.first_line) == "new line"
+
+
 def test_list_item_parses_tag_and_contents_on_same_line() -> None:
     """Descriptive items may include both tag and first-line contents."""
     document = loads("- tag :: item contents\n")

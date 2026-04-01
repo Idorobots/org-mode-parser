@@ -78,6 +78,20 @@ if TYPE_CHECKING:
 __all__ = ["RichText"]
 
 
+def coerce_rich_text(value: RichText | str) -> RichText:
+    """Return *value* as [org_parser.text.RichText][]."""
+    if isinstance(value, RichText):
+        return value
+    return RichText(value)
+
+
+def coerce_optional_rich_text(value: RichText | str | None) -> RichText | None:
+    """Return *value* as [org_parser.text.RichText][] or ``None``."""
+    if value is None:
+        return None
+    return coerce_rich_text(value)
+
+
 class RichText:
     """Rich text content represented as Org inline objects.
 

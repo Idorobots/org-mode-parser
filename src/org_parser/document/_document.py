@@ -33,7 +33,7 @@ from org_parser.element._element import (
     ensure_trailing_newline,
 )
 from org_parser.element._keyword import Keyword
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_optional_rich_text
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -109,11 +109,11 @@ class Document:
         self,
         *,
         filename: str,
-        title: RichText | None = None,
-        author: RichText | None = None,
-        category: RichText | None = None,
-        description: RichText | None = None,
-        todo: RichText | None = None,
+        title: RichText | str | None = None,
+        author: RichText | str | None = None,
+        category: RichText | str | None = None,
+        description: RichText | str | None = None,
+        todo: RichText | str | None = None,
         keywords: Sequence[Keyword] = (),
         properties: Properties | None = None,
         logbook: Logbook | None = None,
@@ -282,7 +282,7 @@ class Document:
         return kw.value if kw is not None else None
 
     @title.setter
-    def title(self, value: RichText | None) -> None:
+    def title(self, value: RichText | str | None) -> None:
         """Set the ``#+TITLE:`` value."""
         self._set_keyword_value(TITLE, value)
 
@@ -306,7 +306,7 @@ class Document:
         return kw.value if kw is not None else None
 
     @author.setter
-    def author(self, value: RichText | None) -> None:
+    def author(self, value: RichText | str | None) -> None:
         """Set the ``#+AUTHOR:`` value."""
         self._set_keyword_value(AUTHOR, value)
 
@@ -339,7 +339,7 @@ class Document:
         return RichText(stem) if stem else None
 
     @category.setter
-    def category(self, value: RichText | None) -> None:
+    def category(self, value: RichText | str | None) -> None:
         """Set the ``#+CATEGORY:`` value."""
         self._set_keyword_value(CATEGORY, value)
 
@@ -350,7 +350,7 @@ class Document:
         return kw.value if kw is not None else None
 
     @description.setter
-    def description(self, value: RichText | None) -> None:
+    def description(self, value: RichText | str | None) -> None:
         """Set the ``#+DESCRIPTION:`` value."""
         self._set_keyword_value(DESCRIPTION, value)
 
@@ -372,7 +372,7 @@ class Document:
         return kw.value if kw is not None else None
 
     @todo.setter
-    def todo(self, value: RichText | None) -> None:
+    def todo(self, value: RichText | str | None) -> None:
         """Set the ``#+TODO:`` value."""
         self._set_keyword_value(TODO, value)
 
@@ -799,28 +799,30 @@ class Document:
         """Return ``#+TODO:`` keyword values in document order."""
         return [kw.value for kw in self._keywords if kw.key == TODO]
 
-    def _set_keyword_value(self, key: str, value: RichText | None) -> None:
+    def _set_keyword_value(self, key: str, value: RichText | str | None) -> None:
         """Update, create, or remove a keyword entry by key.
 
         If *value* is *None* the keyword is removed from the list.  Otherwise
         the existing keyword's value is updated in place, or a new keyword is
         appended when no entry for *key* exists.
         """
+        coerced = coerce_optional_rich_text(value)
         existing = self._find_last_keyword(key)
-        if value is None:
+        if coerced is None:
             self._keywords = [kw for kw in self._keywords if kw.key != key]
         elif existing is not None:
-            existing.value = value
+            existing.value = coerced
         else:
-            new_kw = Keyword(key=key, value=value, parent=self)
+            new_kw = Keyword(key=key, value=coerced, parent=self)
             self._keywords.append(new_kw)
         self.mark_dirty()
 
-    def _init_set_keyword(self, key: str, value: RichText | None) -> None:
+    def _init_set_keyword(self, key: str, value: RichText | str | None) -> None:
         """Init-time helper: append a keyword for *key* if *value* is not *None*."""
-        if value is None:
+        coerced = coerce_optional_rich_text(value)
+        if coerced is None:
             return
-        self._keywords.append(Keyword(key=key, value=value))
+        self._keywords.append(Keyword(key=key, value=coerced))
 
     def _init_merge_keyword(self, kw: Keyword) -> None:
         """Init-time helper: merge *kw* into the list (last-write-wins).

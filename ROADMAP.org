@@ -228,15 +228,48 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_stru
 
 This should extract the indent from the =whitespace= property of the parse tree.
 * Dev Ex
-** TODO Any method that accepts RichText should also accept raw strings.
+** DONE Any method that accepts RichText should also accept raw strings.
 :PROPERTIES:
 :capture_time: [2026-03-30 Mon 15:10]
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
 :END:
-** TODO Document.properties should accept a dictionary when setting.
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 19:59]
+:END:
+*** DONE src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 19:59]
+:END:
+
+In file src/org_parser/element/_list.py around line 48, near the ~_REPEAT_HEADER_PREFIX_PATTERN = re.compile(~
+
+#+begin_example
+ 
++def _coerce_optional_rich_text(value: RichText | str | None) -> RichText | None:
++    """Return *value* as [org_parser.text.RichText][] or ``None``."""
++    if value is None:
++        return None
++    if isinstance(value, RichText):
++        return value
++    return RichText(value)
++
++
+ class ListItem(Element):
+     r"""One mutable plain-list item with all item-level metadata.
+
+#+end_example
+
+This is duplicated elsewhere, please refactor these into a common helper function.
+** DONE Document.properties should accept a dictionary when setting.
 :PROPERTIES:
 :capture_time: [2026-03-30 Mon 15:12]
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 19:18]
 :END:
 ** DONE Properties constructor should accept a dictionary.
 :PROPERTIES:
@@ -282,6 +315,11 @@ The line and column numbers are useful for sorting the nodes/elements. It makes 
 :END:
 Update the heading class field name and tests. Make sure to update the documentation examples.
 
+** TODO Timestamp.raw should be optional as these can be constructed programatically.
+:PROPERTIES:
+:capture_time: [2026-04-01 Wed 19:50]
+:context: 
+:END:
 * Initial release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:

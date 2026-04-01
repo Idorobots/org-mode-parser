@@ -43,7 +43,7 @@ from org_parser.element._structure_recovery import (
     attach_affiliated_keywords,
 )
 from org_parser.text._inline import CompletionCounter
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_optional_rich_text, coerce_rich_text
 from org_parser.time import Clock, Timestamp
 
 if TYPE_CHECKING:
@@ -99,7 +99,7 @@ class Heading:
         todo: str | None = None,
         is_comment: bool = False,
         priority: str | None = None,
-        title: RichText | None = None,
+        title: RichText | str | None = None,
         counter: CompletionCounter | None = None,
         heading_tags: Sequence[str] = (),
         scheduled: Timestamp | None = None,
@@ -118,7 +118,7 @@ class Heading:
         self._todo = todo
         self._is_comment = is_comment
         self._priority = priority
-        self._title = title
+        self._title = coerce_optional_rich_text(title)
         self._counter = counter
         self._heading_tags: list[str] = list(heading_tags)
         self._scheduled = scheduled
@@ -390,9 +390,9 @@ class Heading:
         return self._title
 
     @title.setter
-    def title(self, value: RichText | None) -> None:
+    def title(self, value: RichText | str | None) -> None:
         """Set the heading title."""
-        self._title = value
+        self._title = coerce_optional_rich_text(value)
         self._adopt_element(self._title)
         self.mark_dirty()
 
@@ -500,7 +500,7 @@ class Heading:
         return None
 
     @heading_category.setter
-    def heading_category(self, value: RichText | None) -> None:
+    def heading_category(self, value: RichText | str | None) -> None:
         """Set or clear the ``CATEGORY`` property in this heading's ``PROPERTIES``.
 
         When *value* is not *None* the ``CATEGORY`` key is created or updated
@@ -514,7 +514,7 @@ class Heading:
                 del self._properties["CATEGORY"]
                 self.mark_dirty()
             return
-        self._properties["CATEGORY"] = value
+        self._properties["CATEGORY"] = coerce_rich_text(value)
         self.mark_dirty()
 
     @property

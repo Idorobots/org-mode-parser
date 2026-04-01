@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING
 
 from org_parser._node import node_source
 from org_parser.element._element import Element
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_rich_text
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -43,7 +43,6 @@ __all__ = [
     "ResultsKeyword",
     "TblnameKeyword",
 ]
-
 # ---------------------------------------------------------------------------
 # Special keyword (zeroth-section)
 # ---------------------------------------------------------------------------
@@ -71,12 +70,12 @@ class Keyword(Element):
         self,
         *,
         key: str,
-        value: RichText,
+        value: RichText | str,
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self._key = key.upper()
-        self._value = value
+        self._value = coerce_rich_text(value)
         self._value.parent = self
 
     @classmethod
@@ -126,9 +125,9 @@ class Keyword(Element):
         return self._value
 
     @value.setter
-    def value(self, value: RichText) -> None:
+    def value(self, value: RichText | str) -> None:
         """Set keyword value."""
-        self._value = value
+        self._value = coerce_rich_text(value)
         self._value.parent = self
         self.mark_dirty()
 

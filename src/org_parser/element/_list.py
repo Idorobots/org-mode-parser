@@ -16,7 +16,7 @@ from org_parser.element._element import (
 )
 from org_parser.element._structure import Indent
 from org_parser.text._inline import LineBreak, PlainText
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_optional_rich_text
 from org_parser.time import Timestamp
 
 if TYPE_CHECKING:
@@ -59,8 +59,8 @@ class ListItem(Element):
         ordered_counter: str | None = None,
         counter_set: str | None = None,
         checkbox: str | None = None,
-        item_tag: RichText | None = None,
-        first_line: RichText | None = None,
+        item_tag: RichText | str | None = None,
+        first_line: RichText | str | None = None,
         body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
@@ -69,8 +69,8 @@ class ListItem(Element):
         self._ordered_counter = ordered_counter
         self._counter_set = counter_set
         self._checkbox = checkbox
-        self._item_tag = item_tag
-        self._first_line = first_line
+        self._item_tag = coerce_optional_rich_text(item_tag)
+        self._first_line = coerce_optional_rich_text(first_line)
         self._body = list(body)
 
         if self._item_tag is not None:
@@ -180,9 +180,9 @@ class ListItem(Element):
         return self._item_tag
 
     @item_tag.setter
-    def item_tag(self, value: RichText | None) -> None:
+    def item_tag(self, value: RichText | str | None) -> None:
         """Set item tag."""
-        self._item_tag = value
+        self._item_tag = coerce_optional_rich_text(value)
         if self._item_tag is not None:
             self._item_tag.parent = self
         self.mark_dirty()
@@ -193,9 +193,9 @@ class ListItem(Element):
         return self._first_line
 
     @first_line.setter
-    def first_line(self, value: RichText | None) -> None:
+    def first_line(self, value: RichText | str | None) -> None:
         """Set first-line rich text."""
-        self._first_line = value
+        self._first_line = coerce_optional_rich_text(value)
         if self._first_line is not None:
             self._first_line.parent = self
         self.mark_dirty()
@@ -324,8 +324,8 @@ class Repeat(ListItem):
         bullet: str = "-",
         ordered_counter: str | None = None,
         counter_set: str | None = None,
-        item_tag: RichText | None = None,
-        first_line: RichText | None = None,
+        item_tag: RichText | str | None = None,
+        first_line: RichText | str | None = None,
         checkbox: str | None = None,
         parent: Document | Heading | Element | None = None,
     ) -> None:

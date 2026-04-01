@@ -92,6 +92,44 @@ def test_document_setters_mark_dirty() -> None:
     assert document.dirty is True
 
 
+def test_document_dedicated_keyword_setters_accept_raw_strings() -> None:
+    """Document keyword setters accept raw strings and store RichText."""
+    document = Document(filename="x.org")
+
+    document.title = "Title"
+    document.author = "Author"
+    document.category = "work"
+    document.description = "desc"
+    document.todo = "TODO | DONE"
+
+    assert isinstance(document.title, RichText)
+    assert isinstance(document.author, RichText)
+    assert isinstance(document.category, RichText)
+    assert isinstance(document.description, RichText)
+    assert isinstance(document.todo, RichText)
+    assert str(document.title) == "Title"
+    assert str(document.author) == "Author"
+    assert str(document.category) == "work"
+    assert str(document.description) == "desc"
+    assert str(document.todo) == "TODO | DONE"
+
+
+def test_heading_title_and_category_setters_accept_raw_strings() -> None:
+    """Heading title and heading_category setters accept raw strings."""
+    document = Document(filename="doc.org")
+    heading = Heading(level=1, document=document, parent=document)
+
+    heading.title = "Heading"
+    heading.heading_category = "sprint"
+
+    assert isinstance(heading.title, RichText)
+    assert heading.title is not None
+    assert str(heading.title) == "Heading"
+    assert isinstance(heading.heading_category, RichText)
+    assert heading.heading_category is not None
+    assert str(heading.heading_category) == "sprint"
+
+
 def test_document_default_drawers_support_immediate_mutation() -> None:
     """Document default drawers can be mutated without prior assignment."""
     document = Document(filename="x.org")
@@ -132,6 +170,21 @@ def test_keyword_value_mutation_bubbles_to_document() -> None:
 
     assert document.title.dirty is True
     assert document.dirty is True
+
+
+def test_keyword_and_paragraph_setters_accept_raw_strings() -> None:
+    """Keyword/Paragraph public setters accept raw strings."""
+    document = Document(filename="x.org")
+    keyword = Keyword(key="LANG", value="en", parent=document)
+    paragraph = Paragraph(body="Before\n", parent=document)
+
+    keyword.value = "fr"
+    paragraph.body = "After\n"
+
+    assert isinstance(keyword.value, RichText)
+    assert isinstance(paragraph.body, RichText)
+    assert str(keyword.value) == "fr"
+    assert str(paragraph.body) == "After\n"
 
 
 def test_heading_setters_mark_heading_and_document_dirty() -> None:

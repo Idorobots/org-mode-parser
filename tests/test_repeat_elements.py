@@ -27,6 +27,27 @@ def test_repeat_parses_logbook_item_without_note() -> None:
     assert repeat.body == []
 
 
+def test_repeat_constructor_accepts_raw_string_rich_text_fields() -> None:
+    """Repeat constructor accepts raw strings for item tag and first line."""
+    repeat = Repeat(
+        after="DONE",
+        before="TODO",
+        timestamp=Timestamp(
+            raw="[2026-03-08 Sun]",
+            is_active=False,
+            start_year=2026,
+            start_month=3,
+            start_day=8,
+        ),
+        item_tag="meta",
+        first_line='State "DONE" from "TODO" ',
+    )
+
+    assert isinstance(repeat.item_tag, RichText)
+    assert isinstance(repeat.first_line, RichText)
+    assert str(repeat.item_tag) == "meta"
+
+
 def test_invalid_repeat_with_trailing_chars() -> None:
     """Repeated-task entries with trailing report errors."""
     document = loads(
