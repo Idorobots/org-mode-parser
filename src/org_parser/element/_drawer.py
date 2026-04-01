@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, MutableMapping, Sequence
+from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import TYPE_CHECKING
 
 from org_parser._nodes import INDENT, NODE_PROPERTY
@@ -337,14 +337,14 @@ class Properties(Element, MutableMapping[str, RichText]):
     def __init__(
         self,
         *,
-        properties: dict[str, RichText] | None = None,
+        properties: Mapping[str, RichText | str] | None = None,
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self._properties: dict[str, RichText] = {}
         if properties is not None:
             for key, value in properties.items():
-                self._set_property(key, value, mark_dirty=False)
+                self._set_property(key, _coerce_rich_text(value), mark_dirty=False)
 
     @classmethod
     def from_node(

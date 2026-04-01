@@ -48,6 +48,18 @@ def test_properties_are_mutable_and_dirty_on_set() -> None:
     assert str(properties) == ":PROPERTIES:\n:ID: beta\n:END:\n"
 
 
+def test_properties_constructor_accepts_string_dictionary_values() -> None:
+    """Constructor wraps raw string dictionary values as rich text."""
+    properties = Properties(properties={"ID": "alpha", "CATEGORY": RichText("work")})
+
+    assert isinstance(properties["ID"], RichText)
+    assert isinstance(properties["CATEGORY"], RichText)
+    assert str(properties["ID"]) == "alpha"
+    assert str(properties["CATEGORY"]) == "work"
+    assert properties["ID"].parent is properties
+    assert properties["CATEGORY"].parent is properties
+
+
 def test_properties_value_mutation_bubbles_to_drawer_and_document() -> None:
     """Mutating one owned rich-text value updates rendered drawer output."""
     document = loads(":PROPERTIES:\n:NAME: old\n:END:\n")
@@ -212,6 +224,20 @@ def test_dirty_heading_drawer_order_is_properties_then_logbook() -> None:
     assert rendered.index(":PROPERTIES:") < rendered.index(":LOGBOOK:")
 
 
+def test_heading_properties_setter_accepts_dictionary_values() -> None:
+    """Heading properties setter accepts raw dictionaries and wraps strings."""
+    document = loads("* H\n")
+    heading = document.children[0]
+
+    heading.properties = {"ID": "abc", "CATEGORY": RichText("work")}
+
+    assert isinstance(heading.properties, Properties)
+    assert isinstance(heading.properties["ID"], RichText)
+    assert str(heading.properties["ID"]) == "abc"
+    assert str(heading.properties["CATEGORY"]) == "work"
+    assert heading.properties["ID"].parent is heading.properties
+
+
 def test_dirty_document_drawer_order_is_properties_then_logbook() -> None:
     """Dirty document rendering prints properties before logbook drawers."""
     document = loads("Text\n")
@@ -222,6 +248,19 @@ def test_dirty_document_drawer_order_is_properties_then_logbook() -> None:
 
     rendered = str(document)
     assert rendered.index(":PROPERTIES:") < rendered.index(":LOGBOOK:")
+
+
+def test_document_properties_setter_accepts_dictionary_values() -> None:
+    """Document properties setter accepts raw dictionaries and wraps strings."""
+    document = loads("Text\n")
+
+    document.properties = {"ID": "abc", "CATEGORY": RichText("work")}
+
+    assert isinstance(document.properties, Properties)
+    assert isinstance(document.properties["ID"], RichText)
+    assert str(document.properties["ID"]) == "abc"
+    assert str(document.properties["CATEGORY"]) == "work"
+    assert document.properties["ID"].parent is document.properties
 
 
 def test_dirty_document_omits_empty_default_drawers() -> None:

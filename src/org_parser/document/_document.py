@@ -465,12 +465,18 @@ class Document:
         return self._properties
 
     @properties.setter
-    def properties(self, value: Properties | None) -> None:
+    def properties(self, value: Properties | dict[str, RichText | str] | None) -> None:
         """Set merged ``PROPERTIES`` drawer.
 
         Assigning ``None`` resets this to an empty drawer instance.
         """
-        self._properties = value if value is not None else Properties(parent=self)
+        if value is None:
+            properties = Properties(parent=self)
+        elif isinstance(value, Properties):
+            properties = value
+        else:
+            properties = Properties(properties=value, parent=self)
+        self._properties = properties
         self._adopt_element(self._properties)
         self.mark_dirty()
 
