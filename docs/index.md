@@ -1,7 +1,6 @@
 # org-parser
 
-`org-parser` provides a semantic Python API for Org documents backed by
-tree-sitter.
+`org-parser` provides a semantic Python API for Org documents backed by tree-sitter.
 
 ## Basic usage
 
@@ -33,14 +32,3 @@ Traverse headings and update content:
 >>> print(dumps(document))
 * Updated heading
 ```
-
-## Top-level API
-
-::: org_parser
-    options:
-      show_root_heading: true
-      members:
-        - load
-        - loads
-        - dump
-        - dumps

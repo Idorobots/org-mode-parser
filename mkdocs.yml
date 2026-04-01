@@ -64,6 +64,8 @@ extra_css:
 nav:
   - Home:
     - Basic usage: index.md
+  - API:
+    - Reading and writing: load.md
     - Document structure: document-structure.md
     - Elements: elements.md
     - Rich text: rich-text.md
