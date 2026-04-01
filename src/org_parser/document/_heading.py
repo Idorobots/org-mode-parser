@@ -124,17 +124,13 @@ class Heading:
         self._scheduled = scheduled
         self._closed = closed
         self._deadline = deadline
-        self._properties = properties
-        self._logbook = logbook
+        self._properties = properties if properties is not None else Properties()
+        self._logbook = logbook if logbook is not None else Logbook()
         self._repeated_tasks: list[Repeat] = (
-            repeated_tasks
-            if repeated_tasks is not None
-            else ([] if logbook is None else logbook.repeats)
+            repeated_tasks if repeated_tasks is not None else self._logbook.repeats
         )
         self._clock_entries: list[Clock] = (
-            clock_entries
-            if clock_entries is not None
-            else ([] if logbook is None else logbook.clock_entries)
+            clock_entries if clock_entries is not None else self._logbook.clock_entries
         )
         self._body: list[Element] = body if body is not None else []
         self._children: list[Heading] = children if children is not None else []
@@ -226,8 +222,6 @@ class Heading:
             scheduled=scheduled,
             deadline=deadline,
             closed=closed,
-            properties=None,
-            logbook=None,
             body=[],
         )
         heading._node = node
@@ -237,8 +231,10 @@ class Heading:
             parent=heading,
             document=document,
         )
-        heading._properties = properties
-        heading._logbook = logbook
+        heading._properties = properties if properties is not None else Properties(parent=heading)
+        heading._logbook = logbook if logbook is not None else Logbook(parent=heading)
+        heading._adopt_element(heading._properties)
+        heading._adopt_element(heading._logbook)
         heading._body = body
         heading._sync_repeated_tasks()
         heading._sync_clock_entries()
@@ -503,7 +499,7 @@ class Heading:
         'Heading'
         ```
         """
-        if self._properties is not None and "CATEGORY" in self._properties:
+        if "CATEGORY" in self._properties:
             return self._properties["CATEGORY"]
         return None
 
@@ -518,12 +514,10 @@ class Heading:
         the heading dirty.
         """
         if value is None:
-            if self._properties is not None and "CATEGORY" in self._properties:
+            if "CATEGORY" in self._properties:
                 del self._properties["CATEGORY"]
                 self.mark_dirty()
             return
-        if self._properties is None:
-            self._properties = Properties(parent=self)
         self._properties["CATEGORY"] = value
         self.mark_dirty()
 
@@ -646,15 +640,13 @@ class Heading:
         self.mark_dirty()
 
     @property
-    def properties(self) -> Properties | None:
-        """Merged heading ``PROPERTIES`` drawer, or *None*.
+    def properties(self) -> Properties:
+        """Merged heading ``PROPERTIES`` drawer.
 
         Example:
         ```python
         >>> from org_parser import loads
-        >>> from org_parser.element import Properties
         >>> heading = loads("* TODO Heading 1").children[0]
-        >>> heading.properties = Properties()
         >>> heading.properties["key"] = RichText("Value")
         >>> print(str(heading))
         * TODO Heading 1
@@ -667,22 +659,24 @@ class Heading:
 
     @properties.setter
     def properties(self, value: Properties | None) -> None:
-        """Set merged heading ``PROPERTIES`` drawer."""
-        self._properties = value
+        """Set merged heading ``PROPERTIES`` drawer.
+
+        Assigning ``None`` resets this to an empty drawer instance.
+        """
+        self._properties = value if value is not None else Properties(parent=self)
         self._adopt_element(self._properties)
         self.mark_dirty()
 
     @property
-    def logbook(self) -> Logbook | None:
-        """Merged heading ``LOGBOOK`` drawer, or *None*.
+    def logbook(self) -> Logbook:
+        """Merged heading ``LOGBOOK`` drawer.
 
         Example:
         ```python
         >>> from org_parser import loads
-        >>> from org_parser.element import Logbook, Repeat
+        >>> from org_parser.element import Repeat
         >>> from org_parser.time import Clock, Timestamp
         >>> heading = loads("* TODO Heading 1").children[0]
-        >>> heading.logbook = Logbook()
         >>> heading.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
         >>> ts = Timestamp.from_source("<2025-10-10>")
         >>> heading.logbook.repeats = [Repeat(after="DONE", before="TODO", timestamp=ts)]
@@ -698,8 +692,11 @@ class Heading:
 
     @logbook.setter
     def logbook(self, value: Logbook | None) -> None:
-        """Set merged heading ``LOGBOOK`` drawer."""
-        self._logbook = value
+        """Set merged heading ``LOGBOOK`` drawer.
+
+        Assigning ``None`` resets this to an empty drawer instance.
+        """
+        self._logbook = value if value is not None else Logbook(parent=self)
         self._adopt_element(self._logbook)
         self._sync_repeated_tasks()
         self._sync_clock_entries()
@@ -1069,10 +1066,8 @@ class Heading:
             self._deadline.reformat()
         if self._closed is not None:
             self._closed.reformat()
-        if self._properties is not None:
-            self._properties.reformat()
-        if self._logbook is not None:
-            self._logbook.reformat()
+        self._properties.reformat()
+        self._logbook.reformat()
         for repeat in self._repeated_tasks:
             repeat.reformat()
         for clock in self._clock_entries:
@@ -1107,9 +1102,6 @@ class Heading:
             document=self._document,
         )
 
-        if self._logbook is None:
-            self._repeated_tasks = body_repeats
-            return
         if not body_repeats:
             self._repeated_tasks = self._logbook.repeats
             return
@@ -1122,19 +1114,13 @@ class Heading:
             document=self._document,
         )
 
-        if self._logbook is None:
-            self._clock_entries = body_clocks
-            return
         if not body_clocks:
             self._clock_entries = self._logbook.clock_entries
             return
         self._clock_entries = [*self._logbook.clock_entries, *body_clocks]
 
     def _ensure_logbook(self) -> Logbook:
-        """Return heading logbook, creating one when absent."""
-        if self._logbook is None:
-            self._logbook = Logbook(parent=self)
-            self._adopt_element(self._logbook)
+        """Return heading logbook drawer."""
         return self._logbook
 
     def _set_planning_timestamp(
@@ -1224,8 +1210,8 @@ class Heading:
             scheduled=self._scheduled,
             deadline=self._deadline,
             closed=self._closed,
-            properties=self._properties,
-            logbook=self._logbook,
+            properties=self._properties if _has_non_empty_properties(self._properties) else None,
+            logbook=self._logbook if _has_non_empty_logbook(self._logbook) else None,
             heading_tags=self._heading_tags,
             repeated_tasks=self._repeated_tasks,
             clock_entries=self._clock_entries,
@@ -1401,8 +1387,8 @@ def _extract_single_heading_node(
     """Return the sole top-level heading semantic node from parsed source."""
     if (
         document.keywords
-        or document.properties is not None
-        or document.logbook is not None
+        or _has_non_empty_properties(document.properties)
+        or _has_non_empty_logbook(document.logbook)
         or document.body
     ):
         return None
@@ -1574,10 +1560,20 @@ def _render_heading_dirty(heading: Heading) -> str:
     if planning_entries:
         parts.append(f"{' '.join(planning_entries)}\n")
 
-    if heading.properties is not None:
+    if _has_non_empty_properties(heading.properties):
         parts.append(ensure_trailing_newline(str(heading.properties)))
-    if heading.logbook is not None:
+    if _has_non_empty_logbook(heading.logbook):
         parts.append(ensure_trailing_newline(str(heading.logbook)))
 
     parts.extend(ensure_trailing_newline(str(element)) for element in heading.body)
     return "".join(parts)
+
+
+def _has_non_empty_properties(properties: Properties) -> bool:
+    """Return whether a properties drawer contains at least one key."""
+    return len(properties) > 0
+
+
+def _has_non_empty_logbook(logbook: Logbook) -> bool:
+    """Return whether a logbook drawer contains at least one body element."""
+    return len(logbook) > 0

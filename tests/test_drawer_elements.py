@@ -68,7 +68,6 @@ def test_heading_properties_drawer_is_exposed_in_heading_body() -> None:
     document = loads("* H\n:PROPERTIES:\n:ID: abc\n:END:\n")
 
     assert isinstance(document.children[0].properties, Properties)
-    assert document.children[0].properties is not None
     assert str(document.children[0].properties["ID"]) == "abc"
     assert document.children[0].body == []
 
@@ -96,7 +95,6 @@ def test_logbook_drawer_extracts_clocks_and_repeats() -> None:
 
     assert isinstance(document.children[0].logbook, Logbook)
     logbook = document.children[0].logbook
-    assert logbook is not None
     assert len(logbook.clock_entries) == 2
     assert all(isinstance(entry, Clock) for entry in logbook.clock_entries)
     assert len(logbook.repeats) == 1
@@ -170,11 +168,9 @@ def test_document_merges_multiple_properties_and_logbooks() -> None:
     )
 
     assert isinstance(document.properties, Properties)
-    assert document.properties is not None
     assert str(document.properties["ID"]) == "two"
     assert str(document.properties["CATEGORY"]) == "work"
     assert isinstance(document.logbook, Logbook)
-    assert document.logbook is not None
     assert len(document.logbook.clock_entries) == 2
     assert document.body == []
 
@@ -196,10 +192,8 @@ def test_heading_merges_multiple_properties_and_logbooks() -> None:
 
     heading = document.children[0]
     assert isinstance(heading.properties, Properties)
-    assert heading.properties is not None
     assert str(heading.properties["ID"]) == "two"
     assert isinstance(heading.logbook, Logbook)
-    assert heading.logbook is not None
     assert len(heading.logbook.clock_entries) == 2
     assert len(heading.body) == 1
     assert isinstance(heading.body[0], Drawer)
@@ -230,12 +224,19 @@ def test_dirty_document_drawer_order_is_properties_then_logbook() -> None:
     assert rendered.index(":PROPERTIES:") < rendered.index(":LOGBOOK:")
 
 
+def test_dirty_document_omits_empty_default_drawers() -> None:
+    """Dirty document rendering omits empty default dedicated drawers."""
+    document = loads("#+TITLE: T\n")
+
+    document.filename = "renamed.org"
+
+    assert str(document) == "#+TITLE: T\n"
+
+
 def test_dirty_document_renders_newline_between_keyword_and_logbook() -> None:
     """Dirty document rendering separates keyword and logbook lines."""
     document = loads("#+TITLE: Logbook")
     document.logbook = Logbook()
-
-    assert document.logbook is not None
     document.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
 
     assert str(document) == ("#+TITLE: Logbook\n" ":LOGBOOK:\n" "CLOCK: [2025-10-10]\n" ":END:\n")
@@ -250,6 +251,16 @@ def test_dirty_heading_render_separates_body_and_child_heading() -> None:
     heading.children = [child]
 
     assert heading.render() == "* H\nBody\n** Child\n"
+
+
+def test_dirty_heading_omits_empty_default_drawers() -> None:
+    """Dirty heading rendering omits empty default dedicated drawers."""
+    document = loads("* H\n")
+    heading = document.children[0]
+
+    heading.todo = "TODO"
+
+    assert str(heading) == "* TODO H\n"
 
 
 def test_drawer_body_setter_marks_dirty() -> None:

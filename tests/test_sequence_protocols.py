@@ -115,7 +115,6 @@ def test_container_block_sequence_uses_body_elements() -> None:
 def test_properties_setitem_accepts_strings_and_rich_text() -> None:
     """Properties accept both rich-text and plain-string assignments."""
     document = loads(":PROPERTIES:\n:ID: old\n:END:\n")
-    assert document.properties is not None
     properties = document.properties
 
     properties["ID"] = "new"

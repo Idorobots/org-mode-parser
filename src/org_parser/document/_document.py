@@ -134,8 +134,8 @@ class Document:
             for kw in keywords:
                 self._init_merge_keyword(kw)
 
-        self._properties = properties
-        self._logbook = logbook
+        self._properties = properties if properties is not None else Properties()
+        self._logbook = logbook if logbook is not None else Logbook()
         self._body: list[Element] = body if body is not None else []
         self._children: list[Heading] = children if children is not None else []
         self._node: tree_sitter.Node | None = None
@@ -219,8 +219,8 @@ class Document:
         # --- extract zeroth-section data ------------------------------------
         kw_list, properties, logbook, body = _parse_zeroth_section(root, parent=doc)
         doc._keywords = kw_list
-        doc._properties = properties
-        doc._logbook = logbook
+        doc._properties = properties if properties is not None else Properties(parent=doc)
+        doc._logbook = logbook if logbook is not None else Logbook(parent=doc)
         doc._body = body
         doc._adopt_keywords(doc._keywords)
         doc._adopt_element(doc._properties)
@@ -448,15 +448,13 @@ class Document:
         self.mark_dirty()
 
     @property
-    def properties(self) -> Properties | None:
-        """Merged zeroth-section ``PROPERTIES`` drawer, or *None*.
+    def properties(self) -> Properties:
+        """Merged zeroth-section ``PROPERTIES`` drawer.
 
         Example:
         ```python
         >>> from org_parser import loads
-        >>> from org_parser.element import Properties
         >>> document = loads("#+TITLE: Properties")
-        >>> document.properties = Properties()
         >>> document.properties["key"] = RichText("Value")
         >>> print(str(document))
         #+TITLE: Properties
@@ -469,21 +467,22 @@ class Document:
 
     @properties.setter
     def properties(self, value: Properties | None) -> None:
-        """Set merged ``PROPERTIES`` drawer."""
-        self._properties = value
+        """Set merged ``PROPERTIES`` drawer.
+
+        Assigning ``None`` resets this to an empty drawer instance.
+        """
+        self._properties = value if value is not None else Properties(parent=self)
         self._adopt_element(self._properties)
         self.mark_dirty()
 
     @property
-    def logbook(self) -> Logbook | None:
-        """Merged zeroth-section ``LOGBOOK`` drawer, or *None*.
+    def logbook(self) -> Logbook:
+        """Merged zeroth-section ``LOGBOOK`` drawer.
 
         Example:
         ```python
-        >>> from org_parser.element import Logbook
         >>> from org_parser.time import Clock
         >>> document = loads("#+TITLE: Logbook")
-        >>> document.logbook = Logbook()
         >>> document.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
         >>> print(str(document))
         #+TITLE: Logbook
@@ -496,8 +495,11 @@ class Document:
 
     @logbook.setter
     def logbook(self, value: Logbook | None) -> None:
-        """Set merged ``LOGBOOK`` drawer."""
-        self._logbook = value
+        """Set merged ``LOGBOOK`` drawer.
+
+        Assigning ``None`` resets this to an empty drawer instance.
+        """
+        self._logbook = value if value is not None else Logbook(parent=self)
         self._adopt_element(self._logbook)
         self.mark_dirty()
 
@@ -773,10 +775,8 @@ class Document:
         """
         for keyword in self._keywords:
             keyword.reformat()
-        if self._properties is not None:
-            self._properties.reformat()
-        if self._logbook is not None:
-            self._logbook.reformat()
+        self._properties.reformat()
+        self._logbook.reformat()
         for element in self._body:
             element.reformat()
         for child in self._children:
@@ -895,6 +895,8 @@ class Document:
         category = self.category
         description = self.description
         todo = self.todo
+        properties = self._properties if _has_non_empty_properties(self._properties) else None
+        logbook = self._logbook if _has_non_empty_logbook(self._logbook) else None
         return build_semantic_repr(
             "Document",
             filename=self._filename,
@@ -904,8 +906,8 @@ class Document:
             description=description,
             todo=todo,
             keywords=extra_kws,
-            properties=self._properties,
-            logbook=self._logbook,
+            properties=properties,
+            logbook=logbook,
             body=self._body,
             children=self._children,
         )
@@ -1080,11 +1082,21 @@ def _render_document_dirty(document: Document) -> str:
         if keyword.key not in _DEDICATED_KEYS
     )
 
-    if document.properties is not None:
+    if _has_non_empty_properties(document.properties):
         parts.append(ensure_trailing_newline(str(document.properties)))
-    if document.logbook is not None:
+    if _has_non_empty_logbook(document.logbook):
         parts.append(ensure_trailing_newline(str(document.logbook)))
 
     parts.extend(ensure_trailing_newline(str(element)) for element in document.body)
 
     return "".join(parts)
+
+
+def _has_non_empty_properties(properties: Properties) -> bool:
+    """Return whether a properties drawer contains at least one key."""
+    return len(properties) > 0
+
+
+def _has_non_empty_logbook(logbook: Logbook) -> bool:
+    """Return whether a logbook drawer contains at least one body element."""
+    return len(logbook) > 0

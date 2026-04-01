@@ -607,8 +607,8 @@ def _extract_single_rich_text_node(
 
     invalid_document_shape = (
         document.keywords
-        or document.properties is not None
-        or document.logbook is not None
+        or len(document.properties) > 0
+        or len(document.logbook) > 0
         or document.children
         or len(document.body) != 1
     )

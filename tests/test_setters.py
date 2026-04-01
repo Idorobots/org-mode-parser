@@ -8,7 +8,7 @@ from org_parser import load
 from org_parser.document import Document, Heading
 from org_parser.element import Element, Keyword, Paragraph
 from org_parser.text import CompletionCounter, RichText
-from org_parser.time import Timestamp
+from org_parser.time import Clock, Timestamp
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -89,6 +89,32 @@ def test_document_setters_mark_dirty() -> None:
     assert document.keywords is keywords
     assert document.body is body
     assert document.children == [child]
+    assert document.dirty is True
+
+
+def test_document_default_drawers_support_immediate_mutation() -> None:
+    """Document default drawers can be mutated without prior assignment."""
+    document = Document(filename="x.org")
+
+    document.properties["ID"] = RichText("abc")
+    document.logbook.clock_entries = [Clock(duration="0:30")]
+
+    assert str(document.properties["ID"]) == "abc"
+    assert len(document.logbook.clock_entries) == 1
+    assert document.dirty is True
+
+
+def test_heading_default_drawers_support_immediate_mutation() -> None:
+    """Heading default drawers can be mutated without prior assignment."""
+    document = Document(filename="doc.org")
+    heading = Heading(level=1, document=document, parent=document)
+
+    heading.properties["ID"] = RichText("h-1")
+    heading.logbook.clock_entries = [Clock(duration="0:15")]
+
+    assert str(heading.properties["ID"]) == "h-1"
+    assert len(heading.logbook.clock_entries) == 1
+    assert heading.dirty is True
     assert document.dirty is True
 
 

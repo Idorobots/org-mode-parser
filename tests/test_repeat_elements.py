@@ -18,7 +18,6 @@ def test_repeat_parses_logbook_item_without_note() -> None:
     )
 
     heading = document.children[0]
-    assert heading.logbook is not None
     assert len(heading.repeated_tasks) == 1
     repeat = heading.repeated_tasks[0]
     assert isinstance(repeat, Repeat)
@@ -65,7 +64,6 @@ def test_repeat_mutation_bubbles_to_list_logbook_and_heading() -> None:
     )
 
     heading = document.children[0]
-    assert heading.logbook is not None
     repeat = heading.repeated_tasks[0]
 
     repeat.after = "CANCELLED"
@@ -79,10 +77,10 @@ def test_repeat_mutation_bubbles_to_list_logbook_and_heading() -> None:
 
 
 def test_repeated_tasks_setter_creates_logbook_when_missing() -> None:
-    """Assigning repeated tasks creates a heading logbook when absent."""
+    """Assigning repeated tasks populates an initially empty heading logbook."""
     document = loads("* H\nBody\n")
     heading = document.children[0]
-    assert heading.logbook is None
+    assert len(heading.logbook) == 0
 
     heading.repeated_tasks = [
         Repeat(
@@ -146,15 +144,14 @@ def test_heading_clock_cache_extracts_logbook_clock_entries() -> None:
     heading = document.children[0]
     assert len(heading.clock_entries) == 1
     assert isinstance(heading.clock_entries[0], Clock)
-    assert heading.logbook is not None
     assert heading.clock_entries is heading.logbook.clock_entries
 
 
 def test_heading_clock_setter_creates_logbook_when_missing() -> None:
-    """Assigning heading clocks creates logbook and syncs body/cache objects."""
+    """Assigning heading clocks populates an initially empty logbook."""
     document = loads("* H\nBody\n")
     heading = document.children[0]
-    assert heading.logbook is None
+    assert len(heading.logbook) == 0
 
     clock = Clock(
         timestamp=Timestamp(
@@ -199,7 +196,6 @@ def test_repeat_parse_requires_plain_item_shape() -> None:
         "* H\n" ":LOGBOOK:\n" '- [X] State "DONE" from "TODO" [2026-03-08 Sun 17:59]\n' ":END:\n"
     )
     heading = document.children[0]
-    assert heading.logbook is not None
     assert heading.logbook.repeats == []
     assert isinstance(heading.logbook.body[0], List)
     assert isinstance(heading.logbook.body[0].items[0], Repeat) is False
@@ -241,7 +237,7 @@ def test_heading_clock_cache_ignores_non_drawer_body_clock_entries() -> None:
 
     heading = document.children[0]
     assert heading.clock_entries == []
-    assert heading.logbook is None
+    assert len(heading.logbook) == 0
 
 
 def test_heading_clock_cache_extracts_nested_body_clock_entries() -> None:

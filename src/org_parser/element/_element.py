@@ -226,9 +226,9 @@ class Element:
 
         semantic_nodes: list[Element] = []
         semantic_nodes.extend(document.keywords)
-        if document.properties is not None:
+        if len(document.properties) > 0:
             semantic_nodes.append(document.properties)
-        if document.logbook is not None:
+        if len(document.logbook) > 0:
             semantic_nodes.append(document.logbook)
         semantic_nodes.extend(document.body)
 

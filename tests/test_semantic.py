@@ -855,12 +855,11 @@ class TestHeadingCategory:
     # -- heading_category setter ---------------------------------------------
 
     def test_setter_creates_properties_drawer(self) -> None:
-        """Setting heading_category creates a properties drawer when absent."""
+        """Setting heading_category populates an initially empty properties drawer."""
         doc = Document(filename="t.org")
         h = Heading(level=1, document=doc, parent=doc)
-        assert h.properties is None
+        assert len(h.properties) == 0
         h.heading_category = RichText("archive")
-        assert h.properties is not None
         assert "CATEGORY" in h.properties
         assert str(h.properties["CATEGORY"]) == "archive"
 
@@ -882,7 +881,6 @@ class TestHeadingCategory:
         assert h.heading_category is not None
         h.heading_category = None
         assert h.heading_category is None
-        assert h.properties is not None
         assert "CATEGORY" not in h.properties
 
     def test_setter_none_noop_when_key_absent(self) -> None:

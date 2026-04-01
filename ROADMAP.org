@@ -48,9 +48,12 @@ CLOCK: [2025-10-10]
 
 The format of the stringified document is invalid, the LOGBOOK drawer should appear on a new line.
 
-** TODO src/org_parser/document/_document.py
+** DONE src/org_parser/document/_document.py
 :PROPERTIES:
 :context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 13:21]
 :END:
 
 In file src/org_parser/document/_document.py around line 452, near the ~class Document:~
@@ -63,7 +66,26 @@ In file src/org_parser/document/_document.py around line 452, near the ~class Do
 
 Alternatively, =Document.properties= could be set by default to an empty instance of =Properties=.
 Same with =Document.logbook=.
-** TODO Code review comment
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_heading.py
+
+#+begin_example
+        heading_tags: list[str] | None = None,
+        scheduled: Timestamp | None = None,
+        closed: Timestamp | None = None,
+        deadline: Timestamp | None = None,
+        properties: Properties | None = None,
+        logbook: Logbook | None = None,
+        repeated_tasks: list[Repeat] | None = None,
+        clock_entries: list[Clock] | None = None,
+        body: list[Element] | None = None,
+        children: list[Heading] | None = None,
+#+end_example
+
+Properties & logbook can be set to their respective classes by default and omitted from dirty stringification when empty.
+Heading tags, repeated tasks, clock entries, body and children should be empty lists by default.
+Repeated tasks should be renamed to =repeats=.
+** TODO Empty lists by default
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::keywords: list\[Keyword\] | None = None,
  properties: Properties | None = None,
@@ -80,44 +102,10 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_doc
         logbook: Logbook | None = None,
         body: list[Element] | None = None,
         children: list[Heading] | None = None,
-
 #+end_example
 
 Keywords, body and children should be empty lists by default.
-** TODO Code review comment
-:PROPERTIES:
-:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_heading.py::heading_tags: list\[str\] | None = None,
- scheduled: Timestamp | None = None,
- closed: Timestamp | None = None,
- deadline: Timestamp | None = None,
- properties: Properties | None = None,
- logbook: Logbook | None = None,
- repeated_tasks: list\[Repeat\] | None = None,
- clock_entries: list\[Clock\] | None = None,
- body: list\[Element\] | None = None,
- children: list\[Heading\] | None = None,]]
-:END:
-
-Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_heading.py
-
-#+begin_example
-        heading_tags: list[str] | None = None,
-        scheduled: Timestamp | None = None,
-        closed: Timestamp | None = None,
-        deadline: Timestamp | None = None,
-        properties: Properties | None = None,
-        logbook: Logbook | None = None,
-        repeated_tasks: list[Repeat] | None = None,
-        clock_entries: list[Clock] | None = None,
-        body: list[Element] | None = None,
-        children: list[Heading] | None = None,
-
-#+end_example
-
-Properties & logbook can be set to their respective classes by default and omitted from dirty  stringification when empty.
-Heading tags, repeated tasks, clock entries, body and children should be empty lists by default.
-Repeated tasks should be renamed to =repeats=.
-** TODO Code review comment
+** TODO Dirty stringification omits completion counter
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_heading.py]]
 :END:
@@ -170,7 +158,7 @@ def _render_heading_dirty(heading: Heading) -> str:
 
 
 This should add the completion counter if set.
-** TODO Code review comment
+** TODO List item from source creation should extract the initial item from a list.
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_list.py::>>> document.body\[0\].items.append(ListItem(bullet="-", first_line=RichText("Item 1")))]]
 :END:
@@ -179,11 +167,10 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_list
 
 #+begin_example
         >>> document.body[0].items.append(ListItem(bullet="-", first_line=RichText("Item 1")))
-
 #+end_example
 
 It's impossible to create a =ListItem= with =ListItem.from_source("- item")= as that creates a =List= instance.
-** DONE Code review comment
+** DONE Paragraph indent not needed
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-03-31 Tue 01:10]
 :END:
@@ -203,7 +190,7 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_para
 #+end_example
 
 Paragraph no longer needs the indent, it's handled by =Indent= class.
-** TODO Code review comment
+** TODO Indent block should use the =whitespace= field for the indent text
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_structure.py]]
 :END:
@@ -224,7 +211,6 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_stru
         )
         block.attach_source(node, document)
         return block
-
 #+end_example
 
 This should extract the indent from the =whitespace= property of the parse tree.
@@ -250,7 +236,7 @@ This should extract the indent from the =whitespace= property of the parse tree.
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
 :END:
 
-** TODO Code review comment
+** TODO Appending to any list should mark the object as dirty
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_keyword.py::>>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
  >>> document.mark_dirty()]]
@@ -265,6 +251,9 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_keyw
 #+end_example
 
 Mark dirty is required for the append to take effect - could use a custom list wrapper that automatically handles it.
+** TODO Heading/Element .line and .column
+The line and column numbers are useful for sorting the nodes/elements. It makes sense to add these as attributes. They should delegate to the internal tree-sitter node start line and column if available or return =None= if not available.
+
 * Initial release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:
@@ -327,5 +316,6 @@ I would like the documentation to organized as follows:
 
 Add the required dependencies, tasks for building the documentation and the documentation scaffold itself.
 
+** Sequence interface docs
 ** Automated tests based on the example files.
 ** Library release
