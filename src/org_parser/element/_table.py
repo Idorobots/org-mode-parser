@@ -22,7 +22,7 @@ from org_parser.element._element import Element, build_semantic_repr
 from org_parser.text._rich_text import RichText
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Sequence
 
     import tree_sitter
 
@@ -206,12 +206,12 @@ class Table(Element):
         self,
         *,
         rows: list[TableRow | TableRuleRow],
-        formulas: list[str] | None = None,
+        formulas: Sequence[str] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self._rows = rows
-        self._formulas = formulas if formulas is not None else []
+        self._formulas = list(formulas)
         self._adopt_rows()
 
     @classmethod

@@ -200,7 +200,7 @@ class Element:
         self._node: tree_sitter.Node | None = None
         self._document: Document | None = None
         self._dirty = False
-        self._keywords: list[AffiliatedKeyword] | None = None
+        self._keywords: list[AffiliatedKeyword] = []
 
     @classmethod
     def from_source(cls: type[_ElementT], source: str) -> _ElementT:
@@ -292,7 +292,7 @@ class Element:
         'Some Table'
         ```
         """
-        return self._keywords if self._keywords is not None else []
+        return self._keywords
 
     def attach_keyword(self, keyword: AffiliatedKeyword) -> None:
         """Attach an affiliated keyword to this element without marking it dirty.
@@ -321,8 +321,6 @@ class Element:
         |table|
         ```
         """
-        if self._keywords is None:
-            self._keywords = []
         self._keywords.append(keyword)
 
     def mark_dirty(self) -> None:

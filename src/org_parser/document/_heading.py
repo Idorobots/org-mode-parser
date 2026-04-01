@@ -101,16 +101,16 @@ class Heading:
         priority: str | None = None,
         title: RichText | None = None,
         counter: CompletionCounter | None = None,
-        heading_tags: list[str] | None = None,
+        heading_tags: Sequence[str] = (),
         scheduled: Timestamp | None = None,
         closed: Timestamp | None = None,
         deadline: Timestamp | None = None,
         properties: Properties | None = None,
         logbook: Logbook | None = None,
-        repeated_tasks: list[Repeat] | None = None,
-        clock_entries: list[Clock] | None = None,
-        body: list[Element] | None = None,
-        children: list[Heading] | None = None,
+        repeated_tasks: Sequence[Repeat] = (),
+        clock_entries: Sequence[Clock] = (),
+        body: Sequence[Element] = (),
+        children: Sequence[Heading] = (),
     ) -> None:
         self._level = level
         self._document = document
@@ -120,20 +120,16 @@ class Heading:
         self._priority = priority
         self._title = title
         self._counter = counter
-        self._heading_tags: list[str] = heading_tags if heading_tags is not None else []
+        self._heading_tags: list[str] = list(heading_tags)
         self._scheduled = scheduled
         self._closed = closed
         self._deadline = deadline
         self._properties = properties if properties is not None else Properties()
         self._logbook = logbook if logbook is not None else Logbook()
-        self._repeated_tasks: list[Repeat] = (
-            repeated_tasks if repeated_tasks is not None else self._logbook.repeats
-        )
-        self._clock_entries: list[Clock] = (
-            clock_entries if clock_entries is not None else self._logbook.clock_entries
-        )
-        self._body: list[Element] = body if body is not None else []
-        self._children: list[Heading] = children if children is not None else []
+        self._repeated_tasks: list[Repeat] = list(repeated_tasks)
+        self._clock_entries: list[Clock] = list(clock_entries)
+        self._body: list[Element] = list(body)
+        self._children: list[Heading] = list(children)
         self._node: tree_sitter.Node | None = None
         self._dirty = False
 

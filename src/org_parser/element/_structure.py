@@ -197,12 +197,12 @@ class Indent(Element):
     def __init__(
         self,
         *,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         indent: str | None = None,
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
-        self._body = body if body is not None else []
+        self._body = list(body)
         self._indent = indent
         self._adopt_body(self._body)
 

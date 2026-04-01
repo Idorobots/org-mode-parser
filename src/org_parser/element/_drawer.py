@@ -58,12 +58,12 @@ class Drawer(Element):
         self,
         *,
         name: str,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self._name = name
-        self._body = body if body is not None else []
+        self._body = list(body)
         self._adopt_body(self._body)
 
     @classmethod
@@ -179,9 +179,9 @@ class Logbook(Drawer):
     def __init__(
         self,
         *,
-        body: list[Element] | None = None,
-        clock_entries: list[Clock] | None = None,
-        repeats: list[Repeat] | None = None,
+        body: Sequence[Element] = (),
+        clock_entries: Sequence[Clock] = (),
+        repeats: Sequence[Repeat] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(
@@ -189,8 +189,8 @@ class Logbook(Drawer):
             body=body,
             parent=parent,
         )
-        self._clock_entries = clock_entries if clock_entries is not None else []
-        self._repeats: list[Repeat] = repeats if repeats is not None else []
+        self._clock_entries = list(clock_entries)
+        self._repeats: list[Repeat] = list(repeats)
         self._adopt_body(self._clock_entries)
         self._sync_clock_entries_into_body()
         _sync_logbook_repeat_list(self, self._repeats, mark_dirty=False)

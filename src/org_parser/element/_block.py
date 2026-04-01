@@ -45,13 +45,13 @@ class _ContainerBlock(Element):
         *,
         begin_line: str,
         end_line: str,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self._begin_line = begin_line
         self._end_line = end_line
-        self._body = body if body is not None else []
+        self._body = list(body)
         self._adopt_body(self._body)
 
     @property
@@ -178,7 +178,7 @@ class CenterBlock(_ContainerBlock):
         self,
         *,
         parameters: str | None = None,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         self._parameters = _normalize_optional_text(parameters)
@@ -252,7 +252,7 @@ class QuoteBlock(_ContainerBlock):
         self,
         *,
         parameters: str | None = None,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         self._parameters = _normalize_optional_text(parameters)
@@ -329,7 +329,7 @@ class SpecialBlock(_ContainerBlock):
         *,
         name: str,
         parameters: str | None = None,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         self._name = name
@@ -424,7 +424,7 @@ class DynamicBlock(_ContainerBlock):
         *,
         name: str,
         parameters: str | None = None,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         self._name = name
@@ -512,7 +512,7 @@ class VerseBlock(_ContainerBlock):
     def __init__(
         self,
         *,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(

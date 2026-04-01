@@ -85,7 +85,10 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_hea
 Properties & logbook can be set to their respective classes by default and omitted from dirty stringification when empty.
 Heading tags, repeated tasks, clock entries, body and children should be empty lists by default.
 Repeated tasks should be renamed to =repeats=.
-** TODO Empty lists by default
+** DONE Empty lists by default
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 15:41]
+:END:
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::keywords: list\[Keyword\] | None = None,
  properties: Properties | None = None,
@@ -104,7 +107,7 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_doc
         children: list[Heading] | None = None,
 #+end_example
 
-Keywords, body and children should be empty lists by default.
+Keywords, body and children should be empty lists by default. Same logic should apply to the =Heading=.
 ** DONE Dirty stringification omits completion counter
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_heading.py]]

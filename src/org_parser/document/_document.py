@@ -114,11 +114,11 @@ class Document:
         category: RichText | None = None,
         description: RichText | None = None,
         todo: RichText | None = None,
-        keywords: list[Keyword] | None = None,
+        keywords: Sequence[Keyword] = (),
         properties: Properties | None = None,
         logbook: Logbook | None = None,
-        body: list[Element] | None = None,
-        children: list[Heading] | None = None,
+        body: Sequence[Element] = (),
+        children: Sequence[Heading] = (),
     ) -> None:
         self._filename = filename
 
@@ -130,14 +130,13 @@ class Document:
         self._init_set_keyword(CATEGORY, category)
         self._init_set_keyword(DESCRIPTION, description)
         self._init_set_keyword(TODO, todo)
-        if keywords is not None:
-            for kw in keywords:
-                self._init_merge_keyword(kw)
+        for kw in keywords:
+            self._init_merge_keyword(kw)
 
         self._properties = properties if properties is not None else Properties()
         self._logbook = logbook if logbook is not None else Logbook()
-        self._body: list[Element] = body if body is not None else []
-        self._children: list[Heading] = children if children is not None else []
+        self._body: list[Element] = list(body)
+        self._children: list[Heading] = list(children)
         self._node: tree_sitter.Node | None = None
         self._source: bytes | None = None
         self._dirty = False

@@ -61,7 +61,7 @@ class ListItem(Element):
         checkbox: str | None = None,
         item_tag: RichText | None = None,
         first_line: RichText | None = None,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
@@ -71,7 +71,7 @@ class ListItem(Element):
         self._checkbox = checkbox
         self._item_tag = item_tag
         self._first_line = first_line
-        self._body = body if body is not None else []
+        self._body = list(body)
 
         if self._item_tag is not None:
             self._item_tag.parent = self
@@ -320,7 +320,7 @@ class Repeat(ListItem):
         after: str,
         before: str,
         timestamp: Timestamp,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         bullet: str = "-",
         ordered_counter: str | None = None,
         counter_set: str | None = None,
@@ -495,11 +495,11 @@ class List(Element):
     def __init__(
         self,
         *,
-        items: list[ListItem] | None = None,
+        items: Sequence[ListItem] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
-        self._items = items if items is not None else []
+        self._items = list(items)
         self._adopt_items(self._items)
 
     @classmethod
@@ -738,16 +738,6 @@ def _parse_repeat_first_line(
         timestamp_part,
         has_remainder,
     )
-
-
-def _normalize_optional_text(value: str | None) -> str | None:
-    """Return stripped text value, or ``None`` when empty."""
-    if value is None:
-        return None
-    normalized = value.strip()
-    if normalized == "":
-        return None
-    return normalized
 
 
 def _extract_list_body_element(
