@@ -323,9 +323,13 @@ Update the heading class field name and tests. Make sure to update the documenta
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-04-01 Wed 23:37]
 :END:
-** TODO Timestamp is missing the delay and repeater marks.
+** DONE Timestamp is missing the delay and repeater marks.
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 23:55]
+:END:
 
 Please add the remaining tree-sitter =timestamp= fields so that they become accessible in =Timestamp=. They can be =None= by default.
+
 ** TODO datetime based timestamp creation
 Add a way to create a timestamp object from a Python datetime. The datetime should be used to set the start timestamp. By default the =is_active= flag should be set to =True= for such modifications. It can be a class method called =from_datetime=.
 

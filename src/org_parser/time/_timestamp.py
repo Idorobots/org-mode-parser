@@ -11,6 +11,9 @@ from typing import TYPE_CHECKING
 
 from org_parser._node import report_internal_parse_errors
 from org_parser._nodes import (
+    DELAY_MARK,
+    REPEATER_MARK,
+    TIME_UNIT,
     TIMESTAMP,
     TS_DAY,
     TS_DAYNAME,
@@ -55,6 +58,14 @@ class Timestamp(InlineObject):
         end_dayname: Optional end day name token.
         end_hour: Optional end hour.
         end_minute: Optional end minute.
+        repeater_mark: Optional repeater mark (``+``, ``++``, ``.+``).
+        repeater_value: Optional repeater numeric value.
+        repeater_unit: Optional repeater unit (``h``, ``d``, ``w``, ``m``, ``y``).
+        repeater_cap_value: Optional upper-bound numeric value for repeaters.
+        repeater_cap_unit: Optional upper-bound unit for repeaters.
+        delay_mark: Optional warning-delay mark (``-`` or ``--``).
+        delay_value: Optional warning-delay numeric value.
+        delay_unit: Optional warning-delay unit (``h``, ``d``, ``w``, ``m``, ``y``).
 
     Example:
     ```python
@@ -66,6 +77,9 @@ class Timestamp(InlineObject):
     """
 
     __slots__ = (
+        "_delay_mark",
+        "_delay_unit",
+        "_delay_value",
         "_dirty",
         "_end_day",
         "_end_dayname",
@@ -76,6 +90,11 @@ class Timestamp(InlineObject):
         "_is_active",
         "_parent",
         "_raw",
+        "_repeater_cap_unit",
+        "_repeater_cap_value",
+        "_repeater_mark",
+        "_repeater_unit",
+        "_repeater_value",
         "_start_day",
         "_start_dayname",
         "_start_hour",
@@ -100,6 +119,14 @@ class Timestamp(InlineObject):
         end_dayname: str | None = None,
         end_hour: int | None = None,
         end_minute: int | None = None,
+        repeater_mark: str | None = None,
+        repeater_value: int | None = None,
+        repeater_unit: str | None = None,
+        repeater_cap_value: int | None = None,
+        repeater_cap_unit: str | None = None,
+        delay_mark: str | None = None,
+        delay_value: int | None = None,
+        delay_unit: str | None = None,
         parent: Heading | Clock | Repeat | RichText | None = None,
     ) -> None:
         """Initialize a mutable timestamp value."""
@@ -116,6 +143,14 @@ class Timestamp(InlineObject):
         self._end_dayname = end_dayname
         self._end_hour = end_hour
         self._end_minute = end_minute
+        self._repeater_mark = repeater_mark
+        self._repeater_value = repeater_value
+        self._repeater_unit = repeater_unit
+        self._repeater_cap_value = repeater_cap_value
+        self._repeater_cap_unit = repeater_cap_unit
+        self._delay_mark = delay_mark
+        self._delay_value = delay_value
+        self._delay_unit = delay_unit
         self._parent = parent
         self._dirty = False
         self._raw = _render_timestamp(self)
@@ -184,6 +219,14 @@ class Timestamp(InlineObject):
         end_dayname: str | None = None
         end_hour: int | None = None
         end_minute: int | None = None
+        repeater_mark: str | None = None
+        repeater_value: int | None = None
+        repeater_unit: str | None = None
+        repeater_cap_value: int | None = None
+        repeater_cap_unit: str | None = None
+        delay_mark: str | None = None
+        delay_value: int | None = None
+        delay_unit: str | None = None
 
         is_explicit_range = "--" in raw and len(year_nodes) >= 2
         is_same_day_time_range = "--" not in raw and len(time_nodes) >= 2
@@ -205,6 +248,17 @@ class Timestamp(InlineObject):
                 document.source_for(time_nodes[1]).decode()
             )
 
+        (
+            repeater_mark,
+            repeater_value,
+            repeater_unit,
+            repeater_cap_value,
+            repeater_cap_unit,
+            delay_mark,
+            delay_value,
+            delay_unit,
+        ) = _extract_repeater_delay_components(node, document)
+
         parsed = cls(
             is_active=is_active,
             start_year=start_year,
@@ -219,6 +273,14 @@ class Timestamp(InlineObject):
             end_dayname=end_dayname,
             end_hour=end_hour,
             end_minute=end_minute,
+            repeater_mark=repeater_mark,
+            repeater_value=repeater_value,
+            repeater_unit=repeater_unit,
+            repeater_cap_value=repeater_cap_value,
+            repeater_cap_unit=repeater_cap_unit,
+            delay_mark=delay_mark,
+            delay_value=delay_value,
+            delay_unit=delay_unit,
         )
         parsed._raw = raw
         return parsed
@@ -377,6 +439,94 @@ class Timestamp(InlineObject):
         self.mark_dirty()
 
     @property
+    def repeater_mark(self) -> str | None:
+        """Optional repeater mark (``+``, ``++``, ``.+``)."""
+        return self._repeater_mark
+
+    @repeater_mark.setter
+    def repeater_mark(self, value: str | None) -> None:
+        """Set repeater mark and mark dirty."""
+        self._repeater_mark = value
+        self.mark_dirty()
+
+    @property
+    def repeater_value(self) -> int | None:
+        """Optional repeater numeric value."""
+        return self._repeater_value
+
+    @repeater_value.setter
+    def repeater_value(self, value: int | None) -> None:
+        """Set repeater numeric value and mark dirty."""
+        self._repeater_value = value
+        self.mark_dirty()
+
+    @property
+    def repeater_unit(self) -> str | None:
+        """Optional repeater unit (``h``, ``d``, ``w``, ``m``, ``y``)."""
+        return self._repeater_unit
+
+    @repeater_unit.setter
+    def repeater_unit(self, value: str | None) -> None:
+        """Set repeater unit and mark dirty."""
+        self._repeater_unit = value
+        self.mark_dirty()
+
+    @property
+    def repeater_cap_value(self) -> int | None:
+        """Optional repeater upper-bound numeric value."""
+        return self._repeater_cap_value
+
+    @repeater_cap_value.setter
+    def repeater_cap_value(self, value: int | None) -> None:
+        """Set repeater upper-bound numeric value and mark dirty."""
+        self._repeater_cap_value = value
+        self.mark_dirty()
+
+    @property
+    def repeater_cap_unit(self) -> str | None:
+        """Optional repeater upper-bound unit (``h``, ``d``, ``w``, ``m``, ``y``)."""
+        return self._repeater_cap_unit
+
+    @repeater_cap_unit.setter
+    def repeater_cap_unit(self, value: str | None) -> None:
+        """Set repeater upper-bound unit and mark dirty."""
+        self._repeater_cap_unit = value
+        self.mark_dirty()
+
+    @property
+    def delay_mark(self) -> str | None:
+        """Optional delay mark (``-`` or ``--``)."""
+        return self._delay_mark
+
+    @delay_mark.setter
+    def delay_mark(self, value: str | None) -> None:
+        """Set delay mark and mark dirty."""
+        self._delay_mark = value
+        self.mark_dirty()
+
+    @property
+    def delay_value(self) -> int | None:
+        """Optional delay numeric value."""
+        return self._delay_value
+
+    @delay_value.setter
+    def delay_value(self, value: int | None) -> None:
+        """Set delay numeric value and mark dirty."""
+        self._delay_value = value
+        self.mark_dirty()
+
+    @property
+    def delay_unit(self) -> str | None:
+        """Optional delay unit (``h``, ``d``, ``w``, ``m``, ``y``)."""
+        return self._delay_unit
+
+    @delay_unit.setter
+    def delay_unit(self, value: str | None) -> None:
+        """Set delay unit and mark dirty."""
+        self._delay_unit = value
+        self.mark_dirty()
+
+    @property
     def start(self) -> datetime:
         """Return the start value as `datetime.datetime`.
 
@@ -451,6 +601,14 @@ class Timestamp(InlineObject):
             end_dayname=self.end_dayname,
             end_hour=self.end_hour,
             end_minute=self.end_minute,
+            repeater_mark=self.repeater_mark,
+            repeater_value=self.repeater_value,
+            repeater_unit=self.repeater_unit,
+            repeater_cap_value=self.repeater_cap_value,
+            repeater_cap_unit=self.repeater_cap_unit,
+            delay_mark=self.delay_mark,
+            delay_value=self.delay_value,
+            delay_unit=self.delay_unit,
         )
 
     def __eq__(self, other: object) -> bool:
@@ -471,6 +629,14 @@ class Timestamp(InlineObject):
             self.end_dayname,
             self.end_hour,
             self.end_minute,
+            self.repeater_mark,
+            self.repeater_value,
+            self.repeater_unit,
+            self.repeater_cap_value,
+            self.repeater_cap_unit,
+            self.delay_mark,
+            self.delay_value,
+            self.delay_unit,
         ) == (
             other.is_active,
             other.start_year,
@@ -485,6 +651,14 @@ class Timestamp(InlineObject):
             other.end_dayname,
             other.end_hour,
             other.end_minute,
+            other.repeater_mark,
+            other.repeater_value,
+            other.repeater_unit,
+            other.repeater_cap_value,
+            other.repeater_cap_unit,
+            other.delay_mark,
+            other.delay_value,
+            other.delay_unit,
         )
 
     @property
@@ -520,6 +694,7 @@ def _render_timestamp(ts: Timestamp) -> str:
     """
     open_delim = "<" if ts.is_active else "["
     close_delim = ">" if ts.is_active else "]"
+    repeater_delay_suffix = _render_repeater_delay_suffix(ts)
 
     is_explicit_range = (
         ts.end_year is not None
@@ -552,6 +727,7 @@ def _render_timestamp(ts: Timestamp) -> str:
             ts.start_dayname,
             ts.start_hour,
             ts.start_minute,
+            repeater_delay_suffix,
         )
         end = _render_date_part(
             end_year,
@@ -574,7 +750,7 @@ def _render_timestamp(ts: Timestamp) -> str:
             ts.start_minute,
         )
         end_time = f"{ts.end_hour:02d}:{ts.end_minute:02d}"
-        return f"{open_delim}{date_part}-{end_time}{close_delim}"
+        return f"{open_delim}{date_part}-{end_time}{repeater_delay_suffix}{close_delim}"
 
     date_part = _render_date_part(
         ts.start_year,
@@ -583,6 +759,7 @@ def _render_timestamp(ts: Timestamp) -> str:
         ts.start_dayname,
         ts.start_hour,
         ts.start_minute,
+        repeater_delay_suffix,
     )
     return f"{open_delim}{date_part}{close_delim}"
 
@@ -594,6 +771,7 @@ def _render_date_part(
     dayname: str | None,
     hour: int | None,
     minute: int | None,
+    repeater_delay_suffix: str = "",
 ) -> str:
     """Render the inner content of one timestamp bracket.
 
@@ -604,6 +782,7 @@ def _render_date_part(
         dayname: Optional abbreviated day name (e.g. ``"Mon"``).
         hour: Optional hour (0-23).
         minute: Optional minute (0-59).
+        repeater_delay_suffix: Optional rendered repeater/delay suffix.
 
     Returns:
         A string like ``"2024-01-15 Mon 14:30"`` (time parts omitted when
@@ -614,7 +793,183 @@ def _render_date_part(
         parts.append(dayname)
     if hour is not None and minute is not None:
         parts.append(f"{hour:02d}:{minute:02d}")
-    return " ".join(parts)
+    return " ".join(parts) + repeater_delay_suffix
+
+
+def _render_repeater_delay_suffix(ts: Timestamp) -> str:
+    """Render repeater and delay components for one timestamp bracket."""
+    parts: list[str] = []
+
+    repeater = _render_mark_component(
+        mark=ts.repeater_mark,
+        value=ts.repeater_value,
+        unit=ts.repeater_unit,
+        cap_value=ts.repeater_cap_value,
+        cap_unit=ts.repeater_cap_unit,
+    )
+    if repeater is not None:
+        parts.append(repeater)
+
+    delay = _render_mark_component(
+        mark=ts.delay_mark,
+        value=ts.delay_value,
+        unit=ts.delay_unit,
+    )
+    if delay is not None:
+        parts.append(delay)
+
+    if not parts:
+        return ""
+    return " " + " ".join(parts)
+
+
+def _render_mark_component(
+    *,
+    mark: str | None,
+    value: int | None,
+    unit: str | None,
+    cap_value: int | None = None,
+    cap_unit: str | None = None,
+) -> str | None:
+    """Render one repeater/delay component when complete."""
+    if mark is None or value is None or unit is None:
+        return None
+    rendered = f"{mark}{value}{unit}"
+    if cap_value is not None and cap_unit is not None:
+        rendered += f"/{cap_value}{cap_unit}"
+    return rendered
+
+
+def _extract_repeater_delay_components(
+    node: tree_sitter.Node,
+    document: Document,
+) -> tuple[
+    str | None,
+    int | None,
+    str | None,
+    int | None,
+    str | None,
+    str | None,
+    int | None,
+    str | None,
+]:
+    """Extract repeater and delay components from one timestamp node."""
+    mark_nodes = list(node.children_by_field_name("mark"))
+    unit_nodes = [
+        candidate
+        for candidate in node.children_by_field_name("unit")
+        if candidate.type == TIME_UNIT
+    ]
+    cap_unit_nodes = [
+        candidate
+        for candidate in node.children_by_field_name("cap_unit")
+        if candidate.type == TIME_UNIT
+    ]
+
+    if not mark_nodes or not unit_nodes:
+        return (None, None, None, None, None, None, None, None)
+
+    source_text = document.source_for(node).decode()
+    repeater: tuple[str | None, int | None, str | None, int | None, str | None] = (
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+    delay: tuple[str | None, int | None, str | None] = (None, None, None)
+
+    cap_index = 0
+    for index, mark_node in enumerate(mark_nodes):
+        if index >= len(unit_nodes):
+            break
+        unit_node = unit_nodes[index]
+        if unit_node.start_byte < mark_node.end_byte:
+            continue
+
+        mark_text = document.source_for(mark_node).decode()
+        unit_text = document.source_for(unit_node).decode()
+        value = _parse_optional_int(
+            source_text[
+                mark_node.end_byte - node.start_byte : unit_node.start_byte - node.start_byte
+            ].strip()
+        )
+        cap_value, cap_unit_text, cap_index = _extract_repeater_cap_component(
+            node=node,
+            source_text=source_text,
+            document=document,
+            unit_node=unit_node,
+            next_mark_start=(
+                mark_nodes[index + 1].start_byte if index + 1 < len(mark_nodes) else None
+            ),
+            cap_unit_nodes=cap_unit_nodes,
+            cap_index=cap_index,
+        )
+
+        if mark_node.type == REPEATER_MARK and repeater[0] is None:
+            repeater = (mark_text, value, unit_text, cap_value, cap_unit_text)
+            continue
+
+        if mark_node.type == DELAY_MARK and delay[0] is None:
+            delay = (mark_text, value, unit_text)
+
+    return (
+        repeater[0],
+        repeater[1],
+        repeater[2],
+        repeater[3],
+        repeater[4],
+        delay[0],
+        delay[1],
+        delay[2],
+    )
+
+
+def _extract_repeater_cap_component(
+    *,
+    node: tree_sitter.Node,
+    source_text: str,
+    document: Document,
+    unit_node: tree_sitter.Node,
+    next_mark_start: int | None,
+    cap_unit_nodes: list[tree_sitter.Node],
+    cap_index: int,
+) -> tuple[int | None, str | None, int]:
+    """Extract optional repeater cap component for one mark/unit pair."""
+    while cap_index < len(cap_unit_nodes):
+        cap_unit_node = cap_unit_nodes[cap_index]
+        if cap_unit_node.start_byte <= unit_node.end_byte:
+            cap_index += 1
+            continue
+        if next_mark_start is not None and cap_unit_node.start_byte >= next_mark_start:
+            break
+
+        span = source_text[
+            unit_node.end_byte - node.start_byte : cap_unit_node.start_byte - node.start_byte
+        ]
+        slash_index = span.find("/")
+        if slash_index == -1:
+            break
+
+        cap_text = span[slash_index + 1 :].strip()
+        cap_value = _parse_optional_int(cap_text)
+        cap_unit_text = document.source_for(cap_unit_node).decode()
+        return cap_value, cap_unit_text, cap_index + 1
+
+    return None, None, cap_index
+
+
+def _parse_optional_int(value: str | None) -> int | None:
+    """Return integer value parsed from text, or ``None``."""
+    if value is None:
+        return None
+    stripped = value.strip()
+    if stripped == "":
+        return None
+    try:
+        return int(stripped)
+    except ValueError:
+        return None
 
 
 def _extract_raw_timestamp_text(node: tree_sitter.Node, document: Document) -> str:

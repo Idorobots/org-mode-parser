@@ -28,6 +28,7 @@ __all__ = [
     "COMMENT_BLOCK",
     "COMPLETION_COUNTER",
     "DEADLINE",
+    "DELAY_MARK",
     "DESCRIPTION",
     "DRAWER",
     "DYNAMIC_BLOCK",
@@ -63,6 +64,7 @@ __all__ = [
     "QUOTE_BLOCK",
     "RADIO_TARGET",
     "REGULAR_LINK",
+    "REPEATER_MARK",
     "RESULTS_KEYWORD",
     "SCHEDULED",
     "SPECIAL_BLOCK",
@@ -80,6 +82,7 @@ __all__ = [
     "TBLFM_LINE",
     "TBLNAME_KEYWORD",
     "TIMESTAMP",
+    "TIME_UNIT",
     "TITLE",
     "TODO",
     "TS_DAY",
@@ -123,6 +126,9 @@ TS_DAYNAME = "ts_dayname"
 TS_MONTH = "ts_month"
 TS_TIME = "ts_time"
 TS_YEAR = "ts_year"
+DELAY_MARK = "delay_mark"
+REPEATER_MARK = "repeater_mark"
+TIME_UNIT = "time_unit"
 
 # ---------------------------------------------------------------------------
 # Heading components

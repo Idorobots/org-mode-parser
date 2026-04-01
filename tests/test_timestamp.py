@@ -108,6 +108,45 @@ def test_repr_includes_only_present_optional_fields() -> None:
     )
 
 
+def test_from_source_extracts_repeater_components() -> None:
+    """Repeater mark/value/unit components are parsed from source."""
+    ts = Timestamp.from_source("<2025-01-06 Mon +1w>")
+    assert ts.repeater_mark == "+"
+    assert ts.repeater_value == 1
+    assert ts.repeater_unit == "w"
+    assert ts.repeater_cap_value is None
+    assert ts.repeater_cap_unit is None
+
+
+def test_from_source_extracts_delay_components() -> None:
+    """Delay mark/value/unit components are parsed from source."""
+    ts = Timestamp.from_source("<2025-01-06 Mon --3d>")
+    assert ts.delay_mark == "--"
+    assert ts.delay_value == 3
+    assert ts.delay_unit == "d"
+
+
+def test_from_source_extracts_combined_components_regardless_of_order() -> None:
+    """Repeater and delay parse correctly even when delay appears first."""
+    ts = Timestamp.from_source("<2025-01-06 Mon --2d +1w>")
+    assert ts.delay_mark == "--"
+    assert ts.delay_value == 2
+    assert ts.delay_unit == "d"
+    assert ts.repeater_mark == "+"
+    assert ts.repeater_value == 1
+    assert ts.repeater_unit == "w"
+
+
+def test_from_source_extracts_repeater_upper_bound_components() -> None:
+    """Repeater cap value/unit are parsed from ``+Nunit/Munit`` forms."""
+    ts = Timestamp.from_source("<2025-01-06 Mon +1m/3m>")
+    assert ts.repeater_mark == "+"
+    assert ts.repeater_value == 1
+    assert ts.repeater_unit == "m"
+    assert ts.repeater_cap_value == 3
+    assert ts.repeater_cap_unit == "m"
+
+
 # ---------------------------------------------------------------------------
 # __str__ — clean path returns raw
 # ---------------------------------------------------------------------------
@@ -231,6 +270,35 @@ def test_str_dirty_explicit_date_range_with_times() -> None:
     ts.end_minute = 31
     ts.end_minute = 30
     assert str(ts) == "<2024-01-15 Mon 09:00>--<2024-01-20 Sat 17:30>"
+
+
+def test_str_dirty_renders_repeater_and_delay_components() -> None:
+    """Dirty rendering includes repeater and delay components."""
+    ts = _make_ts(
+        repeater_mark="+",
+        repeater_value=1,
+        repeater_unit="w",
+        delay_mark="--",
+        delay_value=2,
+        delay_unit="d",
+    )
+    ts.start_day = 16
+    ts.start_day = 15
+    assert str(ts) == "<2024-01-15 Mon +1w --2d>"
+
+
+def test_str_dirty_renders_repeater_upper_bound_components() -> None:
+    """Dirty rendering includes repeater upper-bound components."""
+    ts = _make_ts(
+        repeater_mark="++",
+        repeater_value=1,
+        repeater_unit="m",
+        repeater_cap_value=3,
+        repeater_cap_unit="m",
+    )
+    ts.start_day = 16
+    ts.start_day = 15
+    assert str(ts) == "<2024-01-15 Mon ++1m/3m>"
 
 
 # ---------------------------------------------------------------------------
