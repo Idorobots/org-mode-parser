@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from org_parser import loads
 from org_parser.document import Document, Heading, load_raw
 from org_parser.element import (
     Drawer,
@@ -1104,6 +1105,22 @@ class TestHeadingConvenienceFields:
         parent.children = [child]
         assert parent.is_leaf is False
 
+    def test_line_and_column_without_parse_node(self) -> None:
+        """line/column are None for programmatically created headings."""
+        doc = Document(filename="x.org")
+        heading = Heading(level=1, document=doc, parent=doc)
+
+        assert heading.line is None
+        assert heading.column is None
+
+    def test_line_and_column_delegate_to_parse_node(self) -> None:
+        """line/column mirror the underlying tree-sitter start point."""
+        document = loads("Intro\n\n* H\n")
+        heading = document.children[0]
+
+        assert heading.line == 2
+        assert heading.column == 0
+
     def test_is_completed_uses_document_done_states(
         self, example_file: Callable[[str], Path]
     ) -> None:
@@ -1230,6 +1247,26 @@ class TestElementConvenienceFields:
         """Element.text matches __str__ output."""
         paragraph = Paragraph(body=RichText("hello\n"))
         assert paragraph.text == "hello\n"
+
+    def test_line_and_column_without_parse_node(self) -> None:
+        """line/column are None for elements without parse backing."""
+        element = Element()
+
+        assert element.line is None
+        assert element.column is None
+
+    def test_line_and_column_delegate_to_parse_node(self) -> None:
+        """line/column mirror parse-backed element start points."""
+        document = loads("  indented\n")
+
+        assert isinstance(document.body[0], Indent)
+        indent = document.body[0]
+        assert indent.line == 0
+        assert indent.column == 0
+        assert isinstance(indent.body[0], Paragraph)
+        paragraph = indent.body[0]
+        assert paragraph.line == 0
+        assert paragraph.column == 2
 
     def test_body_text_for_rich_text_body(self) -> None:
         """Element.body_text returns text for scalar body values."""

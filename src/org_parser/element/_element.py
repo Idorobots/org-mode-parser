@@ -260,6 +260,20 @@ class Element:
         return self._dirty
 
     @property
+    def line(self) -> int | None:
+        """Zero-based source line of this element's parse node, or *None*."""
+        if self._node is None:
+            return None
+        return self._node.start_point.row
+
+    @property
+    def column(self) -> int | None:
+        """Zero-based source column of this element's parse node, or *None*."""
+        if self._node is None:
+            return None
+        return self._node.start_point.column
+
+    @property
     def text(self) -> str:
         """Stringified text representation of this element."""
         return str(self)

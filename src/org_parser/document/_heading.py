@@ -1017,6 +1017,20 @@ class Heading:
         """Whether this heading has been mutated after creation."""
         return self._dirty
 
+    @property
+    def line(self) -> int | None:
+        """Zero-based source line of this heading's parse node, or *None*."""
+        if self._node is None:
+            return None
+        return self._node.start_point.row
+
+    @property
+    def column(self) -> int | None:
+        """Zero-based source column of this heading's parse node, or *None*."""
+        if self._node is None:
+            return None
+        return self._node.start_point.column
+
     def mark_dirty(self) -> None:
         """Mark this heading dirty and bubble to its parent chain.
 

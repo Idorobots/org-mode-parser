@@ -270,7 +270,10 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_keyw
 #+end_example
 
 Mark dirty is required for the append to take effect - could use a custom list wrapper that automatically handles it.
-** TODO Heading/Element .line and .column
+** DONE Heading/Element .line and .column
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 19:17]
+:END:
 The line and column numbers are useful for sorting the nodes/elements. It makes sense to add these as attributes. They should delegate to the internal tree-sitter node start line and column if available or return =None= if not available.
 
 ** DONE Rename Heading.repeated_tasks to repeats to match the logbook.
