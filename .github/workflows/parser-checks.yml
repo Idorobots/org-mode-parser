@@ -6,6 +6,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  docs-index-sync:
+    name: Docs index is up to date
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Pandoc
+        run: sudo apt-get update && sudo apt-get install --yes pandoc
+
+      - name: Verify docs index is up to date
+        run: pandoc README.org --from=org --to=gfm --output=/tmp/docs-index.generated.md && diff --unified docs/index.md /tmp/docs-index.generated.md
+
   python-library:
     name: Python library — format, lint, types, tests
     runs-on: ubuntu-latest

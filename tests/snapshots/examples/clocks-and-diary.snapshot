@@ -1,0 +1,388 @@
+Document(
+  filename='examples/clocks-and-diary.org',
+  title=RichText('Time Tracking Log — Clocks and Diary Sexps'),
+  author=RichText('Grumbal Thruss'),
+  category=RichText('clocks-and-diary'),
+  todo=RichText('TODO CLOCKED REVIEWING | DONE BILLED'),
+  body=[
+      BlankLine(),
+      Comment(text='Diary sexp entries can appear in the zeroth section too, though'),
+      Comment(text='they are more commonly placed in dedicated calendar files.'),
+      BlankLine(),
+      Paragraph(body=RichText('%%(diary-anniversary 1989 3 14) Birthday of %d-year-old Pi Day baby\n')),
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Clock Elements'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Open clocks (no end time — currently running or left unclosed)'),
+              body=[
+                  Paragraph(body=RichText('An open clock records a start time with no end time:\n')),
+                  BlankLine(),
+                  Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=9, start_minute=15)),
+                  BlankLine(),
+                  Paragraph(body=RichText('Another open clock (different heading — parser encounters it):\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Refactor authentication module '),
+        properties={
+            'effort': RichText('3:00'),
+          },
+        heading_tags=['backend', 'security'],
+        body=[
+            Paragraph(body=RichText('CLOCK: [2025-01-06 Mon 14:30]\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Closed clocks with duration'),
+              body=[
+                  BlankLine(),
+                  Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=20, start_minute=0, end_year=2025, end_month=1, end_day=5, end_dayname='Sun', end_hour=21, end_minute=45), duration='1:45'),
+                  BlankLine(),
+                  Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=4, start_dayname='Sat', start_hour=10, start_minute=0, end_year=2025, end_month=1, end_day=4, end_dayname='Sat', end_hour=13, end_minute=30), duration='3:30'),
+                  BlankLine(),
+                  Paragraph(body=RichText('A clock where the hours in the duration exceed 9 (multi-digit HH):\n')),
+                  BlankLine(),
+                  Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=8, start_minute=0, end_year=2025, end_month=1, end_day=4, end_dayname='Sat', end_hour=8, end_minute=0), duration='24:00'),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Duration-only clocks (rare but valid)'),
+              body=[
+                  Clock(duration='0:42'),
+                  Clock(duration='12:00'),
+                  Clock(duration='100:30'),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Clocks in LOGBOOK drawers'),
+              body=[
+                  Paragraph(body=RichText('The conventional usage is to store clocks inside a =:LOGBOOK:= drawer:\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Write technical specification '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=18, start_minute=0),
+        properties={
+            'effort': RichText('5:00'),
+          },
+        logbook=Logbook(
+          body=[
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=14, start_minute=0, end_year=2025, end_month=1, end_day=5, end_dayname='Sun', end_hour=18, end_minute=0), duration='4:00'),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=4, start_dayname='Sat', start_hour=16, start_minute=0, end_year=2025, end_month=1, end_day=4, end_dayname='Sat', end_hour=17, end_minute=0), duration='1:00'),
+            ],
+          clock_entries=[
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=14, start_minute=0, end_year=2025, end_month=1, end_day=5, end_dayname='Sun', end_hour=18, end_minute=0), duration='4:00'),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=4, start_dayname='Sat', start_hour=16, start_minute=0, end_year=2025, end_month=1, end_day=4, end_dayname='Sat', end_hour=17, end_minute=0), duration='1:00'),
+            ],
+        ),
+        heading_tags=['docs'],
+        clock_entries=[
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=14, start_minute=0, end_year=2025, end_month=1, end_day=5, end_dayname='Sun', end_hour=18, end_minute=0), duration='4:00'),
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=4, start_dayname='Sat', start_hour=16, start_minute=0, end_year=2025, end_month=1, end_day=4, end_dayname='Sat', end_hour=17, end_minute=0), duration='1:00'),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Implement rate limiting '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=17, start_minute=30),
+        properties={
+            'effort': RichText('4:00'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='CLOCKED', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=17, start_minute=30)),
+                    Repeat(after='CLOCKED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=0)),
+                  ],
+              ),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=13, start_minute=0, end_year=2025, end_month=1, end_day=3, end_dayname='Fri', end_hour=17, end_minute=30), duration='4:30'),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=0, end_year=2025, end_month=1, end_day=2, end_dayname='Thu', end_hour=13, end_minute=0), duration='4:00'),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=14, start_minute=0, end_year=2025, end_month=1, end_day=2, end_dayname='Thu', end_hour=17, end_minute=30), duration='3:30'),
+            ],
+          clock_entries=[
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=13, start_minute=0, end_year=2025, end_month=1, end_day=3, end_dayname='Fri', end_hour=17, end_minute=30), duration='4:30'),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=0, end_year=2025, end_month=1, end_day=2, end_dayname='Thu', end_hour=13, end_minute=0), duration='4:00'),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=14, start_minute=0, end_year=2025, end_month=1, end_day=2, end_dayname='Thu', end_hour=17, end_minute=30), duration='3:30'),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='CLOCKED', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=17, start_minute=30)),
+              Repeat(after='CLOCKED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=0)),
+            ],
+        ),
+        heading_tags=['backend', 'security'],
+        repeats=[
+            Repeat(after='DONE', before='CLOCKED', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=17, start_minute=30)),
+            Repeat(after='CLOCKED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=0)),
+          ],
+        clock_entries=[
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=13, start_minute=0, end_year=2025, end_month=1, end_day=3, end_dayname='Fri', end_hour=17, end_minute=30), duration='4:30'),
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=0, end_year=2025, end_month=1, end_day=2, end_dayname='Thu', end_hour=13, end_minute=0), duration='4:00'),
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=14, start_minute=0, end_year=2025, end_month=1, end_day=2, end_dayname='Thu', end_hour=17, end_minute=30), duration='3:30'),
+          ],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Clocks with a zero duration'),
+              body=[
+                  BlankLine(),
+                  Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=12, start_minute=0, end_year=2025, end_month=1, end_day=6, end_dayname='Mon', end_hour=12, end_minute=0), duration='0:00'),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Clocks inside list items'),
+              body=[
+                  Paragraph(body=RichText('Weekly summary:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('Monday'),
+                          body=[
+                              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=9, start_minute=0, end_year=2025, end_month=1, end_day=6, end_dayname='Mon', end_hour=12, end_minute=30), duration='3:30'),
+                              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=13, start_minute=30, end_year=2025, end_month=1, end_day=6, end_dayname='Mon', end_hour=17, end_minute=0), duration='3:30'),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('Tuesday'),
+                          body=[
+                              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=7, start_dayname='Tue', start_hour=9, start_minute=15, end_year=2025, end_month=1, end_day=7, end_dayname='Tue', end_hour=18, end_minute=0), duration='8:45'),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Planning Lines with All Three Keywords'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('All three keywords on one line'),
+              body=[
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Deploy hotfix to production '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=22, start_minute=0),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=23, start_minute=59),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=22, start_minute=47),
+        properties={
+            'ticket': RichText('OPS-2847'),
+            'severity': RichText('critical'),
+          },
+        heading_tags=['ops'],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Planning with inactive scheduled timestamp'),
+              body=[
+                  Paragraph(body=RichText('Some tools use inactive timestamps in SCHEDULED for reference-only dates:\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='REVIEWING',
+        title=RichText('Code review: PR #412 '),
+        scheduled=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=6, start_dayname='Mon'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=7, start_dayname='Tue'),
+        properties={
+            'pr_number': RichText('412'),
+            'reviewer': RichText('Grumbal Thruss'),
+          },
+        heading_tags=['review', 'backend'],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Repeated deadline keyword (last wins)'),
+              body=[
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Renew infrastructure contracts '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=11, start_day=1, start_dayname='Sat'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=11, start_day=15, start_dayname='Sat'),
+        properties={
+            'contract_value': RichText('48000'),
+            'currency': RichText('GBP'),
+          },
+        heading_tags=['admin'],
+        body=[
+            Paragraph(body=RichText('The effective deadline is <2025-11-15 Sat> — the second DEADLINE keyword wins.\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Diary Sexp Elements'),
+        body=[
+            Paragraph(body=RichText('Diary sexp elements (=%%SEXP=) are lesser elements that can appear in any\nsection. They hold calendar expressions evaluated by the Emacs diary.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Each line is a separate diary sexp element:\n')),
+            BlankLine(),
+            Paragraph(body=RichText('%%(diary-anniversary 1969 7 20) Apollo 11 moon landing — %d years ago\n%%(diary-anniversary 1991 8 25) Linux kernel first announced — %d years\n%%(diary-anniversary 1983 1 1) The ARPANET transitions to TCP/IP — %d years\n')),
+            BlankLine(),
+            Paragraph(body=RichText('%%(diary-float t 4 2) Second Thursday of the month — team retrospective\n%%(diary-float t 5 3) Third Friday of the month — invoice deadline\n')),
+            BlankLine(),
+            Paragraph(body=RichText('A diary sexp with no arguments (a fixed-date trigger):\n%%(org-calendar-holiday)\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Diary sexps can also appear at the heading level:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Calendar Entries'),
+        body=[
+            Paragraph(body=RichText("%%(diary-anniversary 1990 5 15) Project lead's work anniversary — %d years\n%%(diary-float 3 3 -1) Last Wednesday of March — Q1 close\n")),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Recurring Administrative Events'),
+        body=[
+            Paragraph(body=RichText('%%(diary-float t 1 1) First Monday of every month — expense report due\n%%(diary-float t 4 4) Fourth Thursday of November — US Thanksgiving (if applicable)\n%%(diary-float t 1 -1) Last Monday of every month — team planning session\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Mixed Clocks, Planning, and Diary Sexps'),
+        body=[
+            Paragraph(body=RichText('A realistic time-tracking section:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Prepare quarterly board presentation '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=20, start_dayname='Thu'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=28, start_dayname='Fri'),
+        properties={
+            'effort': RichText('8:00'),
+            'audience': RichText('board_of_directors'),
+            'slide_count_target': RichText('20'),
+          },
+        logbook=Logbook(
+          body=[
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=16, start_minute=0, end_year=2025, end_month=1, end_day=6, end_dayname='Mon', end_hour=17, end_minute=30), duration='1:30'),
+            ],
+          clock_entries=[
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=16, start_minute=0, end_year=2025, end_month=1, end_day=6, end_dayname='Mon', end_hour=17, end_minute=30), duration='1:30'),
+            ],
+        ),
+        heading_tags=['management', 'reporting'],
+        clock_entries=[
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=16, start_minute=0, end_year=2025, end_month=1, end_day=6, end_dayname='Mon', end_hour=17, end_minute=30), duration='1:30'),
+          ],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText("Preparation notes: the previous quarter's presentation is at\n[[file:archive.org::*Harbour Light][Harbour Light archive entry]] for reference.\n")),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Slide outline'),
+              body=[
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Executive summary (2 slides)')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Revenue and KPIs (4 slides)')),
+                        ListItem(bullet='-', checkbox='-', first_line=RichText('Product roadmap (3 slides — in progress)')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Headcount and hiring (2 slides)')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Risk register update (2 slides)')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Q2 outlook (3 slides)')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Appendix (4 slides)')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Related diary entries'),
+              body=[
+                  Paragraph(body=RichText('%%(diary-float 3 5 4) Fourth Friday of March — board meeting day\n')),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from org_parser.element._element import Element, build_semantic_repr, node_source
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_rich_text
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -35,11 +35,11 @@ class Paragraph(Element):
     def __init__(
         self,
         *,
-        body: RichText,
+        body: RichText | str,
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
-        self._body = body
+        self._body = coerce_rich_text(body)
         self._body.parent = self
 
     @classmethod
@@ -72,9 +72,9 @@ class Paragraph(Element):
         return self._body
 
     @body.setter
-    def body(self, value: RichText) -> None:
+    def body(self, value: RichText | str) -> None:
         """Set body rich text."""
-        self._body = value
+        self._body = coerce_rich_text(value)
         self._body.parent = self
         self.mark_dirty()
 

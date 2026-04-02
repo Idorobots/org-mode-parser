@@ -1,0 +1,316 @@
+Document(
+  filename='examples/citations.org',
+  title=RichText('Academic Bibliography — Citation Syntax Showcase'),
+  author=RichText('Dr. Grix Floamwhistle'),
+  category=RichText('citations'),
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Introduction to the Citation Syntax'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText("Org Mode's citation syntax (introduced in Org 9.5) provides a structured way\nto embed bibliographic references. The general form is:\n")),
+            BlankLine(),
+            ExampleBlock(body='[cite CITESTYLE: REFERENCES]\n'),
+            BlankLine(),
+            Paragraph(body=RichText('where =CITESTYLE= (optional) qualifies /how/ the citation is rendered, and\n=REFERENCES= contains one or more citation reference objects separated by =;=.\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Basic Citations'),
+        body=[
+            Paragraph(body=RichText('The simplest citation references a single key:\n')),
+            BlankLine(),
+            Paragraph(body=RichText('[cite:@shannon1948]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('In prose: the foundational theory of information [cite:@shannon1948] was\npublished in 1948. The companion paper on communication in the presence of\nnoise appeared the following year [cite:@shannon1949].\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Multiple references to the same in-text position are separated by semicolons:\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Early neural language models include [cite:@bengio2003;@collobert2008].\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Three or more references:\n')),
+            BlankLine(),
+            Paragraph(body=RichText('For a comprehensive survey of the field see [cite:@goodfellow2016;@lecun2015;@schmidhuber2015].\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Citation Styles'),
+        body=[
+            Paragraph(body=RichText('The style is appended immediately to =cite= with a leading slash.\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Textual citation (/t) — author as part of the prose'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('[cite/t:@turing1950] argued that the question of machine intelligence should\nbe replaced by the more tractable question of behavioural indistinguishability.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[cite/t:@chomsky1965] proposed a formal distinction between competence and\nperformance in linguistic theory.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Author-only citation (/a)'),
+              body=[
+                  Paragraph(body=RichText('Work by [cite/a:@knuth1968] spans decades; see also [cite/a:@dijkstra1972].\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Year-only citation (/y)'),
+              body=[
+                  Paragraph(body=RichText('The recursive descent technique dates to [cite/y:@lucas1961].\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Noauthor citation (/na) — suppress author in parenthetical'),
+              body=[
+                  Paragraph(body=RichText('Parsing theory was significantly advanced [cite/na:@earley1970] in this period.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Styles with variants (/STYLE/VARIANT)'),
+              body=[
+                  Paragraph(body=RichText('Full citation with note variant — typically renders footnote-style:\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[cite/f/f:@church1936]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Author-in-text with a short variant:\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[cite/a/s:@greibach1965]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('A hypothetical style/variant pair for a specific bibliography system:\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[cite/numeric/brackets:@hopcroft1979]\n')),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Global Prefix and Suffix'),
+        body=[
+            Paragraph(body=RichText('A citation can have a prefix that applies to the entire citation bracket,\nand a suffix that follows all references.\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Global prefix (before all references)'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('[cite: see;@martin2009]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[cite: e.g.;@liskov1987;@meyer1988]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[cite: for a contrasting view, see;@wirth1974]\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Global suffix (after all references)'),
+              body=[
+                  Paragraph(body=RichText('[cite:@parnas1972; for a modern retrospective]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[cite:@brooks1975;@boehm1981; remain essential reading today]\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Both prefix and suffix'),
+              body=[
+                  Paragraph(body=RichText('[cite: as discussed in;@hoare1969;@floyd1967; these results were later unified]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[cite: see;@church1936;@turing1936; for the foundational independence results]\n')),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Citation References with Key Prefix and Suffix'),
+        body=[
+            Paragraph(body=RichText('Individual references within a citation can have their own prefix (KEYPREFIX)\nand suffix (KEYSUFFIX) — no whitespace between the elements.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('A page reference as key suffix:\n')),
+            BlankLine(),
+            Paragraph(body=RichText('[cite:@knuth1997 pp. 1-10]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Multiple references with individual suffixes:\n')),
+            BlankLine(),
+            Paragraph(body=RichText('[cite:@shannon1948 §2;@wiener1948 ch. 3]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('A reference with both prefix and suffix:\n')),
+            BlankLine(),
+            Paragraph(body=RichText('[cite:see @turing1950 §6 for the imitation game]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Multiple references with mixed prefix/suffix:\n')),
+            BlankLine(),
+            Paragraph(body=RichText('[cite: see also;see @chomsky1956 §4;cf. @bar-hillel1961 pp. 91-92;@ginsburg1966]\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Citations in Different Contexts'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('In a paragraph with other markup'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('The seminal work on *attention mechanisms* [cite:@bahdanau2015] paved the\nway for the /transformer architecture/ [cite:@vaswani2017] which is now\nthe dominant paradigm in natural language processing [cite:@devlin2019;@brown2020].\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Inside a footnote definition'),
+              body=[
+                  Paragraph(body=RichText('The concept of a universal computing machine was formalised independently\nby Church [fn:church-turing] and Turing in the 1930s.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[fn:church-turing] See [cite:@church1936] for the lambda calculus formulation\nand [cite:@turing1936] for the Turing machine model. The equivalence of the\ntwo formalisms is known as the Church–Turing thesis.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('In a list item'),
+              body=[
+                  Paragraph(body=RichText('Key milestones in programming language theory:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Lambda calculus [cite:@church1936] — the foundation of functional programming.')),
+                        ListItem(bullet='-', first_line=RichText('Turing machines [cite:@turing1936] — the imperative computation model.')),
+                        ListItem(bullet='-', first_line=RichText('LISP [cite:@mccarthy1960] — first language with garbage collection and recursion.')),
+                        ListItem(bullet='-', first_line=RichText('Structured programming [cite:@dijkstra1968] — =goto= considered harmful.')),
+                        ListItem(bullet='-', first_line=RichText("Object-oriented programming [cite:@dahl1972] — Simula's lasting influence.")),
+                        ListItem(bullet='-', first_line=RichText('Functional purity [cite:@backus1978] — Turing Award lecture, "Can programming be liberated?"')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('In a table cell'),
+              body=[
+                  CaptionKeyword(value='Landmark papers in computer science'),
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Year ')),
+                              TableCell(value=RichText(' Authors              ')),
+                              TableCell(value=RichText(' Citation               ')),
+                              TableCell(value=RichText(' Contribution               ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|------+----------------------+------------------------+----------------------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' 1936 ')),
+                              TableCell(value=RichText(' Church               ')),
+                              TableCell(value=RichText(' [cite:@church1936]     ')),
+                              TableCell(value=RichText(' Lambda calculus            ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' 1936 ')),
+                              TableCell(value=RichText(' Turing               ')),
+                              TableCell(value=RichText(' [cite:@turing1936]     ')),
+                              TableCell(value=RichText(' Turing machines            ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' 1948 ')),
+                              TableCell(value=RichText(' Shannon              ')),
+                              TableCell(value=RichText(' [cite:@shannon1948]    ')),
+                              TableCell(value=RichText(' Information theory         ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' 1950 ')),
+                              TableCell(value=RichText(' Turing               ')),
+                              TableCell(value=RichText(' [cite:@turing1950]     ')),
+                              TableCell(value=RichText(' Computing machinery & int. ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' 1968 ')),
+                              TableCell(value=RichText(' Dijkstra             ')),
+                              TableCell(value=RichText(' [cite:@dijkstra1968]   ')),
+                              TableCell(value=RichText(' Structured programming     ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' 2017 ')),
+                              TableCell(value=RichText(' Vaswani et al.       ')),
+                              TableCell(value=RichText(' [cite:@vaswani2017]    ')),
+                              TableCell(value=RichText(' Transformer architecture   ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Complex Multi-Reference Citations'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('A citation review passage:\n')),
+            BlankLine(),
+            Paragraph(body=RichText('The question of whether neural networks can learn formal grammars has been\nstudied extensively [cite: see the surveys in;@chomsky1956;@gold1967;@angluin1987;\nsee also recent work on;@bhattamishra2020;@hahn2020; for transformer-specific results].\n')),
+            BlankLine(),
+            Paragraph(body=RichText('A citation with a long global prefix containing markup:\n')),
+            BlankLine(),
+            Paragraph(body=RichText('[cite: as argued by *three independent groups* almost simultaneously,;@vaswani2017;@gehring2017;@wu2016]\n')),
+          ],
+      ),
+    ],
+)

@@ -1,0 +1,664 @@
+Document(
+  filename='examples/plain-lists.org',
+  title=RichText("The Wanderer's Cookbook — List Showcase"),
+  author=RichText('Oswick Quelby'),
+  category=RichText('plain-lists'),
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Unordered Lists'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Using the hyphen bullet'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Essential pantry staples:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Olive oil (extra virgin, cold-pressed)')),
+                        ListItem(bullet='-', first_line=RichText('Sea salt (flaked, not iodised)')),
+                        ListItem(bullet='-', first_line=RichText('Black pepper (whole peppercorns for grinding)')),
+                        ListItem(bullet='-', first_line=RichText('Garlic (fresh heads, not pre-minced)')),
+                        ListItem(bullet='-', first_line=RichText('Good-quality tinned tomatoes')),
+                        ListItem(bullet='-', first_line=RichText('Dried pasta in at least three shapes')),
+                        ListItem(bullet='-', first_line=RichText('Arborio rice for risotto and rice pudding')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Using the plus bullet'),
+              body=[
+                  Paragraph(body=RichText('Recommended kitchen tools:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='+', first_line=RichText("Chef's knife (200 mm blade, full tang)")),
+                        ListItem(bullet='+', first_line=RichText('Wooden cutting board (at least 45 × 30 cm)')),
+                        ListItem(bullet='+', first_line=RichText('Heavy-bottomed saucepan (3-litre capacity)')),
+                        ListItem(bullet='+', first_line=RichText('Cast-iron skillet (25 cm)')),
+                        ListItem(bullet='+', first_line=RichText('Instant-read thermometer')),
+                        ListItem(bullet='+', first_line=RichText('Microplane grater')),
+                        ListItem(bullet='+', first_line=RichText('Fine-mesh sieve')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Using the asterisk bullet (indented — not a heading)'),
+              body=[
+                  Indent(
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='*', first_line=RichText('Balloon whisk')),
+                              ListItem(bullet='*', first_line=RichText('Silicone spatula')),
+                              ListItem(bullet='*', first_line=RichText('Bench scraper')),
+                              ListItem(bullet='*', first_line=RichText('Spider strainer')),
+                              ListItem(bullet='*', first_line=RichText('Kitchen twine')),
+                            ],
+                        ),
+                      ],
+                    indent=' ',
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Ordered Lists'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Digit counter — period terminator'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Method for a classic beurre blanc:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='.', first_line=RichText('Combine 120 ml dry white wine and 60 ml white wine vinegar in a small saucepan.')),
+                        ListItem(bullet='.', first_line=RichText('Add two finely minced shallots and a pinch of white pepper.')),
+                        ListItem(bullet='.', first_line=RichText('Reduce over medium heat until only 2 tablespoons of liquid remain.')),
+                        ListItem(bullet='.', first_line=RichText('Remove from heat and let cool to approximately 60°C.')),
+                        ListItem(bullet='.', first_line=RichText('Add 250 g cold unsalted butter, one cube at a time, whisking constantly.')),
+                        ListItem(bullet='.', first_line=RichText('Return briefly to very low heat if the emulsion cools too much.')),
+                        ListItem(bullet='.', first_line=RichText('Strain through a fine sieve and season with salt and lemon juice.')),
+                        ListItem(bullet='.', first_line=RichText('Keep warm in a bain-marie at 55°C until service.')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Digit counter — parenthesis terminator'),
+              body=[
+                  Paragraph(body=RichText('Steps to sharpen a knife on a whetstone:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet=')', first_line=RichText('Soak the 1000-grit stone in water for ten minutes.')),
+                        ListItem(bullet=')', first_line=RichText('Hold the blade at a consistent 15–20° angle to the stone.')),
+                        ListItem(bullet=')', first_line=RichText('Push the edge forward in smooth arcs, heel to tip, ten strokes per side.')),
+                        ListItem(bullet=')', first_line=RichText('Move to the 3000-grit stone and repeat with lighter pressure.')),
+                        ListItem(bullet=')', first_line=RichText('Finish on the 6000-grit stone with minimal pressure, eight strokes per side.')),
+                        ListItem(bullet=')', first_line=RichText('Strop on leather five times per side.')),
+                        ListItem(bullet=')', first_line=RichText('Test sharpness by slicing a sheet of paper cleanly.')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Letter counter — period terminator'),
+              body=[
+                  Paragraph(body=RichText('Wine pairing principles (from lightest to most complex):\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='.', first_line=RichText('Sparkling wines before still; dry before off-dry.')),
+                        ListItem(bullet='.', first_line=RichText('White wines before red; light reds before heavy reds.')),
+                        ListItem(bullet='.', first_line=RichText('Match weight: delicate dishes with delicate wines.')),
+                        ListItem(bullet='.', first_line=RichText('Bridge flavours: acidic wines with acidic dishes.')),
+                      ],
+                  ),
+                  Paragraph(body=RichText('e. Contrast when bridge fails: salty cheese with sweet Sauternes.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Letter counter — parenthesis terminator'),
+              body=[
+                  Paragraph(body=RichText('Order of classical sauce families:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet=')', first_line=RichText('Béchamel (butter, flour, milk)')),
+                        ListItem(bullet=')', first_line=RichText('Velouté (butter, flour, white stock)')),
+                        ListItem(bullet=')', first_line=RichText('Espagnole (brown stock, mirepoix, tomato)')),
+                        ListItem(bullet=')', first_line=RichText('Sauce tomat (tomato, stock, aromatics)')),
+                      ],
+                  ),
+                  Paragraph(body=RichText('e) Hollandaise (egg yolk, butter, acid)\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Counter-set — resetting mid-list'),
+              body=[
+                  Paragraph(body=RichText('The full mise-en-place checklist, numbered from 5 for legacy compatibility:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='.', counter_set='5', first_line=RichText("Review the day's bookings and note dietary restrictions.")),
+                        ListItem(bullet='.', first_line=RichText('Check that all proteins have been portioned and tempered.')),
+                        ListItem(bullet='.', first_line=RichText('Confirm vegetable prep is complete and stored correctly.')),
+                        ListItem(bullet='.', counter_set='8', first_line=RichText('Taste and adjust all sauces and soups.')),
+                        ListItem(bullet='.', first_line=RichText('Plate a test portion of each dish.')),
+                        ListItem(bullet='.', first_line=RichText('Brief the front-of-house team at 17:30.')),
+                      ],
+                  ),
+                  BlankLine(),
+                  Paragraph(body=RichText('A second sequence reset for desserts:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='.', counter_set='1', first_line=RichText('Confirm gelato is at scooping temperature (-11°C).')),
+                        ListItem(bullet='.', first_line=RichText('Pre-plate all cold dessert components.')),
+                        ListItem(bullet='.', counter_set='5', first_line=RichText('Torch crème brûlée sugar to order only.')),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Descriptive Lists'),
+        body=[
+            Paragraph(body=RichText('Regional flour varieties and their uses:\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('"00" flour :: Ultra-fine Italian wheat flour; ideal for fresh pasta and Neapolitan pizza dough. Protein content 9–12%.')),
+                  ListItem(bullet='-', item_tag=RichText('Bread flour'), first_line=RichText('High-gluten wheat flour (12–14% protein); gives chew and structure to yeast-leavened breads.')),
+                  ListItem(bullet='-', item_tag=RichText('Cake flour'), first_line=RichText('Very low protein (7–9%); produces tender crumb in layer cakes and delicate pastries.')),
+                  ListItem(bullet='-', item_tag=RichText('Semolina'), first_line=RichText('Coarse-ground durum wheat; used for dried pasta, gnocchi alla romana, and polenta-style porridge.')),
+                  ListItem(bullet='-', item_tag=RichText('Buckwheat'), first_line=RichText('Gluten-free pseudo-grain flour; earthy and slightly bitter; used in blinis, soba noodles, and galettes.')),
+                  ListItem(bullet='-', item_tag=RichText('Chestnut'), first_line=RichText('Naturally sweet, gluten-free; pairs well with honey and aged cheeses; used in Corsican polenta and castagnaccio.')),
+                  ListItem(bullet='-', item_tag=RichText('Teff'), first_line=RichText('Tiny Ethiopian grain, iron-rich and slightly molasses-flavoured; the base of injera flatbread.')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('Equipment terms:\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('Bain-marie :: A water bath used to apply gentle, indirect heat — essential for custards, melting chocolate, and holding sauces.')),
+                  ListItem(bullet='-', item_tag=RichText('Chinois'), first_line=RichText('A very fine conical strainer for clarifying stocks and sauces to a mirror finish.')),
+                  ListItem(bullet='-', item_tag=RichText('Mandoline'), first_line=RichText('An adjustable slicing tool for producing uniform, paper-thin cuts of vegetables and fruit.')),
+                  ListItem(bullet='-', item_tag=RichText('Tamis'), first_line=RichText('A drum sieve used to aerate flour or pass cooked vegetables into a smooth purée.')),
+                ],
+            ),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Checkboxes'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Shopping list — mixed states'),
+              body=[
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', checkbox='X', first_line=RichText('Saffron (0.5 g, Spanish)')),
+                        ListItem(bullet='-', checkbox='X', first_line=RichText('Smoked paprika (sweet and hot varieties)')),
+                        ListItem(bullet='-', checkbox='X', first_line=RichText('Dried morel mushrooms (30 g)')),
+                        ListItem(bullet='-', checkbox='-', first_line=RichText('Aged Manchego (waiting for the specialist cheesemonger to restock)')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Medjool dates (two dozen)')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Pine nuts (100 g, not Chinese variety)')),
+                        ListItem(bullet='-', checkbox='X', first_line=RichText('Tahini (raw sesame, not roasted)')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Preserved lemons (or make fresh batch)')),
+                        ListItem(bullet='-', checkbox='-', first_line=RichText('Pomegranate molasses (checking three shops)')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Barberries (dried, sourberry alternative acceptable)')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Prep checklist for Friday service'),
+              body=[
+                  List(
+                    items=[
+                        ListItem(bullet='-', checkbox='X', first_line=RichText('Butcher whole lamb shoulder into collar, rack, and saddle portions.')),
+                        ListItem(bullet='-', checkbox='X', first_line=RichText('Prepare lamb stock from bones (6-hour reduction).')),
+                        ListItem(bullet='-', checkbox='X', first_line=RichText('Render duck fat and confit duck legs (72-hour confit at 65°C).')),
+                        ListItem(bullet='-', checkbox='-', first_line=RichText('Cure salmon gravlax (48 hours, currently curing since Wednesday).')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Make sourdough levain for Saturday bake.')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Prep beetroot in three textures: roasted, gel, raw-pickled.')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Turn 60 potato barrels for garnish.')),
+                        ListItem(bullet='-', checkbox=' ', first_line=RichText('Make verjuice reduction for the scallop course.')),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Nested Lists'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('A menu with nested structure'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Tasting menu — Spring edition:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('Amuse-bouche'),
+                          body=[
+                              List(
+                                items=[
+                                    ListItem(bullet='-', first_line=RichText('Oyster, cucumber water, dill oil')),
+                                    ListItem(bullet='-', first_line=RichText('Radish, whipped butter, roe')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('First course'),
+                          body=[
+                              List(
+                                items=[
+                                    ListItem(bullet='-', first_line=RichText('Option A: Asparagus, mousseline, black truffle')),
+                                    ListItem(
+                                      bullet='-',
+                                      first_line=RichText('Option B: Burrata, pea, preserved lemon'),
+                                      body=[
+                                          List(
+                                            items=[
+                                                ListItem(bullet='-', first_line=RichText('Vegetarian')),
+                                                ListItem(bullet='-', first_line=RichText('Can be made vegan (omit cheese, substitute cashew cream)')),
+                                              ],
+                                          ),
+                                        ],
+                                    ),
+                                  ],
+                              ),
+                            ],
+                        ),
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('Second course'),
+                          body=[
+                              List(
+                                items=[
+                                    ListItem(
+                                      bullet='-',
+                                      first_line=RichText('Fish: Turbot, beurre blanc, samphire'),
+                                      body=[
+                                          List(
+                                            items=[
+                                                ListItem(bullet='-', first_line=RichText('Wine pairing: Chablis Premier Cru')),
+                                              ],
+                                          ),
+                                        ],
+                                    ),
+                                    ListItem(
+                                      bullet='-',
+                                      first_line=RichText('Meat: Squab, cherry, foie gras'),
+                                      body=[
+                                          List(
+                                            items=[
+                                                ListItem(bullet='-', first_line=RichText('Wine pairing: Gevrey-Chambertin')),
+                                              ],
+                                          ),
+                                        ],
+                                    ),
+                                  ],
+                              ),
+                            ],
+                        ),
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('Pre-dessert'),
+                          body=[
+                              List(
+                                items=[
+                                    ListItem(bullet='-', first_line=RichText('Yoghurt sorbet, honey, buckwheat tuile')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('Main dessert'),
+                          body=[
+                              List(
+                                items=[
+                                    ListItem(bullet='-', first_line=RichText('Dark chocolate tart, hazelnut, salted caramel')),
+                                    ListItem(bullet='-', first_line=RichText('Alternative: Seasonal fruit pavlova')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Nested ordered lists'),
+              body=[
+                  Paragraph(body=RichText('Full recipe structure for Bouillabaisse:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='.',
+                          first_line=RichText('Prepare the stock'),
+                          body=[
+                              List(
+                                items=[
+                                    ListItem(bullet='.', first_line=RichText('Sweat onion, fennel, and leek in olive oil until soft (8 minutes).')),
+                                    ListItem(bullet='.', first_line=RichText('Add garlic, tomato paste, and saffron; cook 2 minutes.')),
+                                    ListItem(bullet='.', first_line=RichText('Add fish bones and heads; cover with cold water.')),
+                                    ListItem(bullet='.', first_line=RichText('Simmer 25 minutes — do not boil or the stock will turn cloudy.')),
+                                    ListItem(bullet='.', first_line=RichText('Strain, discard solids, reserve stock.')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                        ListItem(
+                          bullet='.',
+                          first_line=RichText('Prepare the rouille'),
+                          body=[
+                              List(
+                                items=[
+                                    ListItem(bullet='.', first_line=RichText('Pound garlic and salt to a paste in a mortar.')),
+                                    ListItem(bullet='.', first_line=RichText('Add saffron, soaked in a teaspoon of warm water.')),
+                                    ListItem(bullet='.', first_line=RichText('Work in egg yolk, then drizzle in olive oil to emulsify.')),
+                                    ListItem(bullet='.', first_line=RichText('Season with lemon juice, cayenne, and pepper.')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                        ListItem(
+                          bullet='.',
+                          first_line=RichText('Cook the seafood'),
+                          body=[
+                              List(
+                                items=[
+                                    ListItem(bullet='.', first_line=RichText('Bring stock to a rolling boil.')),
+                                    ListItem(bullet='.', first_line=RichText('Add firm fish (monkfish, John Dory) and cook 4 minutes.')),
+                                    ListItem(bullet='.', first_line=RichText('Add delicate fish (red mullet, sea bream) and cook 2 minutes.')),
+                                    ListItem(bullet='.', first_line=RichText('Add mussels and clams; cook until they open (2–3 minutes).')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                        ListItem(
+                          bullet='.',
+                          first_line=RichText('Serve'),
+                          body=[
+                              List(
+                                items=[
+                                    ListItem(bullet='.', first_line=RichText('Place toasted baguette slices in each bowl.')),
+                                    ListItem(bullet='.', first_line=RichText('Spread rouille generously on toast.')),
+                                    ListItem(bullet='.', first_line=RichText('Ladle hot broth and fish over the toast.')),
+                                    ListItem(bullet='.', first_line=RichText('Serve remaining rouille on the side.')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('List Items Containing Other Elements'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Items with sub-blocks'),
+              body=[
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('Stock types and their properties:'),
+                          body=[
+                              QuoteBlock(
+                                body=[
+                                    Paragraph(body=RichText('A good stock is the foundation of French cooking — it cannot be rushed.\n')),
+                                    Paragraph(body=RichText('— Auguste Escoffier\n')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('Braising liquid ratios (fixed-width reference):'),
+                          body=[
+                              FixedWidthBlock(body='Red wine braise:      60% stock, 30% wine, 10% aromatics\nWhite wine braise:    70% stock, 20% wine, 10% aromatics\nMilk braise:          100% milk (or buttermilk), aromatics only'),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('Temperatures for sous-vide cooking:'),
+                          body=[
+                              Table(
+                                rows=[
+                                    TableRow(
+                                      cells=[
+                                          TableCell(value=RichText('Ingredient    ')),
+                                          TableCell(value=RichText(' Temperature ')),
+                                          TableCell(value=RichText(' Time      ')),
+                                        ],
+                                    ),
+                                    TableRuleRow(raw='|---------------+-------------+-----------|'),
+                                    TableRow(
+                                      cells=[
+                                          TableCell(value=RichText('Chicken breast ')),
+                                          TableCell(value=RichText(' 63°C       ')),
+                                          TableCell(value=RichText(' 1.5 hours ')),
+                                        ],
+                                    ),
+                                    TableRow(
+                                      cells=[
+                                          TableCell(value=RichText('Duck confit   ')),
+                                          TableCell(value=RichText(' 65°C        ')),
+                                          TableCell(value=RichText(' 36 hours  ')),
+                                        ],
+                                    ),
+                                    TableRow(
+                                      cells=[
+                                          TableCell(value=RichText('Beef short rib ')),
+                                          TableCell(value=RichText(' 72°C       ')),
+                                          TableCell(value=RichText(' 48 hours  ')),
+                                        ],
+                                    ),
+                                    TableRow(
+                                      cells=[
+                                          TableCell(value=RichText('Egg (soft)    ')),
+                                          TableCell(value=RichText(' 63°C        ')),
+                                          TableCell(value=RichText(' 45 min    ')),
+                                        ],
+                                    ),
+                                    TableRow(
+                                      cells=[
+                                          TableCell(value=RichText('Salmon        ')),
+                                          TableCell(value=RichText(' 47°C        ')),
+                                          TableCell(value=RichText(' 30 min    ')),
+                                        ],
+                                    ),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Items with drawers'),
+              body=[
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('Sourdough starter notes:'),
+                          body=[
+                              Drawer(
+                                name='FEEDING_LOG',
+                                body=[
+                                    Paragraph(body=RichText('[2025-01-04 Sat] Fed 1:1:1 (starter:flour:water). Rose 3× in 4 hours.\n')),
+                                    Paragraph(body=RichText('[2025-01-05 Sun] Fed 1:2:2. Peak at 6 hours — slightly slower.\n')),
+                                    Paragraph(body=RichText('[2025-01-06 Mon] Fed 1:5:5. Testing for long cold ferment.\n')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('Fermentation crock (sauerkraut batch 7):'),
+                          body=[
+                              Drawer(
+                                name='NOTES',
+                                body=[
+                                    Paragraph(body=RichText('Started 2024-12-15. Cabbage from local farm, 2% salt by weight.\n')),
+                                    Paragraph(body=RichText('Pressed under brine with weight. Fermenting at 18°C cellar temperature.\n')),
+                                    Paragraph(body=RichText('Ready to taste after 4 weeks (2025-01-12).\n')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Items terminating on two blank lines'),
+              body=[
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('This is a list item that contains multiple paragraphs.')),
+                      ],
+                  ),
+                  BlankLine(),
+                  Indent(
+                    body=[
+                        Paragraph(body=RichText('The second paragraph is indented by two spaces to remain part of the item.\n  It contains a continuation of the thought.\n')),
+                      ],
+                    indent='  ',
+                  ),
+                  BlankLine(),
+                  Indent(
+                    body=[
+                        Paragraph(body=RichText('A third paragraph, still part of the same item.\n')),
+                      ],
+                    indent='  ',
+                  ),
+                  BlankLine(),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('This item begins after the two blank lines that ended the previous item.'),
+                          body=[
+                              Paragraph(body=RichText('Two consecutive blank lines terminate the list item above.\n')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Final item in the list.')),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

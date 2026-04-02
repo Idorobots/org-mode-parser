@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from org_parser import loads
 from org_parser.document import Document, Heading, load_raw
 from org_parser.element import (
     Drawer,
@@ -96,6 +97,12 @@ class TestParagraph:
         assert isinstance(paragraph, Paragraph)
         assert str(paragraph.body) == "Hello world.\n"
 
+    def test_construction_accepts_raw_string_body(self) -> None:
+        """Paragraph constructor accepts raw strings and stores RichText."""
+        paragraph = Paragraph(body="Hello world.\n")
+        assert isinstance(paragraph.body, RichText)
+        assert str(paragraph.body) == "Hello world.\n"
+
     def test_body_setter_marks_dirty(self) -> None:
         paragraph = Paragraph(body=RichText("Before\n"))
         assert paragraph.dirty is False
@@ -128,7 +135,7 @@ class TestDocumentManual:
         assert doc.filename == "test.org"
         assert doc.title is None
         assert doc.author is None
-        # No #+CATEGORY: keyword → falls back to filename stem.
+        # NOTE: No CATEGORY keyword → falls back to filename stem.
         assert doc.category is not None
         assert str(doc.category) == "test"
         assert doc.description is None
@@ -167,6 +174,27 @@ class TestDocumentManual:
         assert any(kw.key == "DESCRIPTION" for kw in doc.keywords)
         assert any(kw.key == "TODO" for kw in doc.keywords)
         assert len(doc.body) == 1
+
+    def test_constructor_accepts_raw_string_dedicated_keyword_values(self) -> None:
+        """Document constructor accepts raw strings for dedicated keyword values."""
+        doc = Document(
+            filename="full.org",
+            title="My Title",
+            author="An Author",
+            category="work",
+            description="A description.",
+            todo="TODO | DONE",
+        )
+        assert isinstance(doc.title, RichText)
+        assert isinstance(doc.author, RichText)
+        assert isinstance(doc.category, RichText)
+        assert isinstance(doc.description, RichText)
+        assert isinstance(doc.todo, RichText)
+        assert str(doc.title) == "My Title"
+        assert str(doc.author) == "An Author"
+        assert str(doc.category) == "work"
+        assert str(doc.description) == "A description."
+        assert str(doc.todo) == "TODO | DONE"
 
     def test_repr(self) -> None:
         doc = Document(filename="x.org")
@@ -207,6 +235,14 @@ class TestHeadingManual:
         assert h.closed is None
         assert h.body == []
         assert h.children == []
+
+    def test_constructor_accepts_raw_string_title(self) -> None:
+        """Heading constructor accepts raw string titles."""
+        doc = Document(filename="t.org")
+        heading = Heading(level=1, document=doc, parent=doc, title="My heading")
+        assert isinstance(heading.title, RichText)
+        assert heading.title is not None
+        assert str(heading.title) == "My heading"
 
     def test_document_property_direct_parent(self) -> None:
         doc = Document(filename="t.org")
@@ -420,7 +456,7 @@ class TestHeadingFields:
     def test_tags(self, example_file: Callable[[str], Path]) -> None:
         """heading_tags are extracted as a list of individual strings."""
         doc = _load_document(example_file("priorities-and-special-headings.org"))
-        # "* TODO [#A] Critical: ... :ops:critical:"
+        # * TODO [#A] Critical: ... :ops:critical:
         tagged = [h for h in doc.children if len(h.heading_tags) > 0]
         assert len(tagged) > 0
         # Check that tags are individual strings, not the full `:a:b:` form
@@ -855,12 +891,11 @@ class TestHeadingCategory:
     # -- heading_category setter ---------------------------------------------
 
     def test_setter_creates_properties_drawer(self) -> None:
-        """Setting heading_category creates a properties drawer when absent."""
+        """Setting heading_category populates an initially empty properties drawer."""
         doc = Document(filename="t.org")
         h = Heading(level=1, document=doc, parent=doc)
-        assert h.properties is None
+        assert len(h.properties) == 0
         h.heading_category = RichText("archive")
-        assert h.properties is not None
         assert "CATEGORY" in h.properties
         assert str(h.properties["CATEGORY"]) == "archive"
 
@@ -882,7 +917,6 @@ class TestHeadingCategory:
         assert h.heading_category is not None
         h.heading_category = None
         assert h.heading_category is None
-        assert h.properties is not None
         assert "CATEGORY" not in h.properties
 
     def test_setter_none_noop_when_key_absent(self) -> None:
@@ -1106,6 +1140,22 @@ class TestHeadingConvenienceFields:
         parent.children = [child]
         assert parent.is_leaf is False
 
+    def test_line_and_column_without_parse_node(self) -> None:
+        """line/column are None for programmatically created headings."""
+        doc = Document(filename="x.org")
+        heading = Heading(level=1, document=doc, parent=doc)
+
+        assert heading.line is None
+        assert heading.column is None
+
+    def test_line_and_column_delegate_to_parse_node(self) -> None:
+        """line/column mirror the underlying tree-sitter start point."""
+        document = loads("Intro\n\n* H\n")
+        heading = document.children[0]
+
+        assert heading.line == 2
+        assert heading.column == 0
+
     def test_is_completed_uses_document_done_states(
         self, example_file: Callable[[str], Path]
     ) -> None:
@@ -1128,16 +1178,20 @@ class TestHeadingConvenienceFields:
     def test_timestamp_aggregation_and_extrema(self) -> None:
         """Heading timestamp helpers include planning, repeat, and clock values."""
         doc = Document(filename="x.org", todo=RichText("TODO | DONE"))
-        scheduled = Timestamp("<2025-01-02 Thu>", True, 2025, 1, 2)
-        closed = Timestamp("[2025-01-09 Thu]", False, 2025, 1, 9)
-        deadline = Timestamp("<2025-01-07 Tue>", True, 2025, 1, 7)
-        repeat_timestamp = Timestamp("[2025-01-05 Sun]", False, 2025, 1, 5)
+        scheduled = Timestamp(is_active=True, start_year=2025, start_month=1, start_day=2)
+        closed = Timestamp(is_active=False, start_year=2025, start_month=1, start_day=9)
+        deadline = Timestamp(is_active=True, start_year=2025, start_month=1, start_day=7)
+        repeat_timestamp = Timestamp(
+            is_active=False,
+            start_year=2025,
+            start_month=1,
+            start_day=5,
+        )
         clock_timestamp = Timestamp(
-            "[2025-01-03 Fri 10:00]--[2025-01-03 Fri 11:00]",
-            False,
-            2025,
-            1,
-            3,
+            is_active=False,
+            start_year=2025,
+            start_month=1,
+            start_day=3,
             start_hour=10,
             start_minute=0,
             end_year=2025,
@@ -1183,11 +1237,10 @@ class TestHeadingConvenienceFields:
         """latest_timestamp compares by end datetime when a range has one."""
         doc = Document(filename="x.org")
         with_end = Timestamp(
-            "[2025-01-01 Wed 23:00]--[2025-01-10 Fri 01:00]",
-            False,
-            2025,
-            1,
-            1,
+            is_active=False,
+            start_year=2025,
+            start_month=1,
+            start_day=1,
             start_hour=23,
             start_minute=0,
             end_year=2025,
@@ -1196,7 +1249,12 @@ class TestHeadingConvenienceFields:
             end_hour=1,
             end_minute=0,
         )
-        later_start_only = Timestamp("<2025-01-09 Thu>", True, 2025, 1, 9)
+        later_start_only = Timestamp(
+            is_active=True,
+            start_year=2025,
+            start_month=1,
+            start_day=9,
+        )
         heading = Heading(
             level=1,
             document=doc,
@@ -1233,6 +1291,26 @@ class TestElementConvenienceFields:
         paragraph = Paragraph(body=RichText("hello\n"))
         assert paragraph.text == "hello\n"
 
+    def test_line_and_column_without_parse_node(self) -> None:
+        """line/column are None for elements without parse backing."""
+        element = Element()
+
+        assert element.line is None
+        assert element.column is None
+
+    def test_line_and_column_delegate_to_parse_node(self) -> None:
+        """line/column mirror parse-backed element start points."""
+        document = loads("  indented\n")
+
+        assert isinstance(document.body[0], Indent)
+        indent = document.body[0]
+        assert indent.line == 0
+        assert indent.column == 0
+        assert isinstance(indent.body[0], Paragraph)
+        paragraph = indent.body[0]
+        assert paragraph.line == 0
+        assert paragraph.column == 2
+
     def test_body_text_for_rich_text_body(self) -> None:
         """Element.body_text returns text for scalar body values."""
         paragraph = Paragraph(body=RichText("hello\n"))
@@ -1248,6 +1326,34 @@ class TestElementConvenienceFields:
             ],
         )
         assert drawer.body_text == "one\ntwo\n"
+
+    def test_indent_body_setter_accepts_element_and_raw_string(self) -> None:
+        """Indent body setter accepts one element and raw string input."""
+        indent = Indent(indent="  ")
+        paragraph = Paragraph(body=RichText("line\n"))
+
+        indent.body = paragraph
+
+        assert indent.body == [paragraph]
+        assert indent.body[0].parent is indent
+
+        indent.body = "next line"
+
+        assert len(indent.body) == 1
+        assert isinstance(indent.body[0], Paragraph)
+        assert str(indent.body[0]) == "next line"
+        assert indent.body[0].parent is indent
+        assert str(indent) == "next line\n"
+
+    def test_indent_body_append_marks_dirty(self) -> None:
+        """Appending to indent body marks the indent dirty."""
+        indent = Indent(indent="  ")
+        paragraph = Paragraph(body=RichText("line\n"))
+
+        indent.body.append(paragraph)
+
+        assert indent.dirty is True
+        assert paragraph.parent is indent
 
     def test_body_text_empty_when_body_missing(self) -> None:
         """Element.body_text is empty when no body attribute exists."""

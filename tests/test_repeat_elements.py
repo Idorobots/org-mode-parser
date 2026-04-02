@@ -18,14 +18,33 @@ def test_repeat_parses_logbook_item_without_note() -> None:
     )
 
     heading = document.children[0]
-    assert heading.logbook is not None
-    assert len(heading.repeated_tasks) == 1
-    repeat = heading.repeated_tasks[0]
+    assert len(heading.repeats) == 1
+    repeat = heading.repeats[0]
     assert isinstance(repeat, Repeat)
     assert repeat.after == "DONE"
     assert repeat.before == "TODO"
     assert str(repeat.timestamp) == "[2026-03-08 Sun 17:59]"
     assert repeat.body == []
+
+
+def test_repeat_constructor_accepts_raw_string_rich_text_fields() -> None:
+    """Repeat constructor accepts raw strings for item tag and first line."""
+    repeat = Repeat(
+        after="DONE",
+        before="TODO",
+        timestamp=Timestamp(
+            is_active=False,
+            start_year=2026,
+            start_month=3,
+            start_day=8,
+        ),
+        item_tag="meta",
+        first_line='State "DONE" from "TODO" ',
+    )
+
+    assert isinstance(repeat.item_tag, RichText)
+    assert isinstance(repeat.first_line, RichText)
+    assert str(repeat.item_tag) == "meta"
 
 
 def test_invalid_repeat_with_trailing_chars() -> None:
@@ -38,7 +57,7 @@ def test_invalid_repeat_with_trailing_chars() -> None:
         ":END:\n"
     )
 
-    assert len(document.children[0].repeated_tasks) == 0
+    assert len(document.children[0].repeats) == 0
     assert len(document.errors) == 1
 
 
@@ -52,7 +71,7 @@ def test_repeat_uses_entire_item_body_as_note_payload() -> None:
         ":END:\n"
     )
 
-    repeat = document.children[0].repeated_tasks[0]
+    repeat = document.children[0].repeats[0]
     assert len(repeat.body) == 1
     assert isinstance(repeat.body[0], Paragraph)
     assert str(repeat.body[0]) == "One note paragraph.\n"
@@ -65,8 +84,7 @@ def test_repeat_mutation_bubbles_to_list_logbook_and_heading() -> None:
     )
 
     heading = document.children[0]
-    assert heading.logbook is not None
-    repeat = heading.repeated_tasks[0]
+    repeat = heading.repeats[0]
 
     repeat.after = "CANCELLED"
     repeat.body = [Paragraph(body=RichText("not needed"), parent=repeat)]
@@ -78,18 +96,17 @@ def test_repeat_mutation_bubbles_to_list_logbook_and_heading() -> None:
     assert 'State "CANCELLED"' in str(heading.logbook)
 
 
-def test_repeated_tasks_setter_creates_logbook_when_missing() -> None:
-    """Assigning repeated tasks creates a heading logbook when absent."""
+def test_repeats_setter_creates_logbook_when_missing() -> None:
+    """Assigning repeats populates an initially empty heading logbook."""
     document = loads("* H\nBody\n")
     heading = document.children[0]
-    assert heading.logbook is None
+    assert len(heading.logbook) == 0
 
-    heading.repeated_tasks = [
+    heading.repeats = [
         Repeat(
             after="DONE",
             before="TODO",
             timestamp=Timestamp(
-                raw="[2026-03-08 Sun 17:59]",
                 is_active=False,
                 start_year=2026,
                 start_month=3,
@@ -103,11 +120,11 @@ def test_repeated_tasks_setter_creates_logbook_when_missing() -> None:
 
     assert isinstance(heading.logbook, Logbook)
     assert len(heading.logbook.repeats) == 1
-    assert len(heading.repeated_tasks) == 1
+    assert len(heading.repeats) == 1
     assert 'State "DONE"' in str(heading.logbook)
 
 
-def test_repeated_tasks_append_creates_logbook_when_missing() -> None:
+def test_repeats_append_creates_logbook_when_missing() -> None:
     """Adding a task via ``add_repeated_task`` creates a logbook if absent."""
     document = loads("* H\n")
     heading = document.children[0]
@@ -117,7 +134,6 @@ def test_repeated_tasks_append_creates_logbook_when_missing() -> None:
             after="DONE",
             before="TODO",
             timestamp=Timestamp(
-                raw="[2026-03-08 Sun 17:59]",
                 is_active=False,
                 start_year=2026,
                 start_month=3,
@@ -130,7 +146,7 @@ def test_repeated_tasks_append_creates_logbook_when_missing() -> None:
     )
 
     assert isinstance(heading.logbook, Logbook)
-    assert len(heading.repeated_tasks) == 1
+    assert len(heading.repeats) == 1
     assert len(heading.logbook.repeats) == 1
 
 
@@ -146,19 +162,17 @@ def test_heading_clock_cache_extracts_logbook_clock_entries() -> None:
     heading = document.children[0]
     assert len(heading.clock_entries) == 1
     assert isinstance(heading.clock_entries[0], Clock)
-    assert heading.logbook is not None
-    assert heading.clock_entries is heading.logbook.clock_entries
+    assert heading.clock_entries == heading.logbook.clock_entries
 
 
 def test_heading_clock_setter_creates_logbook_when_missing() -> None:
-    """Assigning heading clocks creates logbook and syncs body/cache objects."""
+    """Assigning heading clocks populates an initially empty logbook."""
     document = loads("* H\nBody\n")
     heading = document.children[0]
-    assert heading.logbook is None
+    assert len(heading.logbook) == 0
 
     clock = Clock(
         timestamp=Timestamp(
-            raw="[2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30]",
             is_active=False,
             start_year=2025,
             start_month=1,
@@ -199,7 +213,6 @@ def test_repeat_parse_requires_plain_item_shape() -> None:
         "* H\n" ":LOGBOOK:\n" '- [X] State "DONE" from "TODO" [2026-03-08 Sun 17:59]\n' ":END:\n"
     )
     heading = document.children[0]
-    assert heading.logbook is not None
     assert heading.logbook.repeats == []
     assert isinstance(heading.logbook.body[0], List)
     assert isinstance(heading.logbook.body[0].items[0], Repeat) is False
@@ -213,7 +226,7 @@ def test_heading_body_lists_are_recovered_for_repeats() -> None:
     assert isinstance(heading.body[0], List)
     parsed = heading.body[0]
     assert isinstance(parsed.items[0], Repeat)
-    assert heading.repeated_tasks == [parsed.items[0]]
+    assert heading.repeats == [parsed.items[0]]
 
 
 def test_heading_body_nested_lists_are_not_recovered_for_repeats() -> None:
@@ -230,7 +243,7 @@ def test_heading_body_nested_lists_are_not_recovered_for_repeats() -> None:
     assert isinstance(outer.items[0].body[0], List)
     nested = outer.items[0].body[0]
     assert isinstance(nested.items[0], Repeat) is False
-    assert heading.repeated_tasks == []
+    assert heading.repeats == []
 
 
 def test_heading_clock_cache_ignores_non_drawer_body_clock_entries() -> None:
@@ -241,7 +254,7 @@ def test_heading_clock_cache_ignores_non_drawer_body_clock_entries() -> None:
 
     heading = document.children[0]
     assert heading.clock_entries == []
-    assert heading.logbook is None
+    assert len(heading.logbook) == 0
 
 
 def test_heading_clock_cache_extracts_nested_body_clock_entries() -> None:

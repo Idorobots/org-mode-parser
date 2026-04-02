@@ -1,0 +1,163 @@
+Document(
+  filename='examples/zeroth-section.org',
+  title=RichText('Quentix Vaultworks — Production Slate 2025'),
+  author=RichText('Zolinda Pruxwick'),
+  category=RichText('production'),
+  description=RichText('Internal production tracking document for all active and upcoming Quentix Vaultworks projects.'),
+  todo=RichText('DEVELOPMENT PREPRODUCTION PRODUCTION POSTPRODUCTION | RELEASED CANCELLED'),
+  keywords=[
+      Keyword(key='EMAIL', value=RichText('zpruxwick@quentixvaultworks.example.com')),
+      Keyword(key='DATE', value=RichText('<2025-01-06 Mon>')),
+      Keyword(key='KEYWORDS', value=RichText('film, production, schedule, budget')),
+      Keyword(key='LANGUAGE', value=RichText('en')),
+      Keyword(key='FILETAGS', value=RichText(':quentix:internal:')),
+      Keyword(key='STARTUP', value=RichText('overview')),
+      Keyword(key='ARCHIVE', value=RichText('::* Archived Projects')),
+      Keyword(key='PROPERTY', value=RichText('budget_currency USD')),
+      Keyword(key='PROPERTY', value=RichText('status_default active')),
+      Keyword(key='PRIORITIES', value=RichText('A C B')),
+    ],
+  properties={
+      'document_version': RichText('3.1'),
+      'last_reviewed': RichText('[2025-01-06 Mon]'),
+      'owner': RichText('Production Office'),
+    },
+  body=[
+      BlankLine(),
+      Comment(text='This document is confidential and intended for internal use only.'),
+      Comment(text='Last reviewed by the production office on 2025-01-06.'),
+      BlankLine(),
+      BlankLine(),
+      Paragraph(body=RichText('The zeroth section above contains the full set of document-level special keywords,\na comment block, and a property drawer — all before the first heading.\n')),
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        todo='PRODUCTION',
+        priority='A',
+        title=RichText("The Cartographer's Dilemma "),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=10, start_dayname='Mon'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=11, start_day=28, start_dayname='Fri'),
+        properties={
+            'director': RichText('Dorfwick Blumvane'),
+            'budget': RichText('12500000'),
+            'lead_cast': RichText('Trundle Ploxby, Worthem Grulbe'),
+            'location': RichText('Prague, Vienna'),
+          },
+        heading_tags=['drama', 'period'],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Principal photography begins March 2025. Locations scouted and locked.\nCostume department requires sign-off by end of February.\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Script & Development'),
+              deadline=Timestamp(is_active=True, start_year=2025, start_month=2, start_day=14, start_dayname='Fri'),
+              properties={
+                  'writer': RichText('Quelda Brimswick'),
+                  'draft_number': RichText('4'),
+                },
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Fourth draft delivered. Notes from the director addressed in revision.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Casting'),
+              properties={
+                  'casting_director': RichText('Flombert Grush'),
+                },
+              body=[
+                  Paragraph(body=RichText('All lead roles confirmed. Supporting cast finalised week of 2025-01-20.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Locations'),
+              properties={
+                  'location_manager': RichText('Brindle Woxwick'),
+                  'permit_status': RichText('approved'),
+                },
+              body=[
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Prague Old Town: permits approved [2024-12-18 Wed]')),
+                        ListItem(bullet='-', first_line=RichText('Vienna Belvedere exterior: permits approved [2025-01-03 Fri]')),
+                        ListItem(bullet='-', first_line=RichText('Studio Stage 4 (Fluxbridge Studios): booked 2025-03-10 through 2025-06-20')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='PREPRODUCTION',
+        priority='B',
+        title=RichText('Salt and Longitude '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=6, start_day=2, start_dayname='Mon'),
+        properties={
+            'director': RichText('Quorby Flumwell'),
+            'budget': RichText('8200000'),
+            'lead_cast': RichText('Gruble Dwinwick'),
+          },
+        heading_tags=['thriller', 'contemporary'],
+        body=[
+            Paragraph(body=RichText('Preproduction underway. Script locked after arbitration.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DEVELOPMENT',
+        title=RichText('Ghost Latitude '),
+        properties={
+            'director': RichText('TBD'),
+            'budget': RichText('22000000'),
+            'writer': RichText('Twiggle Hunsworth'),
+          },
+        heading_tags=['scifi'],
+        body=[
+            Paragraph(body=RichText('High-concept science fiction. Currently in second-draft development.\nGreenlit pending director attachment.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='RELEASED',
+        title=RichText('Harbour Light '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=9, start_day=15, start_dayname='Sun'),
+        properties={
+            'director': RichText('Glorble Vextwick'),
+            'runtime_minutes': RichText('94'),
+            'distributor': RichText('Velorum Distribution'),
+          },
+        heading_tags=['documentary'],
+        body=[
+            Paragraph(body=RichText('Released at the Wendermoor Film Festival 2024. Theatrical distribution through Velorum Distribution begins 2025-02-07.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='CANCELLED',
+        title=RichText('The Ember Protocol '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=11, start_day=1, start_dayname='Fri'),
+        properties={
+            'cancellation_reason': RichText('financing_collapsed'),
+          },
+        heading_tags=['action'],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Project cancelled following collapse of co-production financing.\nRights reverted to original IP holder.\n')),
+          ],
+      ),
+    ],
+)

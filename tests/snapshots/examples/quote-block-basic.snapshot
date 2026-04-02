@@ -1,0 +1,51 @@
+Document(
+  filename='examples/quote-block-basic.org',
+  category=RichText('quote-block-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Quote Block'),
+        body=[
+            BlankLine(),
+            QuoteBlock(
+              body=[
+                  Paragraph(body=RichText('This is a quoted passage.\nIt can span multiple lines.\n')),
+                ],
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Center Block'),
+        body=[
+            CenterBlock(
+              body=[
+                  Paragraph(body=RichText('Centred text.\n')),
+                ],
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Verse Block'),
+        body=[
+            VerseBlock(
+              body=[
+                  Paragraph(body=RichText('Line one.\nLine two.\nLine three.\n')),
+                ],
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Example Block'),
+        body=[
+            BlankLine(),
+            ExampleBlock(body='verbatim content\n  preserved indentation\n'),
+          ],
+      ),
+    ],
+)

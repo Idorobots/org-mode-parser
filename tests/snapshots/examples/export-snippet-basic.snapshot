@@ -1,0 +1,22 @@
+Document(
+  filename='examples/export-snippet-basic.org',
+  category=RichText('export-snippet-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Export Snippets'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('An HTML snippet: @@html:<br>@@\n')),
+            BlankLine(),
+            Paragraph(body=RichText('A LaTeX snippet: @@latex:\\newpage@@\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Both in one paragraph: @@html:<b>@@bold@@html:</b>@@ and @@latex:\\textbf{bold}@@\n')),
+            BlankLine(),
+            Paragraph(body=RichText('An empty snippet: @@html:@@\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(level=1, title=RichText('Snippet in a heading: @@html:<em>@@emphasis@@html:</em>@@')),
+    ],
+)

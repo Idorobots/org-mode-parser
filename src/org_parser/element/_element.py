@@ -12,6 +12,7 @@ from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, TypeVar, cast
 
 from org_parser._node import node_source
+from org_parser.element._dirty_list import DirtyList
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     from org_parser.document._heading import Heading
     from org_parser.element._keyword import AffiliatedKeyword
 
-__all__ = ["Element", "node_source"]
+__all__ = ["DirtyList", "Element", "node_source"]
 
 _ElementT = TypeVar("_ElementT", bound="Element")
 
@@ -200,10 +201,10 @@ class Element:
         self._node: tree_sitter.Node | None = None
         self._document: Document | None = None
         self._dirty = False
-        self._keywords: list[AffiliatedKeyword] | None = None
+        self._keywords: list[AffiliatedKeyword] = []
 
     @classmethod
-    def from_source(cls: type[_ElementT], source: str) -> _ElementT:
+    def from_source(cls: type[_ElementT], source: str) -> _ElementT:  # noqa: PYI019
         """Parse *source* and return one strict semantic element.
 
         The source must parse to exactly one non-heading semantic element.
@@ -215,8 +216,8 @@ class Element:
             The parsed semantic element instance.
 
         Raises:
-            ValueError: If parsing fails, structure is not exactly one element,
-                or the parsed element does not match *cls*.
+            ValueError: If parsing fails or structure is not exactly one element.
+            TypeError: If the parsed element does not match *cls*.
         """
         from org_parser._from_source import parse_document_from_source
 
@@ -226,9 +227,9 @@ class Element:
 
         semantic_nodes: list[Element] = []
         semantic_nodes.extend(document.keywords)
-        if document.properties is not None:
+        if len(document.properties) > 0:
             semantic_nodes.append(document.properties)
-        if document.logbook is not None:
+        if len(document.logbook) > 0:
             semantic_nodes.append(document.logbook)
         semantic_nodes.extend(document.body)
 
@@ -237,7 +238,7 @@ class Element:
 
         semantic_node: Element = semantic_nodes[0]
         if not isinstance(semantic_node, cls):
-            raise ValueError(
+            raise TypeError(
                 f"Parsed element is {semantic_node.__class__.__name__}, " f"expected {cls.__name__}"
             )
         return semantic_node
@@ -258,6 +259,20 @@ class Element:
     def dirty(self) -> bool:
         """Whether this element has been mutated after creation."""
         return self._dirty
+
+    @property
+    def line(self) -> int | None:
+        """Zero-based source line of this element's parse node, or *None*."""
+        if self._node is None:
+            return None
+        return self._node.start_point.row
+
+    @property
+    def column(self) -> int | None:
+        """Zero-based source column of this element's parse node, or *None*."""
+        if self._node is None:
+            return None
+        return self._node.start_point.column
 
     @property
     def text(self) -> str:
@@ -292,7 +307,14 @@ class Element:
         'Some Table'
         ```
         """
-        return self._keywords if self._keywords is not None else []
+
+        def on_keywords_mutation(wrapped: DirtyList[AffiliatedKeyword]) -> None:
+            self._keywords = list(wrapped)
+            for keyword in self._keywords:
+                keyword.parent = self
+            self.mark_dirty()
+
+        return DirtyList(self._keywords, on_mutation=on_keywords_mutation)
 
     def attach_keyword(self, keyword: AffiliatedKeyword) -> None:
         """Attach an affiliated keyword to this element without marking it dirty.
@@ -321,9 +343,8 @@ class Element:
         |table|
         ```
         """
-        if self._keywords is None:
-            self._keywords = []
-        self._keywords.append(keyword)
+        self._keywords = [*self._keywords, keyword]
+        keyword.parent = self
 
     def mark_dirty(self) -> None:
         """Mark this element as dirty."""
@@ -361,6 +382,23 @@ class Element:
     def __repr__(self) -> str:
         """Return a developer-friendly representation."""
         return "Element()"
+
+
+def coerce_element_body(value: Sequence[Element] | Element | str) -> list[Element]:
+    """Return *value* as a mutable list of semantic elements.
+
+    Raw strings are wrapped in a single
+    [org_parser.element.Paragraph][] element.
+    """
+    if isinstance(value, str):
+        from org_parser.element._paragraph import Paragraph
+
+        return [Paragraph(body=value)]
+    if isinstance(value, Element):
+        return [value]
+    if isinstance(value, list):
+        return value
+    return list(value)
 
 
 # ---------------------------------------------------------------------------

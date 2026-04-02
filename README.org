@@ -1,10 +1,15 @@
-#+TITLE: Org-Mode parser
+#+TITLE: Org-Parser
 
 * Overview
-This project implements a Python parser for Emacs Org-Mode files providing nice semantic nodes.
-It's based on the following Tree-Sitter grammar:
+This project implements a Python parser for Emacs Org-Mode files providing nice semantic nodes in a hierarchical document tree. It's based on [[https://github.com/Idorobots/tree-sitter-org][this Tree-Sitter grammar]].
 
-https://github.com/Idorobots/tree-sitter-org
+=org-parser= was created as an alternative to the wonderful, but admittedly incomplete and unmaintained [[https://github.com/karlicoss/orgparse/][=orgparse=]]. The main improvements on top of =orgparse= are:
+
+- /Almost/ complete feature set, including markup, blocks, tables and more niche constructs such as Babel calls.
+- Fully mutable tree for easy edits that preserves original document whitespace & formatting.
+- Better document error handling and reporting, useful for validation.
+
+[[https://idorobots.github.io/org-parser/][See the documentation here.]]
 
 * Installation
 
@@ -151,10 +156,3 @@ True
 >>> doc.errors
 [ParseError(start_point=Point(row=2, column=0), end_point=Point(row=2, column=20), text='SCHEDULED: yesterday')]
 #+end_src
-
-For more examples and documentation see [[docs/index.md][the documentation]].
-
-Parsing [[examples/showcase.org][this file]] results in the following [[examples/showcase.python][Python object layout]].
-
-* Roadmap
-See [[file:ROADMAP.org][ROADMAP.org]] for planned work and milestone history.

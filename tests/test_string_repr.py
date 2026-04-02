@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from org_parser import load
 from org_parser.document import load_raw
 from org_parser.element import Keyword
-from org_parser.text import RichText
+from org_parser.text import CompletionCounter, RichText
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -121,6 +121,32 @@ def test_heading_str_dirty_includes_comment_marker(
 
     rendered = str(heading)
     assert rendered.startswith("* COMMENT First top-level heading\n")
+
+
+def test_heading_str_dirty_includes_counter_cookie_when_set(
+    example_file: Callable[[str], Path],
+) -> None:
+    """Dirty heading rendering includes completion cookie when set."""
+    document = load(str(example_file("nested-headings-basic.org")))
+    heading = document.children[0]
+    heading.counter = CompletionCounter("1/2")
+
+    rendered = str(heading)
+    assert rendered.startswith("* [1/2] First top-level heading\n")
+
+
+def test_heading_str_dirty_omits_duplicate_counter_cookie_in_title(tmp_path: Path) -> None:
+    """Dirty heading rendering avoids duplicating an existing title cookie."""
+    path = tmp_path / "counter-title.org"
+    path.write_bytes(b"* Tasks [1/3] remaining\n")
+
+    document = load(str(path))
+    heading = document.children[0]
+    heading.todo = "DONE"
+
+    rendered = str(heading)
+    assert rendered.startswith("* DONE Tasks [1/3] remaining\n")
+    assert rendered.splitlines()[0].count("[1/3]") == 1
 
 
 def test_document_str_dirty_preserves_repeated_todo_keywords(tmp_path: Path) -> None:

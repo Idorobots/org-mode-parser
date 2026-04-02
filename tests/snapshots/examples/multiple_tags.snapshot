@@ -1,0 +1,69 @@
+Document(
+  filename='examples/multiple_tags.org',
+  category=RichText('multiple_tags'),
+  children=[
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Implement feature A '),
+        scheduled=Timestamp(is_active=True, start_year=2024, start_month=1, start_day=10, start_dayname='Wed'),
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=10, start_dayname='Wed', start_hour=14, start_minute=0)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=10, start_dayname='Wed', start_hour=14, start_minute=0)),
+            ],
+        ),
+        heading_tags=['Test', 'WebDev', 'Unix'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=10, start_dayname='Wed', start_hour=14, start_minute=0)),
+          ],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Feature implementation details.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Fix bug in parser '),
+        scheduled=Timestamp(is_active=True, start_year=2024, start_month=1, start_day=11, start_dayname='Thu'),
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=11, start_dayname='Thu', start_hour=16, start_minute=0)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=11, start_dayname='Thu', start_hour=16, start_minute=0)),
+            ],
+        ),
+        heading_tags=['Debugging', 'SysAdmin'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=11, start_dayname='Thu', start_hour=16, start_minute=0)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Refactor codebase '),
+        scheduled=Timestamp(is_active=True, start_year=2024, start_month=1, start_day=12, start_dayname='Fri'),
+        heading_tags=['Maintenance'],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Not done yet.\n')),
+          ],
+      ),
+    ],
+)

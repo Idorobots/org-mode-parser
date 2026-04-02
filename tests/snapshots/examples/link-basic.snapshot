@@ -1,0 +1,37 @@
+Document(
+  filename='examples/link-basic.org',
+  category=RichText('link-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Links'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Plain link: https://orgmode.org\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Angle link: <https://orgmode.org>\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Regular link, no description: [[https://orgmode.org]]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Regular link with description: [[https://orgmode.org][Org Mode]]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('File link: [[file:simple.org]]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Fuzzy link to a heading: [[Links]]\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Targets and References'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('A target: <<my-target>>\n')),
+            BlankLine(),
+            Paragraph(body=RichText('A link to it: [[my-target]]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('A link to it with description: [[my-target][jump to target]]\n')),
+          ],
+      ),
+    ],
+)

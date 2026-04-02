@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, MutableMapping, Sequence
+from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import TYPE_CHECKING
 
 from org_parser._nodes import INDENT, NODE_PROPERTY
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._dispatch import body_element_factories
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
+    coerce_element_body,
     element_from_error_or_unknown,
     ensure_trailing_newline,
     node_source,
@@ -17,7 +19,7 @@ from org_parser.element._element import (
 from org_parser.element._list import List, ListItem, Repeat
 from org_parser.element._structure import Indent
 from org_parser.element._structure_recovery import attach_affiliated_keywords
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_rich_text
 from org_parser.time import Clock
 
 if TYPE_CHECKING:
@@ -58,12 +60,12 @@ class Drawer(Element):
         self,
         *,
         name: str,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self._name = name
-        self._body = body if body is not None else []
+        self._body = list(body)
         self._adopt_body(self._body)
 
     @classmethod
@@ -105,12 +107,18 @@ class Drawer(Element):
     @property
     def body(self) -> list[Element]:
         """Mutable list of drawer body elements."""
-        return self._body
+
+        def on_body_mutation(wrapped: DirtyList[Element]) -> None:
+            self._body = list(wrapped)
+            self._adopt_body(self._body)
+            self.mark_dirty()
+
+        return DirtyList(self._body, on_mutation=on_body_mutation)
 
     @body.setter
-    def body(self, value: list[Element]) -> None:
+    def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set drawer body."""
-        self._body = value
+        self._body = list(coerce_element_body(value))
         self._adopt_body(self._body)
         self.mark_dirty()
 
@@ -179,9 +187,9 @@ class Logbook(Drawer):
     def __init__(
         self,
         *,
-        body: list[Element] | None = None,
-        clock_entries: list[Clock] | None = None,
-        repeats: list[Repeat] | None = None,
+        body: Sequence[Element] = (),
+        clock_entries: Sequence[Clock] = (),
+        repeats: Sequence[Repeat] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(
@@ -189,8 +197,8 @@ class Logbook(Drawer):
             body=body,
             parent=parent,
         )
-        self._clock_entries = clock_entries if clock_entries is not None else []
-        self._repeats: list[Repeat] = repeats if repeats is not None else []
+        self._clock_entries = list(clock_entries)
+        self._repeats: list[Repeat] = list(repeats)
         self._adopt_body(self._clock_entries)
         self._sync_clock_entries_into_body()
         _sync_logbook_repeat_list(self, self._repeats, mark_dirty=False)
@@ -198,12 +206,20 @@ class Logbook(Drawer):
     @property
     def body(self) -> list[Element]:
         """Mutable list of drawer body elements."""
-        return self._body
+
+        def on_body_mutation(wrapped: DirtyList[Element]) -> None:
+            self._body = list(wrapped)
+            self._adopt_body(self._body)
+            self._clock_entries = [element for element in self._body if isinstance(element, Clock)]
+            self._repeats = _extract_existing_logbook_repeats(self._body)
+            self.mark_dirty()
+
+        return DirtyList(self._body, on_mutation=on_body_mutation)
 
     @body.setter
-    def body(self, value: list[Element]) -> None:
+    def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set drawer body and synchronize extracted logbook entry caches."""
-        self._body = value
+        self._body = list(coerce_element_body(value))
         self._adopt_body(self._body)
         self._clock_entries = [element for element in self._body if isinstance(element, Clock)]
         self._repeats = _extract_existing_logbook_repeats(self._body)
@@ -238,12 +254,19 @@ class Logbook(Drawer):
     @property
     def clock_entries(self) -> list[Clock]:
         """Clock entries extracted from logbook body."""
-        return self._clock_entries
+
+        def on_clock_entries_mutation(wrapped: DirtyList[Clock]) -> None:
+            self._clock_entries = list(wrapped)
+            self._adopt_body(self._clock_entries)
+            self._sync_clock_entries_into_body()
+            self.mark_dirty()
+
+        return DirtyList(self._clock_entries, on_mutation=on_clock_entries_mutation)
 
     @clock_entries.setter
     def clock_entries(self, value: list[Clock]) -> None:
         """Set logbook clock entries."""
-        self._clock_entries = value
+        self._clock_entries = list(value)
         self._adopt_body(self._clock_entries)
         self._sync_clock_entries_into_body()
         self.mark_dirty()
@@ -251,12 +274,18 @@ class Logbook(Drawer):
     @property
     def repeats(self) -> list[Repeat]:
         """Repeated task entries extracted from list items in this logbook."""
-        return self._repeats
+
+        def on_repeats_mutation(wrapped: DirtyList[Repeat]) -> None:
+            self._repeats = list(wrapped)
+            _sync_logbook_repeat_list(self, self._repeats, mark_dirty=True)
+            self.mark_dirty()
+
+        return DirtyList(self._repeats, on_mutation=on_repeats_mutation)
 
     @repeats.setter
     def repeats(self, value: list[Repeat]) -> None:
         """Set logbook repeat entries."""
-        self._repeats = value
+        self._repeats = list(value)
         _sync_logbook_repeat_list(self, self._repeats, mark_dirty=True)
         self.mark_dirty()
 
@@ -337,14 +366,14 @@ class Properties(Element, MutableMapping[str, RichText]):
     def __init__(
         self,
         *,
-        properties: dict[str, RichText] | None = None,
+        properties: Mapping[str, RichText | str] | None = None,
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self._properties: dict[str, RichText] = {}
         if properties is not None:
             for key, value in properties.items():
-                self._set_property(key, value, mark_dirty=False)
+                self._set_property(key, coerce_rich_text(value), mark_dirty=False)
 
     @classmethod
     def from_node(
@@ -395,7 +424,7 @@ class Properties(Element, MutableMapping[str, RichText]):
 
     def __setitem__(self, key: str, value: RichText | str) -> None:
         """Set one property value."""
-        self._set_property(key, _coerce_rich_text(value), mark_dirty=True)
+        self._set_property(key, coerce_rich_text(value), mark_dirty=True)
 
     def __delitem__(self, key: str) -> None:
         """Delete one property key."""
@@ -451,13 +480,6 @@ def _extract_drawer_body_element(
     if factory is None:
         return element_from_error_or_unknown(node, document, parent=parent)
     return factory(node, document, parent=parent)
-
-
-def _coerce_rich_text(value: RichText | str) -> RichText:
-    """Return *value* as [org_parser.text.RichText][]."""
-    if isinstance(value, RichText):
-        return value
-    return RichText(value)
 
 
 def _extract_indent(

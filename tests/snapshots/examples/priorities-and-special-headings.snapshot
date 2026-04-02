@@ -1,0 +1,395 @@
+Document(
+  filename='examples/priorities-and-special-headings.org',
+  title=RichText('Priority Cookies and Special Heading Forms'),
+  author=RichText('Quelby Flontsworth'),
+  category=RichText('priorities-and-special-headings'),
+  todo=RichText('TODO WAITING DELEGATED | DONE WONTFIX'),
+  keywords=[
+      Keyword(key='PRIORITIES', value=RichText('A F B')),
+    ],
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Priority Cookies — All Forms'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Letter priorities A through Z'),
+              body=[
+                  Paragraph(body=RichText('The standard priority range runs A (highest) to C (lowest) by default.\nThis file uses A–F as its range (set in #+PRIORITIES above).\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='A',
+        title=RichText('Critical: production outage — payment service down '),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=9, start_minute=0),
+        heading_tags=['ops', 'critical'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='B',
+        title=RichText('High: memory leak in session handler '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=7, start_dayname='Tue'),
+        properties={
+            'ticket': RichText('BE-1193'),
+          },
+        heading_tags=['backend', 'performance'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='C',
+        title=RichText('Medium: update dependency audit report '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=10, start_dayname='Fri'),
+        heading_tags=['security'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(level=1, todo='TODO', priority='D', title=RichText('Normal: refactor user preferences endpoint '), heading_tags=['backend']),
+      Heading(level=1, todo='TODO', priority='E', title=RichText('Low: add dark mode to admin panel '), heading_tags=['frontend', 'ux']),
+      Heading(
+        level=1,
+        todo='WAITING',
+        priority='F',
+        title=RichText('Backlog: localise error messages '),
+        heading_tags=['i18n'],
+        body=[
+            Paragraph(body=RichText('Additional letter priorities (Z = explicitly lowest in standard range):\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='Z',
+        title=RichText('Eventually: investigate WASM compilation target '),
+        heading_tags=['research', 'experimental'],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Numeric priorities'),
+              body=[
+                  Paragraph(body=RichText('Numeric priorities allow finer-grained ordering (0 = highest, 64 = lowest).\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='0',
+        title=RichText('Emergency: data integrity violation in production '),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=8, start_minute=0),
+        heading_tags=['ops'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='1',
+        title=RichText('Urgent: SSL certificate expires in 48 hours '),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=8, start_dayname='Wed'),
+        heading_tags=['security', 'ops'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='10',
+        title=RichText('Important: onboard new team member '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=13, start_dayname='Mon'),
+        heading_tags=['hr', 'admin'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(level=1, todo='TODO', priority='27', title=RichText('Routine: update the team wiki '), heading_tags=['docs']),
+      Heading(level=1, todo='TODO', priority='50', title=RichText('Nice to have: improve test output formatting '), heading_tags=['testing']),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='64',
+        title=RichText('Someday: write a blog post about the parser '),
+        heading_tags=['marketing'],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Priority with no TODO keyword'),
+              body=[
+                  Paragraph(body=RichText('A priority cookie is valid even when there is no TODO keyword:\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(level=1, priority='A', title=RichText('Architectural Decision Record: adopt event sourcing')),
+      Heading(level=1, priority='B', title=RichText('Meeting notes: 2025-01-06 all-hands')),
+      Heading(
+        level=1,
+        priority='C',
+        title=RichText('Reference: glossary of distributed systems terms'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('All optional heading fields populated simultaneously'),
+              body=[
+                  Paragraph(body=RichText('The most complex valid heading form: STARS + KEYWORD + PRIORITY + TITLE + TAGS\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(level=1, todo='TODO', priority='A', title=RichText('Complete the Org Mode parser implementation '), heading_tags=['parser', 'milestone']),
+      Heading(level=1, todo='DONE', priority='B', title=RichText('Write the syntax reference document '), heading_tags=['docs', 'research']),
+      Heading(level=1, todo='WAITING', priority='C', title=RichText('Await feedback on the grammar proposal '), heading_tags=['planning']),
+      Heading(
+        level=1,
+        todo='DELEGATED',
+        priority='D',
+        title=RichText('Handover test suite to QA team '),
+        heading_tags=['testing'],
+        body=[
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        is_comment=True,
+        title=RichText('Headings'),
+        body=[
+            Paragraph(body=RichText('A heading with the literal word =COMMENT= (case-significant) is a commented heading.\nCommented headings and their subtrees are not exported.\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              is_comment=True,
+              title=RichText('Internal implementation notes'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('These notes are excluded from all exports.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('The tokeniser currently uses a hand-written recursive descent parser.\nConsider switching to tree-sitter for better error recovery.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Known issues:\n')),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Clock duration parsing fails for durations > 99:59.')),
+                        ListItem(bullet='-', first_line=RichText('Radio target matching is O(n²) — needs a trie or Aho-Corasick implementation.')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    is_comment=True,
+                    title=RichText('Subheading under a commented heading'),
+                    body=[
+                        BlankLine(),
+                        Paragraph(body=RichText('Subtrees of COMMENT headings are also implicitly commented.\nThis subheading would also be excluded from exports.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('This heading is NOT commented'),
+              body=[
+                  Paragraph(body=RichText('The word COMMENT only triggers the commented state when it appears in the\nCOMMENT field position — after KEYWORD and PRIORITY, before TITLE.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('A heading whose *title* contains the word COMMENT is a normal heading:\n')),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Write a COMMENT on the proposal'),
+        body=[
+            Paragraph(body=RichText('A heading with COMMENT in the right position:\n')),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        is_comment=True,
+        title=RichText('This entire subtree is excluded from export '),
+        heading_tags=['internal'],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              is_comment=True,
+              title=RichText('Another top-level commented heading'),
+              properties={
+                  'security': RichText('internal-only'),
+                },
+              body=[
+                  Paragraph(body=RichText('Completely excluded from export regardless of export settings.\n')),
+                  BlankLine(),
+                  BlankLine(),
+                  Paragraph(body=RichText('Content here will not appear in any exported file.\n')),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('The Archive Tag'),
+        body=[
+            Paragraph(body=RichText('A heading tagged =:ARCHIVE:= is considered archived. The tag is case-significant.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Set up CI/CD pipeline '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=9, start_day=15, start_dayname='Sun'),
+        properties={
+            'archived_date': RichText('2024-10-01'),
+          },
+        heading_tags=['ARCHIVE'],
+        body=[
+            Paragraph(body=RichText('The above heading is archived. Archived headings are excluded from the agenda\nby default and often visually de-emphasised.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Migrate from Jenkins to GitHub Actions '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=11, start_day=30, start_dayname='Sat'),
+        heading_tags=['devops', 'ARCHIVE'],
+        body=[
+            Paragraph(body=RichText('Multiple tags are allowed; =ARCHIVE= can appear anywhere in the tag list.\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('The Footnote Section Heading'),
+        body=[
+            Paragraph(body=RichText('The heading whose title exactly matches =org-footnote-section=\n(default value: ="Footnotes"=, case-significant) is treated as a footnote section.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Inline reference to the footnote below.[fn:special-heading]\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Footnotes'),
+        body=[
+            Paragraph(body=RichText('[fn:special-heading] This heading "Footnotes" is a special footnote section.\nThe parser flags it with a special type distinct from a regular heading.\nIts exact title must match the value of the =org-footnote-section= variable.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Note: if you changed =org-footnote-section= to e.g. ="Bibliography"=, then\na heading titled =Footnotes= would be an ordinary heading, not a footnote section.\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Priority Interaction with Other Fields'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Priority + all optional heading fields on one line'),
+              body=[
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        is_comment=True,
+        priority='A',
+        title=RichText('Classified quarterly budget figures '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=31, start_dayname='Mon'),
+        heading_tags=['finance', 'confidential'],
+        body=[
+            Paragraph(body=RichText('This heading has: TODO keyword, priority, COMMENT flag, title, and tags.\nIt is both commented (excluded from export) and has a priority and keyword.\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Priority without a space before the title'),
+              body=[
+                  Paragraph(body=RichText('The priority cookie =[]= is followed by a space before the title begins:\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(level=1, priority='A', title=RichText('Title begins after one space')),
+      Heading(
+        level=1,
+        priority='B',
+        title=RichText('Title begins after two spaces (both valid — extra space is part of title matching)'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Tags containing special characters'),
+              body=[
+                  Paragraph(body=RichText('Tag characters allowed: =a-z A-Z 0-9 _ @ # %=\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(level=1, todo='TODO', priority='C', title=RichText('Multi-character special tags '), heading_tags=['backend_api', '@mentions', '#tickets', 'progress%']),
+    ],
+)

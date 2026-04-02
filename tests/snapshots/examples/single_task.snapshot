@@ -1,0 +1,35 @@
+Document(
+  filename='examples/single_task.org',
+  category=RichText('single_task'),
+  children=[
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Write comprehensive tests for the application '),
+        scheduled=Timestamp(is_active=True, start_year=2024, start_month=1, start_day=15, start_dayname='Mon'),
+        properties={
+            'capture_time': RichText('[2024-01-15 Mon 10:00]'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=15, start_dayname='Mon', start_hour=15, start_minute=30)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=15, start_dayname='Mon', start_hour=15, start_minute=30)),
+            ],
+        ),
+        heading_tags=['Testing', 'Python'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=15, start_dayname='Mon', start_hour=15, start_minute=30)),
+          ],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('This task involves creating unit and integration tests.\n')),
+          ],
+      ),
+    ],
+)

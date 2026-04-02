@@ -1,0 +1,77 @@
+Document(
+  filename='examples/edge_cases.org',
+  category=RichText('edge_cases'),
+  children=[
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with special chars!? :Tag.With:Punctuation,:Symbols;:'),
+        scheduled=Timestamp(is_active=True, start_year=2024, start_month=1, start_day=5, start_dayname='Fri'),
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=5, start_dayname='Fri', start_hour=12, start_minute=0)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=5, start_dayname='Fri', start_hour=12, start_minute=0)),
+            ],
+        ),
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=5, start_dayname='Fri', start_hour=12, start_minute=0)),
+          ],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Body with "quotes" and \'apostrophes\' and & ampersand.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task at 24:00 time'),
+        scheduled=Timestamp(is_active=True, start_year=2024, start_month=1, start_day=6, start_dayname='Sat', start_hour=24, start_minute=0),
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=6, start_dayname='Sat', start_hour=24, start_minute=0)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=6, start_dayname='Sat', start_hour=24, start_minute=0)),
+            ],
+        ),
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=6, start_dayname='Sat', start_hour=24, start_minute=0)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Empty body task '),
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=7, start_dayname='Sun', start_hour=10, start_minute=0)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=7, start_dayname='Sun', start_hour=10, start_minute=0)),
+            ],
+        ),
+        heading_tags=['NoBody'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=7, start_dayname='Sun', start_hour=10, start_minute=0)),
+          ],
+      ),
+    ],
+)

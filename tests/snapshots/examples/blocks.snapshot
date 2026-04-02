@@ -1,0 +1,432 @@
+Document(
+  filename='examples/blocks.org',
+  title=RichText('Block Types — Complete Demonstration'),
+  author=RichText('Morthea Plunshaw'),
+  category=RichText('blocks'),
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Greater Blocks'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Greater blocks can contain other elements, including nested greater blocks.\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Quote Blocks'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('A simple attribution:\n')),
+                  BlankLine(),
+                  QuoteBlock(
+                    body=[
+                        Paragraph(body=RichText('The programmer, like the poet, works only slightly removed from pure\nthought-stuff. He builds his castles in the air, from air, creating by\nexertion of the imagination.\n')),
+                        BlankLine(),
+                        Paragraph(body=RichText('— Fred Brooks, /The Mythical Man-Month/\n')),
+                      ],
+                  ),
+                  BlankLine(),
+                  Paragraph(body=RichText('A quote containing a list:\n')),
+                  BlankLine(),
+                  QuoteBlock(
+                    body=[
+                        Paragraph(body=RichText('Three virtues of a great programmer, according to Larry Wall:\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', first_line=RichText('Laziness — the quality that makes you write general solutions that save work later.')),
+                              ListItem(bullet='-', first_line=RichText('Impatience — the anger you feel when the computer is being slow, driving you to make it faster.')),
+                              ListItem(bullet='-', first_line=RichText("Hubris — excessive pride that makes you write programs other people won't say bad things about.")),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  Paragraph(body=RichText('Nested quote blocks:\n')),
+                  BlankLine(),
+                  QuoteBlock(
+                    body=[
+                        Paragraph(body=RichText('Dijkstra wrote:\n')),
+                        BlankLine(),
+                        QuoteBlock(
+                          body=[
+                              Paragraph(body=RichText('The question of whether a computer can think is no more interesting than\nthe question of whether a submarine can swim.\n')),
+                            ],
+                        ),
+                        BlankLine(),
+                        Paragraph(body=RichText('This is often cited out of context. The full passage makes a deeper point\nabout the nature of simulation versus instantiation.\n')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Center Blocks'),
+              body=[
+                  CenterBlock(
+                    body=[
+                        Paragraph(body=RichText('*Quatremont Institute*\nAnnual Symposium on Computational Linguistics\n12–14 March 2025 · Grumblewick, Northshire\n')),
+                      ],
+                  ),
+                  BlankLine(),
+                  CenterBlock(
+                    body=[
+                        Paragraph(body=RichText('/This page intentionally left blank./\n')),
+                      ],
+                  ),
+                  BlankLine(),
+                  Paragraph(body=RichText('A center block with structured content:\n')),
+                  BlankLine(),
+                  CenterBlock(
+                    body=[
+                        Table(
+                          rows=[
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' Award                  ')),
+                                    TableCell(value=RichText(' Recipient             ')),
+                                    TableCell(value=RichText(' Year ')),
+                                  ],
+                              ),
+                              TableRuleRow(raw='|------------------------+-----------------------+------|'),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' Best Paper             ')),
+                                    TableCell(value=RichText(' Pruxwick & Blumvane   ')),
+                                    TableCell(value=RichText(' 2023 ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' Outstanding Poster     ')),
+                                    TableCell(value=RichText(' Flomsworth et al.     ')),
+                                    TableCell(value=RichText(' 2024 ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' Distinguished Reviewer ')),
+                                    TableCell(value=RichText(' Prof. N. Glorbleby    ')),
+                                    TableCell(value=RichText(' 2024 ')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Special Blocks (custom names)'),
+              body=[
+                  Paragraph(body=RichText('A =warning= special block:\n')),
+                  BlankLine(),
+                  SpecialBlock(
+                    name='warning',
+                    body=[
+                        Paragraph(body=RichText('*Data loss risk:* this operation permanently deletes the source files.\nEnsure backups exist before proceeding. There is no undo.\n')),
+                      ],
+                  ),
+                  BlankLine(),
+                  Paragraph(body=RichText('An =abstract= special block (common in academic documents):\n')),
+                  BlankLine(),
+                  SpecialBlock(
+                    name='abstract',
+                    body=[
+                        Paragraph(body=RichText('We present a novel approach to parsing context-sensitive grammars using\na two-pass algorithm that separates structural recognition from object\nresolution. Empirical evaluation on a corpus of 10,000 Org Mode documents\ndemonstrates a 40% reduction in parse time compared to the reference\nimplementation, with identical output on 99.97% of inputs.\n')),
+                      ],
+                  ),
+                  BlankLine(),
+                  Paragraph(body=RichText('A =note= block with nested elements:\n')),
+                  BlankLine(),
+                  SpecialBlock(
+                    name='note',
+                    body=[
+                        Paragraph(body=RichText('The following configuration values are defaults and can be overridden\nper-file using special keywords in the zeroth section.\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', first_line=RichText('~org-todo-keywords-1~: controls TODO keyword recognition.')),
+                              ListItem(bullet='-', first_line=RichText('~org-link-parameters~: controls plain-link type recognition.')),
+                            ],
+                        ),
+                        BlankLine(),
+                        Paragraph(body=RichText('See the [[https://orgmode.org/manual/][Org Manual]] for the full list of configurable variables.\n')),
+                      ],
+                  ),
+                  BlankLine(),
+                  Paragraph(body=RichText('A =figure= block containing a caption-affiliated element:\n')),
+                  BlankLine(),
+                  SpecialBlock(
+                    name='figure',
+                    body=[
+                        CaptionKeyword(value='Architecture diagram — request lifecycle'),
+                        ExampleBlock(body='Client → Load Balancer → API Gateway → Service Mesh → Microservice\n                                    ↓\n                              Auth Service\n'),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Nested Greater Blocks'),
+              body=[
+                  QuoteBlock(
+                    body=[
+                        Paragraph(body=RichText('Here is a center block nested inside a quote:\n')),
+                        BlankLine(),
+                        CenterBlock(
+                          body=[
+                              Paragraph(body=RichText('*The key insight* is that nesting is allowed between /different/ block types.\n')),
+                            ],
+                        ),
+                        BlankLine(),
+                        Paragraph(body=RichText('And the quote continues after the nested center block.\n')),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Lesser Blocks'),
+        body=[
+            Paragraph(body=RichText('Lesser blocks cannot contain other elements (except verse blocks, which contain objects).\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Comment Blocks'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Comment blocks are never exported or rendered.\n')),
+                  BlankLine(),
+                  CommentBlock(body='TODO: add benchmark results from the Grumblewick corpus run.\nThe numbers from the Velstow subset are in ~/data/velstow-results.csv.\nDo not publish until peer-reviewed.\n'),
+                  BlankLine(),
+                  CommentBlock(body='REVIEWER NOTE (internal):\nThe abstract above needs tightening — currently 117 words, target is 100.\nSections 3 and 4 can be condensed once the figures are finalised.\n'),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Example Blocks'),
+              body=[
+                  Paragraph(body=RichText('Example blocks preserve whitespace and are not parsed for objects.\n')),
+                  BlankLine(),
+                  CaptionKeyword(value='Example of a minimal Org document'),
+                  ExampleBlock(body='#+TITLE: My Document\n\n,* First Heading\n\nThis is a paragraph under the first heading.\n\n,** Sub-heading\n\nAnother paragraph.\n'),
+                  BlankLine(),
+                  Paragraph(body=RichText('An example block showing a shell session:\n')),
+                  BlankLine(),
+                  ExampleBlock(body="$ git clone https://github.com/example/org-parser.git\nCloning into 'org-parser'...\nremote: Enumerating objects: 1842, done.\nremote: Counting objects: 100% (1842/1842), done.\nReceiving objects: 100% (1842/1842), 3.21 MiB | 4.5 MiB/s, done.\n$ cd org-parser\n$ poetry install\nInstalling dependencies from lock file\n...\nAll packages installed successfully.\n$ poetry run pytest\n======================== 247 passed in 4.32s ========================\n"),
+                  BlankLine(),
+                  Paragraph(body=RichText('Note comma-quoting in example block above: lines that would start with =,*= (like =,* First Heading=) are comma-quoted.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Verse Blocks'),
+              body=[
+                  Paragraph(body=RichText('Verse blocks parse objects (markup, links, etc.) while preserving line structure.\n')),
+                  BlankLine(),
+                  CaptionKeyword(value='Excerpt from "The Wasteland" — T.S. Eliot'),
+                  VerseBlock(
+                    body=[
+                        Paragraph(body=RichText('April is the cruellest month, breeding\nLilacs out of the dead land, mixing\nMemory and desire, stirring\nDull roots with spring rain.\n')),
+                      ],
+                  ),
+                  BlankLine(),
+                  Paragraph(body=RichText('A verse block with markup and a hard line break:\n')),
+                  BlankLine(),
+                  VerseBlock(
+                    body=[
+                        Paragraph(body=RichText('*Do not go gentle* into that good night,\nOld age should burn and rave at close of day;\n/Rage, rage/ against the dying of the light.\n')),
+                        BlankLine(),
+                        Paragraph(body=RichText('Though wise men at their end know _dark is right_,\nBecause their words had forked no lightning they\n*Do not go gentle* into that good night.\n')),
+                        BlankLine(),
+                        Paragraph(body=RichText('— Dylan Thomas\n')),
+                      ],
+                  ),
+                  BlankLine(),
+                  Paragraph(body=RichText('A verse block with a link:\n')),
+                  BlankLine(),
+                  VerseBlock(
+                    body=[
+                        Paragraph(body=RichText("Come, my friends,\n'Tis not too late to seek a newer world.\nPush off, and sitting well in order smite\nThe sounding furrows; for my purpose holds\nTo sail beyond the sunset — see [[https://www.poetryfoundation.org/poems/45392/ulysses][the full poem]].\n")),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Source Blocks'),
+              body=[
+                  Paragraph(body=RichText('Basic source block:\n')),
+                  BlankLine(),
+                  CaptionKeyword(value='Greatest common divisor — Euclidean algorithm'),
+                  SourceBlock(language='python', body='def gcd(a: int, b: int) -> int:\n    """Return the greatest common divisor of a and b."""\n    while b:\n        a, b = b, a % b\n    return a\n'),
+                  BlankLine(),
+                  Paragraph(body=RichText('Source block with line numbering switch:\n')),
+                  BlankLine(),
+                  SourceBlock(language='emacs-lisp', switches='-n', body='(defun org-parse-heading (element)\n  "Extract heading metadata from ELEMENT."\n  (let ((level (org-element-property :level element))\n        (todo  (org-element-property :todo-keyword element))\n        (title (org-element-property :raw-value element)))\n    (list :level level :todo todo :title title)))\n'),
+                  BlankLine(),
+                  Paragraph(body=RichText('Source block with continuation numbering (+n):\n')),
+                  BlankLine(),
+                  SourceBlock(language='emacs-lisp', switches='+n 10', body='(defun org-parse-section (element)\n  "Extract section contents from ELEMENT."\n  (org-element-contents element))\n'),
+                  BlankLine(),
+                  Paragraph(body=RichText('Source block with reference links disabled (-r) and line numbers (-n):\n')),
+                  BlankLine(),
+                  SourceBlock(language='c', switches='-n -r', body='#include <stdio.h>\n\nint main(void) {\n    printf("Hello, world!\\n"); /* (ref:hello) */\n    return 0;\n}\n'),
+                  BlankLine(),
+                  Paragraph(body=RichText('Shell script example:\n')),
+                  BlankLine(),
+                  SourceBlock(language='bash', body='#!/usr/bin/env bash\nset -euo pipefail\n\nreadonly INPUT_DIR="${1:?Usage: $0 <input-dir>}"\nreadonly OUTPUT_DIR="${2:-./output}"\n\nmkdir -p "$OUTPUT_DIR"\n\nfind "$INPUT_DIR" -name "*.org" -print0 | while IFS= read -r -d \'\' file; do\n    base="$(basename "$file" .org)"\n    echo "Processing: $file"\n    # Placeholder for actual processing\n    cp "$file" "$OUTPUT_DIR/${base}.processed.org"\ndone\n\necho "Done. Processed $(find "$OUTPUT_DIR" -name "*.processed.org" | wc -l) files."\n'),
+                  BlankLine(),
+                  Paragraph(body=RichText('Source block with arguments:\n')),
+                  BlankLine(),
+                  SourceBlock(language='python', switches=':results output :exports both', body='import sys\nprint(f"Python {sys.version}")\nprint("Parser ready.")\n'),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Export Blocks'),
+              body=[
+                  Paragraph(body=RichText('Export blocks pass raw content through to a specific backend unchanged.\n')),
+                  BlankLine(),
+                  ExportBlock(backend='html', body='<div class="callout callout-warning">\n  <h4>Browser Compatibility</h4>\n  <p>The interactive features on this page require a modern browser\n  with ES2020 support. Internet Explorer is not supported.</p>\n</div>\n'),
+                  BlankLine(),
+                  ExportBlock(backend='latex', body="\\begin{theorem}\nFor any integer $n > 1$, there exists a prime $p$ such that $n < p < 2n$.\n\\end{theorem}\n\\begin{proof}\nThis is Bertrand's postulate, proven by Chebyshev in 1852.\n\\end{proof}\n"),
+                  BlankLine(),
+                  ExportBlock(backend='odt', body='<text:p text:style-name="Heading_20_1">Section Title</text:p>\n<text:p text:style-name="Text_20_Body">Body content in ODT format.</text:p>\n'),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Dynamic Blocks'),
+        body=[
+            Paragraph(body=RichText('Dynamic blocks are populated programmatically. In a static parse, their contents are treated as ordinary elements.\n')),
+            BlankLine(),
+            DynamicBlock(
+              name='clocktable',
+              parameters=':scope subtree :maxlevel 3',
+              body=[
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Headline             ')),
+                              TableCell(value=RichText(' Time   ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|----------------------+--------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' *Total time*         ')),
+                              TableCell(value=RichText(' *3:45* ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|----------------------+--------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Chapter 1 drafting   ')),
+                              TableCell(value=RichText(' 2:00   ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Chapter 2 revision   ')),
+                              TableCell(value=RichText(' 1:15   ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Bibliography check   ')),
+                              TableCell(value=RichText(' 0:30   ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                ],
+            ),
+            BlankLine(),
+            DynamicBlock(
+              name='columnview',
+              parameters=':hlines 1 :id local',
+              body=[
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ITEM                     ')),
+                              TableCell(value=RichText(' TODO ')),
+                              TableCell(value=RichText(' PRIORITY ')),
+                              TableCell(value=RichText(' TAGS       ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|--------------------------+------+----------+------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Planning document        ')),
+                              TableCell(value=RichText(' TODO ')),
+                              TableCell(value=RichText(' A        ')),
+                              TableCell(value=RichText(' :admin:    ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' First chapter            ')),
+                              TableCell(value=RichText(' DONE ')),
+                              TableCell(value=RichText('          ')),
+                              TableCell(value=RichText(' :writing:  ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Second chapter           ')),
+                              TableCell(value=RichText(' TODO ')),
+                              TableCell(value=RichText(' B        ')),
+                              TableCell(value=RichText(' :writing:  ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                ],
+            ),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Comma-Quoting in Block Contents'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Inside any block, lines beginning with =*= must be comma-quoted with a leading comma.\nLines beginning with =#+= may also be comma-quoted.\n')),
+            BlankLine(),
+            ExampleBlock(body=',* This line starts with an asterisk — comma-quoted.\n,** So does this — also comma-quoted.\n\nNormal text needs no quoting.\n\n,#+TITLE: This #+KEY line is also comma-quoted (optional for safety).\n#+TITLE: This one is not quoted — the parser strips commas only from ,#+ and ,* lines.\n'),
+          ],
+      ),
+    ],
+)

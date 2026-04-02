@@ -45,6 +45,8 @@ class Clock(Element):
     ) -> None:
         super().__init__(parent=parent)
         self._timestamp = timestamp
+        if self._timestamp is not None:
+            self._timestamp.parent = self
         self._duration = _normalize_duration(duration)
 
     @classmethod
@@ -83,6 +85,8 @@ class Clock(Element):
     def timestamp(self, value: Timestamp | None) -> None:
         """Set clock timestamp and recompute duration for ranged timestamps."""
         self._timestamp = value
+        if self._timestamp is not None:
+            self._timestamp.parent = self
         if value is not None and value.end is not None:
             self._duration = _duration_from_timestamp(value)
         else:

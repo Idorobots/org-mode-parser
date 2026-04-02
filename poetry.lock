@@ -1435,21 +1435,21 @@ tests = ["tree-sitter-html (>=0.23.2)", "tree-sitter-javascript (>=0.23.1)", "tr
 
 [[package]]
 name = "tree-sitter-org"
-version = "0.23.5"
+version = "0.23.6"
 description = "Tree-sitter grammar for Org Mode syntax"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "tree_sitter_org-0.23.5-cp310-abi3-macosx_10_9_x86_64.whl", hash = "sha256:1dff6b29ceb1430056ef19d777956a7243c1978080989abd030b6079eaba540f"},
-    {file = "tree_sitter_org-0.23.5-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:4d4c907365bba432c8aefed2d5fdb49aee50e48877e2e3f7f640ddf327295372"},
-    {file = "tree_sitter_org-0.23.5-cp310-abi3-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:4f4a0db4be0f584ae2b3ad2bf03cf3fd7c343f07ef6867378c5eed6d4613808c"},
-    {file = "tree_sitter_org-0.23.5-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:57c6a0f278b9b768459c6c02412798963c8b38d90e331fa584b0b2a452b5d8c1"},
-    {file = "tree_sitter_org-0.23.5-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:541e677d7f54d5559737dfb69472caf3ba9450b7d98edfbb6659528f460471ec"},
-    {file = "tree_sitter_org-0.23.5-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:6644f3587562caf2a79d413b5455eedbbad93efab2f22f52584ee7aa6ef3d418"},
-    {file = "tree_sitter_org-0.23.5-cp310-abi3-win_amd64.whl", hash = "sha256:b14fb25b9bef7d48e395f47168001ff74aa93984aca09a0a7fe037b943504d66"},
-    {file = "tree_sitter_org-0.23.5-cp310-abi3-win_arm64.whl", hash = "sha256:9579ed0d6373e668fc31fa147526e3aae1eaefb557145c81336e1525a11ff87a"},
-    {file = "tree_sitter_org-0.23.5.tar.gz", hash = "sha256:dd7987b3ba051da58e7c8d5f131c57da34e1e92c19c2d9f1cad115354d4ea79d"},
+    {file = "tree_sitter_org-0.23.6-cp310-abi3-macosx_10_9_x86_64.whl", hash = "sha256:9fc099d94c212128be9727a2d175aad98ad40f306d402eae403168cb7abceb8a"},
+    {file = "tree_sitter_org-0.23.6-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:d1febe55243c9aa4b820537158c2890da699ae46269d6ef4eef509b635f91f55"},
+    {file = "tree_sitter_org-0.23.6-cp310-abi3-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:1edda97d3247c6f02094f3abf49644073f2cbffc88d80318df9eff0dd920f4d8"},
+    {file = "tree_sitter_org-0.23.6-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:75d813961e9dd3ddaca69f0617de6d50e4fe97d245b476b3ae3677ca4af7d0d8"},
+    {file = "tree_sitter_org-0.23.6-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:4e932d4ebb8d0d5800f1d5a23d0487f9fb63fde219b40c8a603a8adc4d3cda5b"},
+    {file = "tree_sitter_org-0.23.6-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:8199190c4ca25a569cd5d7c641d6385e164f6a2dd13a28dd0d26ffa49f66817e"},
+    {file = "tree_sitter_org-0.23.6-cp310-abi3-win_amd64.whl", hash = "sha256:0f5bdb78db0d076e0326ce2118cc363baa82dcb68b074e7d97acbdd8e1e94a6a"},
+    {file = "tree_sitter_org-0.23.6-cp310-abi3-win_arm64.whl", hash = "sha256:970e7634b95c0a59f6bea71bbea56b256da60639a95efe18d0998da769ca9658"},
+    {file = "tree_sitter_org-0.23.6.tar.gz", hash = "sha256:4aafa0ebee95c8f69598145783845b1fb7497721e708ec15c7233fcefa3deb47"},
 ]
 
 [package.extras]
@@ -1531,4 +1531,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "bcb34efbc8ddca6738119ec8e2e27a9128c3ff095462dc51590ccdde4dafaf61"
+content-hash = "797d68964b3b7219a13e931b7b73f31c5ff9d5b92fdd88114c9e036e45000b2a"

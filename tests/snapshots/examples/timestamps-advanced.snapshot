@@ -1,0 +1,484 @@
+Document(
+  filename='examples/timestamps-advanced.org',
+  title=RichText('Recurring Habit and Schedule Tracker'),
+  author=RichText('Vorwick Thrumble'),
+  category=RichText('timestamps-advanced'),
+  todo=RichText('TODO DOING WAITING | DONE SKIPPED'),
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Active and Inactive Timestamps'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Active timestamps — appear in the agenda'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('A scheduled event: <2025-03-15 Sat>\nAn event with time: <2025-03-15 Sat 09:30>\nA date without day name (minimal form): <2025-03-15>\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Active timestamps inline in text:\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('The project kickoff is on <2025-01-20 Mon> and the first review is scheduled\nfor <2025-02-10 Mon 14:00>. The final deadline is <2025-06-30 Mon>.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Inactive timestamps — do not appear in the agenda'),
+              body=[
+                  Paragraph(body=RichText('Created: [2025-01-06 Mon 11:42]\nLast modified: [2025-01-06 Mon 15:03]\nReviewed: [2024-12-20 Fri]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Inactive timestamps in text:\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('This document was originally drafted [2024-11-01 Fri] and substantially\nrevised [2024-12-15 Sun]. The version history begins at [2024-10-15 Tue 09:00].\n')),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Date and Time Ranges'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Multi-day active range'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Conference attendance:\n<2025-03-12 Wed>--<2025-03-14 Fri>\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Annual leave:\n<2025-07-21 Mon>--<2025-08-01 Fri>\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Multi-day inactive range'),
+              body=[
+                  Paragraph(body=RichText('Reference period:\n[2024-01-01 Mon]--[2024-12-31 Tue]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Sprint duration:\n[2025-01-06 Mon]--[2025-01-17 Fri]\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Same-day time range (active)'),
+              body=[
+                  Paragraph(body=RichText('Morning block: <2025-01-20 Mon 09:00-12:00>\nAfternoon session: <2025-02-05 Wed 14:30-16:45>\nEvening seminar: <2025-03-01 Sat 19:00-21:30>\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Same-day time range (inactive)'),
+              body=[
+                  Paragraph(body=RichText('Historical record: [2024-12-18 Wed 10:00-11:30]\nMeeting log: [2024-11-07 Thu 15:00-15:45]\n')),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Repeaters'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Cumulative repeater (+) — always reschedule by N units from original date'),
+              body=[
+                  Paragraph(body=RichText('Daily stand-up (every weekday — approximated as daily):\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Morning stand-up '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=9, start_minute=0, repeater_mark='+', repeater_value=1, repeater_unit='d'),
+        properties={
+            'ID': RichText('d1a2b3c4-e5f6-7890-abcd-ef1234567890'),
+          },
+        heading_tags=['team'],
+        body=[
+            Paragraph(body=RichText('Weekly review:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Weekly review '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=10, start_dayname='Fri', start_hour=16, start_minute=0, repeater_mark='+', repeater_value=1, repeater_unit='w'),
+        properties={
+            'effort': RichText('1:00'),
+          },
+        heading_tags=['planning'],
+        body=[
+            Paragraph(body=RichText('Monthly one-on-one:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('One-on-one with manager '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=15, start_dayname='Wed', repeater_mark='+', repeater_value=1, repeater_unit='m'),
+        heading_tags=['admin'],
+        body=[
+            Paragraph(body=RichText('Quarterly board report:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Prepare board report '),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=31, start_dayname='Mon', repeater_mark='+', repeater_value=3, repeater_unit='m'),
+        heading_tags=['reporting', 'admin'],
+        body=[
+            Paragraph(body=RichText('Annual performance review:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Complete self-assessment '),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=12, start_day=1, start_dayname='Mon', repeater_mark='+', repeater_value=1, repeater_unit='y'),
+        heading_tags=['hr'],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Catch-up repeater (++) — reschedule from today, skipping missed occurrences'),
+              body=[
+                  Paragraph(body=RichText('Bi-weekly newsletter:\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Draft newsletter '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=14, start_dayname='Tue', repeater_mark='++', repeater_value=2, repeater_unit='w'),
+        heading_tags=['comms'],
+        body=[
+            Paragraph(body=RichText('Every-other-day medication log:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Take vitamin D supplement '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater_mark='++', repeater_value=2, repeater_unit='d'),
+        heading_tags=['health'],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Restart repeater (.+) — reschedule N units from the completion date'),
+              body=[
+                  Paragraph(body=RichText('Irregular maintenance — reset the clock from when last done:\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Water the office plants '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater_mark='.+', repeater_value=3, repeater_unit='d'),
+        heading_tags=['maintenance'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Back up development database '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater_mark='.+', repeater_value=1, repeater_unit='w'),
+        heading_tags=['sysadmin'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Update project dependencies '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater_mark='.+', repeater_value=1, repeater_unit='m'),
+        heading_tags=['maintenance', 'dev'],
+        body=[
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Delays'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('All-type delay (-) — warn this many units before the date for all occurrences'),
+              body=[
+                  Paragraph(body=RichText('Task with a one-week warning before the deadline:\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Submit grant application '),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=4, start_day=30, start_dayname='Wed', delay_mark='-', delay_value=1, delay_unit='w'),
+        heading_tags=['research'],
+        body=[
+            Paragraph(body=RichText('Task with a two-day warning:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Pay quarterly tax '),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=4, start_day=5, start_dayname='Sat', delay_mark='-', delay_value=2, delay_unit='d'),
+        heading_tags=['finance'],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('First-type delay (--) — warn only for the first (upcoming) occurrence'),
+              body=[
+                  Paragraph(body=RichText('Repeating task — warn only for the next occurrence, not all future ones:\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Monthly server audit '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=2, start_day=1, start_dayname='Sat', repeater_mark='+', repeater_value=1, repeater_unit='m', delay_mark='--', delay_value=3, delay_unit='d'),
+        heading_tags=['sysadmin'],
+        body=[
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Combined Repeater and Delay'),
+        body=[
+            Paragraph(body=RichText('A repeater with a delay combines both markers in the REPEATER-OR-DELAY field.\nThe order of the two markers is not significant.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Weekly team sync — repeat weekly, warn two days before:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Team sync preparation '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=10, start_dayname='Fri', start_hour=10, start_minute=0, repeater_mark='+', repeater_value=1, repeater_unit='w', delay_mark='-', delay_value=2, delay_unit='d'),
+        heading_tags=['team', 'planning'],
+        body=[
+            Paragraph(body=RichText('Monthly financial close — cumulative repeat, three-day all-type warning:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DOING',
+        title=RichText('Monthly financial close '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=31, start_dayname='Fri', repeater_mark='+', repeater_value=1, repeater_unit='m', delay_mark='-', delay_value=3, delay_unit='d'),
+        properties={
+            'effort': RichText('4:00'),
+            'assignee': RichText('Vorwick Thrumble'),
+          },
+        heading_tags=['finance'],
+        body=[
+            Paragraph(body=RichText('Quarterly report — catch-up repeat with first-type warning:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Draft quarterly report '),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=31, start_dayname='Mon', repeater_mark='++', repeater_value=3, repeater_unit='m', delay_mark='--', delay_value=1, delay_unit='w'),
+        heading_tags=['reporting'],
+        body=[
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Repeater with Upper Bound'),
+        body=[
+            Paragraph(body=RichText('The upper bound form =MARK VALUE UNIT/VALUE UNIT= limits how far ahead a\ncumulative repeater will advance when catching up after a long absence.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Weekly habit with a two-week catch-up limit:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Write in journal '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater_mark='+', repeater_value=1, repeater_unit='d', repeater_cap_value=1, repeater_cap_unit='w'),
+        properties={
+            'effort': RichText('0:15'),
+          },
+        heading_tags=['personal'],
+        body=[
+            Paragraph(body=RichText('Monthly review with a three-month upper bound:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Audit access permissions '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=31, start_dayname='Fri', repeater_mark='+', repeater_value=1, repeater_unit='m', repeater_cap_value=3, repeater_cap_unit='m'),
+        heading_tags=['security', 'sysadmin'],
+        body=[
+            Paragraph(body=RichText('Yearly archiving with a two-year limit:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Archive old project files '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=12, start_day=31, start_dayname='Wed', repeater_mark='+', repeater_value=1, repeater_unit='y', repeater_cap_value=2, repeater_cap_unit='y'),
+        heading_tags=['admin'],
+        body=[
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Full Planning Lines — All Three Keywords Together'),
+        body=[
+            Paragraph(body=RichText('A task that has been closed but retains its scheduled and deadline timestamps\nfor historical reference:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Migrate production database '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=3, start_dayname='Fri'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=5, start_dayname='Sun'),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=4, start_dayname='Sat', start_hour=23, start_minute=47),
+        properties={
+            'effort': RichText('6:00'),
+            'actual_time': RichText('7:30'),
+          },
+        heading_tags=['ops'],
+        body=[
+            Paragraph(body=RichText('Migration completed one day ahead of deadline. Actual time exceeded estimate due\nto an unexpected schema conflict in the =user_sessions= table.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Another fully-planned task:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Launch staging environment '),
+        scheduled=Timestamp(is_active=True, start_year=2024, start_month=12, start_day=16, start_dayname='Mon'),
+        deadline=Timestamp(is_active=True, start_year=2024, start_month=12, start_day=20, start_dayname='Fri'),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=12, start_day=18, start_dayname='Wed', start_hour=14, start_minute=22),
+        properties={
+            'environment': RichText('staging'),
+            'region': RichText('eu-west-1'),
+          },
+        heading_tags=['devops'],
+        body=[
+            Paragraph(body=RichText('A task with repeated keyword (last instance wins):\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Renew SSL certificates '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=6, start_day=1, start_dayname='Sun'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=6, start_day=10, start_dayname='Tue'),
+        heading_tags=['security'],
+        body=[
+            Paragraph(body=RichText('The effective deadline above is <2025-06-10 Tue> — the last DEADLINE wins.\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Timestamps Inline in Paragraphs'),
+        body=[
+            Paragraph(body=RichText('Timestamps can appear anywhere objects are valid — not just in planning lines.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('The first public release of Emacs was on [1985-01-01 Tue] (approximately — the\nexact date is debated). GNU Emacs 19.1 shipped on <1993-05-31 Mon>. Version 21\narrived <2001-10-28 Sun>, followed by 22 on <2007-06-02 Sat>.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('The tree-sitter integration was merged into Emacs during the period\n<2022-09-01 Thu>--<2022-11-01 Tue>, shipping in Emacs 29.1 on <2023-07-30 Sun>.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Meeting notes cross-reference: discussed [2025-01-06 Mon 14:00] with outcome\nto revisit [2025-01-13 Mon 14:00].\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='SKIPPED',
+        title=RichText('Timestamps with No Day Name'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('These timestamps omit the optional =DAYNAME= field:\n')),
+            BlankLine(),
+            Paragraph(body=RichText('SCHEDULED: <2025-06-15>\nDEADLINE: [2025-09-01]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Inline: project window is <2025-06-01>--<2025-08-31>, reviewed at [2025-07-15].\n')),
+          ],
+      ),
+    ],
+)

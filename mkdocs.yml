@@ -63,7 +63,12 @@ extra_css:
 
 nav:
   - Home:
-    - Basic usage: index.md
+    - Introduction: index.md
+    - Basic usage: usage.md
+    - Tree traversal: traversal.md
+    - Mutability: mutability.md
+  - API:
+    - Reading and writing: load.md
     - Document structure: document-structure.md
     - Elements: elements.md
     - Rich text: rich-text.md

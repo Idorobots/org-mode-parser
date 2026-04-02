@@ -1,0 +1,7 @@
+Document(
+  filename='examples/simple.org',
+  category=RichText('simple'),
+  children=[
+      Heading(level=1, todo='DONE', title=RichText('Simple task')),
+    ],
+)

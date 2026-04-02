@@ -1,0 +1,60 @@
+Document(
+  filename='examples/priority-basic.org',
+  category=RichText('priority-basic'),
+  children=[
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='A',
+        title=RichText('Highest priority task'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='B',
+        title=RichText('Medium priority task'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='C',
+        title=RichText('Low priority task'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        priority='A',
+        title=RichText('Priority with no TODO keyword'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='0',
+        title=RichText('Numeric priority zero'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        priority='27',
+        title=RichText('Numeric priority twenty-seven'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(level=1, todo='DONE', priority='B', title=RichText('Completed task with priority')),
+    ],
+)

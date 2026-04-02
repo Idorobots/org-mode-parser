@@ -26,13 +26,16 @@ from org_parser.element import (
     Logbook,
     Properties,
 )
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
+    coerce_element_body,
     element_from_error_or_unknown,
+    ensure_trailing_newline,
 )
 from org_parser.element._keyword import Keyword
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_optional_rich_text
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -108,16 +111,16 @@ class Document:
         self,
         *,
         filename: str,
-        title: RichText | None = None,
-        author: RichText | None = None,
-        category: RichText | None = None,
-        description: RichText | None = None,
-        todo: RichText | None = None,
-        keywords: list[Keyword] | None = None,
+        title: RichText | str | None = None,
+        author: RichText | str | None = None,
+        category: RichText | str | None = None,
+        description: RichText | str | None = None,
+        todo: RichText | str | None = None,
+        keywords: Sequence[Keyword] = (),
         properties: Properties | None = None,
         logbook: Logbook | None = None,
-        body: list[Element] | None = None,
-        children: list[Heading] | None = None,
+        body: Sequence[Element] = (),
+        children: Sequence[Heading] = (),
     ) -> None:
         self._filename = filename
 
@@ -129,14 +132,13 @@ class Document:
         self._init_set_keyword(CATEGORY, category)
         self._init_set_keyword(DESCRIPTION, description)
         self._init_set_keyword(TODO, todo)
-        if keywords is not None:
-            for kw in keywords:
-                self._init_merge_keyword(kw)
+        for kw in keywords:
+            self._init_merge_keyword(kw)
 
-        self._properties = properties
-        self._logbook = logbook
-        self._body: list[Element] = body if body is not None else []
-        self._children: list[Heading] = children if children is not None else []
+        self._properties = properties if properties is not None else Properties()
+        self._logbook = logbook if logbook is not None else Logbook()
+        self._body: list[Element] = list(body)
+        self._children: list[Heading] = list(children)
         self._node: tree_sitter.Node | None = None
         self._source: bytes | None = None
         self._dirty = False
@@ -218,8 +220,8 @@ class Document:
         # --- extract zeroth-section data ------------------------------------
         kw_list, properties, logbook, body = _parse_zeroth_section(root, parent=doc)
         doc._keywords = kw_list
-        doc._properties = properties
-        doc._logbook = logbook
+        doc._properties = properties if properties is not None else Properties(parent=doc)
+        doc._logbook = logbook if logbook is not None else Logbook(parent=doc)
         doc._body = body
         doc._adopt_keywords(doc._keywords)
         doc._adopt_element(doc._properties)
@@ -282,7 +284,7 @@ class Document:
         return kw.value if kw is not None else None
 
     @title.setter
-    def title(self, value: RichText | None) -> None:
+    def title(self, value: RichText | str | None) -> None:
         """Set the ``#+TITLE:`` value."""
         self._set_keyword_value(TITLE, value)
 
@@ -306,7 +308,7 @@ class Document:
         return kw.value if kw is not None else None
 
     @author.setter
-    def author(self, value: RichText | None) -> None:
+    def author(self, value: RichText | str | None) -> None:
         """Set the ``#+AUTHOR:`` value."""
         self._set_keyword_value(AUTHOR, value)
 
@@ -339,7 +341,7 @@ class Document:
         return RichText(stem) if stem else None
 
     @category.setter
-    def category(self, value: RichText | None) -> None:
+    def category(self, value: RichText | str | None) -> None:
         """Set the ``#+CATEGORY:`` value."""
         self._set_keyword_value(CATEGORY, value)
 
@@ -350,7 +352,7 @@ class Document:
         return kw.value if kw is not None else None
 
     @description.setter
-    def description(self, value: RichText | None) -> None:
+    def description(self, value: RichText | str | None) -> None:
         """Set the ``#+DESCRIPTION:`` value."""
         self._set_keyword_value(DESCRIPTION, value)
 
@@ -372,7 +374,7 @@ class Document:
         return kw.value if kw is not None else None
 
     @todo.setter
-    def todo(self, value: RichText | None) -> None:
+    def todo(self, value: RichText | str | None) -> None:
         """Set the ``#+TODO:`` value."""
         self._set_keyword_value(TODO, value)
 
@@ -437,25 +439,29 @@ class Document:
         0
         ```
         """
-        return self._keywords
+
+        def on_keywords_mutation(wrapped: DirtyList[Keyword]) -> None:
+            self._keywords = list(wrapped)
+            self._adopt_keywords(self._keywords)
+            self.mark_dirty()
+
+        return DirtyList(self._keywords, on_mutation=on_keywords_mutation)
 
     @keywords.setter
     def keywords(self, value: list[Keyword]) -> None:
         """Set the keywords list."""
-        self._keywords = value
+        self._keywords = list(value)
         self._adopt_keywords(self._keywords)
         self.mark_dirty()
 
     @property
-    def properties(self) -> Properties | None:
-        """Merged zeroth-section ``PROPERTIES`` drawer, or *None*.
+    def properties(self) -> Properties:
+        """Merged zeroth-section ``PROPERTIES`` drawer.
 
         Example:
         ```python
         >>> from org_parser import loads
-        >>> from org_parser.element import Properties
         >>> document = loads("#+TITLE: Properties")
-        >>> document.properties = Properties()
         >>> document.properties["key"] = RichText("Value")
         >>> print(str(document))
         #+TITLE: Properties
@@ -467,22 +473,29 @@ class Document:
         return self._properties
 
     @properties.setter
-    def properties(self, value: Properties | None) -> None:
-        """Set merged ``PROPERTIES`` drawer."""
-        self._properties = value
+    def properties(self, value: Properties | dict[str, RichText | str] | None) -> None:
+        """Set merged ``PROPERTIES`` drawer.
+
+        Assigning ``None`` resets this to an empty drawer instance.
+        """
+        if value is None:
+            properties = Properties(parent=self)
+        elif isinstance(value, Properties):
+            properties = value
+        else:
+            properties = Properties(properties=value, parent=self)
+        self._properties = properties
         self._adopt_element(self._properties)
         self.mark_dirty()
 
     @property
-    def logbook(self) -> Logbook | None:
-        """Merged zeroth-section ``LOGBOOK`` drawer, or *None*.
+    def logbook(self) -> Logbook:
+        """Merged zeroth-section ``LOGBOOK`` drawer.
 
         Example:
         ```python
-        >>> from org_parser.element import Logbook
         >>> from org_parser.time import Clock
         >>> document = loads("#+TITLE: Logbook")
-        >>> document.logbook = Logbook()
         >>> document.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
         >>> print(str(document))
         #+TITLE: Logbook
@@ -495,8 +508,11 @@ class Document:
 
     @logbook.setter
     def logbook(self, value: Logbook | None) -> None:
-        """Set merged ``LOGBOOK`` drawer."""
-        self._logbook = value
+        """Set merged ``LOGBOOK`` drawer.
+
+        Assigning ``None`` resets this to an empty drawer instance.
+        """
+        self._logbook = value if value is not None else Logbook(parent=self)
         self._adopt_element(self._logbook)
         self.mark_dirty()
 
@@ -513,12 +529,18 @@ class Document:
         Add some body text
         ```
         """
-        return self._body
+
+        def on_body_mutation(wrapped: DirtyList[Element]) -> None:
+            self._body = list(wrapped)
+            self._adopt_elements(self._body)
+            self.mark_dirty()
+
+        return DirtyList(self._body, on_mutation=on_body_mutation)
 
     @body.setter
-    def body(self, value: list[Element]) -> None:
+    def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set zeroth-section body elements."""
-        self._body = value
+        self._body = list(coerce_element_body(value))
         self._adopt_elements(self._body)
         self.mark_dirty()
 
@@ -545,7 +567,17 @@ class Document:
         *** Heading 3
         ```
         """
-        return self._children
+
+        def on_children_mutation(wrapped: DirtyList[Heading]) -> None:
+            from org_parser.document._heading import ensure_child_heading_level
+
+            self._children = list(wrapped)
+            self._adopt_elements(self._children)
+            for child in self._children:
+                ensure_child_heading_level(child, parent_level=0)
+            self.mark_dirty()
+
+        return DirtyList(self._children, on_mutation=on_children_mutation)
 
     @children.setter
     def children(self, value: list[Heading]) -> None:
@@ -560,7 +592,7 @@ class Document:
         # Lazy import avoids the circular dependency with _heading.py.
         from org_parser.document._heading import ensure_child_heading_level
 
-        self._children = value
+        self._children = list(value)
         self._adopt_elements(self._children)
         for child in self._children:
             ensure_child_heading_level(child, parent_level=0)
@@ -772,10 +804,8 @@ class Document:
         """
         for keyword in self._keywords:
             keyword.reformat()
-        if self._properties is not None:
-            self._properties.reformat()
-        if self._logbook is not None:
-            self._logbook.reformat()
+        self._properties.reformat()
+        self._logbook.reformat()
         for element in self._body:
             element.reformat()
         for child in self._children:
@@ -793,28 +823,30 @@ class Document:
         """Return ``#+TODO:`` keyword values in document order."""
         return [kw.value for kw in self._keywords if kw.key == TODO]
 
-    def _set_keyword_value(self, key: str, value: RichText | None) -> None:
+    def _set_keyword_value(self, key: str, value: RichText | str | None) -> None:
         """Update, create, or remove a keyword entry by key.
 
         If *value* is *None* the keyword is removed from the list.  Otherwise
         the existing keyword's value is updated in place, or a new keyword is
         appended when no entry for *key* exists.
         """
+        coerced = coerce_optional_rich_text(value)
         existing = self._find_last_keyword(key)
-        if value is None:
+        if coerced is None:
             self._keywords = [kw for kw in self._keywords if kw.key != key]
         elif existing is not None:
-            existing.value = value
+            existing.value = coerced
         else:
-            new_kw = Keyword(key=key, value=value, parent=self)
+            new_kw = Keyword(key=key, value=coerced, parent=self)
             self._keywords.append(new_kw)
         self.mark_dirty()
 
-    def _init_set_keyword(self, key: str, value: RichText | None) -> None:
+    def _init_set_keyword(self, key: str, value: RichText | str | None) -> None:
         """Init-time helper: append a keyword for *key* if *value* is not *None*."""
-        if value is None:
+        coerced = coerce_optional_rich_text(value)
+        if coerced is None:
             return
-        self._keywords.append(Keyword(key=key, value=value))
+        self._keywords.append(Keyword(key=key, value=coerced))
 
     def _init_merge_keyword(self, kw: Keyword) -> None:
         """Init-time helper: merge *kw* into the list (last-write-wins).
@@ -894,6 +926,8 @@ class Document:
         category = self.category
         description = self.description
         todo = self.todo
+        properties = self._properties if _has_non_empty_properties(self._properties) else None
+        logbook = self._logbook if _has_non_empty_logbook(self._logbook) else None
         return build_semantic_repr(
             "Document",
             filename=self._filename,
@@ -903,8 +937,8 @@ class Document:
             description=description,
             todo=todo,
             keywords=extra_kws,
-            properties=self._properties,
-            logbook=self._logbook,
+            properties=properties,
+            logbook=logbook,
             body=self._body,
             children=self._children,
         )
@@ -1027,12 +1061,12 @@ def _parse_todo_states(
 
     for todo in todo_values:
         in_done_group = False
-        for token in str(todo).split():
-            if token == "|":
+        for state_part in str(todo).split():
+            if state_part == "|":
                 in_done_group = True
                 continue
 
-            state = _todo_state_name(token)
+            state = _todo_state_name(state_part)
             if state is None:
                 continue
             if in_done_group:
@@ -1048,13 +1082,13 @@ def _parse_todo_states(
     return all_states, todo_states, done_states
 
 
-def _todo_state_name(token: str) -> str | None:
+def _todo_state_name(state_part: str) -> str | None:
     """Extract one TODO state token name from keyword syntax.
 
     This strips optional fast-selection metadata, for example:
     ``TODO(t)`` -> ``TODO`` and ``DONE(d@/!)`` -> ``DONE``.
     """
-    stripped = token.strip()
+    stripped = state_part.strip()
     if stripped == "":
         return None
     head, _, _ = stripped.partition("(")
@@ -1068,16 +1102,32 @@ def _render_document_dirty(document: Document) -> str:
 
     # Render dedicated keywords in the canonical fixed order.
     for key in _DEDICATED_ORDER:
-        parts.extend(str(kw) for kw in keywords if kw.key == key)
+        parts.extend(
+            ensure_trailing_newline(str(keyword)) for keyword in keywords if keyword.key == key
+        )
 
     # Render non-dedicated keywords in their list order.
-    parts.extend(str(kw) for kw in keywords if kw.key not in _DEDICATED_KEYS)
+    parts.extend(
+        ensure_trailing_newline(str(keyword))
+        for keyword in keywords
+        if keyword.key not in _DEDICATED_KEYS
+    )
 
-    if document.properties is not None:
-        parts.append(str(document.properties))
-    if document.logbook is not None:
-        parts.append(str(document.logbook))
+    if _has_non_empty_properties(document.properties):
+        parts.append(ensure_trailing_newline(str(document.properties)))
+    if _has_non_empty_logbook(document.logbook):
+        parts.append(ensure_trailing_newline(str(document.logbook)))
 
-    parts.extend(str(element) for element in document.body)
+    parts.extend(ensure_trailing_newline(str(element)) for element in document.body)
 
     return "".join(parts)
+
+
+def _has_non_empty_properties(properties: Properties) -> bool:
+    """Return whether a properties drawer contains at least one key."""
+    return len(properties) > 0
+
+
+def _has_non_empty_logbook(logbook: Logbook) -> bool:
+    """Return whether a logbook drawer contains at least one body element."""
+    return len(logbook) > 0

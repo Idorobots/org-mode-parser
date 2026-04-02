@@ -1,0 +1,295 @@
+Document(
+  filename='examples/text-markup.org',
+  title=RichText("Typographer's Companion — A Markup Style Guide"),
+  author=RichText('Brelda Flomsworth'),
+  category=RichText('text-markup'),
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('The Six Markup Types'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('This section demonstrates each of the six inline markup types in isolation.\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('*Bold* — for strong emphasis'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Use *bold* to draw attention to *critical terms* or *warnings*.\nBold text can appear mid-sentence like *this*, or wrap a longer phrase like *the entire clause here*.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('*Bold at the very start of a line* is valid when the line itself is the PRE boundary.\nEqually, a sentence can end with bold*. No — that trailing asterisk would break it.\nA sentence can correctly end with *bold.*\nAnother correct form: (*bold inside parentheses*).\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('/Italic/ — for titles, foreign words, and gentle stress'),
+              body=[
+                  Paragraph(body=RichText('The novel /The Name of the Rose/ by Umberto Eco is set in a medieval monastery.\nIntroduce foreign phrases in italic: the concept of /Weltanschauung/ (worldview) is central here.\nScientific names are italicised by convention: /Homo sapiens/, /Arabidopsis thaliana/.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('/Italic at the start of a line/ works because the line boundary is a valid PRE.\nEnd a sentence with italic: the answer is /always./\nInside quotes: "She said it was /magnificent/."\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('_Underline_ — for proper nouns and UI labels'),
+              body=[
+                  Paragraph(body=RichText('Navigate to _Settings_ then _Privacy_ then _Location Services_.\nThe treaty known as the _Peace of Westphalia_ (1648) reshaped European sovereignty.\nClick _Save Changes_ to confirm — _Cancel_ to discard.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('_Underlined_ text should be used sparingly to avoid confusion with hyperlinks.\nConsider: (_underline inside parentheses_) and -_underline after a hyphen_-.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('=Verbatim= — literal characters, not parsed'),
+              body=[
+                  Paragraph(body=RichText('The variable =org-todo-keywords-1= controls which keywords are recognised.\nTo insert a literal asterisk write =*= and it will not be treated as markup.\nFile paths like =/usr/local/bin/emacs= should always be verbatim.\nThe sequence =#+BEGIN_SRC= starts a source block — the =#+= prefix is significant.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Verbatim contents are *never* parsed: =*this asterisk is not bold*= renders as-is.\nA verbatim span can itself contain what looks like other markup: =_not underlined_=.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('~Code~ — for inline code fragments'),
+              body=[
+                  Paragraph(body=RichText('Call the function ~calculate_checksum(data, algorithm="sha256")~ with a byte string.\nThe shell command ~find . -name "*.org" -mtime -7~ lists recently modified Org files.\nIn Python, ~dict.get(key, default)~ avoids a ~KeyError~ on missing keys.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Like verbatim, code contents are not parsed: ~*not bold*~ and ~/not italic/~.\nNote the distinction: ~code~ is for executable fragments; =verbatim= is for literal text.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('+Strike-through+ — for retracted or superseded content'),
+              body=[
+                  Paragraph(body=RichText('The original estimate was +three weeks+ — revised to *five weeks* after scoping.\n+Delete this line+ — actually, keep it for historical context.\nThe deprecated function +get_user_by_name()+ has been replaced by ~find_user(name=...)~.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('+Strike-through at the start of a line+ is valid.\nEnding a sentence: the plan was abandoned +permanently.+\n')),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Markup in Heading Titles'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(level=2, title=RichText('*Bold* and /italic/ in the same heading')),
+            Heading(level=2, title=RichText('Report: =config.yml= is _malformed_')),
+            Heading(level=2, todo='DONE', title=RichText('+Deprecated+ approach replaced with ~new_api()~')),
+            Heading(
+              level=2,
+              todo='TODO',
+              title=RichText('Review the _Peace of Westphalia_ chapter (/see also:/ bibliography)'),
+              body=[
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Nested and Combined Markup'),
+        body=[
+            Paragraph(body=RichText('Nesting markup creates compound emphasis:\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('*/Bold and italic simultaneously/* — achieved by nesting one inside the other.')),
+                  ListItem(bullet='-', first_line=RichText('/*Italic wrapping bold*/ — the outer marker determines the outer type.')),
+                  ListItem(bullet='-', first_line=RichText('*A _bold underlined_ phrase* — underline nested inside bold.')),
+                  ListItem(bullet='-', first_line=RichText('/An _italic underlined_ passage/ — underline nested inside italic.')),
+                  ListItem(bullet='-', first_line=RichText('*A +bold struck-through+ segment* — strike-through nested inside bold.')),
+                  ListItem(bullet='-', first_line=RichText('_Both *bold* and /italic/ inside underline_ — two children in one parent.')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('Markup adjacent to punctuation (the PRE/POST rule in action):\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('(*/nested bold-italic inside parens/*) — opens with =(= which is a valid PRE.')),
+                  ListItem(bullet='-', first_line=RichText('"/italic inside double quotes/" — double quote is a valid PRE.')),
+                  ListItem(bullet='-', first_line=RichText("'/italic inside single quotes/' — single quote is a valid PRE.")),
+                  ListItem(bullet='-', first_line=RichText('"Say it with *emphasis*!" — exclamation mark is a valid POST.')),
+                  ListItem(bullet='-', first_line=RichText('Was it /really/ that simple? — question mark is a valid POST.')),
+                  ListItem(bullet='-', first_line=RichText('The result: *42*. — full stop after closing marker is a valid POST.')),
+                ],
+            ),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Hard Line Breaks'),
+        body=[
+            Paragraph(body=RichText('A hard line break forces a new line in the rendered output without ending the paragraph.\\\\\nThis sentence follows immediately on the next visual line.\\\\\nAnd this one after that.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('In a verse or prose poem context, line breaks carry structural meaning:\\\\\nThe fog comes\\\\\non little cat feet.\\\\\nIt sits looking\\\\\nover harbour and city.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Line breaks are valid anywhere in a paragraph (not just at the end of a verse block).\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Markup in List Items'),
+        body=[
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('This item has *bold* text and /italic/ text in it.')),
+                  ListItem(bullet='-', first_line=RichText('This item uses ~inline code~ to name the function ~process_batch~.')),
+                  ListItem(bullet='-', first_line=RichText('This item mentions the +old way+ replaced by the =new_way=.')),
+                  ListItem(bullet='-', first_line=RichText('*Entire item is bold from the first character.*')),
+                  ListItem(bullet='-', first_line=RichText('The item ends with emphasis on the _final word_. *Final.*')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('Ordered list with markup:\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='.', first_line=RichText('First, run ~git fetch --all~ to synchronise remote branches.')),
+                  ListItem(bullet='.', first_line=RichText('Then, /carefully/ review the diff with ~git diff origin/main~.')),
+                  ListItem(bullet='.', first_line=RichText('Finally, *merge only when CI is green*.')),
+                ],
+            ),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Markup in Table Cells'),
+        body=[
+            Table(
+              rows=[
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Feature       ')),
+                        TableCell(value=RichText(' Status          ')),
+                        TableCell(value=RichText(' Notes                                    ')),
+                      ],
+                  ),
+                  TableRuleRow(raw='|---------------+-----------------+------------------------------------------|'),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' *Bold*        ')),
+                        TableCell(value=RichText(' =implemented=   ')),
+                        TableCell(value=RichText(' Works in all /standard/ contexts         ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' /Italic/      ')),
+                        TableCell(value=RichText(' =implemented=   ')),
+                        TableCell(value=RichText(' Used for _titles_ and foreign terms      ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' ~Code~        ')),
+                        TableCell(value=RichText(' =implemented=   ')),
+                        TableCell(value=RichText(' Contents are +not+ parsed                ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' +Strike+      ')),
+                        TableCell(value=RichText(' =implemented=   ')),
+                        TableCell(value=RichText(' For *superseded* content                 ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' _Underline_   ')),
+                        TableCell(value=RichText(' =implemented=   ')),
+                        TableCell(value=RichText(' Avoid overuse — ~sparingly~              ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' =Verbatim=    ')),
+                        TableCell(value=RichText(' =implemented=   ')),
+                        TableCell(value=RichText(' Also not parsed: ~/not italic/~          ')),
+                      ],
+                  ),
+                ],
+            ),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Edge Cases and Boundary Conditions'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('No markup when whitespace immediately follows the opening marker'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('These do NOT form markup objects (space after opening marker):\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('= not verbatim = (space before closing)')),
+                        ListItem(bullet='-', first_line=RichText('* not bold * (space before closing)')),
+                        ListItem(bullet='-', first_line=RichText('/ not italic / (space before closing)')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Adjacent markup objects with no separator'),
+              body=[
+                  Paragraph(body=RichText('*Bold*/italic/ — two markup objects sharing a boundary.\n~code~=verbatim= — code immediately followed by verbatim.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Markup spanning only a single character'),
+              body=[
+                  Paragraph(body=RichText('*X* is valid bold.\n/A/ is valid italic.\n=!= is valid verbatim.\n~_~ is valid code (contains an underscore).\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Markup that looks like a heading star'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('A paragraph starting with text before an asterisk: the word *star* has markup.\nBut =* at column zero= followed by a space is always a heading — comma-quoting required in blocks.\n')),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from org_parser import loads
-from org_parser.element import Table, TableEl, TableRow, TableRuleRow
+from org_parser.element import Table, TableCell, TableEl, TableRow, TableRuleRow
 from org_parser.text import RichText
 
 
@@ -73,3 +73,40 @@ def test_table_row_mutation_marks_table_dirty() -> None:
     row0.cells[0].value = RichText("Z")
 
     assert table.dirty is True
+
+
+def test_table_cell_constructor_and_setter_accept_raw_strings() -> None:
+    """TableCell accepts raw strings and stores RichText values."""
+    table = Table(rows=[])
+    cell = TableCell(value="A", table=table)
+
+    assert isinstance(cell.value, RichText)
+    assert str(cell.value) == "A"
+
+    cell.value = "B"
+    assert isinstance(cell.value, RichText)
+    assert str(cell.value) == "B"
+
+
+def test_table_list_appends_mark_dirty() -> None:
+    """Appending to table row/cell/formula lists marks table dirty."""
+    document = loads("| A |\n| B |\n")
+    assert isinstance(document.body[0], Table)
+    table = document.body[0]
+
+    row0 = table.rows[0]
+    assert isinstance(row0, TableRow)
+    row0.cells.append(TableCell(value="X", table=table))
+    assert table.dirty is True
+
+    document2 = loads("| A |\n| B |\n")
+    assert isinstance(document2.body[0], Table)
+    table2 = document2.body[0]
+    table2.rows.append(TableRuleRow(raw="|---|", table=table2))
+    assert table2.dirty is True
+
+    document3 = loads("| A |\n")
+    assert isinstance(document3.body[0], Table)
+    table3 = document3.body[0]
+    table3.formulas.append("$1=1")
+    assert table3.dirty is True

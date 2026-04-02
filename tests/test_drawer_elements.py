@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from org_parser import loads
-from org_parser.element import Drawer, List, Logbook, Properties, Repeat
+from org_parser.element import Drawer, List, Logbook, Paragraph, Properties, Repeat
 from org_parser.text import RichText
 from org_parser.time import Clock, Timestamp
 
@@ -48,6 +48,18 @@ def test_properties_are_mutable_and_dirty_on_set() -> None:
     assert str(properties) == ":PROPERTIES:\n:ID: beta\n:END:\n"
 
 
+def test_properties_constructor_accepts_string_dictionary_values() -> None:
+    """Constructor wraps raw string dictionary values as rich text."""
+    properties = Properties(properties={"ID": "alpha", "CATEGORY": RichText("work")})
+
+    assert isinstance(properties["ID"], RichText)
+    assert isinstance(properties["CATEGORY"], RichText)
+    assert str(properties["ID"]) == "alpha"
+    assert str(properties["CATEGORY"]) == "work"
+    assert properties["ID"].parent is properties
+    assert properties["CATEGORY"].parent is properties
+
+
 def test_properties_value_mutation_bubbles_to_drawer_and_document() -> None:
     """Mutating one owned rich-text value updates rendered drawer output."""
     document = loads(":PROPERTIES:\n:NAME: old\n:END:\n")
@@ -68,7 +80,6 @@ def test_heading_properties_drawer_is_exposed_in_heading_body() -> None:
     document = loads("* H\n:PROPERTIES:\n:ID: abc\n:END:\n")
 
     assert isinstance(document.children[0].properties, Properties)
-    assert document.children[0].properties is not None
     assert str(document.children[0].properties["ID"]) == "abc"
     assert document.children[0].body == []
 
@@ -96,7 +107,6 @@ def test_logbook_drawer_extracts_clocks_and_repeats() -> None:
 
     assert isinstance(document.children[0].logbook, Logbook)
     logbook = document.children[0].logbook
-    assert logbook is not None
     assert len(logbook.clock_entries) == 2
     assert all(isinstance(entry, Clock) for entry in logbook.clock_entries)
     assert len(logbook.repeats) == 1
@@ -128,7 +138,6 @@ def test_logbook_setters_keep_body_and_extracted_entries_identical() -> None:
         after="DONE",
         before="TODO",
         timestamp=Timestamp(
-            raw="[2026-03-08 Sun 17:59]",
             is_active=False,
             start_year=2026,
             start_month=3,
@@ -170,11 +179,9 @@ def test_document_merges_multiple_properties_and_logbooks() -> None:
     )
 
     assert isinstance(document.properties, Properties)
-    assert document.properties is not None
     assert str(document.properties["ID"]) == "two"
     assert str(document.properties["CATEGORY"]) == "work"
     assert isinstance(document.logbook, Logbook)
-    assert document.logbook is not None
     assert len(document.logbook.clock_entries) == 2
     assert document.body == []
 
@@ -196,10 +203,8 @@ def test_heading_merges_multiple_properties_and_logbooks() -> None:
 
     heading = document.children[0]
     assert isinstance(heading.properties, Properties)
-    assert heading.properties is not None
     assert str(heading.properties["ID"]) == "two"
     assert isinstance(heading.logbook, Logbook)
-    assert heading.logbook is not None
     assert len(heading.logbook.clock_entries) == 2
     assert len(heading.body) == 1
     assert isinstance(heading.body[0], Drawer)
@@ -218,6 +223,20 @@ def test_dirty_heading_drawer_order_is_properties_then_logbook() -> None:
     assert rendered.index(":PROPERTIES:") < rendered.index(":LOGBOOK:")
 
 
+def test_heading_properties_setter_accepts_dictionary_values() -> None:
+    """Heading properties setter accepts raw dictionaries and wraps strings."""
+    document = loads("* H\n")
+    heading = document.children[0]
+
+    heading.properties = {"ID": "abc", "CATEGORY": RichText("work")}
+
+    assert isinstance(heading.properties, Properties)
+    assert isinstance(heading.properties["ID"], RichText)
+    assert str(heading.properties["ID"]) == "abc"
+    assert str(heading.properties["CATEGORY"]) == "work"
+    assert heading.properties["ID"].parent is heading.properties
+
+
 def test_dirty_document_drawer_order_is_properties_then_logbook() -> None:
     """Dirty document rendering prints properties before logbook drawers."""
     document = loads("Text\n")
@@ -228,6 +247,58 @@ def test_dirty_document_drawer_order_is_properties_then_logbook() -> None:
 
     rendered = str(document)
     assert rendered.index(":PROPERTIES:") < rendered.index(":LOGBOOK:")
+
+
+def test_document_properties_setter_accepts_dictionary_values() -> None:
+    """Document properties setter accepts raw dictionaries and wraps strings."""
+    document = loads("Text\n")
+
+    document.properties = {"ID": "abc", "CATEGORY": RichText("work")}
+
+    assert isinstance(document.properties, Properties)
+    assert isinstance(document.properties["ID"], RichText)
+    assert str(document.properties["ID"]) == "abc"
+    assert str(document.properties["CATEGORY"]) == "work"
+    assert document.properties["ID"].parent is document.properties
+
+
+def test_dirty_document_omits_empty_default_drawers() -> None:
+    """Dirty document rendering omits empty default dedicated drawers."""
+    document = loads("#+TITLE: T\n")
+
+    document.filename = "renamed.org"
+
+    assert str(document) == "#+TITLE: T\n"
+
+
+def test_dirty_document_renders_newline_between_keyword_and_logbook() -> None:
+    """Dirty document rendering separates keyword and logbook lines."""
+    document = loads("#+TITLE: Logbook")
+    document.logbook = Logbook()
+    document.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
+
+    assert str(document) == ("#+TITLE: Logbook\n" ":LOGBOOK:\n" "CLOCK: [2025-10-10]\n" ":END:\n")
+
+
+def test_dirty_heading_render_separates_body_and_child_heading() -> None:
+    """Dirty heading render keeps child heading on a new line."""
+    document = loads("* H\nBody")
+    heading = document.children[0]
+    child = loads("* Child").children[0]
+
+    heading.children = [child]
+
+    assert heading.render() == "* H\nBody\n** Child\n"
+
+
+def test_dirty_heading_omits_empty_default_drawers() -> None:
+    """Dirty heading rendering omits empty default dedicated drawers."""
+    document = loads("* H\n")
+    heading = document.children[0]
+
+    heading.todo = "TODO"
+
+    assert str(heading) == "* TODO H\n"
 
 
 def test_drawer_body_setter_marks_dirty() -> None:
@@ -244,3 +315,68 @@ def test_drawer_body_setter_marks_dirty() -> None:
     assert drawer.dirty is True
     assert document.dirty is True
     assert str(drawer) == ":NOTE:\n:END:\n"
+
+
+def test_drawer_body_setter_accepts_element_and_raw_string() -> None:
+    """Drawer body setter accepts one element and raw string input."""
+    document = loads(":NOTE:\nA\n:END:\n")
+
+    assert isinstance(document.body[0], Drawer)
+    drawer = document.body[0]
+    paragraph = Paragraph(body=RichText("Two\n"))
+
+    drawer.body = paragraph
+
+    assert drawer.body == [paragraph]
+    assert drawer.body[0].parent is drawer
+
+    drawer.body = "raw"
+
+    assert len(drawer.body) == 1
+    assert isinstance(drawer.body[0], Paragraph)
+    assert str(drawer.body[0]) == "raw"
+    assert drawer.body[0].parent is drawer
+    assert str(drawer) == ":NOTE:\nraw\n:END:\n"
+
+
+def test_logbook_body_setter_accepts_element_and_raw_string() -> None:
+    """Logbook body setter accepts one element and raw string input."""
+    document = loads("* H\n")
+    logbook = document.children[0].logbook
+    clock = Clock(duration="0:15")
+
+    logbook.body = clock
+
+    assert logbook.body == [clock]
+    assert logbook.clock_entries == [clock]
+    assert logbook.repeats == []
+    assert clock.parent is logbook
+
+    logbook.body = "plain"
+
+    assert len(logbook.body) == 1
+    assert isinstance(logbook.body[0], Paragraph)
+    assert str(logbook.body[0]) == "plain"
+    assert logbook.body[0].parent is logbook
+    assert logbook.clock_entries == []
+    assert logbook.repeats == []
+
+
+def test_drawer_and_logbook_list_appends_mark_dirty() -> None:
+    """Appending to drawer/logbook list fields marks owner dirty."""
+    drawer_document = loads(":NOTE:\nA\n:END:\n")
+    assert isinstance(drawer_document.body[0], Drawer)
+    drawer = drawer_document.body[0]
+    paragraph = Paragraph(body=RichText("B\n"))
+    drawer.body.append(paragraph)
+    assert drawer.dirty is True
+    assert drawer_document.dirty is True
+    assert paragraph.parent is drawer
+
+    logbook_document = loads("* H\n")
+    logbook = logbook_document.children[0].logbook
+    clock = Clock(duration="0:10")
+    logbook.clock_entries.append(clock)
+    assert logbook.dirty is True
+    assert logbook_document.dirty is True
+    assert clock.parent is logbook

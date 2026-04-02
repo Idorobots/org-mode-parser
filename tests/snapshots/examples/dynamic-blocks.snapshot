@@ -1,0 +1,101 @@
+Document(
+  filename='examples/dynamic-blocks.org',
+  category=RichText('dynamic-blocks'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Dynamic Blocks'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Dynamic blocks are populated programmatically. In a static parse, their contents are treated as ordinary elements.\n')),
+            BlankLine(),
+            DynamicBlock(
+              name='clocktable',
+              parameters=':scope subtree :maxlevel 3',
+              body=[
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Headline             ')),
+                              TableCell(value=RichText(' Time   ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|----------------------+--------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' *Total time*         ')),
+                              TableCell(value=RichText(' *3:45* ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|----------------------+--------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Chapter 1 drafting   ')),
+                              TableCell(value=RichText(' 2:00   ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Chapter 2 revision   ')),
+                              TableCell(value=RichText(' 1:15   ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Bibliography check   ')),
+                              TableCell(value=RichText(' 0:30   ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                ],
+            ),
+            BlankLine(),
+            DynamicBlock(
+              name='columnview',
+              parameters=':hlines 1 :id local',
+              body=[
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ITEM                     ')),
+                              TableCell(value=RichText(' TODO ')),
+                              TableCell(value=RichText(' PRIORITY ')),
+                              TableCell(value=RichText(' TAGS       ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|--------------------------+------+----------+------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Planning document        ')),
+                              TableCell(value=RichText(' TODO ')),
+                              TableCell(value=RichText(' A        ')),
+                              TableCell(value=RichText(' :admin:    ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' First chapter            ')),
+                              TableCell(value=RichText(' DONE ')),
+                              TableCell(value=RichText('          ')),
+                              TableCell(value=RichText(' :writing:  ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Second chapter           ')),
+                              TableCell(value=RichText(' TODO ')),
+                              TableCell(value=RichText(' B        ')),
+                              TableCell(value=RichText(' :writing:  ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

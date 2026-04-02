@@ -1,0 +1,51 @@
+Document(
+  filename='examples/mapping_test.org',
+  category=RichText('mapping_test'),
+  children=[
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with foo tag '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=10, start_dayname='Wed', start_hour=14, start_minute=0),
+        heading_tags=['foo'],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('This task has a foo tag.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with testing tag '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=11, start_dayname='Thu', start_hour=14, start_minute=0),
+        heading_tags=['testing'],
+        body=[
+            Paragraph(body=RichText('This task has a testing tag.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with python tag '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=12, start_dayname='Fri', start_hour=14, start_minute=0),
+        heading_tags=['python'],
+        body=[
+            Paragraph(body=RichText('This task has a python tag.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with unmapped tag '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=13, start_dayname='Sat', start_hour=14, start_minute=0),
+        heading_tags=['unmapped'],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('This task has an unmapped tag.\n')),
+          ],
+      ),
+    ],
+)

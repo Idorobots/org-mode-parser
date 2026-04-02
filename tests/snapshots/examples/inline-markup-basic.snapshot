@@ -1,0 +1,28 @@
+Document(
+  filename='examples/inline-markup-basic.org',
+  category=RichText('inline-markup-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Inline Markup'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('*bold text*\n')),
+            BlankLine(),
+            Paragraph(body=RichText('/italic text/\n')),
+            BlankLine(),
+            Paragraph(body=RichText('_underlined text_\n')),
+            BlankLine(),
+            Paragraph(body=RichText('=verbatim text=\n')),
+            BlankLine(),
+            Paragraph(body=RichText('~code text~\n')),
+            BlankLine(),
+            Paragraph(body=RichText('+strike-through text+\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Markup mid-sentence: a *bold* word, an /italic/ word, a _underlined_ word.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Verbatim and code are not parsed: =*not bold*= and ~_not underlined_~.\n')),
+          ],
+      ),
+    ],
+)

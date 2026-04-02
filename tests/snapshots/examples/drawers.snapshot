@@ -1,0 +1,356 @@
+Document(
+  filename='examples/drawers.org',
+  title=RichText('Research Notes — Custom Drawers Showcase'),
+  author=RichText('Threndel Quoxworth'),
+  category=RichText('drawers'),
+  properties={
+      'document_type': RichText('research_notes'),
+      'department': RichText('Computational Linguistics'),
+      'project_code': RichText('CL-2025-04'),
+    },
+  body=[
+      BlankLine(),
+      BlankLine(),
+      Comment(text='The PROPERTIES drawer above is in the zeroth section.'),
+      Comment(text='It attaches to the document as a whole, not to any heading.'),
+      BlankLine(),
+      Paragraph(body=RichText('The zeroth section of this file contains a property drawer, which is valid\nin this position. The drawer above establishes document-level metadata.\n')),
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('On Drawer Nesting and Custom Names'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('The PROPERTIES Drawer'),
+              body=[
+                  Paragraph(body=RichText('The =:PROPERTIES:= drawer is special — it holds node properties for the\nheading it belongs to. It must directly follow the heading (or its planning\nline) with no intervening blank lines.\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Analyse corpus of 19th-century English fiction '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=2, start_day=1, start_dayname='Sat'),
+        properties={
+            'ID': RichText('f7e6d5c4-b3a2-1098-7654-3210fedcba98'),
+            'CUSTOM_ID': RichText('corpus-analysis-2025'),
+            'effort': RichText('40:00'),
+            'assignee': RichText('Threndel Quoxworth'),
+            'priority_note': RichText('High impact on thesis chapter 3'),
+          },
+        heading_tags=['corpus', 'nlp'],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('The Property Append Form'),
+              body=[
+                  Paragraph(body=RichText('Node properties can be *appended* rather than replaced using the =NAME+= form.\nThis is useful for building up lists of values across multiple property entries.\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Build feature extraction pipeline '),
+        properties={
+            'tags': RichText('python'),
+            'tags+': RichText('transformers'),
+            'related_papers': RichText('Vaswani2017'),
+            'related_papers+': RichText('Brown2020'),
+          },
+        heading_tags=['pipeline', 'ml'],
+        body=[
+            Paragraph(body=RichText('The =tags= property above has the effective value =python sklearn spacy transformers=.\nThe =related_papers= property accumulates three values on separate =+= lines.\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Custom Named Drawers'),
+              body=[
+                  Paragraph(body=RichText('Custom drawers (any name that is not =PROPERTIES=, =LOGBOOK=, or =END=) are\nvalid drawer elements. They are treated as opaque containers.\n')),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Literature review — transformer architectures '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun'),
+        properties={
+            'effort': RichText('8:00'),
+          },
+        heading_tags=['reading', 'nlp'],
+        body=[
+            Drawer(
+              name='NOTE',
+              body=[
+                  Paragraph(body=RichText('Key finding: self-attention mechanisms outperform recurrent approaches for\nlong-range dependency capture (sequence length > 512 tokens). The O(n²) memory\ncost of full attention remains a practical bottleneck for very long documents.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Action: investigate Longformer, BigBird, and Mamba as long-sequence alternatives.\n')),
+                ],
+            ),
+            Drawer(
+              name='SOURCE',
+              body=[
+                  Paragraph(body=RichText('Primary: [cite:@vaswani2017attention]\nSecondary: [cite:@devlin2019bert], [cite:@brown2020gpt3]\nReview paper: [cite:@tay2022efficient_transformers]\n')),
+                ],
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Design evaluation benchmark '),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=15, start_dayname='Sat'),
+        properties={
+            'effort': RichText('12:00'),
+          },
+        heading_tags=['evaluation'],
+        body=[
+            Drawer(
+              name='REVIEW',
+              body=[
+                  Paragraph(body=RichText('[2025-01-04 Sat] Initial design discussed with supervisor. Three evaluation\ndimensions agreed: accuracy, speed, and memory footprint.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[2025-01-06 Mon] Revised after considering [cite:@papineni2002bleu] and\n[cite:@lin2004rouge] — both metrics have known shortcomings for our use case.\nA human-evaluation component is now mandatory.\n')),
+                ],
+            ),
+            Drawer(
+              name='DECISION_LOG',
+              body=[
+                  Paragraph(body=RichText('2025-01-04 :: Use F1 over accuracy — class imbalance in validation set.\n2025-01-05 :: Include perplexity as secondary metric for language model tasks.\n2025-01-06 :: Exclude BLEU — inappropriate for structured prediction tasks.\n')),
+                ],
+            ),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Drawers Inside Greater Elements'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Drawers inside greater blocks'),
+              body=[
+                  BlankLine(),
+                  QuoteBlock(
+                    body=[
+                        Drawer(
+                          name='ATTRIBUTION',
+                          body=[
+                              Paragraph(body=RichText('Speaker: Prof. Glorble Vextwicky\nOccasion: Inaugural lecture, Grumblewick University, 2024-11-15\nSource: Transcript (unedited)\n')),
+                            ],
+                        ),
+                        BlankLine(),
+                        Paragraph(body=RichText('The relationship between language and thought is not one of simple encoding.\nLanguage does not merely /express/ thought — it shapes the boundaries of what\ncan be thought, what can be communicated, and ultimately what can be done.\n')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Drawers inside list items'),
+              body=[
+                  Paragraph(body=RichText('Project work packages:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('WP1: Corpus construction'),
+                          body=[
+                              Drawer(
+                                name='SCOPE',
+                                body=[
+                                    Paragraph(body=RichText('Collect 50,000 Org Mode documents from public repositories on GitHub,\n')),
+                                    Paragraph(body=RichText('GitLab, and Sourcehut. Filter for English-language content using\n')),
+                                    Paragraph(body=RichText('langdetect. Deduplicate using SimHash.\n')),
+                                  ],
+                              ),
+                              Drawer(
+                                name='PROGRESS',
+                                body=[
+                                    Paragraph(body=RichText('[2025-01-06 Mon] 12,400 documents collected. Deduplication in progress.\n')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('WP2: Annotation'),
+                          body=[
+                              Drawer(
+                                name='SCOPE',
+                                body=[
+                                    Paragraph(body=RichText('Annotate 5,000 documents for: heading structure, inline markup,\n')),
+                                    Paragraph(body=RichText('link types, and temporal expression types. Use inter-annotator\n')),
+                                    Paragraph(body=RichText("agreement (Cohen's kappa) to validate annotation scheme.\n")),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(
+                          bullet='-',
+                          first_line=RichText('WP3: Model training'),
+                          body=[
+                              Drawer(
+                                name='SCOPE',
+                                body=[
+                                    Paragraph(body=RichText('Fine-tune a pre-trained transformer (BERT-base or RoBERTa) on the\n')),
+                                    Paragraph(body=RichText('annotated corpus. Train with AdamW, linear warmup, cosine decay.\n')),
+                                  ],
+                              ),
+                              Drawer(
+                                name='HYPERPARAMS',
+                                body=[
+                                    Paragraph(body=RichText('learning_rate: 2e-5\n')),
+                                    Paragraph(body=RichText('batch_size: 32\n')),
+                                    Paragraph(body=RichText('epochs: 5\n')),
+                                    Paragraph(body=RichText('warmup_steps: 500\n')),
+                                    Paragraph(body=RichText('weight_decay: 0.01\n')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Deeply Nested Drawers'),
+        body=[
+            Paragraph(body=RichText('A heading with multiple custom drawers and a property drawer, showing\nthat all three can coexist:\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Integrate Mamba state-space model '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=4, start_day=1, start_dayname='Tue'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=5, start_day=31, start_dayname='Sat'),
+        properties={
+            'effort': RichText('20:00'),
+            'assignee': RichText('Threndel Quoxworth'),
+            'ID': RichText('c1d2e3f4-a5b6-7890-cdef-012345678901'),
+          },
+        heading_tags=['research', 'ml', 'experimental'],
+        body=[
+            Drawer(
+              name='BACKGROUND',
+              body=[
+                  Paragraph(body=RichText('Mamba (Gu & Dao, 2023) introduces selective state-space models that achieve\nlinear scaling in sequence length while matching transformer performance on\nlanguage modelling benchmarks. The key innovation is *input-dependent*\nSSM parameters — analogous to attention, but O(n) rather than O(n²).\n')),
+                ],
+            ),
+            Drawer(
+              name='RISKS',
+              body=[
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Mamba is a very new architecture (2023); tooling support is immature.')),
+                        ListItem(bullet='-', first_line=RichText('Hardware requirements: A100 or H100 GPUs; not available on our cluster.')),
+                        ListItem(bullet='-', first_line=RichText('Integration with existing pipeline requires significant refactoring.')),
+                      ],
+                  ),
+                ],
+            ),
+            Drawer(
+              name='MITIGATION',
+              body=[
+                  Paragraph(body=RichText('For hardware: apply for EPSRC compute allocation by 2025-02-28.\nFor tooling: contribute patches upstream if necessary.\nFor integration: build an adapter layer — do not modify core pipeline.\n')),
+                ],
+            ),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('The LOGBOOK Drawer (Conventional Name)'),
+        body=[
+            Paragraph(body=RichText('While =:LOGBOOK:= is just a custom drawer by name, Org Mode and many tools\ntreat it conventionally to hold state-change history and clock entries.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Implement tokeniser for Org Mode headings '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=17, start_minute=45),
+        properties={
+            'effort': RichText('6:00'),
+            'actual_time': RichText('5:30'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='DOING', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=17, start_minute=45)),
+                    Repeat(after='DOING', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=15)),
+                  ],
+              ),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=15, end_year=2025, end_month=1, end_day=2, end_dayname='Thu', end_hour=17, end_minute=30), duration='8:15'),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2025, end_month=1, end_day=3, end_dayname='Fri', end_hour=12, end_minute=30), duration='3:30'),
+            ],
+          clock_entries=[
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=15, end_year=2025, end_month=1, end_day=2, end_dayname='Thu', end_hour=17, end_minute=30), duration='8:15'),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2025, end_month=1, end_day=3, end_dayname='Fri', end_hour=12, end_minute=30), duration='3:30'),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='DOING', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=17, start_minute=45)),
+              Repeat(after='DOING', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=15)),
+            ],
+        ),
+        heading_tags=['implementation'],
+        repeats=[
+            Repeat(after='DONE', before='DOING', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=17, start_minute=45)),
+            Repeat(after='DOING', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=15)),
+          ],
+        clock_entries=[
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=15, end_year=2025, end_month=1, end_day=2, end_dayname='Thu', end_hour=17, end_minute=30), duration='8:15'),
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2025, end_month=1, end_day=3, end_dayname='Fri', end_hour=12, end_minute=30), duration='3:30'),
+          ],
+      ),
+    ],
+)

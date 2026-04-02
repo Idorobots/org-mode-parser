@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     libtree-sitter-dev \
     build-essential \
     mkdocstrings \
+    pandoc \
     && rm -rf /var/lib/apt/lists/*
 
 USER ubuntu

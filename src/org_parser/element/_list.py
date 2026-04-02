@@ -7,16 +7,18 @@ from typing import TYPE_CHECKING
 
 from org_parser._node import is_error_node, node_source
 from org_parser._nodes import INDENT, LIST_ITEM
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._dispatch import body_element_factories
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
+    coerce_element_body,
     element_from_error_or_unknown,
     ensure_trailing_newline,
 )
 from org_parser.element._structure import Indent
 from org_parser.text._inline import LineBreak, PlainText
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_optional_rich_text
 from org_parser.time import Timestamp
 
 if TYPE_CHECKING:
@@ -59,9 +61,9 @@ class ListItem(Element):
         ordered_counter: str | None = None,
         counter_set: str | None = None,
         checkbox: str | None = None,
-        item_tag: RichText | None = None,
-        first_line: RichText | None = None,
-        body: list[Element] | None = None,
+        item_tag: RichText | str | None = None,
+        first_line: RichText | str | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
@@ -69,9 +71,9 @@ class ListItem(Element):
         self._ordered_counter = ordered_counter
         self._counter_set = counter_set
         self._checkbox = checkbox
-        self._item_tag = item_tag
-        self._first_line = first_line
-        self._body = body if body is not None else []
+        self._item_tag = coerce_optional_rich_text(item_tag)
+        self._first_line = coerce_optional_rich_text(first_line)
+        self._body = list(body)
 
         if self._item_tag is not None:
             self._item_tag.parent = self
@@ -105,6 +107,30 @@ class ListItem(Element):
         item._node = node
         item._document = document
         return item
+
+    @classmethod
+    def from_source(cls, source: str) -> ListItem:
+        """Parse *source* and return one strict [org_parser.element.ListItem][].
+
+        The source must parse to exactly one list item wrapped by one plain
+        list element and no other semantic nodes.
+
+        Args:
+            source: Org source text containing exactly one list item.
+
+        Returns:
+            Parsed [org_parser.element.ListItem][].
+
+        Raises:
+            ValueError: If parsing fails or the structure is not one list item.
+        """
+        from org_parser._from_source import parse_source_with_extractor
+
+        list_item, _ = parse_source_with_extractor(
+            source,
+            extractor=_extract_single_list_item_node,
+        )
+        return list_item
 
     @property
     def bullet(self) -> str:
@@ -156,9 +182,9 @@ class ListItem(Element):
         return self._item_tag
 
     @item_tag.setter
-    def item_tag(self, value: RichText | None) -> None:
+    def item_tag(self, value: RichText | str | None) -> None:
         """Set item tag."""
-        self._item_tag = value
+        self._item_tag = coerce_optional_rich_text(value)
         if self._item_tag is not None:
             self._item_tag.parent = self
         self.mark_dirty()
@@ -169,9 +195,9 @@ class ListItem(Element):
         return self._first_line
 
     @first_line.setter
-    def first_line(self, value: RichText | None) -> None:
+    def first_line(self, value: RichText | str | None) -> None:
         """Set first-line rich text."""
-        self._first_line = value
+        self._first_line = coerce_optional_rich_text(value)
         if self._first_line is not None:
             self._first_line.parent = self
         self.mark_dirty()
@@ -179,12 +205,18 @@ class ListItem(Element):
     @property
     def body(self) -> list[Element]:
         """Mutable body elements for this list item."""
-        return self._body
+
+        def on_body_mutation(wrapped: DirtyList[Element]) -> None:
+            self._body = list(wrapped)
+            self._adopt_body(self._body)
+            self.mark_dirty()
+
+        return DirtyList(self._body, on_mutation=on_body_mutation)
 
     @body.setter
-    def body(self, value: list[Element]) -> None:
+    def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set body elements."""
-        self._body = value
+        self._body = list(coerce_element_body(value))
         self._adopt_body(self._body)
         self.mark_dirty()
 
@@ -296,12 +328,12 @@ class Repeat(ListItem):
         after: str,
         before: str,
         timestamp: Timestamp,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         bullet: str = "-",
         ordered_counter: str | None = None,
         counter_set: str | None = None,
-        item_tag: RichText | None = None,
-        first_line: RichText | None = None,
+        item_tag: RichText | str | None = None,
+        first_line: RichText | str | None = None,
         checkbox: str | None = None,
         parent: Document | Heading | Element | None = None,
     ) -> None:
@@ -318,6 +350,7 @@ class Repeat(ListItem):
         self._after = after
         self._before = before
         self._timestamp = timestamp
+        self._timestamp.parent = self
 
     @classmethod
     def from_list_item(cls, item: ListItem, document: Document) -> Repeat | None:
@@ -392,6 +425,7 @@ class Repeat(ListItem):
     def timestamp(self, value: Timestamp) -> None:
         """Set repeat timestamp."""
         self._timestamp = value
+        self._timestamp.parent = self
         self.mark_dirty()
 
     def reformat(self) -> None:
@@ -471,11 +505,11 @@ class List(Element):
     def __init__(
         self,
         *,
-        items: list[ListItem] | None = None,
+        items: Sequence[ListItem] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
-        self._items = items if items is not None else []
+        self._items = list(items)
         self._adopt_items(self._items)
 
     @classmethod
@@ -500,7 +534,13 @@ class List(Element):
     @property
     def items(self) -> list[ListItem]:
         """Mutable list items in source order."""
-        return self._items
+
+        def on_items_mutation(wrapped: DirtyList[ListItem]) -> None:
+            self._items = list(wrapped)
+            self._adopt_items(self._items)
+            self.mark_dirty()
+
+        return DirtyList(self._items, on_mutation=on_items_mutation)
 
     @items.setter
     def items(self, value: list[ListItem]) -> None:
@@ -509,22 +549,24 @@ class List(Element):
 
     def set_items(self, value: list[ListItem], *, mark_dirty: bool = True) -> None:
         """Set list items with optional dirty propagation."""
-        self._items = value
+        self._items = list(value)
         self._adopt_items(self._items)
         if mark_dirty:
             self.mark_dirty()
 
     def append_item(self, item: ListItem, *, mark_dirty: bool = True) -> None:
         """Append one list item with optional dirty propagation."""
-        item.parent = self
-        self._items.append(item)
+        self._items = [*self._items, item]
+        self._adopt_items(self._items)
         if mark_dirty:
             self.mark_dirty()
 
     def insert_item(self, index: int, item: ListItem) -> None:
         """Insert one list item at *index*."""
-        item.parent = self
-        self._items.insert(index, item)
+        items = [*self._items]
+        items.insert(index, item)
+        self._items = items
+        self._adopt_items(self._items)
         self.mark_dirty()
 
     def reformat(self) -> None:
@@ -571,6 +613,25 @@ class List(Element):
     def __getitem__(self, index: int | slice) -> ListItem | list[ListItem]:
         """Return one list item (or list-item slice)."""
         return self._items[index]
+
+
+def _extract_single_list_item_node(document: Document) -> ListItem | None:
+    """Return the sole list item semantic node from parsed source."""
+    if (
+        document.keywords
+        or len(document.properties) > 0
+        or len(document.logbook) > 0
+        or document.children
+        or len(document.body) != 1
+    ):
+        return None
+
+    list_element = document.body[0]
+    if not isinstance(list_element, List):
+        return None
+    if len(list_element.items) != 1:
+        return None
+    return list_element.items[0]
 
 
 def _extract_optional_field_text(
@@ -695,16 +756,6 @@ def _parse_repeat_first_line(
         timestamp_part,
         has_remainder,
     )
-
-
-def _normalize_optional_text(value: str | None) -> str | None:
-    """Return stripped text value, or ``None`` when empty."""
-    if value is None:
-        return None
-    normalized = value.strip()
-    if normalized == "":
-        return None
-    return normalized
 
 
 def _extract_list_body_element(

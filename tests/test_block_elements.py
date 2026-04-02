@@ -13,6 +13,7 @@ from org_parser.element import (
     ExampleBlock,
     ExportBlock,
     FixedWidthBlock,
+    List,
     Paragraph,
     QuoteBlock,
     SourceBlock,
@@ -129,6 +130,42 @@ def test_container_block_contents_are_mutable_and_adopt_parents() -> None:
     assert str(block) == "#+begin_quote\ntwo\n#+end_quote\n"
 
 
+def test_container_block_body_setter_accepts_element_and_raw_string() -> None:
+    """Container block body setter accepts one element and raw string input."""
+    document = loads("#+begin_quote\none\n#+end_quote\n")
+
+    assert isinstance(document.body[0], QuoteBlock)
+    block = document.body[0]
+    paragraph = Paragraph(body=RichText("two\n"))
+
+    block.body = paragraph
+
+    assert block.body == [paragraph]
+    assert block.body[0].parent is block
+
+    block.body = "three"
+
+    assert len(block.body) == 1
+    assert isinstance(block.body[0], Paragraph)
+    assert str(block.body[0]) == "three"
+    assert block.body[0].parent is block
+    assert str(block) == "#+begin_quote\nthree\n#+end_quote\n"
+
+
+def test_container_block_body_append_marks_dirty() -> None:
+    """Appending to container block body marks block and document dirty."""
+    document = loads("#+begin_quote\none\n#+end_quote\n")
+
+    assert isinstance(document.body[0], QuoteBlock)
+    block = document.body[0]
+    paragraph = Paragraph(body=RichText("two\n"))
+    block.body.append(paragraph)
+
+    assert block.dirty is True
+    assert document.dirty is True
+    assert paragraph.parent is block
+
+
 def test_nested_container_content_mutation_bubbles_dirty_state() -> None:
     """Mutating nested content marks the owning block and document dirty."""
     document = loads("#+begin_quote\nold\n#+end_quote\n")
@@ -200,3 +237,35 @@ def test_fixed_width_contents_are_mutable() -> None:
     assert fixed.dirty is True
     assert document.dirty is True
     assert str(fixed) == ": after\n"
+
+
+def test_adjacent_fixed_width_lines_are_coalesced() -> None:
+    """Consecutive fixed-width lines parse as one semantic block."""
+    document = loads(": one\n: two\n: three\n")
+
+    assert len(document.body) == 1
+    assert isinstance(document.body[0], FixedWidthBlock)
+    fixed = document.body[0]
+    assert fixed.body == "one\ntwo\nthree"
+    assert str(fixed) == ": one\n: two\n: three\n"
+
+
+def test_fixed_width_area_preserves_empty_colon_lines() -> None:
+    """Coalesced fixed-width blocks preserve empty ``:`` lines."""
+    document = loads(": first\n:\n: third\n")
+
+    assert isinstance(document.body[0], FixedWidthBlock)
+    fixed = document.body[0]
+    assert fixed.body == "first\n\nthird"
+    assert str(fixed) == ": first\n:\n: third\n"
+
+
+def test_fixed_width_lines_in_list_item_body_are_coalesced() -> None:
+    """Nested list-item fixed-width runs are merged into one block."""
+    document = loads("- item\n  : one\n  : two\n")
+
+    assert isinstance(document.body[0], List)
+    item = document.body[0].items[0]
+    assert len(item.body) == 1
+    assert isinstance(item.body[0], FixedWidthBlock)
+    assert item.body[0].body == "one\ntwo"

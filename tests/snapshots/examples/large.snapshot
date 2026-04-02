@@ -1,0 +1,2025 @@
+Document(
+  filename='examples/large.org',
+  title=RichText('Vantage — Distributed In-Memory Cache'),
+  author=RichText('The Vantage Maintainers'),
+  category=RichText('vantage'),
+  description=RichText('Engineering wiki and project reference for the Vantage distributed in-memory cache system.'),
+  todo=RichText('TODO IN-PROGRESS BLOCKED REVIEW | DONE CANCELLED WONTFIX'),
+  keywords=[
+      Keyword(key='EMAIL', value=RichText('maintainers@vantage.example.dev')),
+      Keyword(key='DATE', value=RichText('<2025-01-06 Mon>')),
+      Keyword(key='LANGUAGE', value=RichText('en')),
+      Keyword(key='FILETAGS', value=RichText(':vantage:engineering:')),
+      Keyword(key='STARTUP', value=RichText('overview')),
+      Keyword(key='PROPERTY', value=RichText('effort_default 1:00')),
+      Keyword(key='OPTIONS', value=RichText('toc:2')),
+    ],
+  properties={
+      'project_url': RichText('https://github.com/example/vantage'),
+      'license': RichText('Apache-2.0'),
+      'language': RichText('Rust'),
+      'min_rust': RichText('1.75.0'),
+    },
+  body=[
+      BlankLine(),
+      Comment(text='This file is the canonical engineering reference for the Vantage project.'),
+      Comment(text='All architecture decisions, API contracts, and operational procedures are'),
+      Comment(text='tracked here. For user documentation see docs/user-guide/.'),
+      BlankLine(),
+      BlankLine(),
+      Paragraph(body=RichText('Vantage is a *distributed in-memory cache* designed for sub-millisecond read\nlatency at high concurrency. It implements a superset of the <<<Redis>>> wire\nprotocol and exposes both a binary framing protocol and a human-readable\ntext interface.\n')),
+      BlankLine(),
+      Paragraph(body=RichText('Key properties of Vantage:\n')),
+      BlankLine(),
+      List(
+        items=[
+            ListItem(bullet='-', first_line=RichText('*Consistent hashing* with virtual nodes for cluster topology.')),
+            ListItem(bullet='-', first_line=RichText('*Multi-master replication* with last-write-wins conflict resolution.')),
+            ListItem(bullet='-', first_line=RichText('*Pluggable eviction policies*: LRU, LFU, TTL-only, CLOCK.')),
+            ListItem(bullet='-', first_line=RichText('*Persistence* via append-only log with configurable fsync intervals.')),
+            ListItem(bullet='-', first_line=RichText('*TLS mutual authentication* on all inter-node and client connections.')),
+          ],
+      ),
+      BlankLine(),
+      HorizontalRule(rule='-----'),
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Project Overview'),
+        properties={
+            'CUSTOM_ID': RichText('project-overview'),
+          },
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Vision and Goals'),
+              properties={
+                  'CUSTOM_ID': RichText('vision'),
+                },
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Vantage exists to fill the gap between Redis (single-master, complex cluster\nsharding) and Memcached (no replication, limited data types). Our goals:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='.', first_line=RichText('Drop-in Redis protocol compatibility for the most common commands.')),
+                        ListItem(bullet='.', first_line=RichText('Horizontal write scalability without a primary/replica split.')),
+                        ListItem(bullet='.', first_line=RichText('First-class Rust client with async/await support.')),
+                        ListItem(bullet='.', first_line=RichText('Observable by default: OpenTelemetry traces and Prometheus metrics out of the box.')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Non-Goals'),
+              body=[
+                  Paragraph(body=RichText('We explicitly do *not* aim to:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Replace Redis as a pub/sub broker or stream processor.')),
+                        ListItem(bullet='-', first_line=RichText('Provide ACID transactional guarantees.')),
+                        ListItem(bullet='-', first_line=RichText('Support arbitrary Lua scripting (=EVAL= is a non-goal for v1).')),
+                        ListItem(bullet='-', first_line=RichText('Offer a managed cloud service (that is a downstream concern).')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Licence and Governance'),
+              properties={
+                  'CUSTOM_ID': RichText('governance'),
+                },
+              body=[
+                  Paragraph(body=RichText('Vantage is released under the *Apache License 2.0*. Governance follows the\n/Benevolent Dictator For Life/ (BDFL) model until the project reaches 1.0,\nat which point a steering committee of five maintainers will be constituted.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('See [[file:GOVERNANCE.md]] for the full governance document.\n')),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Architecture'),
+        properties={
+            'CUSTOM_ID': RichText('architecture'),
+          },
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('System Components'),
+              properties={
+                  'CUSTOM_ID': RichText('components'),
+                },
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('The Vantage system comprises five major components:\n')),
+                  BlankLine(),
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Component         ')),
+                              TableCell(value=RichText(' Language ')),
+                              TableCell(value=RichText(' Role                                         ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|-------------------+----------+----------------------------------------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~vantage-server~  ')),
+                              TableCell(value=RichText(' Rust     ')),
+                              TableCell(value=RichText(' Core cache daemon, protocol handler          ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~vantage-cluster~ ')),
+                              TableCell(value=RichText(' Rust     ')),
+                              TableCell(value=RichText(' Cluster membership, gossip, topology         ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~vantage-client~  ')),
+                              TableCell(value=RichText(' Rust     ')),
+                              TableCell(value=RichText(' Async client library (Tokio)                 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~vantage-cli~     ')),
+                              TableCell(value=RichText(' Rust     ')),
+                              TableCell(value=RichText(' Interactive REPL and scripting tool          ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~vantage-exporter~')),
+                              TableCell(value=RichText(' Go       ')),
+                              TableCell(value=RichText(' Prometheus metrics bridge (sidecar)          ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('vantage-server'),
+                    properties={
+                        'CUSTOM_ID': RichText('vantage-server'),
+                      },
+                    body=[
+                        BlankLine(),
+                        Paragraph(body=RichText('The server process owns the in-memory keyspace and handles all client\nconnections. It is structured as a tower of async middleware layers:\n')),
+                        BlankLine(),
+                        ExampleBlock(body='TLS termination\n    ↓\nProtocol framing (Redis RESP3 / Vantage binary)\n    ↓\nCommand dispatch\n    ↓\nACL enforcement\n    ↓\nKeyspace mutation / read\n    ↓\nReplication fanout\n    ↓\nResponse serialisation\n'),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('vantage-cluster'),
+                    properties={
+                        'CUSTOM_ID': RichText('vantage-cluster'),
+                      },
+                    body=[
+                        Paragraph(body=RichText('Cluster membership uses a variant of the SWIM[fn:swim] gossip protocol with\nthe following modifications:\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', first_line=RichText('Piggyback propagation of keyspace metadata (not just membership events).')),
+                              ListItem(bullet='-', first_line=RichText('Suspicion sub-protocol suppressed in favour of direct failure detection.')),
+                              ListItem(bullet='-', first_line=RichText('Ring topology exposed as a =RwLock<Arc<Ring>>= for zero-copy reads.')),
+                            ],
+                        ),
+                        BlankLine(),
+                        Paragraph(body=RichText('[fn:swim] Das, A., Gupta, I., & Motivala, A. (2002). SWIM: Scalable weakly-consistent\ninfection-style process group membership protocol. /DSN 2002/.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('vantage-client'),
+                    properties={
+                        'CUSTOM_ID': RichText('vantage-client'),
+                      },
+                    body=[
+                        Paragraph(body=RichText('The async client uses connection pooling with configurable:\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', first_line=RichText('Minimum idle connections per node.')),
+                              ListItem(bullet='-', first_line=RichText('Maximum connections per node.')),
+                              ListItem(bullet='-', first_line=RichText('Connection acquisition timeout.')),
+                              ListItem(bullet='-', first_line=RichText('Health check interval.')),
+                            ],
+                        ),
+                        BlankLine(),
+                        SourceBlock(language='rust', body='use vantage_client::{Client, Config};\n\n#[tokio::main]\nasync fn main() -> anyhow::Result<()> {\n    let config = Config::builder()\n        .nodes(["cache-1:6380", "cache-2:6380", "cache-3:6380"])\n        .tls_ca_cert("ca.crt")\n        .pool_size(32)\n        .build()?;\n\n    let client = Client::connect(config).await?;\n    client.set("hello", "world", None).await?;\n    let val: Option<String> = client.get("hello").await?;\n    println!("{val:?}");  // Some("world")\n    Ok(())\n}\n'),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Data Flow'),
+              properties={
+                  'CUSTOM_ID': RichText('data-flow'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('Write path'),
+                    body=[
+                        BlankLine(),
+                        Paragraph(body=RichText('A write request follows this path through the system:\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='.', first_line=RichText('Client sends =SET key value [EX seconds]= in RESP3 format.')),
+                              ListItem(bullet='.', first_line=RichText('Server decodes the command and performs ACL check.')),
+                              ListItem(bullet='.', first_line=RichText('Consistent hash ring determines which /primary shard/ owns the key.')),
+                              ListItem(bullet='.', first_line=RichText('If the server is *not* the primary shard, the request is *proxied*.')),
+                              ListItem(bullet='.', first_line=RichText('Primary shard acquires a shard lock (=tokio::sync::RwLock=, write mode).')),
+                              ListItem(bullet='.', first_line=RichText('Value is written to the in-memory slab allocator.')),
+                              ListItem(bullet='.', first_line=RichText('Write is appended to the AOF (append-only file) if persistence is enabled.')),
+                              ListItem(bullet='.', first_line=RichText('Replication events are fanned out to replicas asynchronously.')),
+                              ListItem(bullet='.', first_line=RichText('=+OK= response is returned to the client.')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('Read path'),
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='.', first_line=RichText('Client sends =GET key=.')),
+                              ListItem(bullet='.', first_line=RichText('ACL check.')),
+                              ListItem(bullet='.', first_line=RichText('Consistent hash: locate primary shard.')),
+                              ListItem(bullet='.', first_line=RichText('Proxy if not local (or read from any replica if =read_replicas= is enabled).')),
+                              ListItem(bullet='.', first_line=RichText('Acquire shard lock (read mode).')),
+                              ListItem(bullet='.', first_line=RichText('Lookup in the slab, check TTL expiry.')),
+                              ListItem(bullet='.', first_line=RichText('Return value or =$-1= (nil bulk string).')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Consistent Hashing'),
+              properties={
+                  'CUSTOM_ID': RichText('consistent-hashing'),
+                },
+              body=[
+                  Paragraph(body=RichText('Vantage uses jump consistent hashing [cite:@lamping2014jump] with =V= virtual\nnodes per physical node (default: =V = 150=).\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('The ring is rebalanced whenever a node joins or leaves. During rebalance:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('New key assignments are computed atomically.')),
+                        ListItem(bullet='-', first_line=RichText('In-flight requests to old shard owners complete normally.')),
+                        ListItem(bullet='-', first_line=RichText('Key migration runs in the background at a configurable rate.')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Replication Model'),
+              properties={
+                  'CUSTOM_ID': RichText('replication'),
+                },
+              body=[
+                  Paragraph(body=RichText('Each shard is replicated to =R= peers (default: =R = 2=) using asynchronous\nmulti-master replication. Conflict resolution is /last-write-wins/ based on\na Hybrid Logical Clock (HLC)[fn:hlc].\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[fn:hlc] Kulkarni, S., Demirbas, M., et al. (2014). Logical physical clocks and\nconsistent snapshots in globally distributed databases. /OPODIS 2014/.\n')),
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('Replication lag monitoring'),
+                    body=[
+                        Drawer(
+                          name='NOTE',
+                          body=[
+                              Paragraph(body=RichText('Replication lag is exposed as a Prometheus gauge =vantage_replication_lag_seconds=.\nAlert threshold: 500 ms sustained for > 60 s → PagerDuty P2.\n')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Eviction Policies'),
+              properties={
+                  'CUSTOM_ID': RichText('eviction'),
+                },
+              body=[
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Policy       ')),
+                              TableCell(value=RichText(' Algorithm                    ')),
+                              TableCell(value=RichText(' Use case                         ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|--------------+------------------------------+----------------------------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~lru~        ')),
+                              TableCell(value=RichText(' Approximated LRU (samples=5) ')),
+                              TableCell(value=RichText(' General-purpose                  ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~lfu~        ')),
+                              TableCell(value=RichText(' Count-min sketch, decay=0.5  ')),
+                              TableCell(value=RichText(' Skewed access distributions      ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~ttl~        ')),
+                              TableCell(value=RichText(' Expires-bucket sorted set    ')),
+                              TableCell(value=RichText(' Time-bounded session caches      ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~clock~      ')),
+                              TableCell(value=RichText(' Two-handed CLOCK algorithm   ')),
+                              TableCell(value=RichText(' Low-overhead, uniform workloads  ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~noeviction~ ')),
+                              TableCell(value=RichText(' Return error when full       ')),
+                              TableCell(value=RichText(' Strict capacity guarantees       ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~allkeys-lru~')),
+                              TableCell(value=RichText(' LRU across all keys          ')),
+                              TableCell(value=RichText(' When all keys may be evicted     ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Persistence'),
+              properties={
+                  'CUSTOM_ID': RichText('persistence'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('Append-Only File (AOF)'),
+                    body=[
+                        BlankLine(),
+                        Paragraph(body=RichText('The AOF records every write command in RESP3 format, one command per line.\nOn restart, the server replays the AOF to reconstruct state.\n')),
+                        BlankLine(),
+                        Paragraph(body=RichText('AOF configuration options:\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', first_line=RichText('~aof_enabled~: =true= / =false= (default =false=).')),
+                              ListItem(bullet='-', first_line=RichText('~aof_path~: filesystem path (default =/var/lib/vantage/vantage.aof=).')),
+                              ListItem(bullet='-', first_line=RichText('~aof_fsync~: =always= / =everysec= / =no= (default =everysec=).')),
+                              ListItem(bullet='-', first_line=RichText('~aof_rewrite_min_size~: minimum AOF size before compaction (default =64MiB=).')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('Snapshots (RDB-style)'),
+                    body=[
+                        Paragraph(body=RichText('Point-in-time snapshots are written by forking the process and serialising\nthe keyspace to a compact binary format. Snapshot schedule is configured via\n=snapshot_schedule= as a cron-like expression.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Security Model'),
+              properties={
+                  'CUSTOM_ID': RichText('security'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('TLS Configuration'),
+                    body=[
+                        BlankLine(),
+                        Paragraph(body=RichText('All connections (client-to-server and inter-node) use TLS 1.3 with mandatory\nmutual authentication. Certificates must be signed by the cluster CA.\n')),
+                        BlankLine(),
+                        FixedWidthBlock(body='[tls]\nca_cert = "/etc/vantage/ca.crt"\nserver_cert = "/etc/vantage/server.crt"\nserver_key = "/etc/vantage/server.key"\nrequire_client_cert = true\nmin_version = "TLSv1.3"'),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('Access Control Lists'),
+                    body=[
+                        Paragraph(body=RichText('ACL rules are evaluated in order; first match wins. Rule syntax:\n')),
+                        BlankLine(),
+                        FixedWidthBlock(body='user alice on >password ~cache:* &* +@read +@write -DEBUG\nuser readonly on >secret ~*  &* +@read\nuser default off'),
+                        BlankLine(),
+                        HorizontalRule(rule='-----'),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Requirements'),
+        properties={
+            'CUSTOM_ID': RichText('requirements'),
+          },
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Functional Requirements'),
+              properties={
+                  'CUSTOM_ID': RichText('functional-requirements'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('FR-01: Core Data Types'),
+                    body=[
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('String (binary-safe, up to 512 MiB)')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('List (doubly linked list or compressed quicklist)')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Hash (hash table with listpack encoding for small hashes)')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Set (hash table with intset encoding for small integer sets)')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Sorted Set (skip list + hash table, listpack for small zsets)')),
+                              ListItem(bullet='-', checkbox='-', first_line=RichText('Stream (in progress — targeting v1.2)')),
+                              ListItem(bullet='-', checkbox=' ', first_line=RichText('JSON (planned for v2.0 — requires RFC 8259 compliance)')),
+                              ListItem(bullet='-', checkbox=' ', first_line=RichText('Bloom Filter (planned, via probabilistic module)')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('FR-02: Key Expiry'),
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('=EX seconds= — expire after N seconds.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('=PX milliseconds= — expire after N milliseconds.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('=EXAT unix-timestamp= — expire at Unix timestamp (seconds).')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('=PXAT unix-timestamp-ms= — expire at Unix timestamp (milliseconds).')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('=PERSIST= — remove expiry from a key.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('=TTL key= — return remaining seconds.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('=PTTL key= — return remaining milliseconds.')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('FR-03: Cluster Operations'),
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Automatic cluster discovery via gossip.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Online node addition without downtime.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Online node removal with key migration.')),
+                              ListItem(bullet='-', checkbox='-', first_line=RichText('Rolling cluster upgrade (partial — requires coordinator node).')),
+                              ListItem(bullet='-', checkbox=' ', first_line=RichText('Cross-datacenter replication topology.')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('FR-04: Observability'),
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('=INFO= command (Redis-compatible output).')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Prometheus metrics endpoint (=vantage-exporter= sidecar).')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('OpenTelemetry traces for all commands (opt-in, sampling configurable).')),
+                              ListItem(bullet='-', checkbox=' ', first_line=RichText('Structured logging in JSON format (currently plain text).')),
+                              ListItem(bullet='-', checkbox=' ', first_line=RichText('Integration with Grafana Cloud (dashboard JSON to be published).')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('FR-05: Client Protocol Compatibility'),
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('RESP2 (Redis Serialisation Protocol v2) — full compatibility.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('RESP3 — full compatibility.')),
+                              ListItem(bullet='-', checkbox='-', first_line=RichText('Inline commands — partial (single-line =GET/SET= only).')),
+                              ListItem(bullet='-', checkbox=' ', first_line=RichText('Vantage binary protocol v1 (in design).')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Non-Functional Requirements'),
+              properties={
+                  'CUSTOM_ID': RichText('nfr'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('NFR-01: Latency'),
+                    properties={
+                        'CUSTOM_ID': RichText('nfr-latency'),
+                      },
+                    body=[
+                        BlankLine(),
+                        Table(
+                          rows=[
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' Percentile ')),
+                                    TableCell(value=RichText(' Target   ')),
+                                    TableCell(value=RichText(' Measured (v0.9.4) ')),
+                                  ],
+                              ),
+                              TableRuleRow(raw='|------------+----------+-------------------|'),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' p50        ')),
+                                    TableCell(value=RichText(' < 0.1 ms ')),
+                                    TableCell(value=RichText(' 0.08 ms           ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' p95        ')),
+                                    TableCell(value=RichText(' < 0.5 ms ')),
+                                    TableCell(value=RichText(' 0.31 ms           ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' p99        ')),
+                                    TableCell(value=RichText(' < 1.0 ms ')),
+                                    TableCell(value=RichText(' 0.74 ms           ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' p99.9      ')),
+                                    TableCell(value=RichText(' < 5.0 ms ')),
+                                    TableCell(value=RichText(' 3.21 ms           ')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                        BlankLine(),
+                        Paragraph(body=RichText('Conditions: 3-node cluster, 100 concurrent clients, 1 KiB values, 80/20 read/write.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('NFR-02: Throughput'),
+                    body=[
+                        Paragraph(body=RichText('Target: ≥ 500,000 operations/second per node on standard hardware\n(AWS c6i.2xlarge or equivalent: 8 vCPU, 16 GiB RAM).\n')),
+                        BlankLine(),
+                        Paragraph(body=RichText('Current measured: 620,000 ops/sec (v0.9.4, read-heavy workload).\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('NFR-03: Memory Overhead'),
+                    body=[
+                        Paragraph(body=RichText('Memory overhead per key (excluding value size) must not exceed 128 bytes.\nCurrent overhead: 84 bytes (slab metadata + hash table entry).\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('NFR-04: Availability'),
+                    body=[
+                        Paragraph(body=RichText('Target: 99.99% uptime (< 52.6 minutes downtime/year).\nAchieved via: replica failover ≤ 5 seconds, health-check interval 1 second.\n')),
+                        BlankLine(),
+                        HorizontalRule(rule='-----'),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('API Reference'),
+        properties={
+            'CUSTOM_ID': RichText('api-reference'),
+          },
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('String Commands'),
+              properties={
+                  'CUSTOM_ID': RichText('string-commands'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('GET'),
+                    properties={
+                        'CUSTOM_ID': RichText('cmd-get'),
+                      },
+                    body=[
+                        BlankLine(),
+                        ExampleBlock(body='GET key\n'),
+                        BlankLine(),
+                        Paragraph(body=RichText('Return the value associated with =key=, or nil if the key does not exist.\nTime complexity: O(1). Returns an error if the value is not a string.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('SET'),
+                    properties={
+                        'CUSTOM_ID': RichText('cmd-set'),
+                      },
+                    body=[
+                        ExampleBlock(body='SET key value [NX | XX] [GET] [EX seconds | PX ms | EXAT ts | PXAT ts | KEEPTTL]\n'),
+                        BlankLine(),
+                        Paragraph(body=RichText('Set =key= to =value=. Options:\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', first_line=RichText('~NX~ — only set if key does *not* exist.')),
+                              ListItem(bullet='-', first_line=RichText('~XX~ — only set if key *already* exists.')),
+                              ListItem(bullet='-', first_line=RichText('~GET~ — return the old value before overwriting.')),
+                              ListItem(bullet='-', first_line=RichText('~KEEPTTL~ — preserve existing TTL when overwriting.')),
+                            ],
+                        ),
+                        BlankLine(),
+                        Paragraph(body=RichText('Time complexity: O(1).\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('MGET / MSET'),
+                    properties={
+                        'CUSTOM_ID': RichText('cmd-mget-mset'),
+                      },
+                    body=[
+                        ExampleBlock(body='MGET key [key ...]\nMSET key value [key value ...]\n'),
+                        BlankLine(),
+                        Paragraph(body=RichText('Atomic multi-key read and write. ~MSET~ is always successful. ~MSETNX~\n(set multiple only if none exist) is also supported.\nTime complexity: O(N) where N is the number of keys.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('INCR / INCRBY / DECR / DECRBY'),
+                    properties={
+                        'CUSTOM_ID': RichText('cmd-incr'),
+                      },
+                    body=[
+                        Paragraph(body=RichText('Increment or decrement integer-valued strings atomically.\n')),
+                        BlankLine(),
+                        SourceBlock(body='INCR counter         → integer reply\nINCRBY counter 5     → integer reply\nINCRBYFLOAT rate 0.1 → bulk string reply (float as string)\n'),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('List Commands'),
+              properties={
+                  'CUSTOM_ID': RichText('list-commands'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('LPUSH / RPUSH'),
+                    properties={
+                        'CUSTOM_ID': RichText('cmd-lpush'),
+                      },
+                    body=[
+                        BlankLine(),
+                        ExampleBlock(body='LPUSH key element [element ...]\nRPUSH key element [element ...]\n'),
+                        BlankLine(),
+                        Paragraph(body=RichText('Push elements to the head (=L=) or tail (=R=) of a list.\nMultiple elements are pushed in order: ~LPUSH mylist a b c~ results in =c b a= (c at head).\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('LRANGE'),
+                    properties={
+                        'CUSTOM_ID': RichText('cmd-lrange'),
+                      },
+                    body=[
+                        ExampleBlock(body='LRANGE key start stop\n'),
+                        BlankLine(),
+                        Paragraph(body=RichText('Return a range of elements. Indices are 0-based; negative indices count from the tail\n(=-1= is the last element). O(S+N) where S is the offset from head/tail and N is range size.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('LMOVE'),
+                    properties={
+                        'CUSTOM_ID': RichText('cmd-lmove'),
+                      },
+                    body=[
+                        ExampleBlock(body='LMOVE source destination LEFT|RIGHT LEFT|RIGHT\n'),
+                        BlankLine(),
+                        Paragraph(body=RichText('Atomically move an element from one list to another. Replaces the deprecated ~RPOPLPUSH~.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Hash Commands'),
+              properties={
+                  'CUSTOM_ID': RichText('hash-commands'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('HSET / HGET / HMGET'),
+                    properties={
+                        'CUSTOM_ID': RichText('cmd-hset'),
+                      },
+                    body=[
+                        BlankLine(),
+                        ExampleBlock(body='HSET key field value [field value ...]\nHGET key field\nHMGET key field [field ...]\nHGETALL key\n'),
+                        BlankLine(),
+                        Paragraph(body=RichText('Hash field operations. ~HSET~ now accepts multiple field-value pairs (since Redis 4.0).\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('HINCRBY / HINCRBYFLOAT'),
+                    body=[
+                        Paragraph(body=RichText('Increment hash field values atomically — identical semantics to ~INCR~/~INCRBYFLOAT~.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Sorted Set Commands'),
+              properties={
+                  'CUSTOM_ID': RichText('zset-commands'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('ZADD'),
+                    properties={
+                        'CUSTOM_ID': RichText('cmd-zadd'),
+                      },
+                    body=[
+                        BlankLine(),
+                        ExampleBlock(body='ZADD key [NX|XX] [GT|LT] [CH] [INCR] score member [score member ...]\n'),
+                        BlankLine(),
+                        Paragraph(body=RichText('Add members with scores to a sorted set.\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', first_line=RichText('~GT~ — only update if new score is *greater* than current.')),
+                              ListItem(bullet='-', first_line=RichText('~LT~ — only update if new score is *less* than current.')),
+                              ListItem(bullet='-', first_line=RichText('~CH~ — return count of /changes/ (adds + updates) instead of only adds.')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('ZRANGEBYSCORE / ZRANGEBYLEX / ZRANGE'),
+                    properties={
+                        'CUSTOM_ID': RichText('cmd-zrange'),
+                      },
+                    body=[
+                        Paragraph(body=RichText('~ZRANGE~ (added in Redis 6.2) unifies all range queries:\n')),
+                        BlankLine(),
+                        ExampleBlock(body='ZRANGE key min max [BYSCORE|BYLEX] [REV] [LIMIT offset count] [WITHSCORES]\n'),
+                        BlankLine(),
+                        Paragraph(body=RichText('The older ~ZRANGEBYSCORE~ and ~ZRANGEBYLEX~ are deprecated aliases.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Administrative Commands'),
+              properties={
+                  'CUSTOM_ID': RichText('admin-commands'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('INFO'),
+                    body=[
+                        BlankLine(),
+                        Paragraph(body=RichText('Returns server statistics in Redis-compatible format. Sections:\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', first_line=RichText('=server= — version, uptime, OS, Rust version.')),
+                              ListItem(bullet='-', first_line=RichText('=clients= — connected clients, blocked clients.')),
+                              ListItem(bullet='-', first_line=RichText('=memory= — used memory, peak memory, allocator stats.')),
+                              ListItem(bullet='-', first_line=RichText('=cluster= — cluster enabled, node count, ring version.')),
+                              ListItem(bullet='-', first_line=RichText('=keyspace= — per-database key count and expiry statistics.')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('CLUSTER INFO / CLUSTER NODES'),
+                    body=[
+                        Paragraph(body=RichText('Returns cluster topology. =CLUSTER NODES= output is compatible with Redis\ncluster tooling.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('DEBUG SLEEP / DEBUG JMAP'),
+                    body=[
+                        Drawer(
+                          name='NOTE',
+                          body=[
+                              Paragraph(body=RichText('=DEBUG= commands are available only when the server is built with the\n=debug-commands= feature flag. They must never be enabled in production.\n')),
+                            ],
+                        ),
+                        BlankLine(),
+                        HorizontalRule(rule='-----'),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Testing'),
+        properties={
+            'CUSTOM_ID': RichText('testing'),
+          },
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Test Infrastructure'),
+              properties={
+                  'CUSTOM_ID': RichText('test-infra'),
+                },
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Tests are organised into three layers:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Unit tests — co-located with source, run with ~cargo test~.')),
+                        ListItem(bullet='-', first_line=RichText('Integration tests — in =tests/= directory, require a running cluster.')),
+                        ListItem(bullet='-', first_line=RichText('Compatibility tests — the Redis test suite (=redis-tests=) run against Vantage.')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Unit Test Coverage'),
+              properties={
+                  'CUSTOM_ID': RichText('unit-coverage'),
+                  'coverage_target': RichText('85%'),
+                  'coverage_current': RichText('87.3%'),
+                },
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Current coverage: *87.3%* (target: 85%). Report: [[file:target/coverage/html/index.html]].\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Uncovered paths are primarily in:\n')),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Error handling branches in the AOF replay path.')),
+                        ListItem(bullet='-', first_line=RichText('=CLUSTER RESET= edge cases.')),
+                        ListItem(bullet='-', first_line=RichText('Platform-specific memory allocator paths.')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Integration Test Suites'),
+              properties={
+                  'CUSTOM_ID': RichText('integration-tests'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('Cluster formation tests'),
+                    body=[
+                        BlankLine(),
+                        Paragraph(body=RichText('Tests in =tests/cluster/=:\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Three-node cluster formation from scratch.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Node join to existing two-node cluster.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Node graceful leave with key migration.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Node crash-recovery (simulated via =SIGKILL=).')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Split-brain detection and resolution.')),
+                              ListItem(bullet='-', checkbox='-', first_line=RichText('Five-node cluster with asymmetric partition (flaky — see issue #247).')),
+                              ListItem(bullet='-', checkbox=' ', first_line=RichText('Ten-node cluster stress test (requires dedicated CI machine).')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('Replication tests'),
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Synchronous write confirmed on all replicas.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Replica lag detection triggers alert.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Stale replica read returns error with =read_replicas=strict= config.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('LWW conflict resolution with concurrent writes from two nodes.')),
+                              ListItem(bullet='-', checkbox=' ', first_line=RichText('HLC skew > 500 ms triggers failsafe (blocked on #301).')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('Persistence tests'),
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('AOF replay produces identical keyspace.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('AOF compaction reduces file size by ≥ 50% on typical workloads.')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('Snapshot restore from cold start.')),
+                              ListItem(bullet='-', checkbox='-', first_line=RichText('Cross-version AOF compatibility (v0.8 → v0.9, partially tested).')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Benchmarks'),
+              properties={
+                  'CUSTOM_ID': RichText('benchmarks'),
+                },
+              body=[
+                  Paragraph(body=RichText('Run benchmarks with:\n')),
+                  BlankLine(),
+                  SourceBlock(language='bash', body='cargo bench --bench throughput -- --save-baseline main\n'),
+                  BlankLine(),
+                  CaptionKeyword(value='Benchmark results — v0.9.4 vs v0.9.3'),
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Benchmark             ')),
+                              TableCell(value=RichText(' v0.9.3       ')),
+                              TableCell(value=RichText(' v0.9.4       ')),
+                              TableCell(value=RichText(' Δ      ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|-----------------------+--------------+--------------+--------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' GET (p50)             ')),
+                              TableCell(value=RichText(' 0.11 ms      ')),
+                              TableCell(value=RichText(' 0.08 ms      ')),
+                              TableCell(value=RichText(' -27%   ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' SET (p50)             ')),
+                              TableCell(value=RichText(' 0.14 ms      ')),
+                              TableCell(value=RichText(' 0.09 ms      ')),
+                              TableCell(value=RichText(' -36%   ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' MGET 10 keys (p50)    ')),
+                              TableCell(value=RichText(' 0.38 ms      ')),
+                              TableCell(value=RichText(' 0.22 ms      ')),
+                              TableCell(value=RichText(' -42%   ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ZADD (p50)            ')),
+                              TableCell(value=RichText(' 0.19 ms      ')),
+                              TableCell(value=RichText(' 0.13 ms      ')),
+                              TableCell(value=RichText(' -32%   ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Throughput (ops/sec)  ')),
+                              TableCell(value=RichText(' 491,000      ')),
+                              TableCell(value=RichText(' 620,000      ')),
+                              TableCell(value=RichText(' +26%   |')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Deployment'),
+        properties={
+            'CUSTOM_ID': RichText('deployment'),
+          },
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Minimum Hardware Requirements'),
+              properties={
+                  'CUSTOM_ID': RichText('hardware-requirements'),
+                },
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('For a production three-node cluster:\n')),
+                  BlankLine(),
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Resource ')),
+                              TableCell(value=RichText(' Minimum  ')),
+                              TableCell(value=RichText(' Recommended ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|----------+----------+-------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' CPU      ')),
+                              TableCell(value=RichText(' 4 vCPU   ')),
+                              TableCell(value=RichText(' 8+ vCPU     ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' RAM      ')),
+                              TableCell(value=RichText(' 8 GiB    ')),
+                              TableCell(value=RichText(' 32+ GiB     ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Storage  ')),
+                              TableCell(value=RichText(' 20 GiB   ')),
+                              TableCell(value=RichText(' 100+ GiB NVMe ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Network  ')),
+                              TableCell(value=RichText(' 1 Gbps   ')),
+                              TableCell(value=RichText(' 10 Gbps     ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Docker Deployment'),
+              properties={
+                  'CUSTOM_ID': RichText('docker'),
+                },
+              body=[
+                  SourceBlock(language='yaml', body='version: "3.9"\nservices:\n  vantage-1:\n    image: ghcr.io/example/vantage:0.9.4\n    ports:\n      - "6380:6380"\n    volumes:\n      - ./config/node-1.toml:/etc/vantage/config.toml\n      - ./certs:/etc/vantage/certs\n      - vantage-1-data:/var/lib/vantage\n    environment:\n      VANTAGE_NODE_ID: "node-1"\n      RUST_LOG: "vantage=info"\n\n  vantage-2:\n    image: ghcr.io/example/vantage:0.9.4\n    ports:\n      - "6381:6380"\n    volumes:\n      - ./config/node-2.toml:/etc/vantage/config.toml\n      - ./certs:/etc/vantage/certs\n      - vantage-2-data:/var/lib/vantage\n    environment:\n      VANTAGE_NODE_ID: "node-2"\n\nvolumes:\n  vantage-1-data:\n  vantage-2-data:\n'),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Kubernetes Deployment'),
+              properties={
+                  'CUSTOM_ID': RichText('kubernetes'),
+                },
+              body=[
+                  Paragraph(body=RichText('A Helm chart is available at [[https://github.com/example/vantage-helm]].\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Recommended StatefulSet configuration:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('=replicas=: 3 (minimum for quorum).')),
+                        ListItem(bullet='-', first_line=RichText('=podAntiAffinity=: =requiredDuringSchedulingIgnoredDuringExecution= — one pod per node.')),
+                        ListItem(bullet='-', first_line=RichText('=topologySpreadConstraints=: spread across availability zones.')),
+                        ListItem(bullet='-', first_line=RichText('=resources.requests.memory=: set to 80% of intended keyspace size.')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('Health probes'),
+                    body=[
+                        SourceBlock(language='yaml', body='livenessProbe:\n  tcpSocket:\n    port: 6380\n  initialDelaySeconds: 10\n  periodSeconds: 5\nreadinessProbe:\n  exec:\n    command: ["vantage-cli", "ping"]\n  initialDelaySeconds: 5\n  periodSeconds: 3\n'),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Configuration Reference'),
+              properties={
+                  'CUSTOM_ID': RichText('configuration-reference'),
+                },
+              body=[
+                  CaptionKeyword(value='Configuration file — top-level sections'),
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Section       ')),
+                              TableCell(value=RichText(' Key                  ')),
+                              TableCell(value=RichText(' Type    ')),
+                              TableCell(value=RichText(' Default        ')),
+                              TableCell(value=RichText(' Description                          ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|---------------+----------------------+---------+----------------+--------------------------------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' =[server]=    ')),
+                              TableCell(value=RichText(' ~bind~               ')),
+                              TableCell(value=RichText(' string  ')),
+                              TableCell(value=RichText(' =0.0.0.0:6380= ')),
+                              TableCell(value=RichText(' Listen address                       ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' =[server]=    ')),
+                              TableCell(value=RichText(' ~worker_threads~     ')),
+                              TableCell(value=RichText(' uint    ')),
+                              TableCell(value=RichText(' = CPU count=   ')),
+                              TableCell(value=RichText(' Tokio worker threads                 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' =[server]=    ')),
+                              TableCell(value=RichText(' ~max_connections~    ')),
+                              TableCell(value=RichText(' uint    ')),
+                              TableCell(value=RichText(' =10000=        ')),
+                              TableCell(value=RichText(' Max simultaneous client connections  ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' =[cluster]=   ')),
+                              TableCell(value=RichText(' ~nodes~              ')),
+                              TableCell(value=RichText(' array   ')),
+                              TableCell(value=RichText(' =[]= (standalone) ')),
+                              TableCell(value=RichText(' Bootstrap peer addresses          ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' =[cluster]=   ')),
+                              TableCell(value=RichText(' ~virtual_nodes~      ')),
+                              TableCell(value=RichText(' uint    ')),
+                              TableCell(value=RichText(' =150=          ')),
+                              TableCell(value=RichText(' Virtual nodes per physical node      ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' =[cluster]=   ')),
+                              TableCell(value=RichText(' ~replication_factor~ ')),
+                              TableCell(value=RichText(' uint    ')),
+                              TableCell(value=RichText(' =2=            ')),
+                              TableCell(value=RichText(' Number of replicas per shard         ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' =[memory]=    ')),
+                              TableCell(value=RichText(' ~max_memory~         ')),
+                              TableCell(value=RichText(' size    ')),
+                              TableCell(value=RichText(' =0= (unlimited)')),
+                              TableCell(value=RichText(' Maximum keyspace memory usage        ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' =[memory]=    ')),
+                              TableCell(value=RichText(' ~eviction_policy~    ')),
+                              TableCell(value=RichText(' enum    ')),
+                              TableCell(value=RichText(' =lru=          ')),
+                              TableCell(value=RichText(' Eviction algorithm when at max       ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' =[persistence]=')),
+                              TableCell(value=RichText(' ~aof_enabled~       ')),
+                              TableCell(value=RichText(' bool    ')),
+                              TableCell(value=RichText(' =false=        ')),
+                              TableCell(value=RichText(' Enable append-only file              ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' =[persistence]=')),
+                              TableCell(value=RichText(' ~aof_fsync~         ')),
+                              TableCell(value=RichText(' enum    ')),
+                              TableCell(value=RichText(' =everysec=     ')),
+                              TableCell(value=RichText(' AOF fsync frequency                  ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' =[tls]=       ')),
+                              TableCell(value=RichText(' ~enabled~            ')),
+                              TableCell(value=RichText(' bool    ')),
+                              TableCell(value=RichText(' =false=        ')),
+                              TableCell(value=RichText(' Enable TLS                           ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Monitoring and Alerting'),
+              properties={
+                  'CUSTOM_ID': RichText('monitoring'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('Key metrics'),
+                    body=[
+                        BlankLine(),
+                        Paragraph(body=RichText('Prometheus metrics exposed by =vantage-exporter= on =:9121/metrics=:\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', first_line=RichText('=vantage_commands_total= (counter, labelled by command and status).')),
+                              ListItem(bullet='-', first_line=RichText('=vantage_command_duration_seconds= (histogram).')),
+                              ListItem(bullet='-', first_line=RichText('=vantage_connected_clients= (gauge).')),
+                              ListItem(bullet='-', first_line=RichText('=vantage_used_memory_bytes= (gauge).')),
+                              ListItem(bullet='-', first_line=RichText('=vantage_evicted_keys_total= (counter).')),
+                              ListItem(bullet='-', first_line=RichText('=vantage_replication_lag_seconds= (gauge, per replica).')),
+                              ListItem(bullet='-', first_line=RichText('=vantage_cluster_nodes= (gauge).')),
+                              ListItem(bullet='-', first_line=RichText('=vantage_aof_pending_writes= (gauge).')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('Recommended alert rules'),
+                    body=[
+                        Table(
+                          rows=[
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' Alert                      ')),
+                                    TableCell(value=RichText(' Condition                                   ')),
+                                    TableCell(value=RichText(' Severity ')),
+                                  ],
+                              ),
+                              TableRuleRow(raw='|----------------------------+---------------------------------------------+----------|'),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' =VantageHighLatency=       ')),
+                                    TableCell(value=RichText(' p99 > 5 ms for 2 minutes                   ')),
+                                    TableCell(value=RichText(' warning  ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' =VantageReplicationLag=    ')),
+                                    TableCell(value=RichText(' lag > 500 ms for 1 minute                  ')),
+                                    TableCell(value=RichText(' warning  ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' =VantageNodeDown=          ')),
+                                    TableCell(value=RichText(' node unreachable for 10 seconds             ')),
+                                    TableCell(value=RichText(' critical ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' =VantageMemoryPressure=    ')),
+                                    TableCell(value=RichText(' used memory > 90% of max_memory            ')),
+                                    TableCell(value=RichText(' warning  ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' =VantageEvictionRate=      ')),
+                                    TableCell(value=RichText(' evictions > 1000/sec for 5 minutes         ')),
+                                    TableCell(value=RichText(' warning  ')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                        BlankLine(),
+                        HorizontalRule(rule='-----'),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Contributing'),
+        properties={
+            'CUSTOM_ID': RichText('contributing'),
+          },
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Development Setup'),
+              properties={
+                  'CUSTOM_ID': RichText('dev-setup'),
+                },
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Prerequisites:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Rust 1.75.0 or later (=rustup update stable=).')),
+                        ListItem(bullet='-', first_line=RichText('=protoc= 3.21+ (for the binary protocol code generation).')),
+                        ListItem(bullet='-', first_line=RichText('Docker (for integration tests).')),
+                        ListItem(bullet='-', first_line=RichText('=cargo-nextest= for faster test execution.')),
+                      ],
+                  ),
+                  BlankLine(),
+                  SourceBlock(language='bash', body='git clone https://github.com/example/vantage.git\ncd vantage\ncargo build\ncargo nextest run          # unit tests\n./scripts/start-test-cluster.sh  # integration tests\ncargo bench                # benchmarks\n'),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Code Style'),
+              properties={
+                  'CUSTOM_ID': RichText('code-style'),
+                },
+              body=[
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Run =cargo fmt= before every commit.')),
+                        ListItem(bullet='-', first_line=RichText('Run =cargo clippy -- -D warnings= before every commit.')),
+                        ListItem(bullet='-', first_line=RichText('All public API items must have Rustdoc comments.')),
+                        ListItem(bullet='-', first_line=RichText('Error types must implement =std::error::Error= and produce human-readable messages.')),
+                        ListItem(bullet='-', first_line=RichText('No =unwrap()= or =expect()= outside of tests and =main()= startup.')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Pull Request Process'),
+              properties={
+                  'CUSTOM_ID': RichText('pr-process'),
+                },
+              body=[
+                  List(
+                    items=[
+                        ListItem(bullet='.', first_line=RichText('Fork the repository and create a feature branch from =main=.')),
+                        ListItem(bullet='.', first_line=RichText('Ensure all tests pass: =cargo nextest run --all-features=.')),
+                        ListItem(bullet='.', first_line=RichText('Add or update tests for any changed behaviour.')),
+                        ListItem(bullet='.', first_line=RichText('Update =CHANGELOG.md= under the =Unreleased= heading.')),
+                        ListItem(bullet='.', first_line=RichText('Open a PR against =main=. A maintainer will review within 5 business days.')),
+                        ListItem(bullet='.', first_line=RichText('Two approvals are required before merge.')),
+                        ListItem(bullet='.', first_line=RichText('PRs are merged with squash-and-merge; the commit message becomes the changelog entry.')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Architectural Decision Records'),
+              properties={
+                  'CUSTOM_ID': RichText('adrs'),
+                },
+              body=[
+                  Paragraph(body=RichText('ADRs document significant architectural decisions. They are stored in =docs/adr/=.\n')),
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('ADR-001: Adopt jump consistent hashing'),
+                    properties={
+                        'CUSTOM_ID': RichText('adr-001'),
+                      },
+                    body=[
+                        Paragraph(body=RichText('CLOSED: [2024-03-15 Fri]\n')),
+                        BlankLine(),
+                        Paragraph(body=RichText('*Status:* Accepted.\n*Decision:* Use jump consistent hashing over rendezvous hashing.\n*Rationale:* Lower variance in key distribution; faster computation; well-studied\nguarantees. Trade-off: less flexibility in heterogeneous node weights.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('ADR-002: RESP3 as default client protocol'),
+                    properties={
+                        'CUSTOM_ID': RichText('adr-002'),
+                      },
+                    body=[
+                        Paragraph(body=RichText('CLOSED: [2024-04-02 Tue]\n')),
+                        BlankLine(),
+                        Paragraph(body=RichText('*Status:* Accepted.\n*Decision:* Default new clients to RESP3; maintain RESP2 compatibility.\n*Rationale:* RESP3 supports typed responses (maps, sets) natively, reducing\nclient-side parsing overhead. Existing Redis clients continue to work unchanged.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('ADR-003: Tokio over async-std as the async runtime'),
+                    properties={
+                        'CUSTOM_ID': RichText('adr-003'),
+                      },
+                    body=[
+                        Paragraph(body=RichText('CLOSED: [2024-04-10 Wed]\n')),
+                        BlankLine(),
+                        Paragraph(body=RichText("*Status:* Accepted.\n*Decision:* Use Tokio as the sole async runtime.\n*Rationale:* Tokio has the largest ecosystem (tower, hyper, axum, tonic).\nThe work-stealing scheduler fits our use case better than async-std's\nsingle-threaded per-thread-per-core model.\n")),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('ADR-004: LWW conflict resolution using Hybrid Logical Clocks'),
+                    properties={
+                        'CUSTOM_ID': RichText('adr-004'),
+                      },
+                    body=[
+                        Paragraph(body=RichText('CLOSED: [2024-05-20 Mon]\n')),
+                        BlankLine(),
+                        Paragraph(body=RichText('*Status:* Accepted.\n*Decision:* Use HLC timestamps for LWW conflict resolution instead of wall-clock time.\n*Rationale:* Wall-clock LWW suffers from clock skew across nodes. HLC guarantees\nthat =HLC(a) < HLC(b)= whenever event =a= causally precedes event =b=, even with\nmodest clock drift (< 500 ms). See [cite:@kulkarni2014hlc].\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('ADR-005: Pluggable eviction via trait objects'),
+                    properties={
+                        'CUSTOM_ID': RichText('adr-005'),
+                      },
+                    body=[
+                        Paragraph(body=RichText('CLOSED: [2024-07-01 Mon]\n')),
+                        BlankLine(),
+                        Paragraph(body=RichText('*Status:* Accepted.\n*Decision:* Model eviction policies as ~dyn EvictionPolicy~ trait objects rather\nthan an enum.\n*Rationale:* Allows third-party eviction policies without modifying core code.\nPerformance cost (one virtual dispatch per eviction candidate evaluation) is\nacceptable at < 1 ns overhead per call.\n')),
+                        BlankLine(),
+                        HorizontalRule(rule='-----'),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Changelog'),
+        properties={
+            'CUSTOM_ID': RichText('changelog'),
+          },
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Unreleased'),
+              properties={
+                  'CUSTOM_ID': RichText('unreleased'),
+                },
+              body=[
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('IN-PROGRESS Add ~OBJECT FREQ~ command for LFU policy introspection. :feature:')),
+                        ListItem(bullet='-', first_line=RichText('TODO Implement ~LMPOP~ and ~ZMPOP~ for multi-key blocking pops. :feature:')),
+                        ListItem(bullet='-', first_line=RichText('TODO Structured JSON logging via =tracing-subscriber= JSON formatter. :observability:')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('v0.9.4 — 2025-01-03'),
+              properties={
+                  'CUSTOM_ID': RichText('v094'),
+                },
+              body=[
+                  Paragraph(body=RichText('CLOSED: [2025-01-03 Fri]\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('DONE Optimised slab allocator: 27% reduction in allocation latency. :performance:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Fixed race condition in HLC synchronisation under very high write concurrency. :bugfix:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Upgraded to Tokio 1.42 and Rustls 0.23. :maintenance:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Added =OBJECT ENCODING= command for introspecting internal data structure choice. :feature:')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('v0.9.3 — 2024-12-01'),
+              properties={
+                  'CUSTOM_ID': RichText('v093'),
+                },
+              body=[
+                  Paragraph(body=RichText('CLOSED: [2024-12-01 Sun]\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('DONE Introduced CLOCK eviction policy. :feature:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Fixed =EXPIRE= with =XX= flag incorrectly setting expiry on non-expiring keys. :bugfix:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Improved cluster rebalance speed by 40% via parallel key migration. :performance:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Added =vantage_aof_pending_writes= Prometheus metric. :observability:')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('v0.9.2 — 2024-11-01'),
+              properties={
+                  'CUSTOM_ID': RichText('v092'),
+                },
+              body=[
+                  Paragraph(body=RichText('CLOSED: [2024-11-01 Fri]\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('DONE Fixed critical bug: =LMOVE= with =source == destination= corrupted the list. :bugfix:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Added =OBJECT IDLETIME= command. :feature:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Documented all configuration keys in =docs/configuration.md=. :docs:')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('v0.9.1 — 2024-10-07'),
+              properties={
+                  'CUSTOM_ID': RichText('v091'),
+                },
+              body=[
+                  Paragraph(body=RichText('CLOSED: [2024-10-07 Mon]\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('DONE TLS: added support for PKCS#12 certificate bundles in addition to PEM. :feature:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Fixed memory leak when a client disconnects mid-command. :bugfix:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Reduced default =max_connections= from 50,000 to 10,000 (more sensible default). :config:')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('v0.9.0 — 2024-09-15'),
+              properties={
+                  'CUSTOM_ID': RichText('v090'),
+                },
+              body=[
+                  Paragraph(body=RichText('CLOSED: [2024-09-15 Sun]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('*Breaking changes:*\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Configuration file format changed from YAML to TOML.')),
+                        ListItem(bullet='-', first_line=RichText('=CLUSTER INFO= output now includes =vantage_version= field.')),
+                        ListItem(bullet='-', first_line=RichText('Minimum supported Rust version raised from 1.70 to 1.75.')),
+                      ],
+                  ),
+                  BlankLine(),
+                  Paragraph(body=RichText('Changes:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('DONE Rewrote cluster gossip using SWIM variant; significantly reduced bandwidth. :architecture:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Added =OBJECT HELP= command. :feature:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Full RESP3 support. :feature:')),
+                        ListItem(bullet='-', first_line=RichText('DONE =vantage-exporter= sidecar released as a separate binary. :observability:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Removed legacy =--compat-redis-2.8= flag. :breaking:')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('v0.8.5 — 2024-08-01'),
+              properties={
+                  'CUSTOM_ID': RichText('v085'),
+                },
+              body=[
+                  Paragraph(body=RichText('CLOSED: [2024-08-01 Thu]\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('DONE Fixed =SCAN= cursor wraparound on very large keyspaces (> 100M keys). :bugfix:')),
+                        ListItem(bullet='-', first_line=RichText('DONE =ZADD GT/LT= options now correctly handle negative infinity scores. :bugfix:')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('v0.8.0 — 2024-06-15'),
+              properties={
+                  'CUSTOM_ID': RichText('v080'),
+                },
+              body=[
+                  Paragraph(body=RichText('CLOSED: [2024-06-15 Sat]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('*First public beta.*\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('DONE Core string, list, hash, set, sorted set operations. :feature:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Three-node cluster with consistent hashing. :feature:')),
+                        ListItem(bullet='-', first_line=RichText('DONE LRU and TTL eviction policies. :feature:')),
+                        ListItem(bullet='-', first_line=RichText('DONE AOF persistence. :feature:')),
+                        ListItem(bullet='-', first_line=RichText('DONE Basic TLS (server-side only in this release). :feature:')),
+                        ListItem(bullet='-', first_line=RichText('DONE =vantage-cli= interactive REPL. :feature:')),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Known Issues and Roadmap'),
+        properties={
+            'CUSTOM_ID': RichText('roadmap'),
+          },
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Open Issues'),
+              properties={
+                  'CUSTOM_ID': RichText('open-issues'),
+                },
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('Performance Profiling Tooling'),
+                    properties={
+                        'CUSTOM_ID': RichText('perf-tools'),
+                      },
+                    body=[
+                        BlankLine(),
+                        Paragraph(body=RichText('Tooling used for performance investigation:\n')),
+                        BlankLine(),
+                        List(
+                          items=[
+                              ListItem(bullet='-', first_line=RichText('~cargo flamegraph~ — CPU flame graphs via =perf= or =dtrace=.')),
+                              ListItem(bullet='-', first_line=RichText('~heaptrack~ — heap allocation profiling (Linux only).')),
+                              ListItem(bullet='-', first_line=RichText('~valgrind --tool=massif~ — heap usage over time.')),
+                              ListItem(bullet='-', first_line=RichText('~tokio-console~ — async task visualisation for Tokio runtimes.')),
+                            ],
+                        ),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('Fuzzing Infrastructure'),
+                    properties={
+                        'CUSTOM_ID': RichText('fuzzing'),
+                      },
+                    body=[
+                        Paragraph(body=RichText('Fuzz targets are maintained in =fuzz/= using =cargo-fuzz= (libFuzzer).\n')),
+                        BlankLine(),
+                        Paragraph(body=RichText('Current fuzz targets:\n')),
+                        BlankLine(),
+                        Table(
+                          rows=[
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' Target                 ')),
+                                    TableCell(value=RichText(' Corpus size ')),
+                                    TableCell(value=RichText(' Findings (lifetime) ')),
+                                  ],
+                              ),
+                              TableRuleRow(raw='|------------------------+-------------+---------------------|'),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' ~fuzz_resp_parser~     ')),
+                                    TableCell(value=RichText(' 12,400      ')),
+                                    TableCell(value=RichText(' 3 fixed, 0 open     ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' ~fuzz_command_dispatch~')),
+                                    TableCell(value=RichText(' 8,200       ')),
+                                    TableCell(value=RichText(' 1 fixed, 0 open     ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' ~fuzz_aof_replay~      ')),
+                                    TableCell(value=RichText(' 3,100       ')),
+                                    TableCell(value=RichText(' 2 fixed, 1 open     ')),
+                                  ],
+                              ),
+                              TableRow(
+                                cells=[
+                                    TableCell(value=RichText(' ~fuzz_cluster_gossip~  ')),
+                                    TableCell(value=RichText(' 5,800       ')),
+                                    TableCell(value=RichText(' 0 fixed, 0 open     ')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                        BlankLine(),
+                        BlankLine(),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    todo='BLOCKED',
+                    title=RichText('Issue #247: Asymmetric partition test is flaky '),
+                    scheduled=Timestamp(is_active=True, start_year=2025, start_month=2, start_day=1, start_dayname='Sat'),
+                    properties={
+                        'issue_url': RichText('https://github.com/example/vantage/issues/247'),
+                        'blocker': RichText('Requires deterministic network simulation'),
+                      },
+                    heading_tags=['testing', 'cluster'],
+                    body=[
+                        Paragraph(body=RichText('The five-node asymmetric partition test occasionally fails in CI due to\ntiming sensitivity in the suspicion sub-protocol. Blocked on introducing\na deterministic network simulation layer.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    todo='BLOCKED',
+                    title=RichText('Issue #301: HLC failsafe for skew > 500ms '),
+                    scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=20, start_dayname='Mon'),
+                    properties={
+                        'issue_url': RichText('https://github.com/example/vantage/issues/301'),
+                      },
+                    heading_tags=['safety'],
+                    body=[
+                        Paragraph(body=RichText('When HLC skew exceeds 500 ms, the server should refuse writes and alert\noperators. Implementation is ready but blocked on consensus about the\ncorrect recovery procedure.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    todo='TODO',
+                    title=RichText('Issue #318: =WAIT= command not accounting for replica timeouts '),
+                    scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=15, start_dayname='Wed'),
+                    properties={
+                        'issue_url': RichText('https://github.com/example/vantage/issues/318'),
+                        'effort': RichText('2:00'),
+                      },
+                    heading_tags=['correctness'],
+                    body=[
+                        Paragraph(body=RichText('The =WAIT numreplicas timeout= command returns immediately when =timeout=0=\neven when replicas have not acknowledged the write. This violates the\nRedis-compatible specification.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    todo='TODO',
+                    title=RichText('Issue #312: Structured JSON logging '),
+                    scheduled=Timestamp(is_active=True, start_year=2025, start_month=2, start_day=15, start_dayname='Sat'),
+                    properties={
+                        'issue_url': RichText('https://github.com/example/vantage/issues/312'),
+                        'effort': RichText('3:00'),
+                      },
+                    heading_tags=['observability'],
+                    body=[
+                        Paragraph(body=RichText('Currently all logs are plain-text. Need to add a JSON formatter using\n=tracing-subscriber= for log aggregation systems (Loki, CloudWatch).\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Planned Features — v1.0'),
+              properties={
+                  'CUSTOM_ID': RichText('v1-roadmap'),
+                },
+              body=[
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('Stream data type (~XADD~, ~XREAD~, consumer groups).')),
+                        ListItem(bullet='-', first_line=RichText('Vantage binary protocol v1 specification and implementation.')),
+                        ListItem(bullet='-', first_line=RichText('~EVAL~ / Lua scripting (subset — no global state, no network access).')),
+                        ListItem(bullet='-', first_line=RichText('Cross-datacenter active-active replication (initial topology support).')),
+                        ListItem(bullet='-', first_line=RichText('Official Grafana dashboard JSON.')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Planned Features — v2.0'),
+              properties={
+                  'CUSTOM_ID': RichText('v2-roadmap'),
+                },
+              body=[
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('JSON data type (RFC 8259, with =JSONGET=/=JSONSET= path syntax).')),
+                        ListItem(bullet='-', first_line=RichText('Bloom filter and Cuckoo filter modules.')),
+                        ListItem(bullet='-', first_line=RichText('Vector similarity search (ANN index, targeting HNSW algorithm).')),
+                        ListItem(bullet='-', first_line=RichText('WASM plugin host for custom commands.')),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Footnotes'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('[fn:swim] Das, A., Gupta, I., & Motivala, A. (2002). SWIM: Scalable\nweakly-consistent infection-style process group membership protocol. *DSN 2002*,\n303–312. https://doi.org/10.1109/DSN.2002.1028914\n')),
+            BlankLine(),
+            Paragraph(body=RichText('[fn:hlc] Kulkarni, S., Demirbas, M., Madeppa, D., Avva, B., & Leone, M. (2014).\nLogical physical clocks and consistent snapshots in globally distributed\ndatabases. *OPODIS 2014*, LNCS 8878, 17–32.\n')),
+          ],
+      ),
+    ],
+)

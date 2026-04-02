@@ -1,0 +1,52 @@
+Document(
+  filename='examples/heading-levels.org',
+  category=RichText('heading-levels'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Level one'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Level two'),
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('Level three'),
+                    body=[
+                        BlankLine(),
+                      ],
+                    children=[
+                        Heading(
+                          level=4,
+                          title=RichText('Level four'),
+                          body=[
+                              BlankLine(),
+                            ],
+                          children=[
+                              Heading(
+                                level=5,
+                                title=RichText('Level five'),
+                                body=[
+                                    BlankLine(),
+                                  ],
+                                children=[
+                                    Heading(level=6, title=RichText('Level six')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

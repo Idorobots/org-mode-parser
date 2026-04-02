@@ -1,0 +1,20 @@
+Document(
+  filename='examples/fixed-width-basic.org',
+  category=RichText('fixed-width-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Fixed-Width Areas'),
+        body=[
+            BlankLine(),
+            FixedWidthBlock(body='single fixed-width line'),
+            BlankLine(),
+            FixedWidthBlock(body='first line\nsecond line\nthird line'),
+            BlankLine(),
+            Paragraph(body=RichText('Paragraph between two areas.\n')),
+            BlankLine(),
+            FixedWidthBlock(body='area after paragraph\n\nempty fixed-width line above'),
+          ],
+      ),
+    ],
+)

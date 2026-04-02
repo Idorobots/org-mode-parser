@@ -1,0 +1,110 @@
+Document(
+  filename='examples/table-basic.org',
+  category=RichText('table-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Basic Org Table'),
+        body=[
+            BlankLine(),
+            Table(
+              rows=[
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Name  ')),
+                        TableCell(value=RichText(' Age ')),
+                        TableCell(value=RichText(' City     ')),
+                      ],
+                  ),
+                  TableRuleRow(raw='|-------+-----+----------|'),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Alice ')),
+                        TableCell(value=RichText('  30 ')),
+                        TableCell(value=RichText(' London   ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Bob   ')),
+                        TableCell(value=RichText('  25 ')),
+                        TableCell(value=RichText(' Paris    ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Carol ')),
+                        TableCell(value=RichText('  35 ')),
+                        TableCell(value=RichText(' Berlin   ')),
+                      ],
+                  ),
+                ],
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Table with caption'),
+        body=[
+            CaptionKeyword(value='A small reference table'),
+            Table(
+              rows=[
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Key ')),
+                        TableCell(value=RichText(' Value ')),
+                      ],
+                  ),
+                  TableRuleRow(raw='|-----+-------|'),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' a   ')),
+                        TableCell(value=RichText('     1 ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' b   ')),
+                        TableCell(value=RichText('     2 ')),
+                      ],
+                  ),
+                ],
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Single-column table'),
+        body=[
+            BlankLine(),
+            Table(
+              rows=[
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Item    ')),
+                      ],
+                  ),
+                  TableRuleRow(raw='|---------|'),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' apple   ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' banana  ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' cherry  ')),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

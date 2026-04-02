@@ -47,6 +47,15 @@ class TestAttachKeywordAPI:
         para = Paragraph(body=RichText("hello\n"))
         assert para.keywords == []
 
+    def test_keywords_property_exposes_backing_list(self) -> None:
+        """Keywords property returns the mutable backing list for the element."""
+        para = Paragraph(body=RichText("hello\n"))
+        keyword = CaptionKeyword(value="desc")
+
+        para.keywords.append(keyword)
+
+        assert para.keywords == [keyword]
+
     def test_attach_keyword_does_not_dirty(self) -> None:
         """attach_keyword must not flip the dirty flag."""
         para = Paragraph(body=RichText("hello\n"))

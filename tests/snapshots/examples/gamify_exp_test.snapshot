@@ -1,0 +1,121 @@
+Document(
+  filename='examples/gamify_exp_test.org',
+  category=RichText('gamify_exp_test'),
+  children=[
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Simple task 1 '),
+        properties={
+            'gamify_exp': RichText('5'),
+          },
+        heading_tags=['SimpleTag'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Simple task 2 '),
+        properties={
+            'gamify_exp': RichText('9'),
+          },
+        heading_tags=['SimpleTag'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Regular task 1 '),
+        properties={
+            'gamify_exp': RichText('10'),
+          },
+        heading_tags=['RegularTag'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Regular task 2 '),
+        properties={
+            'gamify_exp': RichText('15'),
+          },
+        heading_tags=['RegularTag'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Regular task 3 '),
+        properties={
+            'gamify_exp': RichText('19'),
+          },
+        heading_tags=['RegularTag'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Hard task 1 '),
+        properties={
+            'gamify_exp': RichText('20'),
+          },
+        heading_tags=['HardTag'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Hard task 2 '),
+        properties={
+            'gamify_exp': RichText('25'),
+          },
+        heading_tags=['HardTag'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Hard task with tuple format '),
+        properties={
+            'gamify_exp': RichText('(30 40)'),
+          },
+        heading_tags=['HardTag'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Missing gamify_exp '),
+        heading_tags=['DefaultTag'],
+        body=[
+            Paragraph(body=RichText('This should default to regular\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Invalid gamify_exp '),
+        properties={
+            'gamify_exp': RichText('invalid_value'),
+          },
+        heading_tags=['DefaultTag'],
+      ),
+    ],
+)

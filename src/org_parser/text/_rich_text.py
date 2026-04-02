@@ -38,6 +38,7 @@ from org_parser._nodes import (
     UNDERLINE,
     VERBATIM,
 )
+from org_parser.element._dirty_list import DirtyList
 from org_parser.text._inline import (
     AngleLink,
     Bold,
@@ -78,6 +79,20 @@ if TYPE_CHECKING:
 __all__ = ["RichText"]
 
 
+def coerce_rich_text(value: RichText | str) -> RichText:
+    """Return *value* as [org_parser.text.RichText][]."""
+    if isinstance(value, RichText):
+        return value
+    return RichText(value)
+
+
+def coerce_optional_rich_text(value: RichText | str | None) -> RichText | None:
+    """Return *value* as [org_parser.text.RichText][] or ``None``."""
+    if value is None:
+        return None
+    return coerce_rich_text(value)
+
+
 class RichText:
     """Rich text content represented as Org inline objects.
 
@@ -113,6 +128,7 @@ class RichText:
         self._document: Document | None = None
         self._source: bytes | None = None
         self._dirty = False
+        self._adopt_parts(self._parts)
 
     @property
     def parts(self) -> list[InlineObject]:
@@ -126,7 +142,13 @@ class RichText:
         4
         ```
         """
-        return self._parts
+
+        def on_parts_mutation(wrapped: DirtyList[InlineObject]) -> None:
+            self._parts = list(wrapped)
+            self._adopt_parts(self._parts)
+            self.mark_dirty()
+
+        return DirtyList(self._parts, on_mutation=on_parts_mutation)
 
     @property
     def text(self) -> str:
@@ -194,7 +216,9 @@ class RichText:
         'AB'
         ```
         """
-        self._parts.append(_coerce_inline_object(part))
+        inline_part = _coerce_inline_object(part)
+        self._parts.append(inline_part)
+        self._adopt_inline_part(inline_part)
         self.mark_dirty()
 
     def prepend(self, part: InlineObject | str) -> None:
@@ -209,7 +233,9 @@ class RichText:
         'AB'
         ```
         """
-        self._parts.insert(0, _coerce_inline_object(part))
+        inline_part = _coerce_inline_object(part)
+        self._parts.insert(0, inline_part)
+        self._adopt_inline_part(inline_part)
         self.mark_dirty()
 
     def insert(self, index: int, part: InlineObject | str) -> None:
@@ -224,8 +250,20 @@ class RichText:
         'BAC'
         ```
         """
-        self._parts.insert(index, _coerce_inline_object(part))
+        inline_part = _coerce_inline_object(part)
+        self._parts.insert(index, inline_part)
+        self._adopt_inline_part(inline_part)
         self.mark_dirty()
+
+    def _adopt_parts(self, parts: list[InlineObject]) -> None:
+        """Attach parent ownership to mutable inline objects."""
+        for part in parts:
+            self._adopt_inline_part(part)
+
+    def _adopt_inline_part(self, part: InlineObject) -> None:
+        """Attach this rich-text as owner for mutable inline object parts."""
+        if isinstance(part, Timestamp):
+            part.parent = self
 
     # -- factory methods -----------------------------------------------------
 
@@ -355,7 +393,7 @@ def _parse_inline_nodes(
     return [_parse_inline_node(node, document) for node in nodes]
 
 
-def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915
+def _parse_inline_node(  # noqa: PLR0911,PLR0912,PLR0915,C901
     node: tree_sitter.Node,
     document: Document,
 ) -> InlineObject:
@@ -607,8 +645,8 @@ def _extract_single_rich_text_node(
 
     invalid_document_shape = (
         document.keywords
-        or document.properties is not None
-        or document.logbook is not None
+        or len(document.properties) > 0
+        or len(document.logbook) > 0
         or document.children
         or len(document.body) != 1
     )

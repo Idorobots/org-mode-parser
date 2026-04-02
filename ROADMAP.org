@@ -1,4 +1,4 @@
-#+TITLE: A Python parser for Org Mode nodes
+#+TITLE: A Python parser for Org Mode documents
 #+ARCHIVE: ./docs/plans/ROADMAP_ARCHIVE.org::
 
 * Bugfixes
@@ -23,9 +23,12 @@ SCHEDULED: <2025-12-12, at some point>
 
 The timestamp is parsed with an error, but it's not available in =document.errors= property.
 
-** TODO Keyword stringification issue
+** DONE Keyword stringification issue
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py]]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 12:19]
 :END:
 
 Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_document.py
@@ -33,6 +36,7 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_doc
 #+begin_example
 >>> from org_parser.element import Logbook
 >>> from org_parser.time import Clock
+>>> from org_parser import loads
 >>> document = loads("#+TITLE: Logbook")
 >>> document.logbook = Logbook()
 >>> document.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
@@ -44,9 +48,12 @@ CLOCK: [2025-10-10]
 
 The format of the stringified document is invalid, the LOGBOOK drawer should appear on a new line.
 
-** TODO src/org_parser/document/_document.py
+** DONE src/org_parser/document/_document.py
 :PROPERTIES:
 :context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 13:21]
 :END:
 
 In file src/org_parser/document/_document.py around line 452, near the ~class Document:~
@@ -59,7 +66,29 @@ In file src/org_parser/document/_document.py around line 452, near the ~class Do
 
 Alternatively, =Document.properties= could be set by default to an empty instance of =Properties=.
 Same with =Document.logbook=.
-** TODO Code review comment
+
+Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_heading.py
+
+#+begin_example
+        heading_tags: list[str] | None = None,
+        scheduled: Timestamp | None = None,
+        closed: Timestamp | None = None,
+        deadline: Timestamp | None = None,
+        properties: Properties | None = None,
+        logbook: Logbook | None = None,
+        repeated_tasks: list[Repeat] | None = None,
+        clock_entries: list[Clock] | None = None,
+        body: list[Element] | None = None,
+        children: list[Heading] | None = None,
+#+end_example
+
+Properties & logbook can be set to their respective classes by default and omitted from dirty stringification when empty.
+Heading tags, repeated tasks, clock entries, body and children should be empty lists by default.
+Repeated tasks should be renamed to =repeats=.
+** DONE Empty lists by default
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 15:41]
+:END:
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::keywords: list\[Keyword\] | None = None,
  properties: Properties | None = None,
@@ -76,46 +105,15 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_doc
         logbook: Logbook | None = None,
         body: list[Element] | None = None,
         children: list[Heading] | None = None,
-
 #+end_example
 
-Keywords, body and children should be empty lists by default.
-** TODO Code review comment
-:PROPERTIES:
-:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_heading.py::heading_tags: list\[str\] | None = None,
- scheduled: Timestamp | None = None,
- closed: Timestamp | None = None,
- deadline: Timestamp | None = None,
- properties: Properties | None = None,
- logbook: Logbook | None = None,
- repeated_tasks: list\[Repeat\] | None = None,
- clock_entries: list\[Clock\] | None = None,
- body: list\[Element\] | None = None,
- children: list\[Heading\] | None = None,]]
-:END:
-
-Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_heading.py
-
-#+begin_example
-        heading_tags: list[str] | None = None,
-        scheduled: Timestamp | None = None,
-        closed: Timestamp | None = None,
-        deadline: Timestamp | None = None,
-        properties: Properties | None = None,
-        logbook: Logbook | None = None,
-        repeated_tasks: list[Repeat] | None = None,
-        clock_entries: list[Clock] | None = None,
-        body: list[Element] | None = None,
-        children: list[Heading] | None = None,
-
-#+end_example
-
-Properties & logbook can be set to their respective classes by default and omitted from dirty  stringification when empty.
-Heading tags, repeated tasks, clock entries, body and children should be empty lists by default.
-Repeated tasks should be renamed to =repeats=.
-** TODO Code review comment
+Keywords, body and children should be empty lists by default. Same logic should apply to the =Heading=.
+** DONE Dirty stringification omits completion counter
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_heading.py]]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 14:27]
 :END:
 
 Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_heading.py
@@ -166,20 +164,22 @@ def _render_heading_dirty(heading: Heading) -> str:
 
 
 This should add the completion counter if set.
-** TODO Code review comment
+** DONE List item from source creation should extract the initial item from a list.
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_list.py::>>> document.body\[0\].items.append(ListItem(bullet="-", first_line=RichText("Item 1")))]]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 14:46]
 :END:
 
 Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_list.py
 
 #+begin_example
         >>> document.body[0].items.append(ListItem(bullet="-", first_line=RichText("Item 1")))
-
 #+end_example
 
 It's impossible to create a =ListItem= with =ListItem.from_source("- item")= as that creates a =List= instance.
-** DONE Code review comment
+** DONE Paragraph indent not needed
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-03-31 Tue 01:10]
 :END:
@@ -199,9 +199,13 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_para
 #+end_example
 
 Paragraph no longer needs the indent, it's handled by =Indent= class.
-** TODO Code review comment
+** CANCELLED Indent block should use the =whitespace= field for the indent text
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_structure.py]]
+:END:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2026-04-01 Wed 14:36] \\
+  This is actually correct.
 :END:
 
 Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_structure.py
@@ -220,33 +224,77 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_stru
         )
         block.attach_source(node, document)
         return block
-
 #+end_example
 
 This should extract the indent from the =whitespace= property of the parse tree.
 * Dev Ex
-** TODO Any method that accepts RichText should also accept raw strings.
+** DONE Any method that accepts RichText should also accept raw strings.
 :PROPERTIES:
 :capture_time: [2026-03-30 Mon 15:10]
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
 :END:
-** TODO Document.properties should accept a dictionary when setting.
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 19:59]
+:END:
+*** DONE src/org_parser/element/_list.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 19:59]
+:END:
+
+In file src/org_parser/element/_list.py around line 48, near the ~_REPEAT_HEADER_PREFIX_PATTERN = re.compile(~
+
+#+begin_example
+ 
++def _coerce_optional_rich_text(value: RichText | str | None) -> RichText | None:
++    """Return *value* as [org_parser.text.RichText][] or ``None``."""
++    if value is None:
++        return None
++    if isinstance(value, RichText):
++        return value
++    return RichText(value)
++
++
+ class ListItem(Element):
+     r"""One mutable plain-list item with all item-level metadata.
+
+#+end_example
+
+This is duplicated elsewhere, please refactor these into a common helper function.
+** DONE Document.properties should accept a dictionary when setting.
 :PROPERTIES:
 :capture_time: [2026-03-30 Mon 15:12]
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
 :END:
-** TODO Properties constructor should accept a dictionary.
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 19:18]
+:END:
+** DONE Properties constructor should accept a dictionary.
 :PROPERTIES:
 :capture_time: [2026-03-30 Mon 15:13]
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
 :END:
-** TODO Any body setter should accept a list of elements, a single element and a raw string.
-:PROPERTIES:
-:capture_time: [2026-03-30 Mon 15:13]
-:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 18:00]
 :END:
 
-** TODO Code review comment
+It should ensure that the values are all =RichText= - raw strings can be wrapped into =RichText=.
+
+** DONE Any body setter should accept a list of elements, a single element and a raw string.
+:PROPERTIES:
+:capture_time: [2026-03-30 Mon 15:13]
+:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_document.py::>>> document.body = \[Paragraph.from_source("Add some body text")\]]]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 00:15]
+:END:
+
+** DONE Appending to any list should mark the object as dirty
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 15:43]
+:END:
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_keyword.py::>>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
  >>> document.mark_dirty()]]
@@ -257,10 +305,120 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_keyw
 #+begin_example
         >>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
         >>> document.mark_dirty()
-
 #+end_example
 
 Mark dirty is required for the append to take effect - could use a custom list wrapper that automatically handles it.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 15:35]
+:END:
+
+In file src/org_parser/document/_document.py around line 453, near the ~class Document:~
+
+#+begin_example
++        if not isinstance(self._keywords, DirtyList):
++            self._keywords = DirtyList(self._keywords, on_mutation=self._on_keywords_mutated)
+         return self._keywords
+#+end_example
+
+Let's just return the DirtyList, not overwrite the stored attribute value.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 15:35]
+:END:
+
+In file src/org_parser/document/_document.py around line 945, near the ~class Document:~
+
+#+begin_example
++    def _on_keywords_mutated(self) -> None:
++        """Re-home keyword parents and mark document dirty after list mutation."""
++        self._adopt_keywords(self._keywords)
++        self.mark_dirty()
++
++    def _on_body_mutated(self) -> None:
++        """Re-home body parents and mark document dirty after list mutation."""
++        self._adopt_elements(self._body)
++        self.mark_dirty()
++
++    def _on_children_mutated(self) -> None:
++        """Re-home children, enforce levels, and mark document dirty."""
++        from org_parser.document._heading import ensure_child_heading_level
++
++        self._adopt_elements(self._children)
++        for child in self._children:
++            ensure_child_heading_level(child, parent_level=0)
++        self.mark_dirty()
+#+end_example
+
+These can be inlined at the place they are used.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 15:35]
+:END:
+
+In file src/org_parser/document/_document.py around line 460, near the ~class Document:~
+
+#+begin_example
++        wrapped = DirtyList(self._keywords)
++
++        def on_keywords_mutation() -> None:
++            self._keywords = list(wrapped)
++            self._adopt_keywords(self._keywords)
++            self.mark_dirty()
++
++        wrapped.set_on_mutation(on_keywords_mutation)
++        return wrapped
+#+end_example
+
+Make the mutation callback accept a parameter and make DirtyList call that callback with itself after the mutation occured, so that we can just =return DirtyList(value, callback)=
+*** DONE Extract the =DirtyList= to a separate module
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 15:42]
+:END:
+It makes sense to extract the =DirtyList= into a separate module.
+
+** DONE Heading/Element .line and .column
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 19:17]
+:END:
+The line and column numbers are useful for sorting the nodes/elements. It makes sense to add these as attributes. They should delegate to the internal tree-sitter node start line and column if available or return =None= if not available.
+
+** DONE Rename Heading.repeated_tasks to repeats to match the logbook.
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 19:08]
+:END:
+Update the heading class field name and tests. Make sure to update the documentation examples.
+
+** DONE Timestamp.raw should be optional as these can be constructed programatically.
+:PROPERTIES:
+:capture_time: [2026-04-01 Wed 19:50]
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 23:37]
+:END:
+** DONE Timestamp is missing the delay and repeater marks.
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 23:55]
+:END:
+
+Please add the remaining tree-sitter =timestamp= fields so that they become accessible in =Timestamp=. They can be =None= by default.
+
+** DONE datetime based timestamp creation
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-01 Wed 23:59]
+:END:
+Add a way to create a timestamp object from a Python datetime. The datetime should be used to set the start timestamp. By default the =is_active= flag should be set to =True= for such modifications. It can be a class method called =from_datetime=.
+
 * Initial release
 ** DONE Supported syntax in the README.org
 :LOGBOOK:
@@ -323,5 +481,51 @@ I would like the documentation to organized as follows:
 
 Add the required dependencies, tasks for building the documentation and the documentation scaffold itself.
 
-** Automated tests based on the example files.
-** Library release
+** DONE Auto-generated introduction docs
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 19:02]
+:END:
+Add a build step for the docs page generation pipeline that uses pandoc to transform the README.org file into docs/index.md.
+The idea is for the documentation page to use the same content as the readme file.
+
+** DONE Basic usage docs
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 20:48]
+:END:
+Expand the basic usage docs in docs/usage.md with examples of loading documents from file, writing files, stringifying documents etc.
+
+** DONE Tree traversal docs
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 21:12]
+:END:
+Create docs/traversal.md file that outlines the document structure - parent, children, =Sequence= interface and iteration. Use short, instructive examples. Add =is_root=, =is_leaf= and any attributes/methods that can aid tree traversal to the docs.
+
+** DONE Mutability docs
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 21:26]
+:END:
+Create docs/mutability.md file that outlines the mutability of the semantic document tree - specifically describe the =dirty= flags, =reformat= operation and describe how the original formatting/whitespace is preserved by default and reconstructed from scratch when dirty.
+Describe the =DirtyList= wrapper with some usage examples.
+
+** DONE index.md sync
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 22:05]
+:END:
+Generating the docs/index.md file during docs page build isn't ideal. Instead, let's check in the docs page pipeline if the file is up to date with README.org - for instance, by running the pandoc export and checking for any git diffs, or by any other means.
+If the docs/index.md file is outdated, the pipeline should fail. To prevent merging PRs with broken docs index, please add another check to the CI pipeline that checks the documentation is up to date.
+
+** DONE Automated tests based on the example files.
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 23:10]
+:END:
+There are example files in the repository unter examples/ directory. I'd like these to be used for snapshot testing the parser.
+
+** DONE Fix-width block update
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-03 Fri 01:00]
+:END:
+The underlying tree-sitter parser was updated so that it coalesces fixed-width blocks. Please update the Python wrapper to also do that.
+
+** TODO Library release
+Update the project configuration file to add all the necessary information that PyPi needs for a package to be publishable.
+Add a release workflow that will run whenever a tag is pushed - it should publish the =org-parser= library to pypi.

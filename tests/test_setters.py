@@ -8,7 +8,7 @@ from org_parser import load
 from org_parser.document import Document, Heading
 from org_parser.element import Element, Keyword, Paragraph
 from org_parser.text import CompletionCounter, RichText
-from org_parser.time import Timestamp
+from org_parser.time import Clock, Timestamp
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -38,6 +38,35 @@ def test_rich_text_mutation_bubbles_to_heading_and_document() -> None:
     assert heading.title.dirty is True
     assert heading.dirty is True
     assert document.dirty is True
+
+
+def test_timestamp_mutation_bubbles_to_heading_and_document() -> None:
+    """Mutating planning timestamp fields marks heading and document dirty."""
+    document = Document(filename="doc.org")
+    heading = Heading(
+        level=1,
+        document=document,
+        parent=document,
+        scheduled=Timestamp(
+            is_active=True,
+            start_year=2025,
+            start_month=3,
+            start_day=1,
+            start_dayname="Sat",
+        ),
+    )
+
+    assert heading.scheduled is not None
+    assert heading.scheduled.dirty is False
+    assert heading.dirty is False
+    assert document.dirty is False
+
+    heading.scheduled.start_day = 2
+
+    assert heading.scheduled.dirty is True
+    assert heading.dirty is True
+    assert document.dirty is True
+    assert "<2025-03-02 Sat>" in str(heading)
 
 
 def test_element_parent_setter_does_not_mark_dirty() -> None:
@@ -86,9 +115,73 @@ def test_document_setters_mark_dirty() -> None:
     assert document.category is category
     assert document.description is description
     assert document.todo is todo
-    assert document.keywords is keywords
-    assert document.body is body
+    assert keywords[0] in document.keywords
+    assert document.body == body
     assert document.children == [child]
+    assert document.dirty is True
+
+
+def test_document_dedicated_keyword_setters_accept_raw_strings() -> None:
+    """Document keyword setters accept raw strings and store RichText."""
+    document = Document(filename="x.org")
+
+    document.title = "Title"
+    document.author = "Author"
+    document.category = "work"
+    document.description = "desc"
+    document.todo = "TODO | DONE"
+
+    assert isinstance(document.title, RichText)
+    assert isinstance(document.author, RichText)
+    assert isinstance(document.category, RichText)
+    assert isinstance(document.description, RichText)
+    assert isinstance(document.todo, RichText)
+    assert str(document.title) == "Title"
+    assert str(document.author) == "Author"
+    assert str(document.category) == "work"
+    assert str(document.description) == "desc"
+    assert str(document.todo) == "TODO | DONE"
+
+
+def test_heading_title_and_category_setters_accept_raw_strings() -> None:
+    """Heading title and heading_category setters accept raw strings."""
+    document = Document(filename="doc.org")
+    heading = Heading(level=1, document=document, parent=document)
+
+    heading.title = "Heading"
+    heading.heading_category = "sprint"
+
+    assert isinstance(heading.title, RichText)
+    assert heading.title is not None
+    assert str(heading.title) == "Heading"
+    assert isinstance(heading.heading_category, RichText)
+    assert heading.heading_category is not None
+    assert str(heading.heading_category) == "sprint"
+
+
+def test_document_default_drawers_support_immediate_mutation() -> None:
+    """Document default drawers can be mutated without prior assignment."""
+    document = Document(filename="x.org")
+
+    document.properties["ID"] = RichText("abc")
+    document.logbook.clock_entries = [Clock(duration="0:30")]
+
+    assert str(document.properties["ID"]) == "abc"
+    assert len(document.logbook.clock_entries) == 1
+    assert document.dirty is True
+
+
+def test_heading_default_drawers_support_immediate_mutation() -> None:
+    """Heading default drawers can be mutated without prior assignment."""
+    document = Document(filename="doc.org")
+    heading = Heading(level=1, document=document, parent=document)
+
+    heading.properties["ID"] = RichText("h-1")
+    heading.logbook.clock_entries = [Clock(duration="0:15")]
+
+    assert str(heading.properties["ID"]) == "h-1"
+    assert len(heading.logbook.clock_entries) == 1
+    assert heading.dirty is True
     assert document.dirty is True
 
 
@@ -108,6 +201,109 @@ def test_keyword_value_mutation_bubbles_to_document() -> None:
     assert document.dirty is True
 
 
+def test_keyword_and_paragraph_setters_accept_raw_strings() -> None:
+    """Keyword/Paragraph public setters accept raw strings."""
+    document = Document(filename="x.org")
+    keyword = Keyword(key="LANG", value="en", parent=document)
+    paragraph = Paragraph(body="Before\n", parent=document)
+
+    keyword.value = "fr"
+    paragraph.body = "After\n"
+
+    assert isinstance(keyword.value, RichText)
+    assert isinstance(paragraph.body, RichText)
+    assert str(keyword.value) == "fr"
+    assert str(paragraph.body) == "After\n"
+
+
+def test_document_body_setter_accepts_element_and_raw_string() -> None:
+    """Document body setter accepts one element and raw string input."""
+    document = Document(filename="x.org")
+    paragraph = Paragraph(body=RichText("Body\n"))
+
+    document.body = paragraph
+
+    assert document.body == [paragraph]
+    assert document.body[0].parent is document
+
+    document.body = "Raw body"
+
+    assert len(document.body) == 1
+    assert isinstance(document.body[0], Paragraph)
+    assert str(document.body[0]) == "Raw body"
+    assert document.body[0].parent is document
+
+
+def test_document_list_appends_mark_dirty() -> None:
+    """Appending to document-owned lists marks the document dirty."""
+    keyword_doc = Document(filename="x.org")
+    keyword = Keyword(key="TITLE", value="x")
+    keyword_doc.keywords.append(keyword)
+    assert keyword_doc.dirty is True
+    assert keyword.parent is keyword_doc
+
+    body_doc = Document(filename="x.org")
+    paragraph = Paragraph(body=RichText("Body\n"))
+    body_doc.body.append(paragraph)
+    assert body_doc.dirty is True
+    assert paragraph.parent is body_doc
+
+    child_doc = Document(filename="x.org")
+    child = Heading(level=0, document=child_doc, parent=child_doc)
+    child_doc.children.append(child)
+    assert child_doc.dirty is True
+    assert child.parent is child_doc
+    assert child.level == 1
+
+
+def test_heading_body_setter_accepts_element_and_raw_string() -> None:
+    """Heading body setter accepts one element and raw string input."""
+    document = Document(filename="doc.org")
+    heading = Heading(level=1, document=document, parent=document)
+    paragraph = Paragraph(body=RichText("Body\n"))
+
+    heading.body = paragraph
+
+    assert heading.body == [paragraph]
+    assert heading.body[0].parent is heading
+
+    heading.body = "Raw body"
+
+    assert len(heading.body) == 1
+    assert isinstance(heading.body[0], Paragraph)
+    assert str(heading.body[0]) == "Raw body"
+    assert heading.body[0].parent is heading
+
+
+def test_heading_list_appends_mark_dirty() -> None:
+    """Appending to heading-owned lists marks heading and document dirty."""
+    tag_document = Document(filename="doc.org")
+    tag_heading = Heading(level=1, document=tag_document, parent=tag_document)
+    tag_document.children = [tag_heading]
+    tag_heading.heading_tags.append("work")
+    assert tag_heading.dirty is True
+    assert tag_document.dirty is True
+
+    body_document = Document(filename="doc.org")
+    body_heading = Heading(level=1, document=body_document, parent=body_document)
+    body_document.children = [body_heading]
+    paragraph = Paragraph(body=RichText("Body\n"))
+    body_heading.body.append(paragraph)
+    assert body_heading.dirty is True
+    assert body_document.dirty is True
+    assert paragraph.parent is body_heading
+
+    child_document = Document(filename="doc.org")
+    child_heading = Heading(level=1, document=child_document, parent=child_document)
+    child_document.children = [child_heading]
+    child = Heading(level=1, document=child_document, parent=child_heading)
+    child_heading.children.append(child)
+    assert child_heading.dirty is True
+    assert child_document.dirty is True
+    assert child.parent is child_heading
+    assert child.level == 2
+
+
 def test_heading_setters_mark_heading_and_document_dirty() -> None:
     """Heading setter mutations mark both heading and document dirty."""
     document = Document(filename="doc.org")
@@ -124,7 +320,6 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
     heading.counter = CompletionCounter("1/2")
     heading.heading_tags = ["work", "next"]
     heading.scheduled = Timestamp(
-        raw="<2025-03-01 Sat>",
         is_active=True,
         start_year=2025,
         start_month=3,
@@ -132,7 +327,6 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
         start_dayname="Sat",
     )
     heading.deadline = Timestamp(
-        raw="<2025-03-05 Wed>",
         is_active=True,
         start_year=2025,
         start_month=3,
@@ -140,7 +334,6 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
         start_dayname="Wed",
     )
     heading.closed = Timestamp(
-        raw="[2025-03-02 Sun 09:00]",
         is_active=False,
         start_year=2025,
         start_month=3,

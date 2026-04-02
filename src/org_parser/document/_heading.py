@@ -33,16 +33,19 @@ from org_parser.element import (
     Properties,
     Repeat,
 )
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
+    coerce_element_body,
     element_from_error_or_unknown,
+    ensure_trailing_newline,
 )
 from org_parser.element._structure_recovery import (
     attach_affiliated_keywords,
 )
 from org_parser.text._inline import CompletionCounter
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_optional_rich_text, coerce_rich_text
 from org_parser.time import Clock, Timestamp
 
 if TYPE_CHECKING:
@@ -73,7 +76,7 @@ class Heading:
         title: The heading title as [org_parser.text.RichText][], or *None*.
         counter: Completion counter object (e.g. ``[1/3]``), or *None*.
         heading_tags: A list of tag strings found on this heading line in source order.
-        repeated_tasks: Repeated task entries extracted from ``LOGBOOK``.
+        repeats: Repeated task entries extracted from ``LOGBOOK``.
         clock_entries: Clock entries extracted from ``LOGBOOK``.
         body: Body elements of the heading (excludes sub-headings).
         children: Direct sub-headings of this heading.
@@ -98,18 +101,18 @@ class Heading:
         todo: str | None = None,
         is_comment: bool = False,
         priority: str | None = None,
-        title: RichText | None = None,
+        title: RichText | str | None = None,
         counter: CompletionCounter | None = None,
-        heading_tags: list[str] | None = None,
+        heading_tags: Sequence[str] = (),
         scheduled: Timestamp | None = None,
         closed: Timestamp | None = None,
         deadline: Timestamp | None = None,
         properties: Properties | None = None,
         logbook: Logbook | None = None,
-        repeated_tasks: list[Repeat] | None = None,
-        clock_entries: list[Clock] | None = None,
-        body: list[Element] | None = None,
-        children: list[Heading] | None = None,
+        repeats: Sequence[Repeat] = (),
+        clock_entries: Sequence[Clock] = (),
+        body: Sequence[Element] = (),
+        children: Sequence[Heading] = (),
     ) -> None:
         self._level = level
         self._document = document
@@ -117,36 +120,31 @@ class Heading:
         self._todo = todo
         self._is_comment = is_comment
         self._priority = priority
-        self._title = title
+        self._title = coerce_optional_rich_text(title)
         self._counter = counter
-        self._heading_tags: list[str] = heading_tags if heading_tags is not None else []
+        self._heading_tags: list[str] = list(heading_tags)
         self._scheduled = scheduled
         self._closed = closed
         self._deadline = deadline
-        self._properties = properties
-        self._logbook = logbook
-        self._repeated_tasks: list[Repeat] = (
-            repeated_tasks
-            if repeated_tasks is not None
-            else ([] if logbook is None else logbook.repeats)
-        )
-        self._clock_entries: list[Clock] = (
-            clock_entries
-            if clock_entries is not None
-            else ([] if logbook is None else logbook.clock_entries)
-        )
-        self._body: list[Element] = body if body is not None else []
-        self._children: list[Heading] = children if children is not None else []
+        self._properties = properties if properties is not None else Properties()
+        self._logbook = logbook if logbook is not None else Logbook()
+        self._repeats: list[Repeat] = list(repeats)
+        self._clock_entries: list[Clock] = list(clock_entries)
+        self._body: list[Element] = list(body)
+        self._children: list[Heading] = list(children)
         self._node: tree_sitter.Node | None = None
         self._dirty = False
 
         self._adopt_element(self._title)
+        self._adopt_timestamp(self._scheduled)
+        self._adopt_timestamp(self._closed)
+        self._adopt_timestamp(self._deadline)
 
         self._adopt_element(self._properties)
         self._adopt_element(self._logbook)
         self._adopt_elements(self._body)
         self._adopt_elements(self._children)
-        self._sync_repeated_tasks()
+        self._sync_repeats()
         self._sync_clock_entries()
 
     # -- factory method ------------------------------------------------------
@@ -225,8 +223,6 @@ class Heading:
             scheduled=scheduled,
             deadline=deadline,
             closed=closed,
-            properties=None,
-            logbook=None,
             body=[],
         )
         heading._node = node
@@ -236,10 +232,12 @@ class Heading:
             parent=heading,
             document=document,
         )
-        heading._properties = properties
-        heading._logbook = logbook
+        heading._properties = properties if properties is not None else Properties(parent=heading)
+        heading._logbook = logbook if logbook is not None else Logbook(parent=heading)
+        heading._adopt_element(heading._properties)
+        heading._adopt_element(heading._logbook)
         heading._body = body
-        heading._sync_repeated_tasks()
+        heading._sync_repeats()
         heading._sync_clock_entries()
 
         # Recursively build sub-headings.
@@ -397,9 +395,9 @@ class Heading:
         return self._title
 
     @title.setter
-    def title(self, value: RichText | None) -> None:
+    def title(self, value: RichText | str | None) -> None:
         """Set the heading title."""
-        self._title = value
+        self._title = coerce_optional_rich_text(value)
         self._adopt_element(self._title)
         self.mark_dirty()
 
@@ -440,12 +438,17 @@ class Heading:
         ['work', 'docs']
         ```
         """
-        return self._heading_tags
+
+        def on_heading_tags_mutation(wrapped: DirtyList[str]) -> None:
+            self._heading_tags = list(wrapped)
+            self.mark_dirty()
+
+        return DirtyList(self._heading_tags, on_mutation=on_heading_tags_mutation)
 
     @heading_tags.setter
     def heading_tags(self, value: list[str]) -> None:
         """Set tag strings on this heading line."""
-        self._heading_tags = value
+        self._heading_tags = list(value)
         self.mark_dirty()
 
     @property
@@ -502,12 +505,12 @@ class Heading:
         'Heading'
         ```
         """
-        if self._properties is not None and "CATEGORY" in self._properties:
+        if "CATEGORY" in self._properties:
             return self._properties["CATEGORY"]
         return None
 
     @heading_category.setter
-    def heading_category(self, value: RichText | None) -> None:
+    def heading_category(self, value: RichText | str | None) -> None:
         """Set or clear the ``CATEGORY`` property in this heading's ``PROPERTIES``.
 
         When *value* is not *None* the ``CATEGORY`` key is created or updated
@@ -517,13 +520,11 @@ class Heading:
         the heading dirty.
         """
         if value is None:
-            if self._properties is not None and "CATEGORY" in self._properties:
+            if "CATEGORY" in self._properties:
                 del self._properties["CATEGORY"]
                 self.mark_dirty()
             return
-        if self._properties is None:
-            self._properties = Properties(parent=self)
-        self._properties["CATEGORY"] = value
+        self._properties["CATEGORY"] = coerce_rich_text(value)
         self.mark_dirty()
 
     @property
@@ -633,27 +634,33 @@ class Heading:
         Add some body text
         ```
         """
-        return self._body
+
+        def on_body_mutation(wrapped: DirtyList[Element]) -> None:
+            self._body = list(wrapped)
+            self._adopt_elements(self._body)
+            self._sync_repeats()
+            self._sync_clock_entries()
+            self.mark_dirty()
+
+        return DirtyList(self._body, on_mutation=on_body_mutation)
 
     @body.setter
-    def body(self, value: list[Element]) -> None:
+    def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set body elements."""
-        self._body = value
+        self._body = list(coerce_element_body(value))
         self._adopt_elements(self._body)
-        self._sync_repeated_tasks()
+        self._sync_repeats()
         self._sync_clock_entries()
         self.mark_dirty()
 
     @property
-    def properties(self) -> Properties | None:
-        """Merged heading ``PROPERTIES`` drawer, or *None*.
+    def properties(self) -> Properties:
+        """Merged heading ``PROPERTIES`` drawer.
 
         Example:
         ```python
         >>> from org_parser import loads
-        >>> from org_parser.element import Properties
         >>> heading = loads("* TODO Heading 1").children[0]
-        >>> heading.properties = Properties()
         >>> heading.properties["key"] = RichText("Value")
         >>> print(str(heading))
         * TODO Heading 1
@@ -665,23 +672,31 @@ class Heading:
         return self._properties
 
     @properties.setter
-    def properties(self, value: Properties | None) -> None:
-        """Set merged heading ``PROPERTIES`` drawer."""
-        self._properties = value
+    def properties(self, value: Properties | dict[str, RichText | str] | None) -> None:
+        """Set merged heading ``PROPERTIES`` drawer.
+
+        Assigning ``None`` resets this to an empty drawer instance.
+        """
+        if value is None:
+            properties = Properties(parent=self)
+        elif isinstance(value, Properties):
+            properties = value
+        else:
+            properties = Properties(properties=value, parent=self)
+        self._properties = properties
         self._adopt_element(self._properties)
         self.mark_dirty()
 
     @property
-    def logbook(self) -> Logbook | None:
-        """Merged heading ``LOGBOOK`` drawer, or *None*.
+    def logbook(self) -> Logbook:
+        """Merged heading ``LOGBOOK`` drawer.
 
         Example:
         ```python
         >>> from org_parser import loads
-        >>> from org_parser.element import Logbook, Repeat
+        >>> from org_parser.element import Repeat
         >>> from org_parser.time import Clock, Timestamp
         >>> heading = loads("* TODO Heading 1").children[0]
-        >>> heading.logbook = Logbook()
         >>> heading.logbook.clock_entries = [Clock.from_source("CLOCK: [2025-10-10]")]
         >>> ts = Timestamp.from_source("<2025-10-10>")
         >>> heading.logbook.repeats = [Repeat(after="DONE", before="TODO", timestamp=ts)]
@@ -697,15 +712,18 @@ class Heading:
 
     @logbook.setter
     def logbook(self, value: Logbook | None) -> None:
-        """Set merged heading ``LOGBOOK`` drawer."""
-        self._logbook = value
+        """Set merged heading ``LOGBOOK`` drawer.
+
+        Assigning ``None`` resets this to an empty drawer instance.
+        """
+        self._logbook = value if value is not None else Logbook(parent=self)
         self._adopt_element(self._logbook)
-        self._sync_repeated_tasks()
+        self._sync_repeats()
         self._sync_clock_entries()
         self.mark_dirty()
 
     @property
-    def repeated_tasks(self) -> list[Repeat]:
+    def repeats(self) -> list[Repeat]:
         """Repeated task entries extracted from this heading's logbook.
 
         Example:
@@ -715,7 +733,7 @@ class Heading:
         >>> from org_parser.time import Timestamp
         >>> heading = loads("* TODO Heading 1").children[0]
         >>> ts = Timestamp.from_source("<2025-10-10>")
-        >>> heading.repeated_tasks = [Repeat(after="DONE", before="TODO", timestamp=ts)]
+        >>> heading.repeats = [Repeat(after="DONE", before="TODO", timestamp=ts)]
         >>> print(str(heading))
         * TODO Heading 1
         :LOGBOOK:
@@ -723,14 +741,23 @@ class Heading:
         :END:
         ```
         """
-        return self._repeated_tasks
 
-    @repeated_tasks.setter
-    def repeated_tasks(self, value: list[Repeat]) -> None:
-        """Set repeated tasks and synchronize them into the logbook drawer."""
-        self._repeated_tasks = value
+        def on_repeats_mutation(wrapped: DirtyList[Repeat]) -> None:
+            self._repeats = list(wrapped)
+            logbook = self._ensure_logbook()
+            logbook.repeats = self._repeats
+            self._repeats = list(logbook.repeats)
+            self.mark_dirty()
+
+        return DirtyList(self._repeats, on_mutation=on_repeats_mutation)
+
+    @repeats.setter
+    def repeats(self, value: list[Repeat]) -> None:
+        """Set repeats and synchronize them into the logbook drawer."""
+        self._repeats = list(value)
         logbook = self._ensure_logbook()
-        logbook.repeats = self._repeated_tasks
+        logbook.repeats = self._repeats
+        self._repeats = list(logbook.repeats)
         self.mark_dirty()
 
     def add_repeated_task(self, repeat: Repeat) -> None:
@@ -751,9 +778,9 @@ class Heading:
         :END:
         ```
         """
-        self._repeated_tasks = [*self._repeated_tasks, repeat]
+        self._repeats = [*self._repeats, repeat]
         logbook = self._ensure_logbook()
-        logbook.repeats = self._repeated_tasks
+        logbook.repeats = self._repeats
         self.mark_dirty()
 
     @property
@@ -773,14 +800,23 @@ class Heading:
         :END:
         ```
         """
-        return self._clock_entries
+
+        def on_clock_entries_mutation(wrapped: DirtyList[Clock]) -> None:
+            self._clock_entries = list(wrapped)
+            logbook = self._ensure_logbook()
+            logbook.clock_entries = self._clock_entries
+            self._clock_entries = list(logbook.clock_entries)
+            self.mark_dirty()
+
+        return DirtyList(self._clock_entries, on_mutation=on_clock_entries_mutation)
 
     @clock_entries.setter
     def clock_entries(self, value: list[Clock]) -> None:
         """Set clock entries and synchronize them into the logbook drawer."""
-        self._clock_entries = value
+        self._clock_entries = list(value)
         logbook = self._ensure_logbook()
         logbook.clock_entries = self._clock_entries
+        self._clock_entries = list(logbook.clock_entries)
         self.mark_dirty()
 
     @property
@@ -820,7 +856,15 @@ class Heading:
         'Heading 2'
         ```
         """
-        return self._children
+
+        def on_children_mutation(wrapped: DirtyList[Heading]) -> None:
+            self._children = list(wrapped)
+            self._adopt_elements(self._children)
+            for child in self._children:
+                ensure_child_heading_level(child, parent_level=self._level)
+            self.mark_dirty()
+
+        return DirtyList(self._children, on_mutation=on_children_mutation)
 
     @children.setter
     def children(self, value: list[Heading]) -> None:
@@ -832,7 +876,7 @@ class Heading:
         subtree — so that the invariant ``child.level > self.level`` holds.
         Only headings whose level is actually changed are marked dirty.
         """
-        self._children = value
+        self._children = list(value)
         self._adopt_elements(self._children)
         for child in self._children:
             ensure_child_heading_level(child, parent_level=self._level)
@@ -936,7 +980,7 @@ class Heading:
             for planning in (self._scheduled, self._closed, self._deadline)
             if planning is not None
         )
-        collected.extend(repeat.timestamp for repeat in self._repeated_tasks)
+        collected.extend(repeat.timestamp for repeat in self._repeats)
         collected.extend(
             clock.timestamp for clock in self._clock_entries if clock.timestamp is not None
         )
@@ -1017,6 +1061,20 @@ class Heading:
         """Whether this heading has been mutated after creation."""
         return self._dirty
 
+    @property
+    def line(self) -> int | None:
+        """Zero-based source line of this heading's parse node, or *None*."""
+        if self._node is None:
+            return None
+        return self._node.start_point.row
+
+    @property
+    def column(self) -> int | None:
+        """Zero-based source column of this heading's parse node, or *None*."""
+        if self._node is None:
+            return None
+        return self._node.start_point.column
+
     def mark_dirty(self) -> None:
         """Mark this heading dirty and bubble to its parent chain.
 
@@ -1068,11 +1126,9 @@ class Heading:
             self._deadline.reformat()
         if self._closed is not None:
             self._closed.reformat()
-        if self._properties is not None:
-            self._properties.reformat()
-        if self._logbook is not None:
-            self._logbook.reformat()
-        for repeat in self._repeated_tasks:
+        self._properties.reformat()
+        self._logbook.reformat()
+        for repeat in self._repeats:
             repeat.reformat()
         for clock in self._clock_entries:
             clock.reformat()
@@ -1099,20 +1155,17 @@ class Heading:
         for value in values:
             self._adopt_element(value)
 
-    def _sync_repeated_tasks(self) -> None:
+    def _sync_repeats(self) -> None:
         """Synchronize repeated-task cache from logbook and heading body."""
         body_repeats, _ = _recover_heading_body_lists_and_extract_clocks(
             self._body,
             document=self._document,
         )
 
-        if self._logbook is None:
-            self._repeated_tasks = body_repeats
-            return
         if not body_repeats:
-            self._repeated_tasks = self._logbook.repeats
+            self._repeats = list(self._logbook.repeats)
             return
-        self._repeated_tasks = [*self._logbook.repeats, *body_repeats]
+        self._repeats = [*self._logbook.repeats, *body_repeats]
 
     def _sync_clock_entries(self) -> None:
         """Synchronize clock cache from logbook and heading body."""
@@ -1121,19 +1174,13 @@ class Heading:
             document=self._document,
         )
 
-        if self._logbook is None:
-            self._clock_entries = body_clocks
-            return
         if not body_clocks:
-            self._clock_entries = self._logbook.clock_entries
+            self._clock_entries = list(self._logbook.clock_entries)
             return
         self._clock_entries = [*self._logbook.clock_entries, *body_clocks]
 
     def _ensure_logbook(self) -> Logbook:
-        """Return heading logbook, creating one when absent."""
-        if self._logbook is None:
-            self._logbook = Logbook(parent=self)
-            self._adopt_element(self._logbook)
+        """Return heading logbook drawer."""
         return self._logbook
 
     def _set_planning_timestamp(
@@ -1144,13 +1191,22 @@ class Heading:
         """Set one planning timestamp field."""
         if planning_keyword == SCHEDULED:
             self._scheduled = value
+            self._adopt_timestamp(self._scheduled)
         elif planning_keyword == DEADLINE:
             self._deadline = value
+            self._adopt_timestamp(self._deadline)
         elif planning_keyword == CLOSED:
             self._closed = value
+            self._adopt_timestamp(self._closed)
         else:
             raise ValueError(f"Unknown planning keyword: {planning_keyword!r}")
         self.mark_dirty()
+
+    def _adopt_timestamp(self, value: Timestamp | None) -> None:
+        """Attach timestamp parent ownership without changing dirty state."""
+        if value is None:
+            return
+        value.parent = self
 
     @property
     def siblings(self) -> list[Heading]:
@@ -1223,10 +1279,10 @@ class Heading:
             scheduled=self._scheduled,
             deadline=self._deadline,
             closed=self._closed,
-            properties=self._properties,
-            logbook=self._logbook,
+            properties=self._properties if _has_non_empty_properties(self._properties) else None,
+            logbook=self._logbook if _has_non_empty_logbook(self._logbook) else None,
             heading_tags=self._heading_tags,
-            repeated_tasks=self._repeated_tasks,
+            repeats=self._repeats,
             clock_entries=self._clock_entries,
             body=self._body,
             children=self._children,
@@ -1400,8 +1456,8 @@ def _extract_single_heading_node(
     """Return the sole top-level heading semantic node from parsed source."""
     if (
         document.keywords
-        or document.properties is not None
-        or document.logbook is not None
+        or _has_non_empty_properties(document.properties)
+        or _has_non_empty_logbook(document.logbook)
         or document.body
     ):
         return None
@@ -1418,7 +1474,7 @@ def _find_first_subheading(node: tree_sitter.Node) -> tree_sitter.Node | None:
     return None
 
 
-def _recover_heading_body_lists_and_extract_clocks(
+def _recover_heading_body_lists_and_extract_clocks(  # noqa: C901
     body: list[Element],
     *,
     document: Document,
@@ -1540,9 +1596,11 @@ def shift_heading_subtree(heading: Heading, *, delta: int) -> None:
         shift_heading_subtree(child, delta=delta)
 
 
-def _render_heading_dirty(heading: Heading) -> str:
+def _render_heading_dirty(heading: Heading) -> str:  # noqa: C901
     """Render a dirty heading from semantic fields only."""
     line_parts: list[str] = ["*" * heading.level]
+    title_text = str(heading.title) if heading.title is not None else None
+    counter_text = str(heading.counter) if heading.counter is not None else None
 
     if heading.todo:
         line_parts.append(heading.todo)
@@ -1553,8 +1611,11 @@ def _render_heading_dirty(heading: Heading) -> str:
     if heading.is_comment:
         line_parts.append("COMMENT")
 
-    if heading.title is not None:
-        line_parts.append(str(heading.title))
+    if counter_text is not None and (title_text is None or counter_text not in title_text):
+        line_parts.append(counter_text)
+
+    if title_text is not None:
+        line_parts.append(title_text)
 
     headline = " ".join(line_parts)
 
@@ -1573,10 +1634,20 @@ def _render_heading_dirty(heading: Heading) -> str:
     if planning_entries:
         parts.append(f"{' '.join(planning_entries)}\n")
 
-    if heading.properties is not None:
-        parts.append(str(heading.properties))
-    if heading.logbook is not None:
-        parts.append(str(heading.logbook))
+    if _has_non_empty_properties(heading.properties):
+        parts.append(ensure_trailing_newline(str(heading.properties)))
+    if _has_non_empty_logbook(heading.logbook):
+        parts.append(ensure_trailing_newline(str(heading.logbook)))
 
-    parts.extend(str(element) for element in heading.body)
+    parts.extend(ensure_trailing_newline(str(element)) for element in heading.body)
     return "".join(parts)
+
+
+def _has_non_empty_properties(properties: Properties) -> bool:
+    """Return whether a properties drawer contains at least one key."""
+    return len(properties) > 0
+
+
+def _has_non_empty_logbook(logbook: Logbook) -> bool:
+    """Return whether a logbook drawer contains at least one body element."""
+    return len(logbook) > 0

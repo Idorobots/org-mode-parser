@@ -1,0 +1,11 @@
+Document(
+  filename='examples/zeroth-only.org',
+  title=RichText('Zeroth Section Only'),
+  category=RichText('zeroth-only'),
+  body=[
+      BlankLine(),
+      Paragraph(body=RichText('A paragraph in the zeroth section. No headings follow.\n')),
+      BlankLine(),
+      Paragraph(body=RichText('Second paragraph, still in the zeroth section.\n')),
+    ],
+)

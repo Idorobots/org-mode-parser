@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from org_parser.document import Document, Heading
-from org_parser.element import Element, List, Paragraph
+from org_parser.element import Element, FixedWidthBlock, List, ListItem, Paragraph
 from org_parser.text import Bold, RichText
 from org_parser.time import Timestamp
 
@@ -90,6 +90,34 @@ def test_element_subclass_from_source_parses_recovered_list() -> None:
     assert str(parsed_list.items[1].first_line) == "bar"
 
 
+def test_list_item_from_source_parses_single_item() -> None:
+    """ListItem.from_source parses one-item list input."""
+    item = ListItem.from_source("- foo\n")
+
+    assert item.bullet == "-"
+    assert item.first_line is not None
+    assert str(item.first_line) == "foo"
+
+
+def test_fixed_width_block_from_source_parses_multi_line_area() -> None:
+    """FixedWidthBlock.from_source accepts contiguous fixed-width areas."""
+    fixed_width = FixedWidthBlock.from_source(": one\n: two\n")
+
+    assert fixed_width.body == "one\ntwo"
+
+
+def test_list_item_from_source_requires_single_list_item() -> None:
+    """ListItem.from_source rejects list source with multiple items."""
+    with pytest.raises(ValueError, match="Unexpected parse tree structure"):
+        ListItem.from_source("- foo\n- bar\n")
+
+
+def test_list_item_from_source_requires_list_structure() -> None:
+    """ListItem.from_source rejects non-list source text."""
+    with pytest.raises(ValueError, match="Unexpected parse tree structure"):
+        ListItem.from_source("plain text\n")
+
+
 def test_element_base_from_source_returns_single_element() -> None:
     """Element.from_source returns the parsed semantic element."""
     element = Element.from_source("plain text\n")
@@ -123,7 +151,7 @@ def test_timestamp_from_source_requires_exactly_one_timestamp() -> None:
 
 def test_element_subclass_from_source_rejects_mismatched_element_type() -> None:
     """Element subclasses reject valid source for a different element class."""
-    with pytest.raises(ValueError, match="expected List"):
+    with pytest.raises(TypeError, match="expected List"):
         List.from_source("plain text\n")
 
 

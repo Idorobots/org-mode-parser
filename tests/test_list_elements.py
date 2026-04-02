@@ -71,6 +71,67 @@ def test_list_item_mutation_marks_list_and_document_dirty() -> None:
     assert str(parsed) == "- new\n"
 
 
+def test_list_item_rich_text_fields_accept_raw_strings() -> None:
+    """ListItem constructor/setters accept raw strings for rich text fields."""
+    item = ListItem(bullet="-", item_tag="tag", first_line="line")
+
+    assert isinstance(item.item_tag, RichText)
+    assert isinstance(item.first_line, RichText)
+    assert str(item.item_tag) == "tag"
+    assert str(item.first_line) == "line"
+
+    item.item_tag = "new tag"
+    item.first_line = "new line"
+
+    assert isinstance(item.item_tag, RichText)
+    assert isinstance(item.first_line, RichText)
+    assert str(item.item_tag) == "new tag"
+    assert str(item.first_line) == "new line"
+
+
+def test_list_item_body_setter_accepts_element_and_raw_string() -> None:
+    """List item body setter accepts one element and raw string input."""
+    item = ListItem(bullet="-", first_line="line")
+    paragraph = Paragraph(body=RichText("detail\n"))
+
+    item.body = paragraph
+
+    assert item.body == [paragraph]
+    assert item.body[0].parent is item
+
+    item.body = "raw detail"
+
+    assert len(item.body) == 1
+    assert isinstance(item.body[0], Paragraph)
+    assert str(item.body[0]) == "raw detail"
+    assert item.body[0].parent is item
+    assert str(item) == "- line\n  raw detail\n"
+
+
+def test_list_item_and_list_appends_mark_dirty() -> None:
+    """Appending to list-item body and list items marks owners dirty."""
+    document = loads("- one\n")
+    assert isinstance(document.body[0], List)
+    parsed = document.body[0]
+    item = parsed.items[0]
+
+    paragraph = Paragraph(body=RichText("next\n"))
+    item.body.append(paragraph)
+    assert item.dirty is True
+    assert parsed.dirty is True
+    assert document.dirty is True
+    assert paragraph.parent is item
+
+    document2 = loads("- one\n")
+    assert isinstance(document2.body[0], List)
+    parsed2 = document2.body[0]
+    new_item = ListItem(bullet="-", first_line="two")
+    parsed2.items.append(new_item)
+    assert parsed2.dirty is True
+    assert document2.dirty is True
+    assert new_item.parent is parsed2
+
+
 def test_list_item_parses_tag_and_contents_on_same_line() -> None:
     """Descriptive items may include both tag and first-line contents."""
     document = loads("- tag :: item contents\n")

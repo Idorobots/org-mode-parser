@@ -150,6 +150,16 @@ def test_rich_text_mutation_marks_dirty_and_reconstructs(
     assert str(rich_text).endswith(" END")
 
 
+def test_rich_text_parts_append_marks_dirty() -> None:
+    """Appending directly to parts marks rich text dirty."""
+    rich_text = RichText("A")
+
+    rich_text.parts.append(PlainText("B"))
+
+    assert rich_text.dirty is True
+    assert rich_text.text == "AB"
+
+
 def test_paragraph_plain_text_children_keep_trailing_newlines(tmp_path: Path) -> None:
     """RichText built from paragraphs preserves line newlines."""
     content = "This is some text:\nMore text\nMore text\n"
@@ -198,7 +208,6 @@ def test_programmatic_rich_text_construction_uses_public_objects() -> None:
             RadioTarget([PlainText("radio")]),
             PlainText(" "),
             Timestamp(
-                raw="<2025-01-01 Wed>",
                 is_active=True,
                 start_year=2025,
                 start_month=1,

@@ -1,0 +1,67 @@
+Document(
+  filename='examples/tags_category_test.org',
+  category=RichText('tags_category_test'),
+  children=[
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with single tag '),
+        heading_tags=['work'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with multiple tags '),
+        heading_tags=['bug', 'feature', 'enhancement'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task without tags'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with gamify and tag '),
+        properties={
+            'gamify_exp': RichText('5'),
+          },
+        heading_tags=['urgent'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Complex task '),
+        properties={
+            'gamify_exp': RichText('25'),
+            'other_prop': RichText('value'),
+          },
+        heading_tags=['project', 'alpha', 'beta'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Incomplete task '),
+        heading_tags=['pending'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(level=1, todo='DONE', title=RichText('Task with special chars '), heading_tags=['my_tag', 'other_tag']),
+    ],
+)

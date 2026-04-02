@@ -18,11 +18,12 @@ from org_parser._nodes import (
     TABLEEL_TABLE,
     TBLFM_LINE,
 )
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._element import Element, build_semantic_repr
-from org_parser.text._rich_text import RichText
+from org_parser.text._rich_text import RichText, coerce_rich_text
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Sequence
 
     import tree_sitter
 
@@ -51,8 +52,8 @@ class TableCell:
     ```
     """
 
-    def __init__(self, *, value: RichText, table: Table) -> None:
-        self._value = value
+    def __init__(self, *, value: RichText | str, table: Table) -> None:
+        self._value = coerce_rich_text(value)
         self._table = table
         self._value.parent = table
 
@@ -62,9 +63,9 @@ class TableCell:
         return self._value
 
     @value.setter
-    def value(self, value: RichText) -> None:
+    def value(self, value: RichText | str) -> None:
         """Set cell value."""
-        self._value = value
+        self._value = coerce_rich_text(value)
         self._value.parent = self._table
         self._table.mark_dirty()
 
@@ -109,12 +110,18 @@ class TableRow:
     @property
     def cells(self) -> list[TableCell]:
         """Mutable row cells."""
-        return self._cells
+
+        def on_cells_mutation(wrapped: DirtyList[TableCell]) -> None:
+            self._cells = list(wrapped)
+            self._adopt_cells()
+            self._table.mark_dirty()
+
+        return DirtyList(self._cells, on_mutation=on_cells_mutation)
 
     @cells.setter
     def cells(self, value: list[TableCell]) -> None:
         """Set row cells."""
-        self._cells = value
+        self._cells = list(value)
         self._adopt_cells()
         self._table.mark_dirty()
 
@@ -148,7 +155,7 @@ class TableRow:
 
     def __setitem__(self, index: int, value: RichText | str) -> None:
         """Set one column value."""
-        self._cells[index].value = _coerce_rich_text(value)
+        self._cells[index].value = coerce_rich_text(value)
 
 
 class TableRuleRow:
@@ -206,12 +213,12 @@ class Table(Element):
         self,
         *,
         rows: list[TableRow | TableRuleRow],
-        formulas: list[str] | None = None,
+        formulas: Sequence[str] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self._rows = rows
-        self._formulas = formulas if formulas is not None else []
+        self._formulas = list(formulas)
         self._adopt_rows()
 
     @classmethod
@@ -249,12 +256,18 @@ class Table(Element):
     @property
     def rows(self) -> list[TableRow | TableRuleRow]:
         """Mutable table rows (data rows and rule rows)."""
-        return self._rows
+
+        def on_rows_mutation(wrapped: DirtyList[TableRow | TableRuleRow]) -> None:
+            self._rows = list(wrapped)
+            self._adopt_rows()
+            self.mark_dirty()
+
+        return DirtyList(self._rows, on_mutation=on_rows_mutation)
 
     @rows.setter
     def rows(self, value: list[TableRow | TableRuleRow]) -> None:
         """Set rows."""
-        self._rows = value
+        self._rows = list(value)
         self._adopt_rows()
         self.mark_dirty()
 
@@ -274,12 +287,17 @@ class Table(Element):
         ['@1$1=5']
         ```
         """
-        return self._formulas
+
+        def on_formulas_mutation(wrapped: DirtyList[str]) -> None:
+            self._formulas = list(wrapped)
+            self.mark_dirty()
+
+        return DirtyList(self._formulas, on_mutation=on_formulas_mutation)
 
     @formulas.setter
     def formulas(self, value: list[str]) -> None:
         """Set formulas."""
-        self._formulas = value
+        self._formulas = list(value)
         self.mark_dirty()
 
     def _adopt_rows(self) -> None:
@@ -388,13 +406,6 @@ def _extract_tblfm_formula(
     if line.upper().startswith(prefix.upper()):
         return line[len(prefix) :].strip()
     return line.strip()
-
-
-def _coerce_rich_text(value: RichText | str) -> RichText:
-    """Return *value* as [org_parser.text.RichText][]."""
-    if isinstance(value, RichText):
-        return value
-    return RichText(value)
 
 
 def _render_org_table(rows: list[TableRow | TableRuleRow], formulas: list[str]) -> str:

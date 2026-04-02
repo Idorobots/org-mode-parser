@@ -1,0 +1,8 @@
+Document(
+  filename='examples/todo_keys.org',
+  category=RichText('todo_keys'),
+  todo=RichText('STARTED | CANCELLED'),
+  children=[
+      Heading(level=1, todo='DONE', title=RichText('Simple task')),
+    ],
+)

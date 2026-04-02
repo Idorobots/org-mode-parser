@@ -1,0 +1,95 @@
+Document(
+  filename='examples/relations_test.org',
+  category=RichText('relations_test'),
+  children=[
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with python and testing '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=10, start_dayname='Wed', start_hour=14, start_minute=0),
+        heading_tags=['python', 'testing'],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Testing Python code.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with python and debugging '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=11, start_dayname='Thu', start_hour=14, start_minute=0),
+        heading_tags=['python', 'debugging'],
+        body=[
+            Paragraph(body=RichText('Debugging Python code.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with python and algorithms '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=12, start_dayname='Fri', start_hour=14, start_minute=0),
+        heading_tags=['python', 'algorithms'],
+        body=[
+            Paragraph(body=RichText('Python algorithms.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with python and datastructures '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=13, start_dayname='Sat', start_hour=14, start_minute=0),
+        heading_tags=['python', 'datastructures'],
+        body=[
+            Paragraph(body=RichText('Python data structures.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with testing and debugging '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=14, start_dayname='Sun', start_hour=14, start_minute=0),
+        heading_tags=['testing', 'debugging'],
+        body=[
+            Paragraph(body=RichText('Testing and debugging.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with algorithms and datastructures '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=15, start_dayname='Mon', start_hour=14, start_minute=0),
+        heading_tags=['algorithms', 'datastructures'],
+        body=[
+            Paragraph(body=RichText('Algorithms and data structures.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with java and testing '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=16, start_dayname='Tue', start_hour=14, start_minute=0),
+        heading_tags=['java', 'testing'],
+        body=[
+            Paragraph(body=RichText('Java testing.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Isolated task '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=17, start_dayname='Wed', start_hour=14, start_minute=0),
+        heading_tags=['isolated'],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('This tag has no relations.\n')),
+          ],
+      ),
+    ],
+)

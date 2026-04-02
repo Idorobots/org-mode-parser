@@ -1,0 +1,13 @@
+Document(
+  filename='examples/custom_states.org',
+  category=RichText('custom_states'),
+  children=[
+      Heading(level=1, todo='TODO', title=RichText('Standard todo task '), heading_tags=['Tag1']),
+      Heading(level=1, title=RichText('WAITING Custom todo state '), heading_tags=['Tag2']),
+      Heading(level=1, title=RichText('IN-PROGRESS Another custom todo state '), heading_tags=['Tag3']),
+      Heading(level=1, todo='DONE', title=RichText('Completed task '), heading_tags=['Tag4']),
+      Heading(level=1, title=RichText('CANCELLED Custom done state '), heading_tags=['Tag5']),
+      Heading(level=1, title=RichText('ARCHIVED Another done state '), heading_tags=['Tag6']),
+      Heading(level=1, title=RichText('Task without any state '), heading_tags=['Tag7']),
+    ],
+)

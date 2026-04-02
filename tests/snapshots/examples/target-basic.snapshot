@@ -1,0 +1,37 @@
+Document(
+  filename='examples/target-basic.org',
+  category=RichText('target-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Targets'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('A plain target: <<section-one>>\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Text after the target.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Radio Targets'),
+        body=[
+            Paragraph(body=RichText('A radio target: <<<important term>>>\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Now the phrase important term appears again as a radio link.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Links to Targets'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Link to the plain target: [[section-one]]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Link with description: [[section-one][back to section one]]\n')),
+          ],
+      ),
+    ],
+)

@@ -59,7 +59,6 @@ def test_clock_timestamp_setter_recomputes_duration() -> None:
     assert clock.duration is None
 
     clock.timestamp = Timestamp(
-        raw="[2025-01-06 Mon 09:00]--[2025-01-06 Mon 11:45]",
         is_active=False,
         start_year=2025,
         start_month=1,
@@ -78,7 +77,7 @@ def test_clock_timestamp_setter_recomputes_duration() -> None:
     assert clock.duration == "2:45"
     assert clock.dirty is True
     assert document.dirty is True
-    assert str(clock) == "CLOCK: [2025-01-06 Mon 09:00]--[2025-01-06 Mon 11:45] =>  2:45\n"
+    assert str(clock) == "CLOCK: [2025-01-06 Mon 09:00-11:45] =>  2:45\n"
 
 
 def test_clock_timestamp_setter_clears_duration_when_end_removed() -> None:
@@ -97,7 +96,6 @@ def test_clock_timestamp_setter_clears_duration_when_end_removed() -> None:
 
     # Replace with a point (open) timestamp — no end, no duration.
     clock.timestamp = Timestamp(
-        raw="[2025-01-06 Mon 09:00]",
         is_active=False,
         start_year=2025,
         start_month=1,
@@ -115,7 +113,6 @@ def test_clock_repr_includes_timestamp_and_duration() -> None:
     """``repr(clock)`` includes timestamp and duration fields when present."""
     clock = Clock(
         timestamp=Timestamp(
-            raw="[2025-01-06 Mon 09:00]",
             is_active=False,
             start_year=2025,
             start_month=1,

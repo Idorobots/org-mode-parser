@@ -1,0 +1,59 @@
+Document(
+  filename='examples/inherited-tags.org',
+  title=RichText('Inherited Tags Test'),
+  category=RichText('inherited-tags'),
+  keywords=[
+      Keyword(key='FILETAGS', value=RichText(':filetag1:filetag2:')),
+    ],
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Parent Heading '),
+        heading_tags=['parent_tag'],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Child Heading '),
+              heading_tags=['child_tag'],
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('Grandchild Heading '),
+                    heading_tags=['grandchild_tag'],
+                    body=[
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('Grandchild With Duplicate Own Tag '),
+                    heading_tags=['parent_tag'],
+                    body=[
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Heading Without Own Tags'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(level=2, title=RichText('Child With Filetag Duplicate '), heading_tags=['filetag1']),
+          ],
+      ),
+    ],
+)

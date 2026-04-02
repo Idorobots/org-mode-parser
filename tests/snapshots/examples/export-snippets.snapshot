@@ -1,0 +1,313 @@
+Document(
+  filename='examples/export-snippets.org',
+  title=RichText('Multi-Backend Document — Export Snippets'),
+  author=RichText('Wunsley Brimwick'),
+  category=RichText('export-snippets'),
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Introduction'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Export snippets allow raw backend-specific markup to be embedded directly in\nan Org document. The syntax is =@@BACKEND:VALUE@@= where =BACKEND= identifies\nthe target format and =VALUE= is passed through unchanged during export.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('They are invisible in backends other than the one specified.\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('HTML Export Snippets'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('In paragraphs'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('This paragraph will render a hard line break in HTML output.@@html:<br>@@\nThe text continues on the next rendered line, but this is a single paragraph.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('You can embed an HTML span with a class:\n@@html:<span class="highlight">@@This text gets a CSS class.@@html:</span>@@\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Insert a non-breaking space: between "Dr."@@html:&nbsp;@@Smith and the next word.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('An HTML comment invisible in the rendered page:\n@@html:<!-- This comment appears only in the HTML source. -->@@\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Embed a raw image tag (bypassing Org\'s own link rendering):\n@@html:<img src="diagram.png" alt="Architecture diagram" width="600">@@\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('In heading titles'),
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('@@html:<span class="new-badge">@@New@@html:</span>@@ Feature: Streaming Parser'),
+                    body=[
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('Section with @@html:<abbr title="Application Programming Interface">@@API@@html:</abbr>@@ Reference'),
+                    body=[
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('In table cells'),
+              body=[
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Feature       ')),
+                              TableCell(value=RichText(' HTML output                               ')),
+                              TableCell(value=RichText(' Notes                    ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|---------------+-------------------------------------------+--------------------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Line break    ')),
+                              TableCell(value=RichText(' @@html:<br>@@                             ')),
+                              TableCell(value=RichText(' Hard break in HTML       ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Non-breaking  ')),
+                              TableCell(value=RichText(' @@html:&nbsp;@@                           ')),
+                              TableCell(value=RichText(' ~\\nbsp~ alternative      ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Bold span     ')),
+                              TableCell(value=RichText(' @@html:<strong>@@text@@html:</strong>@@   ')),
+                              TableCell(value=RichText(' Semantic HTML strong     ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Ruby (CJK)    ')),
+                              TableCell(value=RichText(' @@html:<ruby>@@漢@@html:<rt>@@han@@html:</rt></ruby>@@ ')),
+                              TableCell(value=RichText(' Pronunciation guide ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Empty-value snippet'),
+              body=[
+                  Paragraph(body=RichText('An export snippet with an empty value produces no output in the target backend\nbut can still be useful as a marker: @@html:@@\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('The snippet above is a zero-width HTML element — valid syntax with no content.\n')),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('LaTeX Export Snippets'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('In paragraphs'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('This sentence ends with a specific amount of horizontal space:@@latex:\\hspace{1em}@@Next sentence.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Insert a LaTeX line break:@@latex:\\\\@@New line in LaTeX output only.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('A manual page break visible only in PDF output:@@latex:\\newpage@@\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Embed a raw LaTeX command for a special symbol not in Org entities:\n@@latex:\\textregistered@@ is the registered trademark sign in LaTeX.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('In heading titles'),
+              body=[
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('The @@latex:\\texttt{org-element}@@ API'),
+                    body=[
+                        BlankLine(),
+                      ],
+                  ),
+                  Heading(
+                    level=3,
+                    title=RichText('Results: @@latex:$p < 0.001$@@'),
+                    body=[
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('LaTeX snippet for typographic adjustment'),
+              body=[
+                  Paragraph(body=RichText('This paragraph has a @@latex:\\noindent@@ marker at the start — in LaTeX output,\nthe paragraph will not be indented regardless of document settings.\n')),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('ODT Export Snippets'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('In paragraphs'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('@@odt:<text:p text:style-name="Heading_20_3">@@Formatted as ODT heading@@odt:</text:p>@@\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('An ODT-specific line break:@@odt:<text:line-break/>@@continues here.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('In table cells'),
+              body=[
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Format ')),
+                              TableCell(value=RichText(' Raw snippet                                           ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|--------+-------------------------------------------------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ODT    ')),
+                              TableCell(value=RichText(' @@odt:<text:span text:style-name="Bold">@@hi@@odt:</text:span>@@ ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Export Snippets in Link Descriptions'),
+        body=[
+            Paragraph(body=RichText('Regular links can have descriptions containing export snippets, allowing\nbackend-specific link text.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('[[https://orgmode.org][@@html:<img src="org-mode-logo.png" alt="Org Mode">@@@@latex:Org Mode@@]]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('The link above renders as an image in HTML and as plain text in LaTeX.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('[[https://example.com/report.pdf][@@html:<span class="pdf-link">@@Download PDF@@html:</span>@@]]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('[[#configuration-options][@@html:<span aria-label="Jump to configuration">@@Config@@html:</span>@@@@latex:Configuration@@]]\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Multiple Backends in One Passage'),
+        body=[
+            Paragraph(body=RichText('A single paragraph may interleave snippets for multiple backends.\nOnly the snippet matching the export target will be rendered.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('The project licence is@@html: <a href="mit-license.txt">@@@@latex: (see appendix A)@@ MIT@@html:</a>@@@@latex:{}@@.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('In HTML, the word "MIT" will be a hyperlink. In LaTeX, it will be followed by\na reference to appendix A. In all other backends, only "MIT" appears.\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Edge Cases'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Snippet at the very start of a paragraph'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('@@html:<p class="lead">@@This paragraph has an HTML class applied to it via a\nraw snippet at the start. The snippet is an object, not a PRE character.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Snippet immediately adjacent to markup'),
+              body=[
+                  Paragraph(body=RichText('*@@html:<em>@@Bold and HTML italic simultaneously.@@html:</em>@@*\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Snippet with special characters in VALUE'),
+              body=[
+                  Paragraph(body=RichText('@@html:<!-- <tricky> & "quoted" -->@@\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('The value above contains angle brackets and quotes — these are passed through\nraw to the HTML backend unchanged.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Adjacent snippets with no separator'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('@@html:<strong>@@@@html:</strong>@@ — two adjacent snippets for the same backend.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('@@html:<br>@@@@latex:\\\\@@ — two snippets for different backends, side by side.\n')),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

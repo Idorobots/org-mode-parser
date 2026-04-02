@@ -1,0 +1,32 @@
+Document(
+  filename='examples/horizontal-rule-basic.org',
+  category=RichText('horizontal-rule-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Horizontal Rules'),
+        body=[
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+            Paragraph(body=RichText('Paragraph between rules.\n')),
+            BlankLine(),
+            HorizontalRule(rule='----------'),
+            BlankLine(),
+            Paragraph(body=RichText('Another paragraph.\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Two rules with no content between'),
+        body=[
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            HorizontalRule(rule='-----'),
+          ],
+      ),
+    ],
+)

@@ -1,0 +1,33 @@
+Document(
+  filename='examples/macro-basic.org',
+  title=RichText('Macro Examples'),
+  category=RichText('macro-basic'),
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Simple macros'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('A bare name macro: {{{version}}}\n')),
+            BlankLine(),
+            Paragraph(body=RichText('A macro with a format argument: {{{date(%Y-%m-%d)}}}\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Multiple macros on one line: {{{author}}} wrote this on {{{date}}}.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Non-macro braces'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Single braces {like this} and double braces {{like this}} stay as plain text.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('A triple-brace not followed by a letter: {{{123}}} also stays as plain text.\n')),
+          ],
+      ),
+    ],
+)

@@ -1,0 +1,7 @@
+Document(
+  filename='examples/empty.org',
+  category=RichText('empty'),
+  children=[
+      Heading(level=1, todo='TODO', title=RichText('Empty tasks with no content')),
+    ],
+)

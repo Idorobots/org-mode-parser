@@ -37,11 +37,11 @@ def load(filename: str) -> Document:
     return Document.from_tree(tree, filename, source)
 
 
-def loads(input: str, filename: str | None = None) -> Document:
+def loads(source: str, filename: str | None = None) -> Document:
     """Load an Org Mode document from a string.
 
     Args:
-        input: Org Mode text to parse.
+        source: Org Mode text to parse.
         filename: Optional filename to assign to the parsed document.
 
     Returns:
@@ -56,9 +56,9 @@ def loads(input: str, filename: str | None = None) -> Document:
     ```
     """
     assigned_filename = filename if filename is not None else ""
-    source = input.encode()
-    tree = PARSER.parse(source)
-    return Document.from_tree(tree, assigned_filename, source)
+    source_bytes = source.encode()
+    tree = PARSER.parse(source_bytes)
+    return Document.from_tree(tree, assigned_filename, source_bytes)
 
 
 def dumps(document: Document) -> str:

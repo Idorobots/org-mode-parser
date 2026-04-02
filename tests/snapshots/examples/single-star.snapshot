@@ -1,0 +1,7 @@
+Document(
+  filename='examples/single-star.org',
+  category=RichText('single-star'),
+  body=[
+      Paragraph(body=RichText('*\n')),
+    ],
+)

@@ -6,10 +6,12 @@ from typing import TYPE_CHECKING
 
 from org_parser._node import node_source
 from org_parser._nodes import INDENT, SPECIAL_KEYWORD
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._dispatch import body_element_factories
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
+    coerce_element_body,
     element_from_error_or_unknown,
     ensure_trailing_newline,
 )
@@ -45,24 +47,30 @@ class _ContainerBlock(Element):
         *,
         begin_line: str,
         end_line: str,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(parent=parent)
         self._begin_line = begin_line
         self._end_line = end_line
-        self._body = body if body is not None else []
+        self._body = list(body)
         self._adopt_body(self._body)
 
     @property
     def body(self) -> list[Element]:
         """Mutable block contents as semantic elements."""
-        return self._body
+
+        def on_body_mutation(wrapped: DirtyList[Element]) -> None:
+            self._body = list(wrapped)
+            self._adopt_body(self._body)
+            self.mark_dirty()
+
+        return DirtyList(self._body, on_mutation=on_body_mutation)
 
     @body.setter
-    def body(self, value: list[Element]) -> None:
+    def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set block contents."""
-        self._body = value
+        self._body = list(coerce_element_body(value))
         self._adopt_body(self._body)
         self.mark_dirty()
 
@@ -178,7 +186,7 @@ class CenterBlock(_ContainerBlock):
         self,
         *,
         parameters: str | None = None,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         self._parameters = _normalize_optional_text(parameters)
@@ -252,7 +260,7 @@ class QuoteBlock(_ContainerBlock):
         self,
         *,
         parameters: str | None = None,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         self._parameters = _normalize_optional_text(parameters)
@@ -329,7 +337,7 @@ class SpecialBlock(_ContainerBlock):
         *,
         name: str,
         parameters: str | None = None,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         self._name = name
@@ -424,7 +432,7 @@ class DynamicBlock(_ContainerBlock):
         *,
         name: str,
         parameters: str | None = None,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         self._name = name
@@ -512,7 +520,7 @@ class VerseBlock(_ContainerBlock):
     def __init__(
         self,
         *,
-        body: list[Element] | None = None,
+        body: Sequence[Element] = (),
         parent: Document | Heading | Element | None = None,
     ) -> None:
         super().__init__(
@@ -887,10 +895,7 @@ class FixedWidthBlock(Element):
         parent: Document | Heading | Element | None = None,
     ) -> FixedWidthBlock:
         """Create a [org_parser.element.FixedWidthBlock][] from a ``fixed_width`` node."""
-        block = cls(
-            body=_extract_optional_field_text(node, document, "value") or "",
-            parent=parent,
-        )
+        block = cls(body=_extract_fixed_width_values(node, document), parent=parent)
         block._node = node
         block._document = document
         return block
@@ -986,6 +991,28 @@ def _extract_optional_field_text(
         return None
     value = document.source_for(field_node).decode()
     return value if value != "" else None
+
+
+def _extract_fixed_width_values(node: tree_sitter.Node, document: Document) -> str:
+    """Return fixed-width body text extracted from ``value`` field nodes."""
+    value_nodes = node.children_by_field_name("value")
+    if not value_nodes:
+        return ""
+
+    lines: list[str] = []
+    previous_row = node.start_point.row - 1
+    for value_node in value_nodes:
+        gap = value_node.start_point.row - previous_row - 1
+        if gap > 0:
+            lines.extend([""] * gap)
+        lines.append(document.source_for(value_node).decode())
+        previous_row = value_node.end_point.row
+
+    trailing_gap = node.end_point.row - 1 - previous_row
+    if trailing_gap > 0:
+        lines.extend([""] * trailing_gap)
+
+    return "\n".join(lines)
 
 
 def _extract_block_body_text(source_text: str) -> str:
