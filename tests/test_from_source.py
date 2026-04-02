@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from org_parser.document import Document, Heading
-from org_parser.element import Element, List, ListItem, Paragraph
+from org_parser.element import Element, FixedWidthBlock, List, ListItem, Paragraph
 from org_parser.text import Bold, RichText
 from org_parser.time import Timestamp
 
@@ -97,6 +97,13 @@ def test_list_item_from_source_parses_single_item() -> None:
     assert item.bullet == "-"
     assert item.first_line is not None
     assert str(item.first_line) == "foo"
+
+
+def test_fixed_width_block_from_source_parses_multi_line_area() -> None:
+    """FixedWidthBlock.from_source accepts contiguous fixed-width areas."""
+    fixed_width = FixedWidthBlock.from_source(": one\n: two\n")
+
+    assert fixed_width.body == "one\ntwo"
 
 
 def test_list_item_from_source_requires_single_list_item() -> None:

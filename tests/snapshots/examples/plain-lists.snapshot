@@ -503,9 +503,7 @@ Document(
                           bullet='-',
                           first_line=RichText('Braising liquid ratios (fixed-width reference):'),
                           body=[
-                              FixedWidthBlock(body='Red wine braise:      60% stock, 30% wine, 10% aromatics'),
-                              FixedWidthBlock(body='White wine braise:    70% stock, 20% wine, 10% aromatics'),
-                              FixedWidthBlock(body='Milk braise:          100% milk (or buttermilk), aromatics only'),
+                              FixedWidthBlock(body='Red wine braise:      60% stock, 30% wine, 10% aromatics\nWhite wine braise:    70% stock, 20% wine, 10% aromatics\nMilk braise:          100% milk (or buttermilk), aromatics only'),
                             ],
                         ),
                       ],

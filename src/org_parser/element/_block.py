@@ -895,10 +895,7 @@ class FixedWidthBlock(Element):
         parent: Document | Heading | Element | None = None,
     ) -> FixedWidthBlock:
         """Create a [org_parser.element.FixedWidthBlock][] from a ``fixed_width`` node."""
-        block = cls(
-            body=_extract_optional_field_text(node, document, "value") or "",
-            parent=parent,
-        )
+        block = cls(body=_extract_fixed_width_values(node, document), parent=parent)
         block._node = node
         block._document = document
         return block
@@ -994,6 +991,28 @@ def _extract_optional_field_text(
         return None
     value = document.source_for(field_node).decode()
     return value if value != "" else None
+
+
+def _extract_fixed_width_values(node: tree_sitter.Node, document: Document) -> str:
+    """Return fixed-width body text extracted from ``value`` field nodes."""
+    value_nodes = node.children_by_field_name("value")
+    if not value_nodes:
+        return ""
+
+    lines: list[str] = []
+    previous_row = node.start_point.row - 1
+    for value_node in value_nodes:
+        gap = value_node.start_point.row - previous_row - 1
+        if gap > 0:
+            lines.extend([""] * gap)
+        lines.append(document.source_for(value_node).decode())
+        previous_row = value_node.end_point.row
+
+    trailing_gap = node.end_point.row - 1 - previous_row
+    if trailing_gap > 0:
+        lines.extend([""] * trailing_gap)
+
+    return "\n".join(lines)
 
 
 def _extract_block_body_text(source_text: str) -> str:

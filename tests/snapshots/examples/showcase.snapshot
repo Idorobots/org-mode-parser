@@ -120,8 +120,7 @@ Document(
                         Indent(
                           body=[
                               Paragraph(body=RichText('Fixed-width area:\n')),
-                              FixedWidthBlock(body='line one'),
-                              FixedWidthBlock(body='line two'),
+                              FixedWidthBlock(body='line one\nline two'),
                             ],
                           indent='    ',
                         ),

@@ -13,6 +13,7 @@ from org_parser.element import (
     ExampleBlock,
     ExportBlock,
     FixedWidthBlock,
+    List,
     Paragraph,
     QuoteBlock,
     SourceBlock,
@@ -236,3 +237,35 @@ def test_fixed_width_contents_are_mutable() -> None:
     assert fixed.dirty is True
     assert document.dirty is True
     assert str(fixed) == ": after\n"
+
+
+def test_adjacent_fixed_width_lines_are_coalesced() -> None:
+    """Consecutive fixed-width lines parse as one semantic block."""
+    document = loads(": one\n: two\n: three\n")
+
+    assert len(document.body) == 1
+    assert isinstance(document.body[0], FixedWidthBlock)
+    fixed = document.body[0]
+    assert fixed.body == "one\ntwo\nthree"
+    assert str(fixed) == ": one\n: two\n: three\n"
+
+
+def test_fixed_width_area_preserves_empty_colon_lines() -> None:
+    """Coalesced fixed-width blocks preserve empty ``:`` lines."""
+    document = loads(": first\n:\n: third\n")
+
+    assert isinstance(document.body[0], FixedWidthBlock)
+    fixed = document.body[0]
+    assert fixed.body == "first\n\nthird"
+    assert str(fixed) == ": first\n:\n: third\n"
+
+
+def test_fixed_width_lines_in_list_item_body_are_coalesced() -> None:
+    """Nested list-item fixed-width runs are merged into one block."""
+    document = loads("- item\n  : one\n  : two\n")
+
+    assert isinstance(document.body[0], List)
+    item = document.body[0].items[0]
+    assert len(item.body) == 1
+    assert isinstance(item.body[0], FixedWidthBlock)
+    assert item.body[0].body == "one\ntwo"
