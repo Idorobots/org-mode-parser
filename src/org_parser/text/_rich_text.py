@@ -38,6 +38,7 @@ from org_parser._nodes import (
     UNDERLINE,
     VERBATIM,
 )
+from org_parser.element._dirty_list import DirtyList
 from org_parser.text._inline import (
     AngleLink,
     Bold,
@@ -141,7 +142,13 @@ class RichText:
         4
         ```
         """
-        return self._parts
+
+        def on_parts_mutation(wrapped: DirtyList[InlineObject]) -> None:
+            self._parts = list(wrapped)
+            self._adopt_parts(self._parts)
+            self.mark_dirty()
+
+        return DirtyList(self._parts, on_mutation=on_parts_mutation)
 
     @property
     def text(self) -> str:

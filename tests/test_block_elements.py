@@ -151,6 +151,20 @@ def test_container_block_body_setter_accepts_element_and_raw_string() -> None:
     assert str(block) == "#+begin_quote\nthree\n#+end_quote\n"
 
 
+def test_container_block_body_append_marks_dirty() -> None:
+    """Appending to container block body marks block and document dirty."""
+    document = loads("#+begin_quote\none\n#+end_quote\n")
+
+    assert isinstance(document.body[0], QuoteBlock)
+    block = document.body[0]
+    paragraph = Paragraph(body=RichText("two\n"))
+    block.body.append(paragraph)
+
+    assert block.dirty is True
+    assert document.dirty is True
+    assert paragraph.parent is block
+
+
 def test_nested_container_content_mutation_bubbles_dirty_state() -> None:
     """Mutating nested content marks the owning block and document dirty."""
     document = loads("#+begin_quote\nold\n#+end_quote\n")

@@ -1345,6 +1345,16 @@ class TestElementConvenienceFields:
         assert indent.body[0].parent is indent
         assert str(indent) == "next line\n"
 
+    def test_indent_body_append_marks_dirty(self) -> None:
+        """Appending to indent body marks the indent dirty."""
+        indent = Indent(indent="  ")
+        paragraph = Paragraph(body=RichText("line\n"))
+
+        indent.body.append(paragraph)
+
+        assert indent.dirty is True
+        assert paragraph.parent is indent
+
     def test_body_text_empty_when_body_missing(self) -> None:
         """Element.body_text is empty when no body attribute exists."""
         assert Element().body_text == ""

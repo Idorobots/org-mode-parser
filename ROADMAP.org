@@ -291,7 +291,10 @@ It should ensure that the values are all =RichText= - raw strings can be wrapped
 - State "DONE"       from "TODO"       [2026-04-02 Thu 00:15]
 :END:
 
-** TODO Appending to any list should mark the object as dirty
+** DONE Appending to any list should mark the object as dirty
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 15:43]
+:END:
 :PROPERTIES:
 :context: [[file:~/projects/software/org-mode-parser/src/org_parser/element/_keyword.py::>>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
  >>> document.mark_dirty()]]
@@ -302,10 +305,87 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/element/_keyw
 #+begin_example
         >>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
         >>> document.mark_dirty()
-
 #+end_example
 
 Mark dirty is required for the append to take effect - could use a custom list wrapper that automatically handles it.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 15:35]
+:END:
+
+In file src/org_parser/document/_document.py around line 453, near the ~class Document:~
+
+#+begin_example
++        if not isinstance(self._keywords, DirtyList):
++            self._keywords = DirtyList(self._keywords, on_mutation=self._on_keywords_mutated)
+         return self._keywords
+#+end_example
+
+Let's just return the DirtyList, not overwrite the stored attribute value.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 15:35]
+:END:
+
+In file src/org_parser/document/_document.py around line 945, near the ~class Document:~
+
+#+begin_example
++    def _on_keywords_mutated(self) -> None:
++        """Re-home keyword parents and mark document dirty after list mutation."""
++        self._adopt_keywords(self._keywords)
++        self.mark_dirty()
++
++    def _on_body_mutated(self) -> None:
++        """Re-home body parents and mark document dirty after list mutation."""
++        self._adopt_elements(self._body)
++        self.mark_dirty()
++
++    def _on_children_mutated(self) -> None:
++        """Re-home children, enforce levels, and mark document dirty."""
++        from org_parser.document._heading import ensure_child_heading_level
++
++        self._adopt_elements(self._children)
++        for child in self._children:
++            ensure_child_heading_level(child, parent_level=0)
++        self.mark_dirty()
+#+end_example
+
+These can be inlined at the place they are used.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 15:35]
+:END:
+
+In file src/org_parser/document/_document.py around line 460, near the ~class Document:~
+
+#+begin_example
++        wrapped = DirtyList(self._keywords)
++
++        def on_keywords_mutation() -> None:
++            self._keywords = list(wrapped)
++            self._adopt_keywords(self._keywords)
++            self.mark_dirty()
++
++        wrapped.set_on_mutation(on_keywords_mutation)
++        return wrapped
+#+end_example
+
+Make the mutation callback accept a parameter and make DirtyList call that callback with itself after the mutation occured, so that we can just =return DirtyList(value, callback)=
+*** DONE Extract the =DirtyList= to a separate module
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 15:42]
+:END:
+It makes sense to extract the =DirtyList= into a separate module.
+
 ** DONE Heading/Element .line and .column
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2026-04-01 Wed 19:17]
@@ -402,5 +482,6 @@ I would like the documentation to organized as follows:
 Add the required dependencies, tasks for building the documentation and the documentation scaffold itself.
 
 ** Sequence interface docs
+** Mutability docs
 ** Automated tests based on the example files.
 ** Library release

@@ -115,8 +115,8 @@ def test_document_setters_mark_dirty() -> None:
     assert document.category is category
     assert document.description is description
     assert document.todo is todo
-    assert document.keywords is keywords
-    assert document.body is body
+    assert keywords[0] in document.keywords
+    assert document.body == body
     assert document.children == [child]
     assert document.dirty is True
 
@@ -234,6 +234,28 @@ def test_document_body_setter_accepts_element_and_raw_string() -> None:
     assert document.body[0].parent is document
 
 
+def test_document_list_appends_mark_dirty() -> None:
+    """Appending to document-owned lists marks the document dirty."""
+    keyword_doc = Document(filename="x.org")
+    keyword = Keyword(key="TITLE", value="x")
+    keyword_doc.keywords.append(keyword)
+    assert keyword_doc.dirty is True
+    assert keyword.parent is keyword_doc
+
+    body_doc = Document(filename="x.org")
+    paragraph = Paragraph(body=RichText("Body\n"))
+    body_doc.body.append(paragraph)
+    assert body_doc.dirty is True
+    assert paragraph.parent is body_doc
+
+    child_doc = Document(filename="x.org")
+    child = Heading(level=0, document=child_doc, parent=child_doc)
+    child_doc.children.append(child)
+    assert child_doc.dirty is True
+    assert child.parent is child_doc
+    assert child.level == 1
+
+
 def test_heading_body_setter_accepts_element_and_raw_string() -> None:
     """Heading body setter accepts one element and raw string input."""
     document = Document(filename="doc.org")
@@ -251,6 +273,35 @@ def test_heading_body_setter_accepts_element_and_raw_string() -> None:
     assert isinstance(heading.body[0], Paragraph)
     assert str(heading.body[0]) == "Raw body"
     assert heading.body[0].parent is heading
+
+
+def test_heading_list_appends_mark_dirty() -> None:
+    """Appending to heading-owned lists marks heading and document dirty."""
+    tag_document = Document(filename="doc.org")
+    tag_heading = Heading(level=1, document=tag_document, parent=tag_document)
+    tag_document.children = [tag_heading]
+    tag_heading.heading_tags.append("work")
+    assert tag_heading.dirty is True
+    assert tag_document.dirty is True
+
+    body_document = Document(filename="doc.org")
+    body_heading = Heading(level=1, document=body_document, parent=body_document)
+    body_document.children = [body_heading]
+    paragraph = Paragraph(body=RichText("Body\n"))
+    body_heading.body.append(paragraph)
+    assert body_heading.dirty is True
+    assert body_document.dirty is True
+    assert paragraph.parent is body_heading
+
+    child_document = Document(filename="doc.org")
+    child_heading = Heading(level=1, document=child_document, parent=child_document)
+    child_document.children = [child_heading]
+    child = Heading(level=1, document=child_document, parent=child_heading)
+    child_heading.children.append(child)
+    assert child_heading.dirty is True
+    assert child_document.dirty is True
+    assert child.parent is child_heading
+    assert child.level == 2
 
 
 def test_heading_setters_mark_heading_and_document_dirty() -> None:

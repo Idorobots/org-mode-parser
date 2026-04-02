@@ -360,3 +360,23 @@ def test_logbook_body_setter_accepts_element_and_raw_string() -> None:
     assert logbook.body[0].parent is logbook
     assert logbook.clock_entries == []
     assert logbook.repeats == []
+
+
+def test_drawer_and_logbook_list_appends_mark_dirty() -> None:
+    """Appending to drawer/logbook list fields marks owner dirty."""
+    drawer_document = loads(":NOTE:\nA\n:END:\n")
+    assert isinstance(drawer_document.body[0], Drawer)
+    drawer = drawer_document.body[0]
+    paragraph = Paragraph(body=RichText("B\n"))
+    drawer.body.append(paragraph)
+    assert drawer.dirty is True
+    assert drawer_document.dirty is True
+    assert paragraph.parent is drawer
+
+    logbook_document = loads("* H\n")
+    logbook = logbook_document.children[0].logbook
+    clock = Clock(duration="0:10")
+    logbook.clock_entries.append(clock)
+    assert logbook.dirty is True
+    assert logbook_document.dirty is True
+    assert clock.parent is logbook

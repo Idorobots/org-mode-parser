@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from org_parser._node import node_source
 from org_parser._nodes import INDENT, SPECIAL_KEYWORD
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._dispatch import body_element_factories
 from org_parser.element._element import (
     Element,
@@ -58,12 +59,18 @@ class _ContainerBlock(Element):
     @property
     def body(self) -> list[Element]:
         """Mutable block contents as semantic elements."""
-        return self._body
+
+        def on_body_mutation(wrapped: DirtyList[Element]) -> None:
+            self._body = list(wrapped)
+            self._adopt_body(self._body)
+            self.mark_dirty()
+
+        return DirtyList(self._body, on_mutation=on_body_mutation)
 
     @body.setter
     def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set block contents."""
-        self._body = coerce_element_body(value)
+        self._body = list(coerce_element_body(value))
         self._adopt_body(self._body)
         self.mark_dirty()
 

@@ -33,6 +33,7 @@ from org_parser.element import (
     Properties,
     Repeat,
 )
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
@@ -437,12 +438,17 @@ class Heading:
         ['work', 'docs']
         ```
         """
-        return self._heading_tags
+
+        def on_heading_tags_mutation(wrapped: DirtyList[str]) -> None:
+            self._heading_tags = list(wrapped)
+            self.mark_dirty()
+
+        return DirtyList(self._heading_tags, on_mutation=on_heading_tags_mutation)
 
     @heading_tags.setter
     def heading_tags(self, value: list[str]) -> None:
         """Set tag strings on this heading line."""
-        self._heading_tags = value
+        self._heading_tags = list(value)
         self.mark_dirty()
 
     @property
@@ -628,12 +634,20 @@ class Heading:
         Add some body text
         ```
         """
-        return self._body
+
+        def on_body_mutation(wrapped: DirtyList[Element]) -> None:
+            self._body = list(wrapped)
+            self._adopt_elements(self._body)
+            self._sync_repeats()
+            self._sync_clock_entries()
+            self.mark_dirty()
+
+        return DirtyList(self._body, on_mutation=on_body_mutation)
 
     @body.setter
     def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set body elements."""
-        self._body = coerce_element_body(value)
+        self._body = list(coerce_element_body(value))
         self._adopt_elements(self._body)
         self._sync_repeats()
         self._sync_clock_entries()
@@ -727,14 +741,23 @@ class Heading:
         :END:
         ```
         """
-        return self._repeats
+
+        def on_repeats_mutation(wrapped: DirtyList[Repeat]) -> None:
+            self._repeats = list(wrapped)
+            logbook = self._ensure_logbook()
+            logbook.repeats = self._repeats
+            self._repeats = list(logbook.repeats)
+            self.mark_dirty()
+
+        return DirtyList(self._repeats, on_mutation=on_repeats_mutation)
 
     @repeats.setter
     def repeats(self, value: list[Repeat]) -> None:
         """Set repeats and synchronize them into the logbook drawer."""
-        self._repeats = value
+        self._repeats = list(value)
         logbook = self._ensure_logbook()
         logbook.repeats = self._repeats
+        self._repeats = list(logbook.repeats)
         self.mark_dirty()
 
     def add_repeated_task(self, repeat: Repeat) -> None:
@@ -777,14 +800,23 @@ class Heading:
         :END:
         ```
         """
-        return self._clock_entries
+
+        def on_clock_entries_mutation(wrapped: DirtyList[Clock]) -> None:
+            self._clock_entries = list(wrapped)
+            logbook = self._ensure_logbook()
+            logbook.clock_entries = self._clock_entries
+            self._clock_entries = list(logbook.clock_entries)
+            self.mark_dirty()
+
+        return DirtyList(self._clock_entries, on_mutation=on_clock_entries_mutation)
 
     @clock_entries.setter
     def clock_entries(self, value: list[Clock]) -> None:
         """Set clock entries and synchronize them into the logbook drawer."""
-        self._clock_entries = value
+        self._clock_entries = list(value)
         logbook = self._ensure_logbook()
         logbook.clock_entries = self._clock_entries
+        self._clock_entries = list(logbook.clock_entries)
         self.mark_dirty()
 
     @property
@@ -824,7 +856,15 @@ class Heading:
         'Heading 2'
         ```
         """
-        return self._children
+
+        def on_children_mutation(wrapped: DirtyList[Heading]) -> None:
+            self._children = list(wrapped)
+            self._adopt_elements(self._children)
+            for child in self._children:
+                ensure_child_heading_level(child, parent_level=self._level)
+            self.mark_dirty()
+
+        return DirtyList(self._children, on_mutation=on_children_mutation)
 
     @children.setter
     def children(self, value: list[Heading]) -> None:
@@ -836,7 +876,7 @@ class Heading:
         subtree — so that the invariant ``child.level > self.level`` holds.
         Only headings whose level is actually changed are marked dirty.
         """
-        self._children = value
+        self._children = list(value)
         self._adopt_elements(self._children)
         for child in self._children:
             ensure_child_heading_level(child, parent_level=self._level)
@@ -1123,7 +1163,7 @@ class Heading:
         )
 
         if not body_repeats:
-            self._repeats = self._logbook.repeats
+            self._repeats = list(self._logbook.repeats)
             return
         self._repeats = [*self._logbook.repeats, *body_repeats]
 
@@ -1135,7 +1175,7 @@ class Heading:
         )
 
         if not body_clocks:
-            self._clock_entries = self._logbook.clock_entries
+            self._clock_entries = list(self._logbook.clock_entries)
             return
         self._clock_entries = [*self._logbook.clock_entries, *body_clocks]
 

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from org_parser._node import is_error_node, node_source
 from org_parser._nodes import INDENT, LIST_ITEM
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._dispatch import body_element_factories
 from org_parser.element._element import (
     Element,
@@ -204,12 +205,18 @@ class ListItem(Element):
     @property
     def body(self) -> list[Element]:
         """Mutable body elements for this list item."""
-        return self._body
+
+        def on_body_mutation(wrapped: DirtyList[Element]) -> None:
+            self._body = list(wrapped)
+            self._adopt_body(self._body)
+            self.mark_dirty()
+
+        return DirtyList(self._body, on_mutation=on_body_mutation)
 
     @body.setter
     def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set body elements."""
-        self._body = coerce_element_body(value)
+        self._body = list(coerce_element_body(value))
         self._adopt_body(self._body)
         self.mark_dirty()
 
@@ -527,7 +534,13 @@ class List(Element):
     @property
     def items(self) -> list[ListItem]:
         """Mutable list items in source order."""
-        return self._items
+
+        def on_items_mutation(wrapped: DirtyList[ListItem]) -> None:
+            self._items = list(wrapped)
+            self._adopt_items(self._items)
+            self.mark_dirty()
+
+        return DirtyList(self._items, on_mutation=on_items_mutation)
 
     @items.setter
     def items(self, value: list[ListItem]) -> None:
@@ -536,22 +549,24 @@ class List(Element):
 
     def set_items(self, value: list[ListItem], *, mark_dirty: bool = True) -> None:
         """Set list items with optional dirty propagation."""
-        self._items = value
+        self._items = list(value)
         self._adopt_items(self._items)
         if mark_dirty:
             self.mark_dirty()
 
     def append_item(self, item: ListItem, *, mark_dirty: bool = True) -> None:
         """Append one list item with optional dirty propagation."""
-        item.parent = self
-        self._items.append(item)
+        self._items = [*self._items, item]
+        self._adopt_items(self._items)
         if mark_dirty:
             self.mark_dirty()
 
     def insert_item(self, index: int, item: ListItem) -> None:
         """Insert one list item at *index*."""
-        item.parent = self
-        self._items.insert(index, item)
+        items = [*self._items]
+        items.insert(index, item)
+        self._items = items
+        self._adopt_items(self._items)
         self.mark_dirty()
 
     def reformat(self) -> None:

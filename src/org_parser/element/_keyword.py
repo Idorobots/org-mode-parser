@@ -60,7 +60,6 @@ class Keyword(Element):
     ```python
     >>> from org_parser import loads
     >>> document.keywords.append(Keyword.from_source("#+TITLE: Document"))
-    >>> document.mark_dirty()
     >>> print(str(document))
     #+TITLE: Document
     ```

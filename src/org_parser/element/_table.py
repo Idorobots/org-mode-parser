@@ -18,6 +18,7 @@ from org_parser._nodes import (
     TABLEEL_TABLE,
     TBLFM_LINE,
 )
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._element import Element, build_semantic_repr
 from org_parser.text._rich_text import RichText, coerce_rich_text
 
@@ -109,12 +110,18 @@ class TableRow:
     @property
     def cells(self) -> list[TableCell]:
         """Mutable row cells."""
-        return self._cells
+
+        def on_cells_mutation(wrapped: DirtyList[TableCell]) -> None:
+            self._cells = list(wrapped)
+            self._adopt_cells()
+            self._table.mark_dirty()
+
+        return DirtyList(self._cells, on_mutation=on_cells_mutation)
 
     @cells.setter
     def cells(self, value: list[TableCell]) -> None:
         """Set row cells."""
-        self._cells = value
+        self._cells = list(value)
         self._adopt_cells()
         self._table.mark_dirty()
 
@@ -249,12 +256,18 @@ class Table(Element):
     @property
     def rows(self) -> list[TableRow | TableRuleRow]:
         """Mutable table rows (data rows and rule rows)."""
-        return self._rows
+
+        def on_rows_mutation(wrapped: DirtyList[TableRow | TableRuleRow]) -> None:
+            self._rows = list(wrapped)
+            self._adopt_rows()
+            self.mark_dirty()
+
+        return DirtyList(self._rows, on_mutation=on_rows_mutation)
 
     @rows.setter
     def rows(self, value: list[TableRow | TableRuleRow]) -> None:
         """Set rows."""
-        self._rows = value
+        self._rows = list(value)
         self._adopt_rows()
         self.mark_dirty()
 
@@ -274,12 +287,17 @@ class Table(Element):
         ['@1$1=5']
         ```
         """
-        return self._formulas
+
+        def on_formulas_mutation(wrapped: DirtyList[str]) -> None:
+            self._formulas = list(wrapped)
+            self.mark_dirty()
+
+        return DirtyList(self._formulas, on_mutation=on_formulas_mutation)
 
     @formulas.setter
     def formulas(self, value: list[str]) -> None:
         """Set formulas."""
-        self._formulas = value
+        self._formulas = list(value)
         self.mark_dirty()
 
     def _adopt_rows(self) -> None:

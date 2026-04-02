@@ -162,7 +162,7 @@ def test_heading_clock_cache_extracts_logbook_clock_entries() -> None:
     heading = document.children[0]
     assert len(heading.clock_entries) == 1
     assert isinstance(heading.clock_entries[0], Clock)
-    assert heading.clock_entries is heading.logbook.clock_entries
+    assert heading.clock_entries == heading.logbook.clock_entries
 
 
 def test_heading_clock_setter_creates_logbook_when_missing() -> None:

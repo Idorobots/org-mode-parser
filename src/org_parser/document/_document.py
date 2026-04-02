@@ -26,6 +26,7 @@ from org_parser.element import (
     Logbook,
     Properties,
 )
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
@@ -438,12 +439,18 @@ class Document:
         0
         ```
         """
-        return self._keywords
+
+        def on_keywords_mutation(wrapped: DirtyList[Keyword]) -> None:
+            self._keywords = list(wrapped)
+            self._adopt_keywords(self._keywords)
+            self.mark_dirty()
+
+        return DirtyList(self._keywords, on_mutation=on_keywords_mutation)
 
     @keywords.setter
     def keywords(self, value: list[Keyword]) -> None:
         """Set the keywords list."""
-        self._keywords = value
+        self._keywords = list(value)
         self._adopt_keywords(self._keywords)
         self.mark_dirty()
 
@@ -522,12 +529,18 @@ class Document:
         Add some body text
         ```
         """
-        return self._body
+
+        def on_body_mutation(wrapped: DirtyList[Element]) -> None:
+            self._body = list(wrapped)
+            self._adopt_elements(self._body)
+            self.mark_dirty()
+
+        return DirtyList(self._body, on_mutation=on_body_mutation)
 
     @body.setter
     def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set zeroth-section body elements."""
-        self._body = coerce_element_body(value)
+        self._body = list(coerce_element_body(value))
         self._adopt_elements(self._body)
         self.mark_dirty()
 
@@ -554,7 +567,17 @@ class Document:
         *** Heading 3
         ```
         """
-        return self._children
+
+        def on_children_mutation(wrapped: DirtyList[Heading]) -> None:
+            from org_parser.document._heading import ensure_child_heading_level
+
+            self._children = list(wrapped)
+            self._adopt_elements(self._children)
+            for child in self._children:
+                ensure_child_heading_level(child, parent_level=0)
+            self.mark_dirty()
+
+        return DirtyList(self._children, on_mutation=on_children_mutation)
 
     @children.setter
     def children(self, value: list[Heading]) -> None:
@@ -569,7 +592,7 @@ class Document:
         # Lazy import avoids the circular dependency with _heading.py.
         from org_parser.document._heading import ensure_child_heading_level
 
-        self._children = value
+        self._children = list(value)
         self._adopt_elements(self._children)
         for child in self._children:
             ensure_child_heading_level(child, parent_level=0)

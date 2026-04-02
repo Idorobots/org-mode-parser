@@ -12,6 +12,7 @@ from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, TypeVar, cast
 
 from org_parser._node import node_source
+from org_parser.element._dirty_list import DirtyList
 
 if TYPE_CHECKING:
     import tree_sitter
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     from org_parser.document._heading import Heading
     from org_parser.element._keyword import AffiliatedKeyword
 
-__all__ = ["Element", "node_source"]
+__all__ = ["DirtyList", "Element", "node_source"]
 
 _ElementT = TypeVar("_ElementT", bound="Element")
 
@@ -306,7 +307,14 @@ class Element:
         'Some Table'
         ```
         """
-        return self._keywords
+
+        def on_keywords_mutation(wrapped: DirtyList[AffiliatedKeyword]) -> None:
+            self._keywords = list(wrapped)
+            for keyword in self._keywords:
+                keyword.parent = self
+            self.mark_dirty()
+
+        return DirtyList(self._keywords, on_mutation=on_keywords_mutation)
 
     def attach_keyword(self, keyword: AffiliatedKeyword) -> None:
         """Attach an affiliated keyword to this element without marking it dirty.
@@ -335,7 +343,8 @@ class Element:
         |table|
         ```
         """
-        self._keywords.append(keyword)
+        self._keywords = [*self._keywords, keyword]
+        keyword.parent = self
 
     def mark_dirty(self) -> None:
         """Mark this element as dirty."""

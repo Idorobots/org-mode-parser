@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from org_parser._node import node_source
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._element import (
     Element,
     build_semantic_repr,
@@ -265,12 +266,18 @@ class Indent(Element):
     @property
     def body(self) -> list[Element]:
         """Nested elements contained by this indentation block."""
-        return self._body
+
+        def on_body_mutation(wrapped: DirtyList[Element]) -> None:
+            self._body = list(wrapped)
+            self._adopt_body(self._body)
+            self.mark_dirty()
+
+        return DirtyList(self._body, on_mutation=on_body_mutation)
 
     @body.setter
     def body(self, value: Sequence[Element] | Element | str) -> None:
         """Set nested elements."""
-        self._body = coerce_element_body(value)
+        self._body = list(coerce_element_body(value))
         self._adopt_body(self._body)
         self.mark_dirty()
 
