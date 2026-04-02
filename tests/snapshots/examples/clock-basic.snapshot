@@ -1,0 +1,42 @@
+Document(
+  filename='examples/clock-basic.org',
+  category=RichText('clock-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Clocks'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Closed clock with duration:\n')),
+            BlankLine(),
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=9, start_minute=0, end_year=2025, end_month=1, end_day=6, end_dayname='Mon', end_hour=11, end_minute=30), duration='2:30'),
+            BlankLine(),
+            Paragraph(body=RichText('Open clock (no end time):\n')),
+            BlankLine(),
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=7, start_dayname='Tue', start_hour=14, start_minute=0)),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Clock inside a LOGBOOK drawer'),
+        logbook=Logbook(
+          body=[
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=20, start_minute=0, end_year=2025, end_month=1, end_day=5, end_dayname='Sun', end_hour=21, end_minute=0), duration='1:00'),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=4, start_dayname='Sat', start_hour=10, start_minute=0, end_year=2025, end_month=1, end_day=4, end_dayname='Sat', end_hour=12, end_minute=0), duration='2:00'),
+            ],
+          clock_entries=[
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=20, start_minute=0, end_year=2025, end_month=1, end_day=5, end_dayname='Sun', end_hour=21, end_minute=0), duration='1:00'),
+              Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=4, start_dayname='Sat', start_hour=10, start_minute=0, end_year=2025, end_month=1, end_day=4, end_dayname='Sat', end_hour=12, end_minute=0), duration='2:00'),
+            ],
+        ),
+        clock_entries=[
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=20, start_minute=0, end_year=2025, end_month=1, end_day=5, end_dayname='Sun', end_hour=21, end_minute=0), duration='1:00'),
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=4, start_dayname='Sat', start_hour=10, start_minute=0, end_year=2025, end_month=1, end_day=4, end_dayname='Sat', end_hour=12, end_minute=0), duration='2:00'),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+    ],
+)

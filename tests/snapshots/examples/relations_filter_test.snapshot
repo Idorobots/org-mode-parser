@@ -1,0 +1,84 @@
+Document(
+  filename='examples/relations_filter_test.org',
+  category=RichText('relations_filter_test'),
+  children=[
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with python and comp '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=10, start_dayname='Wed', start_hour=14, start_minute=0),
+        heading_tags=['python', 'comp'],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Python and computer task.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with python and home '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=11, start_dayname='Thu', start_hour=14, start_minute=0),
+        heading_tags=['python', 'home'],
+        body=[
+            Paragraph(body=RichText('Python and home task.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with python and testing '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=12, start_dayname='Fri', start_hour=14, start_minute=0),
+        heading_tags=['python', 'testing'],
+        body=[
+            Paragraph(body=RichText('Python and testing task.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with python and debugging '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=13, start_dayname='Sat', start_hour=14, start_minute=0),
+        heading_tags=['python', 'debugging'],
+        body=[
+            Paragraph(body=RichText('Python and debugging task.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with testing and comp '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=14, start_dayname='Sun', start_hour=14, start_minute=0),
+        heading_tags=['testing', 'comp'],
+        body=[
+            Paragraph(body=RichText('Testing and computer task.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with testing and home '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=15, start_dayname='Mon', start_hour=14, start_minute=0),
+        heading_tags=['testing', 'home'],
+        body=[
+            Paragraph(body=RichText('Testing and home task.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with debugging and comp '),
+        closed=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=16, start_dayname='Tue', start_hour=14, start_minute=0),
+        heading_tags=['debugging', 'comp'],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Debugging and computer task.\n')),
+          ],
+      ),
+    ],
+)

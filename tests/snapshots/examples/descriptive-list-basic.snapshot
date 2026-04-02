@@ -1,0 +1,36 @@
+Document(
+  filename='examples/descriptive-list-basic.org',
+  category=RichText('descriptive-list-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Descriptive Lists'),
+        body=[
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='-', item_tag=RichText('key'), first_line=RichText('value')),
+                  ListItem(bullet='-', item_tag=RichText('term'), first_line=RichText('definition text')),
+                  ListItem(bullet='-', item_tag=RichText('CPU'), first_line=RichText('Central Processing Unit')),
+                  ListItem(bullet='-', item_tag=RichText('longer tag text'), first_line=RichText('description can contain *markup* and /italics/')),
+                ],
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Descriptive list with multi-word tags'),
+        body=[
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='-', item_tag=RichText('first key'), first_line=RichText('first value')),
+                  ListItem(bullet='-', item_tag=RichText('second key'), first_line=RichText('second value')),
+                  ListItem(bullet='-', item_tag=RichText('the last'), first_line=RichText('double colon ~::~ must be surrounded by spaces')),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

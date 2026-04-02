@@ -1,0 +1,47 @@
+Document(
+  filename='examples/repeated_tasks.org',
+  category=RichText('repeated_tasks'),
+  children=[
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Recurring daily standup '),
+        scheduled=Timestamp(is_active=True, start_year=2024, start_month=1, start_day=1, start_dayname='Mon', start_hour=9, start_minute=0, repeater_mark='+', repeater_value=1, repeater_unit='d'),
+        properties={
+            'LAST_REPEAT': RichText('[2024-01-05 Fri 09:15]'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=5, start_dayname='Fri', start_hour=9, start_minute=15)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=4, start_dayname='Thu', start_hour=9, start_minute=10)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=3, start_dayname='Wed', start_hour=9, start_minute=5)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=2, start_dayname='Tue', start_hour=9, start_minute=0)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=1, start_dayname='Mon', start_hour=9, start_minute=0)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=5, start_dayname='Fri', start_hour=9, start_minute=15)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=4, start_dayname='Thu', start_hour=9, start_minute=10)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=3, start_dayname='Wed', start_hour=9, start_minute=5)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=2, start_dayname='Tue', start_hour=9, start_minute=0)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=1, start_dayname='Mon', start_hour=9, start_minute=0)),
+            ],
+        ),
+        heading_tags=['Agile', 'GTD'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=5, start_dayname='Fri', start_hour=9, start_minute=15)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=4, start_dayname='Thu', start_hour=9, start_minute=10)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=3, start_dayname='Wed', start_hour=9, start_minute=5)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=2, start_dayname='Tue', start_hour=9, start_minute=0)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=1, start_dayname='Mon', start_hour=9, start_minute=0)),
+          ],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Daily team synchronization meeting.\n')),
+          ],
+      ),
+    ],
+)

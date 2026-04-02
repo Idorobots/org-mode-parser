@@ -1,0 +1,685 @@
+Document(
+  filename='examples/tables.org',
+  title=RichText('Data Reference Tables'),
+  author=RichText('Trindle Gworbeck'),
+  category=RichText('tables'),
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Org-Type Tables'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Simple table with rule row'),
+              body=[
+                  BlankLine(),
+                  CaptionKeyword(value='ISO 4217 currency codes (selection)'),
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Code ')),
+                              TableCell(value=RichText(' Currency             ')),
+                              TableCell(value=RichText(' Symbol ')),
+                              TableCell(value=RichText(' Decimal places ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|------+----------------------+--------+----------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' USD  ')),
+                              TableCell(value=RichText(' US Dollar            ')),
+                              TableCell(value=RichText(' $      ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' EUR  ')),
+                              TableCell(value=RichText(' Euro                 ')),
+                              TableCell(value=RichText(' €      ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' GBP  ')),
+                              TableCell(value=RichText(' Pound Sterling       ')),
+                              TableCell(value=RichText(' £      ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' JPY  ')),
+                              TableCell(value=RichText(' Japanese Yen         ')),
+                              TableCell(value=RichText(' ¥      ')),
+                              TableCell(value=RichText('              0 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' CHF  ')),
+                              TableCell(value=RichText(' Swiss Franc          ')),
+                              TableCell(value=RichText(' Fr     ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' SEK  ')),
+                              TableCell(value=RichText(' Swedish Krona        ')),
+                              TableCell(value=RichText(' kr     ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' DKK  ')),
+                              TableCell(value=RichText(' Danish Krone         ')),
+                              TableCell(value=RichText(' kr     ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' NOK  ')),
+                              TableCell(value=RichText(' Norwegian Krone      ')),
+                              TableCell(value=RichText(' kr     ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' CAD  ')),
+                              TableCell(value=RichText(' Canadian Dollar      ')),
+                              TableCell(value=RichText(' $      ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' AUD  ')),
+                              TableCell(value=RichText(' Australian Dollar    ')),
+                              TableCell(value=RichText(' $      ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' NZD  ')),
+                              TableCell(value=RichText(' New Zealand Dollar   ')),
+                              TableCell(value=RichText(' $      ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' SGD  ')),
+                              TableCell(value=RichText(' Singapore Dollar     ')),
+                              TableCell(value=RichText(' $      ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' HKD  ')),
+                              TableCell(value=RichText(' Hong Kong Dollar     ')),
+                              TableCell(value=RichText(' $      ')),
+                              TableCell(value=RichText('              2 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' KWD  ')),
+                              TableCell(value=RichText(' Kuwaiti Dinar        ')),
+                              TableCell(value=RichText(' KD     ')),
+                              TableCell(value=RichText('              3 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' BHD  ')),
+                              TableCell(value=RichText(' Bahraini Dinar       ')),
+                              TableCell(value=RichText(' BD     ')),
+                              TableCell(value=RichText('              3 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' JOD  ')),
+                              TableCell(value=RichText(' Jordanian Dinar      ')),
+                              TableCell(value=RichText(' JD     ')),
+                              TableCell(value=RichText('              3 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' TND  ')),
+                              TableCell(value=RichText(' Tunisian Dinar       ')),
+                              TableCell(value=RichText(' DT     ')),
+                              TableCell(value=RichText('              3 ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Table with TBLFM formula'),
+              body=[
+                  CaptionKeyword(value='Compound interest projections (5% annual rate)'),
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Year ')),
+                              TableCell(value=RichText(' Principal (£) ')),
+                              TableCell(value=RichText(' Interest (£) ')),
+                              TableCell(value=RichText(' Balance (£) ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|------+---------------+--------------+-------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('    1 ')),
+                              TableCell(value=RichText('       10000.0 ')),
+                              TableCell(value=RichText('        500.0 ')),
+                              TableCell(value=RichText('     10500.0 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('    2 ')),
+                              TableCell(value=RichText('       10000.0 ')),
+                              TableCell(value=RichText('        525.0 ')),
+                              TableCell(value=RichText('     11025.0 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('    3 ')),
+                              TableCell(value=RichText('       10000.0 ')),
+                              TableCell(value=RichText('        551.3 ')),
+                              TableCell(value=RichText('     11576.3 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('    4 ')),
+                              TableCell(value=RichText('       10000.0 ')),
+                              TableCell(value=RichText('        578.8 ')),
+                              TableCell(value=RichText('     12155.1 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('    5 ')),
+                              TableCell(value=RichText('       10000.0 ')),
+                              TableCell(value=RichText('        607.8 ')),
+                              TableCell(value=RichText('     12762.8 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('   10 ')),
+                              TableCell(value=RichText('       10000.0 ')),
+                              TableCell(value=RichText('        975.6 ')),
+                              TableCell(value=RichText('     16288.9 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('   20 ')),
+                              TableCell(value=RichText('       10000.0 ')),
+                              TableCell(value=RichText('       2532.6 ')),
+                              TableCell(value=RichText('     26532.6 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('   30 ')),
+                              TableCell(value=RichText('       10000.0 ')),
+                              TableCell(value=RichText('       6573.4 ')),
+                              TableCell(value=RichText('     43219.4 ')),
+                            ],
+                        ),
+                      ],
+                    formulas=['$3=$2*0.05::$4=$2+$3'],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Table with multiple rule rows and complex alignment'),
+              body=[
+                  CaptionKeyword(value='Unicode block ranges (partial)'),
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Block name                   ')),
+                              TableCell(value=RichText('      Start ')),
+                              TableCell(value=RichText('        End ')),
+                              TableCell(value=RichText(' Scripts / Characters     ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|------------------------------+------------+------------+--------------------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' *Basic Latin*                ')),
+                              TableCell(value=RichText(' U+0000     ')),
+                              TableCell(value=RichText(' U+007F     ')),
+                              TableCell(value=RichText(' ASCII                    ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Latin-1 Supplement           ')),
+                              TableCell(value=RichText(' U+0080     ')),
+                              TableCell(value=RichText(' U+00FF     ')),
+                              TableCell(value=RichText(' Extended Latin           ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Latin Extended-A             ')),
+                              TableCell(value=RichText(' U+0100     ')),
+                              TableCell(value=RichText(' U+017F     ')),
+                              TableCell(value=RichText(' Diacritics               ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|------------------------------+------------+------------+--------------------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' *Greek and Coptic*           ')),
+                              TableCell(value=RichText(' U+0370     ')),
+                              TableCell(value=RichText(' U+03FF     ')),
+                              TableCell(value=RichText(' Greek, Coptic            ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Cyrillic                     ')),
+                              TableCell(value=RichText(' U+0400     ')),
+                              TableCell(value=RichText(' U+04FF     ')),
+                              TableCell(value=RichText(' Slavic scripts           ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Armenian                     ')),
+                              TableCell(value=RichText(' U+0530     ')),
+                              TableCell(value=RichText(' U+058F     ')),
+                              TableCell(value=RichText(' Armenian                 ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|------------------------------+------------+------------+--------------------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' *CJK Unified Ideographs*     ')),
+                              TableCell(value=RichText(' U+4E00     ')),
+                              TableCell(value=RichText(' U+9FFF     ')),
+                              TableCell(value=RichText(' 20,000+ CJK characters   ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Hangul Syllables             ')),
+                              TableCell(value=RichText(' U+AC00     ')),
+                              TableCell(value=RichText(' U+D7AF     ')),
+                              TableCell(value=RichText(' Korean                   ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|------------------------------+------------+------------+--------------------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' *Emoji and Pictographs*      ')),
+                              TableCell(value=RichText(' U+1F300    ')),
+                              TableCell(value=RichText(' U+1F5FF    ')),
+                              TableCell(value=RichText(' Misc. Symbols            ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Supplemental Arrows-C        ')),
+                              TableCell(value=RichText(' U+1F800    ')),
+                              TableCell(value=RichText(' U+1FBFF    ')),
+                              TableCell(value=RichText(' Arrows                   ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Table with markup and links in cells'),
+              body=[
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Library       ')),
+                              TableCell(value=RichText(' Language   ')),
+                              TableCell(value=RichText(' License        ')),
+                              TableCell(value=RichText(' Homepage                              ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|---------------+------------+----------------+---------------------------------------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' *tree-sitter* ')),
+                              TableCell(value=RichText(' C          ')),
+                              TableCell(value=RichText(' =MIT=          ')),
+                              TableCell(value=RichText(' [[https://tree-sitter.github.io]]     ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' /lxml/        ')),
+                              TableCell(value=RichText(' Python     ')),
+                              TableCell(value=RichText(' =BSD-3-Clause= ')),
+                              TableCell(value=RichText(' [[https://lxml.de]]                   ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' ~pest~        ')),
+                              TableCell(value=RichText(' Rust       ')),
+                              TableCell(value=RichText(' =MIT / Apache= ')),
+                              TableCell(value=RichText(' [[https://pest.rs]]                   ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' +ANTLR 3+     ')),
+                              TableCell(value=RichText(' Java       ')),
+                              TableCell(value=RichText(' =BSD=          ')),
+                              TableCell(value=RichText(' _deprecated_ — use ANTLR 4            ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' *ANTLR 4*     ')),
+                              TableCell(value=RichText(' Java/many  ')),
+                              TableCell(value=RichText(' =BSD-3-Clause= ')),
+                              TableCell(value=RichText(' [[https://www.antlr.org]]             ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' /Menhir/      ')),
+                              TableCell(value=RichText(' OCaml      ')),
+                              TableCell(value=RichText(' =LGPL-2=       ')),
+                              TableCell(value=RichText(' [[https://gallium.inria.fr/~fpottier/menhir/]] ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Minimal table — single column, no rule row'),
+              body=[
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Single-column Org table ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Row one                 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Row two                 ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' Row three               ')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Table immediately followed by TBLFM (multiple formulas)'),
+              body=[
+                  CaptionKeyword(value='Temperature conversion reference'),
+                  Table(
+                    rows=[
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText(' °C   ')),
+                              TableCell(value=RichText('   °F ')),
+                              TableCell(value=RichText('    K ')),
+                            ],
+                        ),
+                        TableRuleRow(raw='|------+------+------|'),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('  -40 ')),
+                              TableCell(value=RichText('  -40 ')),
+                              TableCell(value=RichText(' 233. ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('    0 ')),
+                              TableCell(value=RichText('   32 ')),
+                              TableCell(value=RichText(' 273. ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('   20 ')),
+                              TableCell(value=RichText('   68 ')),
+                              TableCell(value=RichText(' 293. ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('   37 ')),
+                              TableCell(value=RichText('  99. ')),
+                              TableCell(value=RichText(' 310. ')),
+                            ],
+                        ),
+                        TableRow(
+                          cells=[
+                              TableCell(value=RichText('  100 ')),
+                              TableCell(value=RichText('  212 ')),
+                              TableCell(value=RichText(' 373. ')),
+                            ],
+                        ),
+                      ],
+                    formulas=['$2=$1*9/5+32::$3=$1+273.15'],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Table.el-Type Tables'),
+        body=[
+            Paragraph(body=RichText('Table.el tables use a different syntax and are parsed as raw content.\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('A table.el table — grid format'),
+              body=[
+                  BlankLine(),
+                  TableEl(),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('A table.el table — no content rows'),
+              body=[
+                  TableEl(),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Caption Without an Affiliated Element'),
+        body=[
+            Paragraph(body=RichText('This paragraph demonstrates that #+CAPTION: followed by a blank line\nbecomes a regular keyword, not an affiliated keyword.\n')),
+            BlankLine(),
+            CaptionKeyword(value='This is NOT affiliated — a blank line follows.'),
+            BlankLine(),
+            Paragraph(body=RichText('The paragraph above is the element following the blank line, so the\n')),
+            CaptionKeyword(value='above is parsed as an ordinary (unrecognised) keyword in the'),
+            Paragraph(body=RichText('target syntax, not as an affiliated keyword of this paragraph.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Compare with a properly affiliated caption:\n')),
+            BlankLine(),
+            CaptionKeyword(value='This IS affiliated — no blank line before the table.'),
+            Table(
+              rows=[
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Properly affiliated table ')),
+                        TableCell(value=RichText(' Column 2 ')),
+                      ],
+                  ),
+                  TableRuleRow(raw='|---------------------------+----------|'),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Row                       ')),
+                        TableCell(value=RichText(' Data     ')),
+                      ],
+                  ),
+                ],
+            ),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Tables with Affiliated Captions Containing Markup'),
+        body=[
+            BlankLine(),
+            CaptionKeyword(value='Comparison of *sorting algorithms* — average and worst-case /complexity/'),
+            Table(
+              rows=[
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Algorithm      ')),
+                        TableCell(value=RichText(' Avg Time   ')),
+                        TableCell(value=RichText(' Worst Time ')),
+                        TableCell(value=RichText(' Space      ')),
+                        TableCell(value=RichText(' Stable? ')),
+                      ],
+                  ),
+                  TableRuleRow(raw='|----------------+------------+------------+------------+---------|'),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Bubble sort    ')),
+                        TableCell(value=RichText(' O(n²)      ')),
+                        TableCell(value=RichText(' O(n²)      ')),
+                        TableCell(value=RichText(' O(1)       ')),
+                        TableCell(value=RichText(' Yes     ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Selection sort ')),
+                        TableCell(value=RichText(' O(n²)      ')),
+                        TableCell(value=RichText(' O(n²)      ')),
+                        TableCell(value=RichText(' O(1)       ')),
+                        TableCell(value=RichText(' No      ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Insertion sort ')),
+                        TableCell(value=RichText(' O(n²)      ')),
+                        TableCell(value=RichText(' O(n²)      ')),
+                        TableCell(value=RichText(' O(1)       ')),
+                        TableCell(value=RichText(' Yes     ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Merge sort     ')),
+                        TableCell(value=RichText(' O(n log n) ')),
+                        TableCell(value=RichText(' O(n log n) ')),
+                        TableCell(value=RichText(' O(n)       ')),
+                        TableCell(value=RichText(' Yes     ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Quicksort      ')),
+                        TableCell(value=RichText(' O(n log n) ')),
+                        TableCell(value=RichText(' O(n²)      ')),
+                        TableCell(value=RichText(' O(log n)   ')),
+                        TableCell(value=RichText(' No      ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Heapsort       ')),
+                        TableCell(value=RichText(' O(n log n) ')),
+                        TableCell(value=RichText(' O(n log n) ')),
+                        TableCell(value=RichText(' O(1)       ')),
+                        TableCell(value=RichText(' No      ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Timsort        ')),
+                        TableCell(value=RichText(' O(n log n) ')),
+                        TableCell(value=RichText(' O(n log n) ')),
+                        TableCell(value=RichText(' O(n)       ')),
+                        TableCell(value=RichText(' Yes     ')),
+                      ],
+                  ),
+                  TableRow(
+                    cells=[
+                        TableCell(value=RichText(' Radix sort     ')),
+                        TableCell(value=RichText(' O(nk)      ')),
+                        TableCell(value=RichText(' O(nk)      ')),
+                        TableCell(value=RichText(' O(n + k)   ')),
+                        TableCell(value=RichText(' Yes     ')),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

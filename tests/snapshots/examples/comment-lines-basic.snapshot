@@ -1,0 +1,26 @@
+Document(
+  filename='examples/comment-lines-basic.org',
+  category=RichText('comment-lines-basic'),
+  body=[
+      Comment(text='A comment line.'),
+      BlankLine(),
+      Comment(text='Another comment line.'),
+      Comment(text='Consecutive comment lines form one comment element.'),
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Heading'),
+        body=[
+            BlankLine(),
+            Comment(text='Comment inside a section.'),
+            BlankLine(),
+            Paragraph(body=RichText('Paragraph after the comment.\n')),
+            BlankLine(),
+            Comment(text=''),
+            Comment(text='Comment with an empty comment line above.'),
+          ],
+      ),
+    ],
+)

@@ -1,0 +1,1090 @@
+Document(
+  filename='examples/archive.org',
+  category=RichText('archive'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('CANCELLED Refine some more tasks with the team.                                     '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=19, start_dayname='czw'),
+        properties={
+            'gamify_exp': RichText('5'),
+            'capture_time': RichText('[2023-10-19 czw 15:37]'),
+            'context': RichText('[[file:~/org/refile.org::*Move the Riak to Redis migration notes to the epic document.][Move the Riak to Redis migration notes to the epic document.]]'),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:48'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=19, start_dayname='czw', start_hour=15, start_minute=38)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=19, start_dayname='czw', start_hour=15, start_minute=38)),
+            ],
+        ),
+        heading_tags=['ProjectManagement'],
+        repeats=[
+            Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=19, start_dayname='czw', start_hour=15, start_minute=38)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('SUSPENDED Try to debug the ejabberd_tls:send timouts.                '),
+        scheduled=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=20, start_dayname='pią'),
+        properties={
+            'gamify_exp': RichText('7'),
+            'capture_time': RichText('[2023-10-20 pią 14:42]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:48'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='SUSPENDED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=20, start_dayname='pią', start_hour=14, start_minute=43)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='SUSPENDED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=20, start_dayname='pią', start_hour=14, start_minute=43)),
+            ],
+        ),
+        heading_tags=['Debugging', 'Erlang', 'XMPP'],
+        repeats=[
+            Repeat(after='SUSPENDED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=20, start_dayname='pią', start_hour=14, start_minute=43)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Investigate the multiple session errors in ejabberd.            '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=23, start_dayname='pon'),
+        properties={
+            'gamify_exp': RichText('10'),
+            'capture_time': RichText('[2023-10-23 pon 18:29]'),
+            'context': RichText('[[file:~/org/refile.org]]'),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:49'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='DONE', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=23, start_dayname='pon', start_hour=23, start_minute=54)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=22, start_dayname='pon', start_hour=18, start_minute=29)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='DONE', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=23, start_dayname='pon', start_hour=23, start_minute=54)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=22, start_dayname='pon', start_hour=18, start_minute=29)),
+            ],
+        ),
+        heading_tags=['Erlang', 'Debugging'],
+        repeats=[
+            Repeat(after='DONE', before='DONE', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=23, start_dayname='pon', start_hour=23, start_minute=54)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=22, start_dayname='pon', start_hour=18, start_minute=29)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Make a stocks table for tracking the stonks.                              '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=25, start_dayname='śro'),
+        properties={
+            'gamify_exp': RichText('13'),
+            'capture_time': RichText('[2023-10-25 śro 11:42]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:49'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=25, start_dayname='śro', start_hour=17, start_minute=26)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=25, start_dayname='śro', start_hour=17, start_minute=26)),
+            ],
+        ),
+        heading_tags=['OrgMode', 'EmacsLisp'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=25, start_dayname='śro', start_hour=17, start_minute=26)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Prepare stories for the refinement.                                  '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=25, start_dayname='śro'),
+        properties={
+            'gamify_exp': RichText('7'),
+            'capture_time': RichText('[2023-10-25 śro 20:00]'),
+            'context': RichText('[[file:~/org/money.org::*Stuff to buy][Stuff to buy]]'),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:49'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=25, start_dayname='śro', start_hour=20, start_minute=1)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=25, start_dayname='śro', start_hour=20, start_minute=1)),
+            ],
+        ),
+        heading_tags=['ProjectManagement', 'Jira'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=25, start_dayname='śro', start_hour=20, start_minute=1)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Prepare a document for game team onboarding to Ejabberd.             '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=25, start_dayname='śro'),
+        properties={
+            'gamify_exp': RichText('6'),
+            'capture_time': RichText('[2023-10-25 śro 20:01]'),
+            'context': RichText('[[file:~/org/refile.org::*Prepare stories for the refinement.][Prepare stories for the refinement.]]'),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:49'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=25, start_dayname='śro', start_hour=20, start_minute=1)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=25, start_dayname='śro', start_hour=20, start_minute=1)),
+            ],
+        ),
+        heading_tags=['ProjectManagement'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=25, start_dayname='śro', start_hour=20, start_minute=1)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Plan a solution framing session for the ejabberd client onboarding.   '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=26, start_dayname='czw'),
+        properties={
+            'gamify_exp': RichText('10'),
+            'capture_time': RichText('[2023-10-26 czw 20:24]'),
+            'context': RichText('[[file:~/org/general.org::*Pull training][Pull training]]'),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:49'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=26)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=26)),
+            ],
+        ),
+        heading_tags=['ProjectManagement'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=26)),
+          ],
+        body=[
+            BlankLine(),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Prepare another batch of tickets for refinement.                       '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=26, start_dayname='czw'),
+        properties={
+            'gamify_exp': RichText('5'),
+            'capture_time': RichText('[2023-10-26 czw 20:25]'),
+            'context': RichText('[[file:~/org/general.org::*Pull training][Pull training]]'),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:49'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=26)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=26)),
+            ],
+        ),
+        heading_tags=['ProjectManagement', 'Jira'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=26)),
+          ],
+        body=[
+            BlankLine(),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Create a design document for the Ejabberd client onboarding.         '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=26, start_dayname='czw'),
+        properties={
+            'gamify_exp': RichText('10'),
+            'capture_time': RichText('[2023-10-26 czw 20:25]'),
+            'context': RichText('[[file:~/org/general.org::*Pull training][Pull training]]'),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:49'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=26)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=26)),
+            ],
+        ),
+        heading_tags=['Documenting', 'ProductDesign'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=26)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Add ElastiCache cluster definitions for Ejabberd in terraform config.         '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=26, start_dayname='czw'),
+        properties={
+            'gamify_exp': RichText('10'),
+            'capture_time': RichText('[2023-10-26 czw 20:27]'),
+            'context': RichText('[[file:~/org/refile.org::*Create a design document for the Ejabberd/VTS onboarding.][Create a design document for the Ejabberd/VTS onboarding.]]'),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:49'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=27)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=27)),
+            ],
+        ),
+        heading_tags=['Terraform', 'AWS'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=26, start_dayname='czw', start_hour=20, start_minute=27)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Build a more permanent PiWM/Inside spartan sensor.                    '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=29, start_dayname='nie'),
+        properties={
+            'gamify_exp': RichText('7'),
+            'capture_time': RichText('[2023-10-29 nie 01:04]'),
+            'context': RichText('[[file:~/projects/software/spartan-sensor-mesh/ui/node_modules/mobx/CHANGELOG.md::UNPUBLISHED (keep this here and add unpublished changes)]]'),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:49'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=29, start_dayname='nie', start_hour=1, start_minute=6)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=29, start_dayname='nie', start_hour=1, start_minute=6)),
+            ],
+        ),
+        heading_tags=['Soldering', 'Electronics'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=29, start_dayname='nie', start_hour=1, start_minute=6)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Make some pulled turkey.                                                            '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=29, start_dayname='nie'),
+        properties={
+            'gamify_exp': RichText('14'),
+            'capture_time': RichText('[2023-10-29 nie 22:01]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-10-30 pon 23:49'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=29, start_dayname='nie', start_hour=22, start_minute=2)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=29, start_dayname='nie', start_hour=22, start_minute=2)),
+            ],
+        ),
+        heading_tags=['Cooking'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=29, start_dayname='nie', start_hour=22, start_minute=2)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText("Fix broken data endpoint in spartan sensor mesh on ESP8266 when there's too large JSON to stringify. "),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=29, start_dayname='nie'),
+        properties={
+            'gamify_exp': RichText('6'),
+            'capture_time': RichText('[2023-10-29 nie 22:30]'),
+            'context': RichText('[[file:~/projects/software/spartan-sensor-mesh/device/src/APIServer.cpp::String resp = this->device.toJSON();]]'),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:54'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=30, start_dayname='pon', start_hour=0, start_minute=29)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=30, start_dayname='pon', start_hour=0, start_minute=29)),
+            ],
+        ),
+        heading_tags=['Debugging', 'Arduino', 'Cpp'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=30, start_dayname='pon', start_hour=0, start_minute=29)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Replace the humidity/temperature sensors on the inside sensor with CO sensor. '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=10, start_day=30, start_dayname='pon'),
+        properties={
+            'gamify_exp': RichText('13'),
+            'capture_time': RichText('[2023-10-30 pon 17:03]'),
+            'context': RichText('[[file:~/projects/software/spartan-sensor-mesh/device/data/device_config.json::"samplingInterval": 60000,]]'),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:54'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=30, start_dayname='pon', start_hour=19, start_minute=39)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=30, start_dayname='pon', start_hour=19, start_minute=39)),
+            ],
+        ),
+        heading_tags=['Electronics', 'Soldering'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=10, start_day=30, start_dayname='pon', start_hour=19, start_minute=39)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Update the invoice generator to support date of sale in time table generator. '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=2, start_dayname='czw'),
+        properties={
+            'gamify_exp': RichText('13'),
+            'capture_time': RichText('[2023-11-02 czw 09:42]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:54'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=2, start_dayname='czw', start_hour=9, start_minute=43)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=2, start_dayname='czw', start_hour=9, start_minute=43)),
+            ],
+        ),
+        heading_tags=['Python', 'Entrepreneurship'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=2, start_dayname='czw', start_hour=9, start_minute=43)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Inventorize all the medical supplies & perishable camping items.                '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=5, start_dayname='nie'),
+        properties={
+            'gamify_exp': RichText('10'),
+            'capture_time': RichText('[2023-11-05 nie 15:17]'),
+            'context': RichText('[[file:~/org/stockpile.org::*Perishable survival stuff][Perishable survival stuff]]'),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:55'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=7, start_dayname='wto', start_hour=9, start_minute=15)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=7, start_dayname='wto', start_hour=9, start_minute=15)),
+            ],
+        ),
+        heading_tags=['Documenting'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=7, start_dayname='wto', start_hour=9, start_minute=15)),
+          ],
+        body=[
+            BlankLine(),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Make the mountainhiker pouch smaller to fit within the smaller cook set.     '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=5, start_dayname='nie'),
+        properties={
+            'gamify_exp': RichText('7'),
+            'capture_time': RichText('[2023-11-05 nie 20:20]'),
+            'context': RichText('[[file:~/org/stockpile.org::*Trauma][Trauma]]'),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:55'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=7, start_dayname='wto', start_hour=9, start_minute=15)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=7, start_dayname='wto', start_hour=9, start_minute=15)),
+            ],
+        ),
+        heading_tags=['Leatherworking'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=7, start_dayname='wto', start_hour=9, start_minute=15)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Respond to the customer tickets.                              '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=8, start_dayname='śro'),
+        properties={
+            'gamify_exp': RichText('9'),
+            'capture_time': RichText('[2023-11-08 śro 10:51]'),
+            'context': RichText('[[file:~/org/general.org::*Backup Essentials.][Backup Essentials.]]'),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:55'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=54)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=54)),
+            ],
+        ),
+        heading_tags=['CustomerSupport'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=54)),
+          ],
+        body=[
+            BlankLine(),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Take a look an the logs provided by the QA.             '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=8, start_dayname='śro'),
+        properties={
+            'gamify_exp': RichText('6'),
+            'capture_time': RichText('[2023-11-08 śro 10:53]'),
+            'context': RichText('[[file:~/org/general.org::*Backup Essentials.][Backup Essentials.]]'),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:55'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=54)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=54)),
+            ],
+        ),
+        heading_tags=['Debugging', 'CustomerSupport'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=54)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Reorganize the Jira shortlist stories and remove the holding sprint.  '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=8, start_dayname='śro'),
+        properties={
+            'gamify_exp': RichText('11'),
+            'capture_time': RichText('[2023-11-08 śro 10:54]'),
+            'context': RichText('[[file:~/org/refile.org::*Take a look an the logs provided by the QA.][Take a look an the logs provided by the QA.]]'),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:55'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=55)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=55)),
+            ],
+        ),
+        heading_tags=['ProjectManagement', 'Jira'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=55)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Sync with Matt on the Kafka architecture issues that may arise.     '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=8, start_dayname='śro'),
+        properties={
+            'gamify_exp': RichText('7'),
+            'capture_time': RichText('[2023-11-08 śro 10:55]'),
+            'context': RichText('[[file:~/org/repeat.org::*\\[\\[Nobody can deny, that...\\]\\[Niemand kann leugnen, dass...\\]\\]][Niemand kann leugnen, dass...]]'),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:55'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=55)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=55)),
+            ],
+        ),
+        heading_tags=['ProjectManagement'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=8, start_dayname='śro', start_hour=10, start_minute=55)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Create a shopping list that can be exported each time.                              '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=9, start_dayname='czw'),
+        properties={
+            'gamify_exp': RichText('8'),
+            'capture_time': RichText('[2023-11-09 czw 11:26]'),
+            'context': RichText('[[file:~/org/stockpile.org::*Long term storage food][Long term storage food]]'),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:55'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=10, start_dayname='pią', start_hour=12, start_minute=53)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=10, start_dayname='pią', start_hour=12, start_minute=53)),
+            ],
+        ),
+        heading_tags=['OrgMode'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=10, start_dayname='pią', start_hour=12, start_minute=53)),
+          ],
+        body=[
+            BlankLine(),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Reorganize tickets on the CHAT project board.                        '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=9, start_dayname='czw'),
+        properties={
+            'gamify_exp': RichText('15'),
+            'capture_time': RichText('[2023-11-09 czw 12:45]'),
+            'context': RichText('[[file:~/org/general.org::*Tidy up the living room.][Tidy up the living room.]]'),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:55'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=9, start_dayname='czw', start_hour=12, start_minute=45)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=9, start_dayname='czw', start_hour=12, start_minute=45)),
+            ],
+        ),
+        heading_tags=['ProjectManagement', 'Jira'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=9, start_dayname='czw', start_hour=12, start_minute=45)),
+          ],
+        body=[
+            BlankLine(),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Prepare some stories for refinement.                                 '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=9, start_dayname='czw'),
+        properties={
+            'gamify_exp': RichText('5'),
+            'capture_time': RichText('[2023-11-09 czw 12:45]'),
+            'context': RichText('[[file:~/org/general.org::*Tidy up the living room.][Tidy up the living room.]]'),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:55'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=9, start_dayname='czw', start_hour=12, start_minute=45)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=9, start_dayname='czw', start_hour=12, start_minute=45)),
+            ],
+        ),
+        heading_tags=['ProjectManagement', 'Jira'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=9, start_dayname='czw', start_hour=12, start_minute=45)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText("Fix Alicia's vacuum robot.                                            "),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=10, start_dayname='pią'),
+        properties={
+            'gamify_exp': RichText('12'),
+            'capture_time': RichText('[2023-11-10 pią 11:55]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:55'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=10, start_dayname='pią', start_hour=11, start_minute=56)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=10, start_dayname='pią', start_hour=11, start_minute=56)),
+            ],
+        ),
+        heading_tags=['Electronics', 'Debugging'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=10, start_dayname='pią', start_hour=11, start_minute=56)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText("Fix Alicia's computer mouse.                                           "),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=11, start_dayname='sob'),
+        properties={
+            'gamify_exp': RichText('7'),
+            'capture_time': RichText('[2023-11-11 sob 17:47]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:55'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=11, start_dayname='sob', start_hour=17, start_minute=47)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=11, start_dayname='sob', start_hour=17, start_minute=47)),
+            ],
+        ),
+        heading_tags=['Debugging', 'Electronics'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=11, start_dayname='sob', start_hour=17, start_minute=47)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Design a bead for the clothesline.                                      '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=12, start_dayname='nie'),
+        properties={
+            'gamify_exp': RichText('13'),
+            'capture_time': RichText('[2023-11-12 nie 21:04]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:56'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=14, start_dayname='wto', start_hour=22, start_minute=13)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=14, start_dayname='wto', start_hour=22, start_minute=13)),
+            ],
+        ),
+        heading_tags=['3DModeling', 'OpenSCAD'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=14, start_dayname='wto', start_hour=22, start_minute=13)),
+          ],
+        body=[
+            BlankLine(),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText("Code review Matt's TF cleanup MR.                                     "),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=13, start_dayname='pon'),
+        properties={
+            'gamify_exp': RichText('15'),
+            'capture_time': RichText('[2023-11-13 pon 10:58]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:56'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=13, start_dayname='pon', start_hour=10, start_minute=59)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=13, start_dayname='pon', start_hour=10, start_minute=59)),
+            ],
+        ),
+        heading_tags=['Terraform', 'GitHub'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=13, start_dayname='pon', start_hour=10, start_minute=59)),
+          ],
+        body=[
+            BlankLine(),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText("Review and expand Jeffrey's Jira hygiene document.                   "),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=13, start_dayname='pon'),
+        properties={
+            'gamify_exp': RichText('10'),
+            'capture_time': RichText('[2023-11-13 pon 10:58]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:56'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=13, start_dayname='pon', start_hour=10, start_minute=59)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=13, start_dayname='pon', start_hour=10, start_minute=59)),
+            ],
+        ),
+        heading_tags=['ProjectManagement', 'Jira'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=13, start_dayname='pon', start_hour=10, start_minute=59)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Implement Redis support code in Ejabberd.                                      '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=14, start_dayname='wto'),
+        properties={
+            'gamify_exp': RichText('11'),
+            'capture_time': RichText('[2023-11-14 wto 19:26]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:56'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=14, start_dayname='wto', start_hour=19, start_minute=30)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=14, start_dayname='wto', start_hour=19, start_minute=30)),
+            ],
+        ),
+        heading_tags=['Erlang', 'Redis'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=14, start_dayname='wto', start_hour=19, start_minute=30)),
+          ],
+        body=[
+            BlankLine(),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Figure out what causes user input control lib to crash the Ejabberd process.                      '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=14, start_dayname='wto'),
+        properties={
+            'gamify_exp': RichText('14'),
+            'capture_time': RichText('[2023-11-14 wto 19:27]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:56'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=14, start_dayname='wto', start_hour=19, start_minute=30)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=14, start_dayname='wto', start_hour=19, start_minute=30)),
+            ],
+        ),
+        heading_tags=['Debugging', 'Erlang'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2023, start_month=11, start_day=14, start_dayname='wto', start_hour=19, start_minute=30)),
+          ],
+        body=[
+            BlankLine(),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Create a slide deck about our Kubernetes migration lessons.           '),
+        scheduled=Timestamp(is_active=True, start_year=2023, start_month=11, start_day=14, start_dayname='wto'),
+        properties={
+            'gamify_exp': RichText('10'),
+            'capture_time': RichText('[2023-11-14 wto 19:27]'),
+            'context': RichText(''),
+            'ARCHIVE_TIME': RichText('2023-11-26 nie 19:56'),
+            'ARCHIVE_FILE': RichText('~/org/refile.org'),
+            'ARCHIVE_CATEGORY': RichText('refile'),
+            'ARCHIVE_TODO': RichText('DONE'),
+          },
+        heading_tags=['Documenting', 'Entrepreneurship'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+    ],
+)

@@ -1,0 +1,37 @@
+Document(
+  filename='examples/property-drawer-basic.org',
+  category=RichText('property-drawer-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Heading with a property drawer'),
+        properties={
+            'my_prop': RichText('hello'),
+            'number': RichText('42'),
+            'empty_prop': RichText(''),
+          },
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Heading with property append form'),
+        properties={
+            'tags': RichText('alpha'),
+            'tags+': RichText('gamma'),
+          },
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Heading with planning then property drawer'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=6, start_day=1, start_dayname='Sun'),
+        properties={
+            'effort': RichText('2:00'),
+          },
+      ),
+    ],
+)

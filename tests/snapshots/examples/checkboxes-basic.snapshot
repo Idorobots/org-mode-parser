@@ -1,0 +1,71 @@
+Document(
+  filename='examples/checkboxes-basic.org',
+  category=RichText('checkboxes-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Checkbox States'),
+        body=[
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='-', checkbox=' ', first_line=RichText('unchecked item')),
+                  ListItem(bullet='-', checkbox='X', first_line=RichText('checked item')),
+                  ListItem(bullet='-', checkbox='-', first_line=RichText('partial item')),
+                ],
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Checkboxes in an ordered list'),
+        body=[
+            List(
+              items=[
+                  ListItem(bullet='.', checkbox='X', first_line=RichText('step one complete')),
+                  ListItem(bullet='.', checkbox='-', first_line=RichText('step two in progress')),
+                  ListItem(bullet='.', checkbox=' ', first_line=RichText('step three not started')),
+                ],
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Nested checkboxes'),
+        body=[
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(
+                    bullet='-',
+                    checkbox='X',
+                    first_line=RichText('outer done'),
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('inner done')),
+                              ListItem(bullet='-', checkbox='X', first_line=RichText('also done')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  ListItem(
+                    bullet='-',
+                    checkbox=' ',
+                    first_line=RichText('outer pending'),
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='-', checkbox=' ', first_line=RichText('inner pending')),
+                            ],
+                        ),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

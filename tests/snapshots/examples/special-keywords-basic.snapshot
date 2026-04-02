@@ -1,0 +1,34 @@
+Document(
+  filename='examples/special-keywords-basic.org',
+  title=RichText('Document Title'),
+  author=RichText('Qrux Bimble'),
+  category=RichText('test'),
+  todo=RichText('TODO | DONE'),
+  keywords=[
+      Keyword(key='DATE', value=RichText('<2025-01-06 Mon>')),
+      Keyword(key='LANGUAGE', value=RichText('en')),
+      Keyword(key='FILETAGS', value=RichText(':foo:bar:')),
+    ],
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('First heading'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Body text.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Second heading'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Body text.\n')),
+          ],
+      ),
+    ],
+)

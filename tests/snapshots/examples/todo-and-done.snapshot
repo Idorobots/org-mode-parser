@@ -1,0 +1,51 @@
+Document(
+  filename='examples/todo-and-done.org',
+  category=RichText('todo-and-done'),
+  todo=RichText('TODO IN-PROGRESS WAITING | DONE CANCELLED'),
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Task not yet started'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='IN-PROGRESS',
+        title=RichText('Task currently being worked on'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='WAITING',
+        title=RichText('Task blocked on external dependency'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task completed successfully'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='CANCELLED',
+        title=RichText('Task abandoned'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(level=1, title=RichText('Heading with no keyword')),
+    ],
+)

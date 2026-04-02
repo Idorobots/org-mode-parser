@@ -1,0 +1,22 @@
+Document(
+  filename='examples/footnote-basic.org',
+  category=RichText('footnote-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Footnotes'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('A sentence with a standard reference.[fn:1]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('An inline footnote.[fn:note:This definition is inline with its reference.]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('An anonymous footnote.[fn::No label on this one.]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('A second standard reference.[fn:1]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('[fn:1] The definition for footnote one.\n')),
+          ],
+      ),
+    ],
+)

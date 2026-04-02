@@ -1,0 +1,52 @@
+Document(
+  filename='examples/unordered-list-basic.org',
+  category=RichText('unordered-list-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Unordered Lists'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Hyphen bullets:\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('first item')),
+                  ListItem(bullet='-', first_line=RichText('second item')),
+                  ListItem(bullet='-', first_line=RichText('third item')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('Plus bullets:\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='+', first_line=RichText('alpha')),
+                  ListItem(bullet='+', first_line=RichText('beta')),
+                  ListItem(bullet='+', first_line=RichText('gamma')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('Nested list:\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(
+                    bullet='-',
+                    first_line=RichText('outer one'),
+                    body=[
+                        List(
+                          items=[
+                              ListItem(bullet='-', first_line=RichText('inner a')),
+                              ListItem(bullet='-', first_line=RichText('inner b')),
+                            ],
+                        ),
+                      ],
+                  ),
+                  ListItem(bullet='-', first_line=RichText('outer two')),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

@@ -1,0 +1,45 @@
+Document(
+  filename='examples/planning-basic.org',
+  category=RichText('planning-basic'),
+  children=[
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Scheduled only'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=1, start_dayname='Sat'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Deadline only'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=4, start_day=30, start_dayname='Wed'),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Closed only'),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=17, start_minute=0),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('All three planning keywords'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=1, start_dayname='Wed'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=10, start_dayname='Fri'),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=8, start_dayname='Wed', start_hour=14, start_minute=23),
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(level=1, todo='TODO', title=RichText('Scheduled with time'), scheduled=Timestamp(is_active=True, start_year=2025, start_month=2, start_day=14, start_dayname='Fri', start_hour=9, start_minute=0)),
+    ],
+)

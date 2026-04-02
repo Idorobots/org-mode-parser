@@ -514,5 +514,10 @@ Describe the =DirtyList= wrapper with some usage examples.
 Generating the docs/index.md file during docs page build isn't ideal. Instead, let's check in the docs page pipeline if the file is up to date with README.org - for instance, by running the pandoc export and checking for any git diffs, or by any other means.
 If the docs/index.md file is outdated, the pipeline should fail. To prevent merging PRs with broken docs index, please add another check to the CI pipeline that checks the documentation is up to date.
 
-** Automated tests based on the example files.
+** DONE Automated tests based on the example files.
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 23:10]
+:END:
+There are example files in the repository unter examples/ directory. I'd like these to be used for snapshot testing the parser.
+
 ** Library release

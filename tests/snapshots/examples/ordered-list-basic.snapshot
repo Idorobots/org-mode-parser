@@ -1,0 +1,51 @@
+Document(
+  filename='examples/ordered-list-basic.org',
+  category=RichText('ordered-list-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Ordered Lists'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Period-terminated digit counter:\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='.', first_line=RichText('first')),
+                  ListItem(bullet='.', first_line=RichText('second')),
+                  ListItem(bullet='.', first_line=RichText('third')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('Parenthesis-terminated digit counter:\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet=')', first_line=RichText('one')),
+                  ListItem(bullet=')', first_line=RichText('two')),
+                  ListItem(bullet=')', first_line=RichText('three')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('Letter counter:\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='.', first_line=RichText('alpha')),
+                  ListItem(bullet='.', first_line=RichText('beta')),
+                  ListItem(bullet='.', first_line=RichText('gamma')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('Counter-set (reset to 5):\n')),
+            BlankLine(),
+            List(
+              items=[
+                  ListItem(bullet='.', counter_set='5', first_line=RichText('fifth')),
+                  ListItem(bullet='.', first_line=RichText('sixth')),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

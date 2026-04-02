@@ -1,0 +1,226 @@
+Document(
+  filename='examples/comprehensive_filter_test.org',
+  category=RichText('comprehensive_filter_test'),
+  children=[
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with everything '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=15, start_dayname='Wed', start_hour=10, start_minute=0),
+        properties={
+            'gamify_exp': RichText('15'),
+            'custom_prop': RichText('value1'),
+            'another_prop': RichText('test=with=equals'),
+          },
+        heading_tags=['tag1', 'tag2'],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Task body text here.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Incomplete task '),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=20, start_dayname='Mon'),
+        properties={
+            'gamify_exp': RichText('5'),
+            'custom_prop': RichText('value2'),
+          },
+        heading_tags=['tag3'],
+        body=[
+            Paragraph(body=RichText('This task is not done yet.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Simple task no properties '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=2, start_day=1, start_dayname='Sat', start_hour=14, start_minute=0),
+        heading_tags=['tag1'],
+        body=[
+            Paragraph(body=RichText('Just a simple completed task.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with many repeats '),
+        properties={
+            'gamify_exp': RichText('25'),
+            'custom_prop': RichText('value1'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=10, start_dayname='Fri', start_hour=9, start_minute=0)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=12, start_dayname='Sun', start_hour=11, start_minute=0)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=14, start_dayname='Tue', start_hour=15, start_minute=0)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=16, start_dayname='Thu', start_hour=13, start_minute=0)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=18, start_dayname='Sat', start_hour=10, start_minute=0)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=10, start_dayname='Fri', start_hour=9, start_minute=0)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=12, start_dayname='Sun', start_hour=11, start_minute=0)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=14, start_dayname='Tue', start_hour=15, start_minute=0)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=16, start_dayname='Thu', start_hour=13, start_minute=0)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=18, start_dayname='Sat', start_hour=10, start_minute=0)),
+            ],
+        ),
+        heading_tags=['tag2', 'repeattag'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=10, start_dayname='Fri', start_hour=9, start_minute=0)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=12, start_dayname='Sun', start_hour=11, start_minute=0)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=14, start_dayname='Tue', start_hour=15, start_minute=0)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=16, start_dayname='Thu', start_hour=13, start_minute=0)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=18, start_dayname='Sat', start_hour=10, start_minute=0)),
+          ],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Repeated task with 5 done states.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Hard task '),
+        properties={
+            'gamify_exp': RichText('30'),
+            'custom_prop': RichText('value1'),
+            'status': RichText('important'),
+          },
+        heading_tags=['tag4'],
+        body=[
+            Paragraph(body=RichText('CLOSED: [2024-12-20 Fri 16:00]\n')),
+            BlankLine(),
+            Paragraph(body=RichText('This is a hard task from last year.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task outside date range '),
+        closed=Timestamp(is_active=False, start_year=2026, start_month=6, start_day=1, start_dayname='Mon', start_hour=12, start_minute=0),
+        properties={
+            'gamify_exp': RichText('12'),
+            'custom_prop': RichText('value3'),
+          },
+        heading_tags=['tag5'],
+        body=[
+            Paragraph(body=RichText('Task from the future.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with low exp '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=25, start_dayname='Sat', start_hour=8, start_minute=0),
+        properties={
+            'gamify_exp': RichText('3'),
+          },
+        heading_tags=['lowexp'],
+        body=[
+            Paragraph(body=RichText('Simple low exp task.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Missing gamify_exp '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=2, start_day=10, start_dayname='Mon', start_hour=11, start_minute=0),
+        properties={
+            'other_prop': RichText('somevalue'),
+          },
+        heading_tags=['defaulttag'],
+        body=[
+            Paragraph(body=RichText('This task has no gamify_exp, should default to 10.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='TODO',
+        title=RichText('Another incomplete '),
+        properties={
+            'gamify_exp': RichText('18'),
+            'custom_prop': RichText('value2'),
+          },
+        heading_tags=['tag3', 'tag6'],
+        body=[
+            Paragraph(body=RichText('Another TODO task.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Case sensitive tag test '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=28, start_dayname='Tue', start_hour=14, start_minute=30),
+        properties={
+            'gamify_exp': RichText('11'),
+            'CaseProp': RichText('CaseValue'),
+          },
+        heading_tags=['CaseSensitive'],
+        body=[
+            Paragraph(body=RichText('Testing case sensitivity.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Property with equals '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=2, start_day=5, start_dayname='Wed', start_hour=9, start_minute=15),
+        properties={
+            'gamify_exp': RichText('14'),
+            'equation': RichText('E=mc^2'),
+          },
+        heading_tags=['tag7'],
+        body=[
+            Paragraph(body=RichText('Property value contains equals sign.\n')),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task two repeats '),
+        properties={
+            'gamify_exp': RichText('20'),
+          },
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=10, start_minute=0)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=22, start_dayname='Wed', start_hour=15, start_minute=0)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=10, start_minute=0)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=22, start_dayname='Wed', start_hour=15, start_minute=0)),
+            ],
+        ),
+        heading_tags=['tag8'],
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=10, start_minute=0)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=22, start_dayname='Wed', start_hour=15, start_minute=0)),
+          ],
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Task with exactly 2 repeats.\n')),
+          ],
+      ),
+    ],
+)

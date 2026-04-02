@@ -1,0 +1,27 @@
+Document(
+  filename='examples/src-block-basic.org',
+  category=RichText('src-block-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Source Blocks'),
+        body=[
+            BlankLine(),
+            SourceBlock(language='python', body='print("hello")\n'),
+            BlankLine(),
+            SourceBlock(language='python', body='def add(a, b):\n    return a + b\n'),
+            BlankLine(),
+            SourceBlock(language='bash', body='echo "hello world"\n'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Source block with line numbers'),
+        body=[
+            BlankLine(),
+            SourceBlock(language='python', switches='-n', body='x = 1\ny = 2\nz = x + y\n'),
+          ],
+      ),
+    ],
+)

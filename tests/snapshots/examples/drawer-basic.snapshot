@@ -1,0 +1,40 @@
+Document(
+  filename='examples/drawer-basic.org',
+  category=RichText('drawer-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Custom Drawers'),
+        body=[
+            BlankLine(),
+            Drawer(
+              name='MYDRAWER',
+              body=[
+                  Paragraph(body=RichText('Some content inside a custom drawer.\nSecond line of drawer content.\n')),
+                ],
+            ),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Multiple Drawers on One Heading'),
+        body=[
+            BlankLine(),
+            Drawer(
+              name='NOTE',
+              body=[
+                  Paragraph(body=RichText('A note drawer.\n')),
+                ],
+            ),
+            BlankLine(),
+            Drawer(
+              name='REVIEW',
+              body=[
+                  Paragraph(body=RichText('A review drawer.\n')),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

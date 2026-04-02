@@ -1,0 +1,52 @@
+Document(
+  filename='examples/nested-headings-basic.org',
+  category=RichText('nested-headings-basic'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('First top-level heading'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Section content under the first heading.\n')),
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('First sub-heading'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Content of the first sub-heading.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Second sub-heading'),
+              body=[
+                  Paragraph(body=RichText('Content of the second sub-heading.\n')),
+                  BlankLine(),
+                ],
+              children=[
+                  Heading(
+                    level=3,
+                    title=RichText('Deeply nested heading'),
+                    body=[
+                        Paragraph(body=RichText('Content under a level-three heading.\n')),
+                        BlankLine(),
+                      ],
+                  ),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Second top-level heading'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('Section content under the second heading.\n')),
+          ],
+      ),
+    ],
+)

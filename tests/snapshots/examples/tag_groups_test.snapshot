@@ -1,0 +1,77 @@
+Document(
+  filename='examples/tag_groups_test.org',
+  category=RichText('tag_groups_test'),
+  children=[
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with python and programming                    '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=1, start_dayname='Wed', start_hour=10, start_minute=0),
+        heading_tags=['python', 'programming'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with python and coding                         '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=11, start_minute=0),
+        heading_tags=['python', 'coding'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with programming and coding                    '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=12, start_minute=0),
+        heading_tags=['programming', 'coding'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with java and programming                      '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=4, start_dayname='Sat', start_hour=13, start_minute=0),
+        heading_tags=['java', 'programming'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with java and coding                           '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=5, start_dayname='Sun', start_hour=14, start_minute=0),
+        heading_tags=['java', 'coding'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with rust and systems                          '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=15, start_minute=0),
+        heading_tags=['rust', 'systems'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        todo='DONE',
+        title=RichText('Task with cpp and systems                           '),
+        closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=7, start_dayname='Tue', start_hour=16, start_minute=0),
+        heading_tags=['cpp', 'systems'],
+        body=[
+            BlankLine(),
+          ],
+      ),
+      Heading(level=1, todo='DONE', title=RichText('Task with excluded tag                              '), closed=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=8, start_dayname='Wed', start_hour=17, start_minute=0), heading_tags=['test', 'excluded']),
+    ],
+)

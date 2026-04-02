@@ -1,0 +1,371 @@
+Document(
+  filename='examples/repeats.org',
+  category=RichText('repeats'),
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Easy case'),
+        logbook=Logbook(
+          body=[
+              List(
+                items=[
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=5, start_dayname='Fri', start_hour=9, start_minute=15)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=4, start_dayname='Thu', start_hour=9, start_minute=10)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=3, start_dayname='Wed', start_hour=9, start_minute=5)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=2, start_dayname='Tue', start_hour=9, start_minute=0)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=1, start_dayname='Mon', start_hour=9, start_minute=0)),
+                  ],
+              ),
+            ],
+          repeats=[
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=5, start_dayname='Fri', start_hour=9, start_minute=15)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=4, start_dayname='Thu', start_hour=9, start_minute=10)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=3, start_dayname='Wed', start_hour=9, start_minute=5)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=2, start_dayname='Tue', start_hour=9, start_minute=0)),
+              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=1, start_dayname='Mon', start_hour=9, start_minute=0)),
+            ],
+        ),
+        repeats=[
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=5, start_dayname='Fri', start_hour=9, start_minute=15)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=4, start_dayname='Thu', start_hour=9, start_minute=10)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=3, start_dayname='Wed', start_hour=9, start_minute=5)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=2, start_dayname='Tue', start_hour=9, start_minute=0)),
+            Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=1, start_day=1, start_dayname='Mon', start_hour=9, start_minute=0)),
+          ],
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=4,
+              title=RichText('Indented'),
+              repeats=[
+                  Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=41)),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=33)),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=26, start_dayname='sob', start_hour=22, start_minute=18)),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=29, start_dayname='nie', start_hour=20, start_minute=54)),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=26, start_dayname='czw', start_hour=22, start_minute=39)),
+                  Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54)),
+                  Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54)),
+                ],
+              body=[
+                  Indent(
+                    body=[
+                        Logbook(
+                          body=[
+                              List(
+                                items=[
+                                    Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=41)),
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=33)),
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=26, start_dayname='sob', start_hour=22, start_minute=18)),
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=29, start_dayname='nie', start_hour=20, start_minute=54)),
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=26, start_dayname='czw', start_hour=22, start_minute=39)),
+                                    Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54)),
+                                    Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54)),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=33)),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=26, start_dayname='sob', start_hour=22, start_minute=18)),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=29, start_dayname='nie', start_hour=20, start_minute=54)),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=26, start_dayname='czw', start_hour=22, start_minute=39)),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54)),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54)),
+                                  ],
+                              ),
+                            ],
+                          repeats=[
+                              Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=41)),
+                              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=33)),
+                              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=26, start_dayname='sob', start_hour=22, start_minute=18)),
+                              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=29, start_dayname='nie', start_hour=20, start_minute=54)),
+                              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=26, start_dayname='czw', start_hour=22, start_minute=39)),
+                              Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54)),
+                              Repeat(after='CANCELLED', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54)),
+                            ],
+                        ),
+                      ],
+                    indent='    ',
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=4,
+              title=RichText('Notes'),
+              logbook=Logbook(
+                body=[
+                    List(
+                      items=[
+                          Repeat(
+                            after='CANCELLED',
+                            before='TODO',
+                            timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=41),
+                            body=[
+                                Paragraph(body=RichText('No need to.\n')),
+                              ],
+                          ),
+                          Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=33)),
+                          Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=26, start_dayname='sob', start_hour=22, start_minute=18)),
+                          Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=29, start_dayname='nie', start_hour=20, start_minute=54)),
+                          Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=26, start_dayname='czw', start_hour=22, start_minute=39)),
+                          Repeat(
+                            after='CANCELLED',
+                            before='TODO',
+                            timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                            body=[
+                                Paragraph(body=RichText('Missed it.\n')),
+                              ],
+                          ),
+                          Repeat(
+                            after='CANCELLED',
+                            before='TODO',
+                            timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                            body=[
+                                Paragraph(body=RichText('Note\n')),
+                              ],
+                          ),
+                        ],
+                    ),
+                  ],
+                repeats=[
+                    Repeat(
+                      after='CANCELLED',
+                      before='TODO',
+                      timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=41),
+                      body=[
+                          Paragraph(body=RichText('No need to.\n')),
+                        ],
+                    ),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=33)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=26, start_dayname='sob', start_hour=22, start_minute=18)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=29, start_dayname='nie', start_hour=20, start_minute=54)),
+                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=26, start_dayname='czw', start_hour=22, start_minute=39)),
+                    Repeat(
+                      after='CANCELLED',
+                      before='TODO',
+                      timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                      body=[
+                          Paragraph(body=RichText('Missed it.\n')),
+                        ],
+                    ),
+                    Repeat(
+                      after='CANCELLED',
+                      before='TODO',
+                      timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                      body=[
+                          Paragraph(body=RichText('Note\n')),
+                        ],
+                    ),
+                  ],
+              ),
+              repeats=[
+                  Repeat(
+                    after='CANCELLED',
+                    before='TODO',
+                    timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=41),
+                    body=[
+                        Paragraph(body=RichText('No need to.\n')),
+                      ],
+                  ),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=33)),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=26, start_dayname='sob', start_hour=22, start_minute=18)),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=29, start_dayname='nie', start_hour=20, start_minute=54)),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=26, start_dayname='czw', start_hour=22, start_minute=39)),
+                  Repeat(
+                    after='CANCELLED',
+                    before='TODO',
+                    timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                    body=[
+                        Paragraph(body=RichText('Missed it.\n')),
+                      ],
+                  ),
+                  Repeat(
+                    after='CANCELLED',
+                    before='TODO',
+                    timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                    body=[
+                        Paragraph(body=RichText('Note\n')),
+                      ],
+                  ),
+                ],
+              body=[
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=4,
+              title=RichText('Notes'),
+              repeats=[
+                  Repeat(
+                    after='CANCELLED',
+                    before='TODO',
+                    timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=41),
+                    body=[
+                        Paragraph(body=RichText('No need to.\n')),
+                      ],
+                  ),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=33)),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=26, start_dayname='sob', start_hour=22, start_minute=18)),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=29, start_dayname='nie', start_hour=20, start_minute=54)),
+                  Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=26, start_dayname='czw', start_hour=22, start_minute=39)),
+                  Repeat(
+                    after='CANCELLED',
+                    before='TODO',
+                    timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                    body=[
+                        Paragraph(body=RichText('Missed it.\n')),
+                      ],
+                  ),
+                  Repeat(
+                    after='CANCELLED',
+                    before='TODO',
+                    timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                    body=[
+                        Paragraph(body=RichText('Note\n')),
+                      ],
+                  ),
+                ],
+              body=[
+                  Indent(
+                    body=[
+                        Logbook(
+                          body=[
+                              List(
+                                items=[
+                                    Repeat(
+                                      after='CANCELLED',
+                                      before='TODO',
+                                      timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=41),
+                                      body=[
+                                          Paragraph(body=RichText('No need to.\n')),
+                                        ],
+                                    ),
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=33)),
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=26, start_dayname='sob', start_hour=22, start_minute=18)),
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=29, start_dayname='nie', start_hour=20, start_minute=54)),
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=26, start_dayname='czw', start_hour=22, start_minute=39)),
+                                    Repeat(
+                                      after='CANCELLED',
+                                      before='TODO',
+                                      timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                                      body=[
+                                          Paragraph(body=RichText('Missed it.\n')),
+                                        ],
+                                    ),
+                                    Repeat(
+                                      after='CANCELLED',
+                                      before='TODO',
+                                      timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                                      body=[
+                                          Paragraph(body=RichText('Note\n')),
+                                        ],
+                                    ),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=33)),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=26, start_dayname='sob', start_hour=22, start_minute=18)),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=29, start_dayname='nie', start_hour=20, start_minute=54)),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=26, start_dayname='czw', start_hour=22, start_minute=39)),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(
+                                      after='CANCELLED',
+                                      before='TODO',
+                                      timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                                      body=[
+                                          Paragraph(body=RichText('Missed it.\n')),
+                                        ],
+                                    ),
+                                  ],
+                              ),
+                              List(
+                                items=[
+                                    Repeat(
+                                      after='CANCELLED',
+                                      before='TODO',
+                                      timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                                      body=[
+                                          Paragraph(body=RichText('Note\n')),
+                                        ],
+                                    ),
+                                  ],
+                              ),
+                            ],
+                          repeats=[
+                              Repeat(
+                                after='CANCELLED',
+                                before='TODO',
+                                timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=41),
+                                body=[
+                                    Paragraph(body=RichText('No need to.\n')),
+                                  ],
+                              ),
+                              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=28, start_dayname='pon', start_hour=18, start_minute=33)),
+                              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=7, start_day=26, start_dayname='sob', start_hour=22, start_minute=18)),
+                              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=29, start_dayname='nie', start_hour=20, start_minute=54)),
+                              Repeat(after='DONE', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=26, start_dayname='czw', start_hour=22, start_minute=39)),
+                              Repeat(
+                                after='CANCELLED',
+                                before='TODO',
+                                timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                                body=[
+                                    Paragraph(body=RichText('Missed it.\n')),
+                                  ],
+                              ),
+                              Repeat(
+                                after='CANCELLED',
+                                before='TODO',
+                                timestamp=Timestamp(is_active=False, start_year=2025, start_month=6, start_day=20, start_dayname='pią', start_hour=19, start_minute=54),
+                                body=[
+                                    Paragraph(body=RichText('Note\n')),
+                                  ],
+                              ),
+                            ],
+                        ),
+                      ],
+                    indent='    ',
+                  ),
+                ],
+            ),
+          ],
+      ),
+    ],
+)

@@ -20,8 +20,8 @@ Document(
         todo='TODO',
         priority='A',
         title=RichText('Heading with Priority and Tags                         '),
-        scheduled=Timestamp(raw='<2026-04-01 Wed>', is_active=True, start_year=2026, start_month=4, start_day=1, start_dayname='Wed', start_hour=None, start_minute=None, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
-        deadline=Timestamp(raw='<2026-04-15 Wed>', is_active=True, start_year=2026, start_month=4, start_day=15, start_dayname='Wed', start_hour=None, start_minute=None, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
+        scheduled=Timestamp(is_active=True, start_year=2026, start_month=4, start_day=1, start_dayname='Wed'),
+        deadline=Timestamp(is_active=True, start_year=2026, start_month=4, start_day=15, start_dayname='Wed'),
         heading_tags=['foo', 'bar'],
         body=[
             Indent(
@@ -77,20 +77,20 @@ Document(
               todo='DONE',
               title=RichText('[1/3] Sub-heading with Completion Cookie                   '),
               counter=CompletionCounter(value='1/3'),
-              closed=Timestamp(raw='[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
+              closed=Timestamp(is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0),
               heading_tags=['child'],
               clock_entries=[
-                  Clock(timestamp=Timestamp(raw='[2026-03-20 Fri 09:00]--[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2026, end_month=3, end_day=20, end_dayname='Fri', end_hour=10, end_minute=0), duration='1:00'),
+                  Clock(timestamp=Timestamp(is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2026, end_month=3, end_day=20, end_dayname='Fri', end_hour=10, end_minute=0), duration='1:00'),
                 ],
               body=[
                   Indent(
                     body=[
                         Logbook(
                           body=[
-                              Clock(timestamp=Timestamp(raw='[2026-03-20 Fri 09:00]--[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2026, end_month=3, end_day=20, end_dayname='Fri', end_hour=10, end_minute=0), duration='1:00'),
+                              Clock(timestamp=Timestamp(is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2026, end_month=3, end_day=20, end_dayname='Fri', end_hour=10, end_minute=0), duration='1:00'),
                             ],
                           clock_entries=[
-                              Clock(timestamp=Timestamp(raw='[2026-03-20 Fri 09:00]--[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2026, end_month=3, end_day=20, end_dayname='Fri', end_hour=10, end_minute=0), duration='1:00'),
+                              Clock(timestamp=Timestamp(is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=9, start_minute=0, end_year=2026, end_month=3, end_day=20, end_dayname='Fri', end_hour=10, end_minute=0), duration='1:00'),
                             ],
                         ),
                       ],
@@ -381,11 +381,11 @@ Document(
         level=1,
         todo='WAIT',
         title=RichText('Misc elements'),
-        repeated_tasks=[
+        repeats=[
             Repeat(
               after='WAIT',
               before='TODO',
-              timestamp=Timestamp(raw='[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
+              timestamp=Timestamp(is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0),
               body=[
                   Paragraph(body=RichText('Note\n')),
                 ],
@@ -401,7 +401,7 @@ Document(
                               Repeat(
                                 after='WAIT',
                                 before='TODO',
-                                timestamp=Timestamp(raw='[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
+                                timestamp=Timestamp(is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0),
                                 body=[
                                     Paragraph(body=RichText('Note\n')),
                                   ],
@@ -413,7 +413,7 @@ Document(
                         Repeat(
                           after='WAIT',
                           before='TODO',
-                          timestamp=Timestamp(raw='[2026-03-20 Fri 10:00]', is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0, end_year=None, end_month=None, end_day=None, end_dayname=None, end_hour=None, end_minute=None),
+                          timestamp=Timestamp(is_active=False, start_year=2026, start_month=3, start_day=20, start_dayname='Fri', start_hour=10, start_minute=0),
                           body=[
                               Paragraph(body=RichText('Note\n')),
                             ],

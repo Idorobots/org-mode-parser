@@ -1,0 +1,270 @@
+Document(
+  filename='examples/links-and-targets.org',
+  title=RichText('Links and Targets — A Wiki of Linked Articles'),
+  author=RichText('Flemwick Clobbe'),
+  category=RichText('links-and-targets'),
+  body=[
+      BlankLine(),
+    ],
+  children=[
+      Heading(
+        level=1,
+        title=RichText('Targets and Radio Targets'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('Defining Targets'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('A target is an invisible anchor for cross-document links.\nThis section contains several targets:\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('<<introduction>> The introduction begins here.\n<<parsing-overview>> This is where the parsing overview anchor sits.\n<<api-design>> The API design notes anchor.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Text continues after the inline target — the target markup is not rendered,\njust the surrounding text.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Multiple targets can appear in a single paragraph: <<target-alpha>>\nsome text, then <<target-beta>> more text, then <<target-gamma>> final text.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Defining Radio Targets'),
+              body=[
+                  Paragraph(body=RichText('Radio targets automatically turn every matching text occurrence into a link.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('The <<<Org Mode parser>>> is the subject of this repository.\nThe <<<zeroth section>>> is everything before the first heading.\n<<<property drawers>>> hold node-level metadata.\n<<<affiliated keywords>>> annotate the element immediately following them.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Now in ordinary text below, whenever these phrases appear they become links:\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('The Org Mode parser processes the zeroth section first, then descends into\nheadings. property drawers are attached to headings or the zeroth section.\naffiliated keywords like =#+CAPTION:= are not standalone elements.\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Explicit Links to Targets'),
+              body=[
+                  Paragraph(body=RichText('Linking to the targets defined above:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('[[introduction]] — links to the =<<introduction>>= target.')),
+                        ListItem(bullet='-', first_line=RichText('[[parsing-overview]] — links to the =<<parsing-overview>>= target.')),
+                        ListItem(bullet='-', first_line=RichText('[[api-design]] — links to the =<<api-design>>= target.')),
+                        ListItem(bullet='-', first_line=RichText('[[target-alpha]] and [[target-beta]] and [[target-gamma]].')),
+                      ],
+                  ),
+                  BlankLine(),
+                  Paragraph(body=RichText('With descriptions:\n')),
+                  BlankLine(),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('[[introduction][Jump to the introduction]]')),
+                        ListItem(bullet='-', first_line=RichText('[[parsing-overview][Skip to parsing overview]]')),
+                      ],
+                  ),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Plain Links'),
+        body=[
+            Paragraph(body=RichText('Plain links are recognised automatically when a known link type prefix appears.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('HTTPS links:\n')),
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('Visit https://orgmode.org for the official documentation.')),
+                  ListItem(bullet='-', first_line=RichText('The tree-sitter project is at https://tree-sitter.github.io/tree-sitter/.')),
+                  ListItem(bullet='-', first_line=RichText('See also https://www.gnu.org/software/emacs/.')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('HTTP (still valid):\n')),
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('Legacy documentation at http://orgmode.org/worg/.')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('FTP:\n')),
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('Archive at ftp://ftp.gnu.org/gnu/emacs/.')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('Mailto:\n')),
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('Contact mailto:maintainer@example.org with questions.')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('Plain links with path components:\n')),
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('Specific page: https://orgmode.org/worg/org-syntax.html')),
+                  ListItem(bullet='-', first_line=RichText('With query string: https://example.com/search?q=org+mode&lang=en')),
+                  ListItem(bullet='-', first_line=RichText('Path ending with slash: https://example.com/docs/')),
+                  ListItem(bullet='-', first_line=RichText('Path with parenthesised component: https://en.wikipedia.org/wiki/Org_(software)')),
+                ],
+            ),
+            BlankLine(),
+            Paragraph(body=RichText('Note: plain links must end at a word boundary or =/ = or a parenthesised segment.\nThe trailing punctuation (period, comma) is NOT part of the link:\n')),
+            List(
+              items=[
+                  ListItem(bullet='-', first_line=RichText('See https://orgmode.org. (The period is POST, not in the link.)')),
+                  ListItem(bullet='-', first_line=RichText('"Visit https://orgmode.org!" (Exclamation is POST.)')),
+                ],
+            ),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Angle Links'),
+        body=[
+            Paragraph(body=RichText('Angle links allow spaces in paths and other characters not permitted in plain links.\n')),
+            BlankLine(),
+            Paragraph(body=RichText('<https://example.com/path with spaces/document.html>\n<https://example.com/search?q=org mode parser>\n<mailto:user+tag@example.org>\n<file:/home/user/documents/my notes.org>\n')),
+            BlankLine(),
+            Paragraph(body=RichText('Angle links with line continuations (newlines inside are ignored):\n')),
+            BlankLine(),
+            Paragraph(body=RichText('<https://very-long-domain-name.example.com/with/a/very/long/\npath/that/spans/multiple/lines/for/testing/purposes>\n')),
+            BlankLine(),
+            HorizontalRule(rule='-----'),
+            BlankLine(),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('Regular Links — All Path Types'),
+        body=[
+            BlankLine(),
+          ],
+        children=[
+            Heading(
+              level=2,
+              title=RichText('File links'),
+              body=[
+                  BlankLine(),
+                  Paragraph(body=RichText('Local file, relative path:\n[[file:simple.org]]\n[[file:../docs/research/syntax.md]]\n[[file:../docs/research/syntax.md][Target syntax reference]]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('Local file, absolute path:\n[[file:/etc/hosts]]\n[[file:/usr/share/doc/org-mode/README]]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('File with search string (heading):\n[[file:blocks.org::*Lesser Blocks]]\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('HTTPS and other URI links'),
+              body=[
+                  Paragraph(body=RichText('[[https://orgmode.org]]\n[[https://orgmode.org][The Org Mode homepage]]\n[[https://tree-sitter.github.io/tree-sitter/][Tree-sitter documentation]]\n[[mailto:contact@example.org][Send an email]]\n[[ftp://ftp.gnu.org/gnu/][GNU FTP archive]]\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('ID links'),
+              body=[
+                  Paragraph(body=RichText('Links to headings by their unique =ID= property (UUID-style):\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[[id:a3f8b2c1-4d5e-6f7a-8b9c-0d1e2f3a4b5c]]\n[[id:a3f8b2c1-4d5e-6f7a-8b9c-0d1e2f3a4b5c][The heading with this ID]]\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Custom-ID links'),
+              body=[
+                  Paragraph(body=RichText('Links to headings by their =CUSTOM_ID= property:\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[[#introduction-to-parsing][Introduction to Parsing]]\n[[#api-reference]]\n[[#configuration-options][Configuration options section]]\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Code reference links'),
+              body=[
+                  Paragraph(body=RichText('Links to labelled lines inside source blocks (coderef type):\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('In the source block below, line 4 is labelled:\n')),
+                  BlankLine(),
+                  SourceBlock(language='c', switches='-n -r', body='#include <stdio.h>\n\nint main(void) {\n    printf("Hello, world!\\n"); /* (ref:main-print) */\n    return 0;                  /* (ref:main-return) */\n}\n'),
+                  BlankLine(),
+                  Paragraph(body=RichText('Now we can reference those lines:\n')),
+                  List(
+                    items=[
+                        ListItem(bullet='-', first_line=RichText('The print statement is at [[(main-print)]].')),
+                        ListItem(bullet='-', first_line=RichText('The return statement is at [[(main-return)]].')),
+                        ListItem(bullet='-', first_line=RichText('With description: see [[(main-print)][the printf call]].')),
+                      ],
+                  ),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Fuzzy links (heading text, target names)'),
+              body=[
+                  Paragraph(body=RichText('Fuzzy links resolve to: a target, a radio target, or a heading title — in that order.\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[[introduction]] — matches the =<<introduction>>= target defined earlier.\n[[Targets and Radio Targets]] — matches a heading title.\n[[Plain Links]] — matches the heading "Plain Links".\n[[Links and Targets — A Wiki of Linked Articles]] — matches the top-level heading (= document title heading if present).\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('A fuzzy link with description:\n[[Plain Links][Jump to the plain links section]]\n[[Targets and Radio Targets][Back to targets]]\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Links with complex descriptions'),
+              body=[
+                  Paragraph(body=RichText('Descriptions can contain markup, export snippets, and other inline objects:\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[[https://orgmode.org][*Official* /Org Mode/ homepage]]\n[[https://orgmode.org][The =orgmode.org= site — @@html:<strong>@@recommended@@html:</strong>@@]]\n[[https://tree-sitter.github.io][~tree-sitter~ — a _fast_ incremental parser library]]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('A link whose description contains another link (plain link only):\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[[https://orgmode.org][See also https://orgmode.org/worg/ for community docs]]\n')),
+                  BlankLine(),
+                ],
+            ),
+            Heading(
+              level=2,
+              title=RichText('Whitespace normalisation in paths'),
+              body=[
+                  Paragraph(body=RichText('Regular link paths normalise internal whitespace — these two are equivalent:\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[[file:path/to/my\n    document.org][Same path, broken across lines]]\n')),
+                  BlankLine(),
+                  Paragraph(body=RichText('[[file:path/to/my document.org][Same path on one line]]\n')),
+                  BlankLine(),
+                  HorizontalRule(rule='-----'),
+                  BlankLine(),
+                ],
+            ),
+          ],
+      ),
+      Heading(
+        level=1,
+        title=RichText('All Link Types in One Section'),
+        body=[
+            BlankLine(),
+            Paragraph(body=RichText('This paragraph exercises multiple link types together.\nVisit the project at [[https://github.com/example/org-parser][GitHub]] or\nread the [[file:../docs/research/target-syntax.md][target syntax document]].\nReport issues to mailto:bugs@example.org or via the\n<https://github.com/example/org-parser/issues> tracker.\nThe [[introduction]] anchor earlier in this document is also reachable.\nFor the Org Mode parser specifically, see\nhttps://orgmode.org/worg/org-syntax.html (the canonical specification).\n')),
+          ],
+      ),
+    ],
+)
