@@ -43,8 +43,8 @@ jobs:
       - name: Install Python dependencies
         run: poetry install
 
-      - name: Generate docs index from README
-        run: pandoc README.org --from=org --to=gfm --output=docs/index.md
+      - name: Verify docs index is up to date
+        run: pandoc README.org --from=org --to=gfm --output=/tmp/docs-index.generated.md && diff --unified docs/index.md /tmp/docs-index.generated.md
 
       - name: Build docs
         run: poetry run task docs-build

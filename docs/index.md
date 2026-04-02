@@ -6,7 +6,7 @@ based on [this Tree-Sitter
 grammar](https://github.com/Idorobots/tree-sitter-org).
 
 `org-parser` was created as an alternative to the wonderful, but
-admitedly incomplete and unmaintained
+admittedly incomplete and unmaintained
 [`orgparse`](https://github.com/karlicoss/orgparse/). The main
 improvements on top of `orgparse` are:
 
@@ -167,7 +167,3 @@ True
 >>> doc.errors
 [ParseError(start_point=Point(row=2, column=0), end_point=Point(row=2, column=20), text='SCHEDULED: yesterday')]
 ```
-
-Parsing <span class="spurious-link" target="examples/showcase.org">*this
-file*</span> results in the following <span class="spurious-link"
-target="examples/showcase.python">*Python object layout*</span>.

@@ -1,4 +1,4 @@
-#+TITLE: A Python parser for Org Mode nodes
+#+TITLE: A Python parser for Org Mode documents
 #+ARCHIVE: ./docs/plans/ROADMAP_ARCHIVE.org::
 
 * Bugfixes
@@ -506,6 +506,13 @@ Create docs/traversal.md file that outlines the document structure - parent, chi
 :END:
 Create docs/mutability.md file that outlines the mutability of the semantic document tree - specifically describe the =dirty= flags, =reformat= operation and describe how the original formatting/whitespace is preserved by default and reconstructed from scratch when dirty.
 Describe the =DirtyList= wrapper with some usage examples.
+
+** DONE index.md sync
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 22:05]
+:END:
+Generating the docs/index.md file during docs page build isn't ideal. Instead, let's check in the docs page pipeline if the file is up to date with README.org - for instance, by running the pandoc export and checking for any git diffs, or by any other means.
+If the docs/index.md file is outdated, the pipeline should fail. To prevent merging PRs with broken docs index, please add another check to the CI pipeline that checks the documentation is up to date.
 
 ** Automated tests based on the example files.
 ** Library release
