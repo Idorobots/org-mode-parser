@@ -481,11 +481,17 @@ I would like the documentation to organized as follows:
 
 Add the required dependencies, tasks for building the documentation and the documentation scaffold itself.
 
-** TODO Auto-generated introduction docs
+** DONE Auto-generated introduction docs
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 19:02]
+:END:
 Add a build step for the docs page generation pipeline that uses pandoc to transform the README.org file into docs/index.md.
 The idea is for the documentation page to use the same content as the readme file.
 
-** TODO Basic usage docs
+** DONE Basic usage docs
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 20:48]
+:END:
 Expand the basic usage docs in docs/usage.md with examples of loading documents from file, writing files, stringifying documents etc.
 
 ** TODO Tree traversal docs
