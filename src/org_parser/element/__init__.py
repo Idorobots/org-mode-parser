@@ -23,6 +23,7 @@ from org_parser.element._block import (
     SpecialBlock,
     VerseBlock,
 )
+from org_parser.element._dirty_list import DirtyList
 from org_parser.element._drawer import Drawer, Logbook, Properties
 from org_parser.element._element import Element
 from org_parser.element._keyword import (
@@ -51,6 +52,7 @@ __all__ = [
     "CenterBlock",
     "Comment",
     "CommentBlock",
+    "DirtyList",
     "Drawer",
     "DynamicBlock",
     "Element",

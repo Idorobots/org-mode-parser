@@ -38,4 +38,5 @@ This section documents structural element objects in the semantic tree.
         - TableEl
         - TblnameKeyword
         - VerseBlock
+        - DirtyList
 
