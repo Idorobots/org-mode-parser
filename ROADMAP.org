@@ -494,8 +494,11 @@ The idea is for the documentation page to use the same content as the readme fil
 :END:
 Expand the basic usage docs in docs/usage.md with examples of loading documents from file, writing files, stringifying documents etc.
 
-** TODO Tree traversal docs
-Create docs/traversal.md file that outlines the document structure - parent, children, =Sequence= interface and iteration. Use short, instructive examples.
+** DONE Tree traversal docs
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-02 Thu 21:12]
+:END:
+Create docs/traversal.md file that outlines the document structure - parent, children, =Sequence= interface and iteration. Use short, instructive examples. Add =is_root=, =is_leaf= and any attributes/methods that can aid tree traversal to the docs.
 
 ** TODO Mutability docs
 Create docs/mutability.md file that outlines the mutability of the semantic document tree - specifically describe the =dirty= flags, =rerender= operation and describe how the original formatting/whitespace is preserved by default and reconstructed from scratch when dirty.
