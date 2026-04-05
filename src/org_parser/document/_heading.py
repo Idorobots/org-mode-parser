@@ -761,10 +761,11 @@ class Heading:
         logbook = self._ensure_logbook()
         logbook.repeats = self._repeats
         self._repeats = list(logbook.repeats)
+        self._sync_repeats()
         self.mark_dirty()
 
-    def add_repeated_task(self, repeat: Repeat) -> None:
-        """Append one repeated task and synchronize it into the logbook.
+    def add_repeat(self, repeat: Repeat) -> None:
+        """Append one repeat and synchronize it into the logbook.
 
         Example:
         ```python
@@ -773,7 +774,7 @@ class Heading:
         >>> from org_parser.time import Timestamp
         >>> heading = loads("* TODO Heading 1").children[0]
         >>> ts = Timestamp.from_source("<2025-10-10>")
-        >>> heading.add_repeated_task(Repeat(after="DONE", before="TODO", timestamp=ts))
+        >>> heading.add_repeat(Repeat(after="DONE", before="TODO", timestamp=ts))
         >>> print(str(heading))
         * TODO Heading 1
         :LOGBOOK:

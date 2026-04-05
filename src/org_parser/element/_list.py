@@ -312,7 +312,7 @@ class Repeat(ListItem):
     >>> from org_parser.time import Timestamp
     >>> heading = loads("* TODO Heading 1").children[0]
     >>> ts = Timestamp.from_source("<2025-10-10>")
-    >>> heading.add_repeated_task(Repeat(after="DONE", before="TODO", timestamp=ts))
+    >>> heading.add_repeat(Repeat(after="DONE", before="TODO", timestamp=ts))
     >>> print(str(heading))
     * TODO Heading 1
     :LOGBOOK:

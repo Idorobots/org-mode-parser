@@ -190,11 +190,11 @@ def test_repeats_setter_creates_logbook_when_missing() -> None:
 
 
 def test_repeats_append_creates_logbook_when_missing() -> None:
-    """Adding a task via ``add_repeated_task`` creates a logbook if absent."""
+    """Adding a task via ``add_repeat`` creates a logbook if absent."""
     document = loads("* H\n")
     heading = document.children[0]
 
-    heading.add_repeated_task(
+    heading.add_repeat(
         Repeat(
             after="DONE",
             before="TODO",
