@@ -392,7 +392,7 @@ class Repeat(ListItem):
             parent=item.parent,
         )
         repeat._node = item._node
-        repeat._document = item._document
+        repeat.attach_document(document)
         return repeat
 
     @property
@@ -428,6 +428,15 @@ class Repeat(ListItem):
         self._timestamp = value
         self._timestamp.parent = self
         self.mark_dirty()
+
+    @property
+    def is_completed(self) -> bool:
+        """Whether this repeat transition moved into a done TODO state."""
+        return self._document is not None and self._after in self._document.done_states
+
+    def attach_document(self, value: Document | None) -> None:
+        """Attach owning document reference without changing dirty state."""
+        self._document = value
 
     def reformat(self) -> None:
         """Mark timestamp, any child content, and this entry dirty."""

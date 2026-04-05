@@ -32,14 +32,6 @@ Add a new read-only attribute to the =RichText= class that returns a new =RichTe
 
 The goal is for the =stripped= attribute to be a visual representation of a string of =RichText= without the markup. Essentially, =stripped= rich text will consist mostly of plaintext objects.
 
-** TODO =to_json()= convenience method
-All objects should be convertible to "simple" JSON objects:
-- =RichText= should be represented by its string representation value,
-- All other objects should become JSON objects with a =type= field indicating the class-name of the underlying object and an attribute for each of the writable attributes of the object.
-
-Omit the =children=, =siblings=, =parent=, =all_heading= and any other fields that could lead to a recursive conversion.
-Prefer =body= and =title= to =body_text= and =title_text=, etc.
-
 ** TODO =Properties= values to accept any type
 It should be possible to set any property to any type. These values should be aucomatically stringified for dirty rendering, but otherwise accessible as-is. I.e.:
 
@@ -53,5 +45,17 @@ It should be possible to set any property to any type. These values should be au
 :END:
 #+end_example
 
-** TODO =Repeat.is_completed= convenience attribute
+** DONE =Repeat.is_completed= convenience attribute
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-05 Sun 20:04]
+:END:
 Add a convenience field to =Repeat= that indicaties if the =after= property is in the =parent.document.done_states=. Its semantics should be the same as =Heading.is_completed=.
+
+* Next
+** TODO =to_json()= convenience method
+All objects should be convertible to "simple" JSON objects:
+- =RichText= should be represented by its string representation value,
+- All other objects should become JSON objects with a =type= field indicating the class-name of the underlying object and an attribute for each of the writable attributes of the object.
+
+Omit the =children=, =siblings=, =parent=, =all_heading= and any other fields that could lead to a recursive conversion.
+Prefer =body= and =title= to =body_text= and =title_text=, etc.

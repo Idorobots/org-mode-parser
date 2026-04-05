@@ -1161,6 +1161,9 @@ class Heading:
             self._body,
             document=self._document,
         )
+        # NOTE Attach the document for state comparisons of programmatically created repeats.
+        for repeat in body_repeats:
+            repeat.attach_document(self._document)
 
         if not body_repeats:
             self._repeats = list(self._logbook.repeats)

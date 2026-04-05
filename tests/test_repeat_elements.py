@@ -27,6 +27,71 @@ def test_repeat_parses_logbook_item_without_note() -> None:
     assert repeat.body == []
 
 
+def test_repeat_is_completed_uses_document_done_states() -> None:
+    """Repeat completion follows owning document done TODO states."""
+    document = loads(
+        "#+TODO: TODO | DONE\n"
+        "* H\n"
+        ":LOGBOOK:\n"
+        '- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+        ":END:\n"
+    )
+
+    repeat = document.children[0].repeats[0]
+
+    assert repeat.is_completed is True
+
+
+def test_repeat_is_completed_false_when_state_not_in_done_states() -> None:
+    """Repeat completion is false when after-state is not a done state."""
+    document = loads(
+        "#+TODO: TODO | CANCELLED\n"
+        "* H\n"
+        ":LOGBOOK:\n"
+        '- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+        ":END:\n"
+    )
+
+    repeat = document.children[0].repeats[0]
+
+    assert repeat.is_completed is False
+
+
+def test_repeat_is_completed_false_without_parse_backed_document() -> None:
+    """Programmatic repeats remain incomplete when detached from parse document."""
+    repeat = Repeat(
+        after="DONE",
+        before="TODO",
+        timestamp=Timestamp(
+            is_active=False,
+            start_year=2026,
+            start_month=3,
+            start_day=8,
+            start_dayname="Sun",
+            start_hour=17,
+            start_minute=59,
+        ),
+    )
+
+    assert repeat.is_completed is False
+
+
+def test_repeat_is_completed_false_when_detached_from_document() -> None:
+    """Detached repeats return false when completion context is unknown."""
+    repeat = Repeat(
+        after="DONE",
+        before="TODO",
+        timestamp=Timestamp(
+            is_active=False,
+            start_year=2026,
+            start_month=3,
+            start_day=8,
+        ),
+    )
+
+    assert repeat.is_completed is False
+
+
 def test_repeat_constructor_accepts_raw_string_rich_text_fields() -> None:
     """Repeat constructor accepts raw strings for item tag and first line."""
     repeat = Repeat(
@@ -227,6 +292,40 @@ def test_heading_body_lists_are_recovered_for_repeats() -> None:
     parsed = heading.body[0]
     assert isinstance(parsed.items[0], Repeat)
     assert heading.repeats == [parsed.items[0]]
+
+
+def test_heading_body_repeat_recovery_sets_document_for_completion() -> None:
+    """Recovered body repeats attach owning document for completion checks."""
+    document = loads(
+        "#+TODO: TODO | DONE\n"
+        "* H\n"
+        '- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+    )
+
+    repeat = document.children[0].repeats[0]
+
+    assert repeat.is_completed is True
+
+
+def test_heading_body_recovery_attaches_document_for_existing_repeat_items() -> None:
+    """Recovery stamps document onto pre-existing Repeat items in heading lists."""
+    document = loads("#+TODO: TODO | DONE\n* H\n")
+    heading = document.children[0]
+    repeat = Repeat(
+        after="DONE",
+        before="TODO",
+        timestamp=Timestamp(
+            is_active=False,
+            start_year=2026,
+            start_month=3,
+            start_day=8,
+        ),
+    )
+
+    heading.body = [List(items=[repeat])]
+
+    assert heading.repeats == [repeat]
+    assert repeat.is_completed is True
 
 
 def test_heading_body_nested_lists_are_not_recovered_for_repeats() -> None:

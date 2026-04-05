@@ -201,7 +201,7 @@ class Logbook(Drawer):
         self._repeats: list[Repeat] = list(repeats)
         self._adopt_body(self._clock_entries)
         self._sync_clock_entries_into_body()
-        _sync_logbook_repeat_list(self, self._repeats, mark_dirty=False)
+        self._sync_repeats_into_body(mark_dirty=False)
 
     @property
     def body(self) -> list[Element]:
@@ -277,7 +277,7 @@ class Logbook(Drawer):
 
         def on_repeats_mutation(wrapped: DirtyList[Repeat]) -> None:
             self._repeats = list(wrapped)
-            _sync_logbook_repeat_list(self, self._repeats, mark_dirty=True)
+            self._sync_repeats_into_body(mark_dirty=True)
             self.mark_dirty()
 
         return DirtyList(self._repeats, on_mutation=on_repeats_mutation)
@@ -286,7 +286,7 @@ class Logbook(Drawer):
     def repeats(self, value: list[Repeat]) -> None:
         """Set logbook repeat entries."""
         self._repeats = list(value)
-        _sync_logbook_repeat_list(self, self._repeats, mark_dirty=True)
+        self._sync_repeats_into_body(mark_dirty=True)
         self.mark_dirty()
 
     def reformat(self) -> None:
@@ -338,6 +338,30 @@ class Logbook(Drawer):
         ]
         self._body = updated_body
         self._adopt_body(self._body)
+
+    def _sync_repeats_into_body(self, *, mark_dirty: bool) -> None:
+        """Synchronize explicit repeat entries into a concrete logbook list."""
+        if self._document is not None:
+            for repeat in self._repeats:
+                repeat.attach_document(self._document)
+
+        target_list: List | None = None
+        for element in _iter_repeat_candidate_lists(self.body):
+            if any(isinstance(item, Repeat) for item in element.items):
+                target_list = element
+                break
+
+        if target_list is None:
+            if not self._repeats:
+                return
+            target_list = List(items=list(self._repeats), parent=self)
+            if mark_dirty:
+                self.body = [*self.body, target_list]
+            else:
+                self.append_to_body_without_dirty(target_list)
+            return
+
+        target_list.set_items(list(self._repeats), mark_dirty=mark_dirty)
 
     def append_to_body_without_dirty(self, element: Element) -> None:
         """Append one body element without changing this drawer's dirty state."""
@@ -537,29 +561,3 @@ def _iter_repeat_candidate_lists(elements: list[Element]) -> Iterator[List]:
             continue
         if isinstance(element, Indent):
             yield from _iter_repeat_candidate_lists(element.body)
-
-
-def _sync_logbook_repeat_list(
-    logbook: Logbook,
-    repeats: list[Repeat],
-    *,
-    mark_dirty: bool,
-) -> None:
-    """Synchronize explicit repeat entries into a concrete logbook list."""
-    target_list: List | None = None
-    for element in _iter_repeat_candidate_lists(logbook.body):
-        if any(isinstance(item, Repeat) for item in element.items):
-            target_list = element
-            break
-
-    if target_list is None:
-        if not repeats:
-            return
-        target_list = List(items=list(repeats), parent=logbook)
-        if mark_dirty:
-            logbook.body = [*logbook.body, target_list]
-        else:
-            logbook.append_to_body_without_dirty(target_list)
-        return
-
-    target_list.set_items(list(repeats), mark_dirty=mark_dirty)
