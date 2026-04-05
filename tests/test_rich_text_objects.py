@@ -160,6 +160,61 @@ def test_rich_text_parts_append_marks_dirty() -> None:
     assert rich_text.text == "AB"
 
 
+def test_rich_text_trimmed_returns_new_value_with_outer_whitespace_removed() -> None:
+    """trimmed returns a new rich text with leading/trailing whitespace removed."""
+    prefix = PlainText("  leading ")
+    middle = Bold([PlainText("keep")])
+    suffix = PlainText(" trailing  ")
+    rich_text = RichText([prefix, middle, suffix])
+
+    trimmed = rich_text.trimmed
+
+    assert trimmed is not rich_text
+    assert str(trimmed) == "leading *keep* trailing"
+    assert str(rich_text) == "  leading *keep* trailing  "
+    assert trimmed.parts[0] is not prefix
+    assert trimmed.parts[1] is middle
+    assert trimmed.parts[-1] is not suffix
+
+
+def test_rich_text_trimmed_reuses_identity_for_unchanged_non_timestamp_parts() -> None:
+    """trimmed reuses existing immutable parts when no boundary trim is needed."""
+    first = Bold([PlainText("one")])
+    middle = PlainText(" and ")
+    last = Italic([PlainText("two")])
+    rich_text = RichText([first, middle, last])
+
+    trimmed = rich_text.trimmed
+
+    assert str(trimmed) == "*one* and /two/"
+    assert trimmed.parts[0] is first
+    assert trimmed.parts[1] is middle
+    assert trimmed.parts[2] is last
+
+
+def test_rich_text_trimmed_clones_timestamp_parts() -> None:
+    """trimmed clones timestamps so parent ownership remains independent."""
+    timestamp = Timestamp.from_source("<2025-01-01 Wed>")
+    rich_text = RichText([timestamp, PlainText(" item")])
+
+    trimmed = rich_text.trimmed
+
+    assert isinstance(trimmed.parts[0], Timestamp)
+    assert trimmed.parts[0] is not timestamp
+    assert str(trimmed.parts[0]) == str(timestamp)
+    assert timestamp.parent is rich_text
+    assert trimmed.parts[0].parent is trimmed
+
+
+def test_rich_text_trimmed_whitespace_only_yields_empty_text() -> None:
+    """trimmed returns an empty rich text when source is all whitespace."""
+    rich_text = RichText([PlainText(" \t"), PlainText("\n  ")])
+
+    trimmed = rich_text.trimmed
+
+    assert str(trimmed) == ""
+
+
 def test_paragraph_plain_text_children_keep_trailing_newlines(tmp_path: Path) -> None:
     """RichText built from paragraphs preserves line newlines."""
     content = "This is some text:\nMore text\nMore text\n"

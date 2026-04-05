@@ -14,7 +14,10 @@
 Ordered list representation omits the counter (and likely other fileds), it only presents the bullet (which isn't useful by itself). Please ensure that list item's =__repr__= shows all non-None fields.
 
 * Additions
-** TODO =RichText.trimmed=
+** DONE =RichText.trimmed=
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-05 Sun 19:08]
+:END:
 Add a new read-only attribute to the =RichText= class that returns a new =RichText= object that has any leading or trailing whitespace removed.
 
 ** TODO =RichText.stripped=
