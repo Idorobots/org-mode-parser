@@ -89,6 +89,31 @@ def test_list_item_rich_text_fields_accept_raw_strings() -> None:
     assert str(item.first_line) == "new line"
 
 
+def test_list_item_repr_includes_all_non_none_fields() -> None:
+    """ListItem repr includes each populated metadata field."""
+    item = ListItem(
+        bullet=".",
+        ordered_counter="3",
+        counter_set="5",
+        checkbox="X",
+        item_tag="tag",
+        first_line="line",
+        body=[Paragraph(body=RichText("details\n"))],
+    )
+
+    rendered = repr(item)
+
+    assert "ListItem(" in rendered
+    assert "bullet='.'" in rendered
+    assert "ordered_counter='3'" in rendered
+    assert "counter_set='5'" in rendered
+    assert "checkbox='X'" in rendered
+    assert "item_tag=RichText('tag')" in rendered
+    assert "first_line=RichText('line')" in rendered
+    assert "body=[" in rendered
+    assert "Paragraph(" in rendered
+
+
 def test_list_item_body_setter_accepts_element_and_raw_string() -> None:
     """List item body setter accepts one element and raw string input."""
     item = ListItem(bullet="-", first_line="line")

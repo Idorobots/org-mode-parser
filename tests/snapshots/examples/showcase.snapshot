@@ -181,9 +181,9 @@ Document(
                   Paragraph(body=RichText('Ordered:\n')),
                   List(
                     items=[
-                        ListItem(bullet='.', first_line=RichText('one')),
-                        ListItem(bullet='.', first_line=RichText('two')),
-                        ListItem(bullet='.', counter_set='5', first_line=RichText('three')),
+                        ListItem(bullet='.', ordered_counter='1', first_line=RichText('one')),
+                        ListItem(bullet='.', ordered_counter='2', first_line=RichText('two')),
+                        ListItem(bullet='.', ordered_counter='3', counter_set='5', first_line=RichText('three')),
                       ],
                   ),
                 ],

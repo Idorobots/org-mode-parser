@@ -23,9 +23,9 @@ Document(
         body=[
             List(
               items=[
-                  ListItem(bullet='.', checkbox='X', first_line=RichText('step one complete')),
-                  ListItem(bullet='.', checkbox='-', first_line=RichText('step two in progress')),
-                  ListItem(bullet='.', checkbox=' ', first_line=RichText('step three not started')),
+                  ListItem(bullet='.', ordered_counter='1', checkbox='X', first_line=RichText('step one complete')),
+                  ListItem(bullet='.', ordered_counter='2', checkbox='-', first_line=RichText('step two in progress')),
+                  ListItem(bullet='.', ordered_counter='3', checkbox=' ', first_line=RichText('step three not started')),
                 ],
             ),
             BlankLine(),

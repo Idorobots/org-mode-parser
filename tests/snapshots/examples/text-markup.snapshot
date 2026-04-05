@@ -168,9 +168,9 @@ Document(
             BlankLine(),
             List(
               items=[
-                  ListItem(bullet='.', first_line=RichText('First, run ~git fetch --all~ to synchronise remote branches.')),
-                  ListItem(bullet='.', first_line=RichText('Then, /carefully/ review the diff with ~git diff origin/main~.')),
-                  ListItem(bullet='.', first_line=RichText('Finally, *merge only when CI is green*.')),
+                  ListItem(bullet='.', ordered_counter='1', first_line=RichText('First, run ~git fetch --all~ to synchronise remote branches.')),
+                  ListItem(bullet='.', ordered_counter='2', first_line=RichText('Then, /carefully/ review the diff with ~git diff origin/main~.')),
+                  ListItem(bullet='.', ordered_counter='3', first_line=RichText('Finally, *merge only when CI is green*.')),
                 ],
             ),
             BlankLine(),

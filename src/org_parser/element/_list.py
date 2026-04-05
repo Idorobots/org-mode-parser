@@ -281,6 +281,7 @@ class ListItem(Element):
         return build_semantic_repr(
             "ListItem",
             bullet=self._bullet,
+            ordered_counter=self._ordered_counter,
             counter_set=self._counter_set,
             checkbox=self._checkbox,
             item_tag=self._item_tag,

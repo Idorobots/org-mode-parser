@@ -11,9 +11,9 @@ Document(
             BlankLine(),
             List(
               items=[
-                  ListItem(bullet='.', first_line=RichText('first')),
-                  ListItem(bullet='.', first_line=RichText('second')),
-                  ListItem(bullet='.', first_line=RichText('third')),
+                  ListItem(bullet='.', ordered_counter='1', first_line=RichText('first')),
+                  ListItem(bullet='.', ordered_counter='2', first_line=RichText('second')),
+                  ListItem(bullet='.', ordered_counter='3', first_line=RichText('third')),
                 ],
             ),
             BlankLine(),
@@ -21,9 +21,9 @@ Document(
             BlankLine(),
             List(
               items=[
-                  ListItem(bullet=')', first_line=RichText('one')),
-                  ListItem(bullet=')', first_line=RichText('two')),
-                  ListItem(bullet=')', first_line=RichText('three')),
+                  ListItem(bullet=')', ordered_counter='1', first_line=RichText('one')),
+                  ListItem(bullet=')', ordered_counter='2', first_line=RichText('two')),
+                  ListItem(bullet=')', ordered_counter='3', first_line=RichText('three')),
                 ],
             ),
             BlankLine(),
@@ -31,9 +31,9 @@ Document(
             BlankLine(),
             List(
               items=[
-                  ListItem(bullet='.', first_line=RichText('alpha')),
-                  ListItem(bullet='.', first_line=RichText('beta')),
-                  ListItem(bullet='.', first_line=RichText('gamma')),
+                  ListItem(bullet='.', ordered_counter='a', first_line=RichText('alpha')),
+                  ListItem(bullet='.', ordered_counter='b', first_line=RichText('beta')),
+                  ListItem(bullet='.', ordered_counter='c', first_line=RichText('gamma')),
                 ],
             ),
             BlankLine(),
@@ -41,8 +41,8 @@ Document(
             BlankLine(),
             List(
               items=[
-                  ListItem(bullet='.', counter_set='5', first_line=RichText('fifth')),
-                  ListItem(bullet='.', first_line=RichText('sixth')),
+                  ListItem(bullet='.', ordered_counter='5', counter_set='5', first_line=RichText('fifth')),
+                  ListItem(bullet='.', ordered_counter='6', first_line=RichText('sixth')),
                 ],
             ),
           ],
