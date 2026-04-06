@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import TYPE_CHECKING, Any
 
+from org_parser._node import is_error_node
 from org_parser._nodes import INDENT, NODE_PROPERTY
 from org_parser.element._dirty_list import DirtyList
 from org_parser.element._dispatch import body_element_factories
@@ -33,6 +34,26 @@ if TYPE_CHECKING:
 __all__ = ["Drawer", "Logbook", "Properties"]
 
 PropertyValue = Any
+_DRAWER_START_TEXT = "drawer_start_text"
+_TRUNCATED_DRAWER_MESSAGE = "Unterminated drawer (missing :END: marker)"
+
+
+def _drawer_marker_error_message() -> str:
+    """Return the canonical parse-error message for malformed drawer markers."""
+    from org_parser.document._document import drawer_marker_trailing_message
+
+    return drawer_marker_trailing_message()
+
+
+def _report_direct_drawer_parse_errors(node: tree_sitter.Node, document: Document) -> None:
+    """Report direct parse-error children on one drawer node.
+
+    Truncated drawers often surface as one direct ``ERROR`` child where the
+    terminating ``:END:`` marker is expected.
+    """
+    for child in node.named_children:
+        if is_error_node(child):
+            document.report_error(child, _TRUNCATED_DRAWER_MESSAGE)
 
 
 class Drawer(Element):
@@ -81,6 +102,9 @@ class Drawer(Element):
         """Create a [org_parser.element.Drawer][] from a tree-sitter ``drawer`` node."""
         name_node = node.child_by_field_name("name")
         name = "" if name_node is None else document.source_for(name_node).decode()
+        end_text_node = node.child_by_field_name("end_text")
+        if end_text_node is not None:
+            document.report_error(end_text_node, _drawer_marker_error_message())
         drawer_body = [
             _extract_drawer_body_element(child, document)
             for child in node.children_by_field_name("body")
@@ -93,6 +117,7 @@ class Drawer(Element):
         )
         drawer._node = node
         drawer._document = document
+        _report_direct_drawer_parse_errors(node, document)
         return drawer
 
     @property
@@ -236,6 +261,9 @@ class Logbook(Drawer):
         parent: Document | Heading | Element | None = None,
     ) -> Logbook:
         """Create a [org_parser.element.Logbook][] from ``logbook_drawer`` node."""
+        end_text_node = node.child_by_field_name("end_text")
+        if end_text_node is not None:
+            document.report_error(end_text_node, _drawer_marker_error_message())
         body = [
             _extract_drawer_body_element(child, document)
             for child in node.children_by_field_name("body")
@@ -251,6 +279,7 @@ class Logbook(Drawer):
         )
         logbook._node = node
         logbook._document = document
+        _report_direct_drawer_parse_errors(node, document)
         return logbook
 
     @property
@@ -411,6 +440,9 @@ class Properties(Element, MutableMapping[str, PropertyValue]):
     ) -> Properties:
         """Create a [org_parser.element.Properties][] from ``property_drawer`` node."""
         properties = cls(parent=parent)
+        end_text_node = node.child_by_field_name("end_text")
+        if end_text_node is not None:
+            document.report_error(end_text_node, _drawer_marker_error_message())
         for child in node.named_children:
             if child.type != NODE_PROPERTY:
                 continue
@@ -427,6 +459,7 @@ class Properties(Element, MutableMapping[str, PropertyValue]):
             properties._set_property(key, value, mark_dirty=False)
         properties._node = node
         properties._document = document
+        _report_direct_drawer_parse_errors(node, document)
         return properties
 
     def _set_property(
@@ -500,6 +533,13 @@ def _extract_drawer_body_element(
     parent: Document | Heading | Element | None = None,
 ) -> Element:
     """Build one semantic element object for a drawer body child node."""
+    if node.type == _DRAWER_START_TEXT:
+        return element_from_error_or_unknown(
+            node,
+            document,
+            parent=parent,
+            error_message=_drawer_marker_error_message(),
+        )
     if node.type == INDENT:
         return _extract_indent(node, document, parent=parent)
 

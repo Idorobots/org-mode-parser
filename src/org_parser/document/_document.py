@@ -59,6 +59,7 @@ class ParseError:
         start_point: ``(row, column)`` of the error node's start position.
         end_point: ``(row, column)`` of the error node's end position.
         text: The verbatim source text span covered by the error node.
+        message: Semantic classification describing the parse error category.
         _node: The raw tree-sitter node (private; not part of public API).
     """
 
@@ -66,6 +67,36 @@ class ParseError:
     end_point: tuple[int, int]
     text: str
     _node: tree_sitter.Node = dataclasses.field(repr=False, compare=False)
+    message: str = "Unexpected parse node"
+
+
+_ERROR_NODE_MESSAGE = "Encountered parser ERROR node"
+_MISSING_NODE_MESSAGE_PREFIX = "Encountered parser MISSING node"
+_FALLBACK_NODE_MESSAGE = "Unexpected parse node"
+_DRAWER_MARKER_TRAILING_MESSAGE = "Trailing characters in drawer marker"
+_INVALID_REPEAT_MESSAGE = "Invalid repeated-task entry"
+
+
+def drawer_marker_trailing_message() -> str:
+    """Return the canonical parse-error message for malformed drawer markers."""
+    return _DRAWER_MARKER_TRAILING_MESSAGE
+
+
+def invalid_repeat_message() -> str:
+    """Return the canonical parse-error message for malformed repeat entries."""
+    return _INVALID_REPEAT_MESSAGE
+
+
+def _default_parse_error_message(node: tree_sitter.Node) -> str:
+    """Return default semantic message for one parse-error *node*."""
+    if node.type == "ERROR":
+        return _ERROR_NODE_MESSAGE
+    if node.is_missing:
+        missing_token = node.type.strip()
+        if missing_token == "":
+            return _MISSING_NODE_MESSAGE_PREFIX
+        return f"{_MISSING_NODE_MESSAGE_PREFIX}: {missing_token}"
+    return _FALLBACK_NODE_MESSAGE
 
 
 class Document:
@@ -731,13 +762,14 @@ class Document:
         [ParseError(
             start_point=Point(row=2, column=0),
             end_point=Point(row=2, column=20),
-            text='SCHEDULED: yesterday'
+            text='SCHEDULED: yesterday',
+            message='Encountered parser ERROR node'
         )]
         ```
         """
         return self._errors
 
-    def report_error(self, node: tree_sitter.Node) -> None:
+    def report_error(self, node: tree_sitter.Node, message: str | None = None) -> None:
         """Record a parse error for *node*.
 
         Extracts the verbatim source text for the node and appends a
@@ -745,6 +777,8 @@ class Document:
 
         Args:
             node: The tree-sitter ``ERROR`` or missing node to record.
+            message: Optional semantic classification. When omitted, a
+                default category is inferred from ``node``.
 
         Raises:
             ValueError: If this document has no source bytes.
@@ -755,6 +789,7 @@ class Document:
                 end_point=node.end_point,
                 text=self.source_for(node).decode(),
                 _node=node,
+                message=message if message is not None else _default_parse_error_message(node),
             )
         )
 

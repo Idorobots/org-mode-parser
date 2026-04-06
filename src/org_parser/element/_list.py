@@ -373,7 +373,9 @@ class Repeat(ListItem):
         if has_remainder:
             if item._node is not None:
                 # NOTE These are considered malformed.
-                document.report_error(item._node)
+                from org_parser.document._document import invalid_repeat_message
+
+                document.report_error(item._node, invalid_repeat_message())
             return None
 
         body = list(item.body)

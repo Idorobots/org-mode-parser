@@ -124,6 +124,7 @@ def test_invalid_repeat_with_trailing_chars() -> None:
 
     assert len(document.children[0].repeats) == 0
     assert len(document.errors) == 1
+    assert document.errors[0].message == "Invalid repeated-task entry"
 
 
 def test_repeat_uses_entire_item_body_as_note_payload() -> None:
