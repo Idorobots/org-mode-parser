@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import TYPE_CHECKING, Any
 
+from org_parser._node import is_error_node
 from org_parser._nodes import INDENT, NODE_PROPERTY
 from org_parser.element._dirty_list import DirtyList
 from org_parser.element._dispatch import body_element_factories
@@ -34,6 +35,7 @@ __all__ = ["Drawer", "Logbook", "Properties"]
 
 PropertyValue = Any
 _DRAWER_START_TEXT = "drawer_start_text"
+_TRUNCATED_DRAWER_MESSAGE = "Unterminated drawer (missing :END: marker)"
 
 
 def _drawer_marker_error_message() -> str:
@@ -41,6 +43,17 @@ def _drawer_marker_error_message() -> str:
     from org_parser.document._document import drawer_marker_trailing_message
 
     return drawer_marker_trailing_message()
+
+
+def _report_direct_drawer_parse_errors(node: tree_sitter.Node, document: Document) -> None:
+    """Report direct parse-error children on one drawer node.
+
+    Truncated drawers often surface as one direct ``ERROR`` child where the
+    terminating ``:END:`` marker is expected.
+    """
+    for child in node.named_children:
+        if is_error_node(child):
+            document.report_error(child, _TRUNCATED_DRAWER_MESSAGE)
 
 
 class Drawer(Element):
@@ -104,6 +117,7 @@ class Drawer(Element):
         )
         drawer._node = node
         drawer._document = document
+        _report_direct_drawer_parse_errors(node, document)
         return drawer
 
     @property
@@ -265,6 +279,7 @@ class Logbook(Drawer):
         )
         logbook._node = node
         logbook._document = document
+        _report_direct_drawer_parse_errors(node, document)
         return logbook
 
     @property
@@ -444,6 +459,7 @@ class Properties(Element, MutableMapping[str, PropertyValue]):
             properties._set_property(key, value, mark_dirty=False)
         properties._node = node
         properties._document = document
+        _report_direct_drawer_parse_errors(node, document)
         return properties
 
     def _set_property(

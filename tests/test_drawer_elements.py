@@ -109,6 +109,15 @@ def test_generic_drawer_parses_name_and_body() -> None:
     assert len(drawer.body) == 1
 
 
+def test_unterminated_drawer_reports_document_error() -> None:
+    """Truncated drawers report one parse error on the document."""
+    document = loads("* hurr\n:hurr:\ndurr\n* derp\n")
+
+    assert len(document.children) == 2
+    assert len(document.errors) == 1
+    assert document.errors[0].message == "Unterminated drawer (missing :END: marker)"
+
+
 def test_drawer_marker_trailing_start_text_reports_specific_message() -> None:
     """Trailing text on a drawer start marker reports a drawer-marker error."""
     document = loads(":NOTE: x\nSome notes.\n:END:\n")

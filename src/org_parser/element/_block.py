@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from org_parser._node import node_source
+from org_parser._node import is_error_node, node_source
 from org_parser._nodes import INDENT, SPECIAL_KEYWORD
 from org_parser.element._dirty_list import DirtyList
 from org_parser.element._dispatch import body_element_factories
@@ -37,6 +37,8 @@ __all__ = [
     "SpecialBlock",
     "VerseBlock",
 ]
+
+_TRUNCATED_BLOCK_MESSAGE = "Unterminated block (missing end marker)"
 
 
 class _ContainerBlock(Element):
@@ -215,6 +217,7 @@ class CenterBlock(_ContainerBlock):
         )
         block._node = node
         block._document = document
+        _report_direct_block_parse_errors(node, document)
         return block
 
     @property
@@ -289,6 +292,7 @@ class QuoteBlock(_ContainerBlock):
         )
         block._node = node
         block._document = document
+        _report_direct_block_parse_errors(node, document)
         return block
 
     @property
@@ -370,6 +374,7 @@ class SpecialBlock(_ContainerBlock):
         )
         block._node = node
         block._document = document
+        _report_direct_block_parse_errors(node, document)
         return block
 
     @property
@@ -465,6 +470,7 @@ class DynamicBlock(_ContainerBlock):
         )
         block._node = node
         block._document = document
+        _report_direct_block_parse_errors(node, document)
         return block
 
     @property
@@ -545,6 +551,7 @@ class VerseBlock(_ContainerBlock):
         )
         block._node = node
         block._document = document
+        _report_direct_block_parse_errors(node, document)
         return block
 
     def __repr__(self) -> str:
@@ -596,6 +603,7 @@ class CommentBlock(_TextBlock):
         )
         block._node = node
         block._document = document
+        _report_direct_block_parse_errors(node, document)
         return block
 
     def __repr__(self) -> str:
@@ -655,6 +663,7 @@ class ExampleBlock(_TextBlock):
         )
         block._node = node
         block._document = document
+        _report_direct_block_parse_errors(node, document)
         return block
 
     @property
@@ -736,6 +745,7 @@ class ExportBlock(_TextBlock):
         )
         block._node = node
         block._document = document
+        _report_direct_block_parse_errors(node, document)
         return block
 
     @property
@@ -829,6 +839,7 @@ class SourceBlock(_TextBlock):
         )
         block._node = node
         block._document = document
+        _report_direct_block_parse_errors(node, document)
         return block
 
     @property
@@ -898,6 +909,7 @@ class FixedWidthBlock(Element):
         block = cls(body=_extract_fixed_width_values(node, document), parent=parent)
         block._node = node
         block._document = document
+        _report_direct_block_parse_errors(node, document)
         return block
 
     @property
@@ -925,6 +937,17 @@ class FixedWidthBlock(Element):
     def __repr__(self) -> str:
         """Return a tree-oriented representation for debugging."""
         return build_semantic_repr("FixedWidthBlock", body=self._body)
+
+
+def _report_direct_block_parse_errors(node: tree_sitter.Node, document: Document) -> None:
+    """Report direct parse-error children on one block node.
+
+    Truncated blocks often surface as one direct ``ERROR`` child anchored at
+    the point where the end marker should appear.
+    """
+    for child in node.named_children:
+        if is_error_node(child):
+            document.report_error(child, _TRUNCATED_BLOCK_MESSAGE)
 
 
 def _extract_container_contents(

@@ -98,6 +98,15 @@ def test_heading_body_uses_dedicated_block_element_types() -> None:
     assert isinstance(body[1], SourceBlock)
 
 
+def test_unterminated_example_block_reports_document_error() -> None:
+    """Truncated example blocks report one parse error on the document."""
+    document = loads("* hurr\n#+begin_example\ndurr\n* derp\n")
+
+    assert len(document.children) == 2
+    assert len(document.errors) == 1
+    assert document.errors[0].message == "Unterminated block (missing end marker)"
+
+
 def test_text_block_contents_are_mutable_and_bubble_dirty() -> None:
     """Mutating text-block contents marks both block and owner dirty."""
     document = loads("#+begin_example\nold\n#+end_example\n")
