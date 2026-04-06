@@ -411,6 +411,7 @@ def element_from_error_or_unknown(
     document: Document | None = None,
     *,
     parent: Document | Heading | Element | None = None,
+    error_message: str | None = None,
 ) -> Element:
     """Return a semantic element for an unrecognised or error parse node.
 
@@ -427,13 +428,15 @@ def element_from_error_or_unknown(
         document: The owning [org_parser.document.Document][], or *None* for programmatic
             construction (source defaults to ``b""``).
         parent: Optional owner object.
+        error_message: Optional semantic classification to pass through to
+            [org_parser.document.Document.report_error][].
 
     Returns:
         A [org_parser.element.Paragraph][] wrapping the
         verbatim source text of *node*.
     """
     if document is not None:
-        document.report_error(node)
+        document.report_error(node, error_message)
     # Lazy imports avoid the circular dependency
     # (_paragraph imports Element; _rich_text imports time/).
     from org_parser.element._paragraph import Paragraph

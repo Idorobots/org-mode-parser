@@ -165,5 +165,5 @@ RichText('Supports *org-mode* /markup/ and inline_{objects}: <2026-03-29>')
 >>> doc[0].scheduled is None
 True
 >>> doc.errors
-[ParseError(start_point=Point(row=2, column=0), end_point=Point(row=2, column=20), text='SCHEDULED: yesterday')]
+[ParseError(start_point=Point(row=2, column=0), end_point=Point(row=2, column=20), text='SCHEDULED: yesterday', message='Encountered parser ERROR node')]
 ```

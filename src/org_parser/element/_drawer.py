@@ -33,6 +33,14 @@ if TYPE_CHECKING:
 __all__ = ["Drawer", "Logbook", "Properties"]
 
 PropertyValue = Any
+_DRAWER_START_TEXT = "drawer_start_text"
+
+
+def _drawer_marker_error_message() -> str:
+    """Return the canonical parse-error message for malformed drawer markers."""
+    from org_parser.document._document import drawer_marker_trailing_message
+
+    return drawer_marker_trailing_message()
 
 
 class Drawer(Element):
@@ -81,6 +89,9 @@ class Drawer(Element):
         """Create a [org_parser.element.Drawer][] from a tree-sitter ``drawer`` node."""
         name_node = node.child_by_field_name("name")
         name = "" if name_node is None else document.source_for(name_node).decode()
+        end_text_node = node.child_by_field_name("end_text")
+        if end_text_node is not None:
+            document.report_error(end_text_node, _drawer_marker_error_message())
         drawer_body = [
             _extract_drawer_body_element(child, document)
             for child in node.children_by_field_name("body")
@@ -236,6 +247,9 @@ class Logbook(Drawer):
         parent: Document | Heading | Element | None = None,
     ) -> Logbook:
         """Create a [org_parser.element.Logbook][] from ``logbook_drawer`` node."""
+        end_text_node = node.child_by_field_name("end_text")
+        if end_text_node is not None:
+            document.report_error(end_text_node, _drawer_marker_error_message())
         body = [
             _extract_drawer_body_element(child, document)
             for child in node.children_by_field_name("body")
@@ -411,6 +425,9 @@ class Properties(Element, MutableMapping[str, PropertyValue]):
     ) -> Properties:
         """Create a [org_parser.element.Properties][] from ``property_drawer`` node."""
         properties = cls(parent=parent)
+        end_text_node = node.child_by_field_name("end_text")
+        if end_text_node is not None:
+            document.report_error(end_text_node, _drawer_marker_error_message())
         for child in node.named_children:
             if child.type != NODE_PROPERTY:
                 continue
@@ -500,6 +517,13 @@ def _extract_drawer_body_element(
     parent: Document | Heading | Element | None = None,
 ) -> Element:
     """Build one semantic element object for a drawer body child node."""
+    if node.type == _DRAWER_START_TEXT:
+        return element_from_error_or_unknown(
+            node,
+            document,
+            parent=parent,
+            error_message=_drawer_marker_error_message(),
+        )
     if node.type == INDENT:
         return _extract_indent(node, document, parent=parent)
 

@@ -115,6 +115,7 @@ class TestParseError:
         assert err.start_point == (0, 0)
         assert err.end_point == (0, len(b"bad text"))
         assert err.text == "bad text"
+        assert err.message == "Unexpected parse node"
 
     def test_frozen(self) -> None:
         """ParseError cannot be mutated after construction."""
@@ -166,6 +167,16 @@ class TestDocumentErrorsClean:
         node = _make_fake_error_node("ERROR text")
         with pytest.raises(ValueError):
             doc.report_error(node)
+
+    def test_report_error_uses_explicit_message(self) -> None:
+        """report_error stores caller-provided semantic message overrides."""
+        doc = _make_doc_with_source(b"ERROR text")
+        node = _make_fake_error_node("ERROR text")
+
+        doc.report_error(node, "custom message")
+
+        assert len(doc.errors) == 1
+        assert doc.errors[0].message == "custom message"
 
     def test_source_for_without_source_raises_value_error(self) -> None:
         """Programmatic documents cannot slice source without source bytes."""
@@ -259,6 +270,7 @@ class TestElementFromErrorOrUnknown:
         assert len(doc.errors) == 1
         assert doc.errors[0].text == "ERROR text"
         assert doc.errors[0].start_point == (0, 0)
+        assert doc.errors[0].message == "Encountered parser ERROR node"
 
     def test_missing_node_returns_paragraph(self) -> None:
         """A missing node is recovered as a Paragraph."""
@@ -275,6 +287,7 @@ class TestElementFromErrorOrUnknown:
         assert len(doc.errors) == 1
         assert doc.errors[0].text == "MISSING text"
         assert doc.errors[0].start_point == (0, 0)
+        assert doc.errors[0].message == "Encountered parser MISSING node: some_token"
 
     def test_unknown_valid_node_returns_paragraph(self) -> None:
         """An unknown but syntactically valid node is recovered as a Paragraph."""
@@ -289,6 +302,7 @@ class TestElementFromErrorOrUnknown:
         element_from_error_or_unknown(node, doc)
         assert len(doc.errors) == 1
         assert doc.errors[0].text == "some text"
+        assert doc.errors[0].message == "Unexpected parse node"
 
     def test_no_document_does_not_raise(self) -> None:
         """Calling without document does not raise."""

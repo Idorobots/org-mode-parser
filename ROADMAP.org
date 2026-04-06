@@ -95,6 +95,15 @@ Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_hea
 
 Can this be removed? Makes no sense.
 * Next
+** DONE More semantically meaningful errors
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-06 Mon 02:44]
+:END:
+- Distinct message when reporting trailing characters in drawer markers.
+- Distinct message for ERROR and MISSING nodes.
+- Distinct message for invalid repeats.
+- Distinct message for any other cases.
+
 ** TODO =to_json()= convenience method
 All objects should be convertible to "simple" JSON objects:
 - =RichText= should be represented by its string representation value,
