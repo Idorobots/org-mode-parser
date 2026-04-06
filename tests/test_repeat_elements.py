@@ -27,6 +27,58 @@ def test_repeat_parses_logbook_item_without_note() -> None:
     assert repeat.body == []
 
 
+def test_repeat_parses_empty_and_missing_states_as_none() -> None:
+    """Empty or omitted repeat states are normalized to ``None``."""
+    document = loads(
+        "* Test\n"
+        ":LOGBOOK:\n"
+        '- State ""           from              [2025-07-13 Thu 10:32]\n'
+        '- State              from ""           [2024-07-13 Thu 10:32]\n'
+        "- State              from              [2023-07-13 Thu 10:32]\n"
+        '- State ""           from ""           [2023-07-13 Thu 10:32]\n'
+        '- State              from "TODO"       [2022-07-10 Sun 22:58]\n'
+        '- State ""           from "TODO"       [2021-07-13 Tue 18:53]\n'
+        '- State "DONE"       from              [2015-07-09 Tue 22:58]\n'
+        '- State "DONE"       from ""           [2013-07-09 Tue 22:58]\n'
+        '- State "DONE"       from "TODO"       [2012-07-10 Tue 20:05]\n'
+        ":END:\n"
+    )
+
+    repeats = document.children[0].repeats
+    assert len(repeats) == 9
+    assert [(repeat.after, repeat.before) for repeat in repeats] == [
+        (None, None),
+        (None, None),
+        (None, None),
+        (None, None),
+        (None, "TODO"),
+        (None, "TODO"),
+        ("DONE", None),
+        ("DONE", None),
+        ("DONE", "TODO"),
+    ]
+    assert document.errors == []
+
+
+def test_repeat_dirty_render_normalizes_none_states_to_empty_quotes() -> None:
+    """Dirty repeat rendering serializes missing states as empty quotes."""
+    document = loads(
+        "* Test\n"
+        ":LOGBOOK:\n"
+        "- State              from              [2023-07-13 Thu 10:32]\n"
+        ":END:\n"
+    )
+
+    heading = document.children[0]
+    repeat = heading.repeats[0]
+    repeat.after = repeat.after
+    repeat.before = repeat.before
+
+    rendered = str(heading.logbook)
+    assert 'State ""' in rendered
+    assert 'from ""' in rendered
+
+
 def test_repeat_is_completed_uses_document_done_states() -> None:
     """Repeat completion follows owning document done TODO states."""
     document = loads(

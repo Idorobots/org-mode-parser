@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from typing import TYPE_CHECKING
 
 from org_parser._node import is_error_node, node_source
@@ -30,10 +29,6 @@ if TYPE_CHECKING:
     from org_parser.document._heading import Heading
 
 __all__ = ["List", "ListItem", "Repeat"]
-
-_REPEAT_HEADER_PREFIX_PATTERN = re.compile(
-    r'^State\s+"(?P<after>[^"]+)"\s+from\s+"(?P<before>[^"]+)"\s+$'
-)
 
 
 class ListItem(Element):
@@ -326,8 +321,8 @@ class Repeat(ListItem):
     def __init__(
         self,
         *,
-        after: str,
-        before: str,
+        after: str | None,
+        before: str | None,
         timestamp: Timestamp,
         body: Sequence[Element] = (),
         bullet: str = "-",
@@ -398,23 +393,23 @@ class Repeat(ListItem):
         return repeat
 
     @property
-    def after(self) -> str:
+    def after(self) -> str | None:
         """Task state after the repeat transition."""
         return self._after
 
     @after.setter
-    def after(self, value: str) -> None:
+    def after(self, value: str | None) -> None:
         """Set the after-state."""
         self._after = value
         self.mark_dirty()
 
     @property
-    def before(self) -> str:
+    def before(self) -> str | None:
         """Task state before the repeat transition."""
         return self._before
 
     @before.setter
-    def before(self, value: str) -> None:
+    def before(self, value: str | None) -> None:
         """Set the before-state."""
         self._before = value
         self.mark_dirty()
@@ -434,7 +429,11 @@ class Repeat(ListItem):
     @property
     def is_completed(self) -> bool:
         """Whether this repeat transition moved into a done TODO state."""
-        return self._document is not None and self._after in self._document.done_states
+        return (
+            self._document is not None
+            and self._after is not None
+            and self._after in self._document.done_states
+        )
 
     def attach_document(self, value: Document | None) -> None:
         """Attach owning document reference without changing dirty state."""
@@ -468,8 +467,8 @@ class Repeat(ListItem):
             parts.append(f"[@{self._counter_set}] ")
         if self._checkbox is not None:
             parts.append(f"[{self._checkbox}] ")
-        after = f'"{self._after}"'
-        before = f'"{self._before}"'
+        after = f'"{self._after or ""}"'
+        before = f'"{self._before or ""}"'
         parts.append(
             f"State {after:<{self.state_alignment_space}}"
             f" from {before:<{self.state_alignment_space}} {self._timestamp}"
@@ -738,7 +737,7 @@ def _indent_non_empty_lines(value: str, prefix: str) -> str:
 
 def _parse_repeat_first_line(
     first_line: RichText,
-) -> tuple[str, str, Timestamp, bool] | None:
+) -> tuple[str | None, str | None, Timestamp, bool] | None:
     """Parse one repeat header from a list item's first-line text.
 
     Returns:
@@ -754,20 +753,90 @@ def _parse_repeat_first_line(
     if not isinstance(prefix_part, PlainText) or not isinstance(timestamp_part, Timestamp):
         return None
 
-    matched = _REPEAT_HEADER_PREFIX_PATTERN.match(prefix_part.text)
-    if matched is None:
+    parsed_states = _parse_repeat_states(prefix_part.text)
+    if parsed_states is None:
         return None
+    after, before = parsed_states
 
     has_remainder = False
     if len(first_line.parts) > 2 and not isinstance(first_line.parts[-1], LineBreak):
         has_remainder = True
 
     return (
-        matched.group("after"),
-        matched.group("before"),
+        after,
+        before,
         timestamp_part,
         has_remainder,
     )
+
+
+def _parse_repeat_states(prefix: str) -> tuple[str | None, str | None] | None:
+    """Parse ``State <after> from <before>`` with optional/empty states."""
+    if not prefix.startswith("State"):
+        return None
+
+    rest = prefix[len("State") :]
+    if rest == "" or not rest[0].isspace():
+        return None
+
+    from_index = _find_repeat_from_token(rest)
+    if from_index is None:
+        return None
+
+    after = _parse_repeat_state_segment(rest[:from_index])
+    if isinstance(after, _InvalidRepeatState):
+        return None
+
+    before = _parse_repeat_state_segment(rest[from_index + len("from") :])
+    if isinstance(before, _InvalidRepeatState):
+        return None
+
+    return after, before
+
+
+class _InvalidRepeatState:
+    """Sentinel type for invalid repeat-state parse segments."""
+
+
+_INVALID_REPEAT_STATE = _InvalidRepeatState()
+
+
+def _parse_repeat_state_segment(segment: str) -> str | None | _InvalidRepeatState:
+    """Parse one repeat state segment into ``str | None`` or invalid marker."""
+    stripped = segment.strip()
+    if stripped in {"", '""'}:
+        return None
+
+    if len(stripped) >= 2 and stripped.startswith('"') and stripped.endswith('"'):
+        value = stripped[1:-1]
+        if '"' in value:
+            return _INVALID_REPEAT_STATE
+        return value if value != "" else None
+
+    return _INVALID_REPEAT_STATE
+
+
+def _find_repeat_from_token(rest: str) -> int | None:
+    """Return ``from`` token index outside quotes with whitespace boundaries."""
+    in_quote = False
+    for index, char in enumerate(rest):
+        if char == '"':
+            in_quote = not in_quote
+            continue
+        if in_quote:
+            continue
+        if not rest.startswith("from", index):
+            continue
+
+        previous = rest[index - 1] if index > 0 else ""
+        next_index = index + len("from")
+        following = rest[next_index] if next_index < len(rest) else ""
+        if previous.isspace() and following.isspace():
+            return index
+
+    if in_quote:
+        return None
+    return None
 
 
 def _extract_list_body_element(

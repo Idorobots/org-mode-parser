@@ -328,6 +328,7 @@ Document(
                 items=[
                     Repeat(after='DONE', before='DOING', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=17, start_minute=45)),
                     Repeat(after='DOING', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=15)),
+                    Repeat(after='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=12, start_day=20, start_dayname='Fri', start_hour=11, start_minute=0)),
                   ],
               ),
               Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=15, end_year=2025, end_month=1, end_day=2, end_dayname='Thu', end_hour=17, end_minute=30), duration='8:15'),
@@ -340,12 +341,14 @@ Document(
           repeats=[
               Repeat(after='DONE', before='DOING', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=17, start_minute=45)),
               Repeat(after='DOING', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=15)),
+              Repeat(after='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=12, start_day=20, start_dayname='Fri', start_hour=11, start_minute=0)),
             ],
         ),
         heading_tags=['implementation'],
         repeats=[
             Repeat(after='DONE', before='DOING', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=3, start_dayname='Fri', start_hour=17, start_minute=45)),
             Repeat(after='DOING', before='TODO', timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=15)),
+            Repeat(after='TODO', timestamp=Timestamp(is_active=False, start_year=2024, start_month=12, start_day=20, start_dayname='Fri', start_hour=11, start_minute=0)),
           ],
         clock_entries=[
             Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=2, start_dayname='Thu', start_hour=9, start_minute=15, end_year=2025, end_month=1, end_day=2, end_dayname='Thu', end_hour=17, end_minute=30), duration='8:15'),

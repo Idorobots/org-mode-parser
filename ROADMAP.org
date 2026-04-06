@@ -2,136 +2,26 @@
 #+ARCHIVE: ./docs/plans/ROADMAP_ARCHIVE.org::
 
 * Bugfixes
-** DONE Bump tree-sitter-org to 0.23.7
+** DONE Well-formed, but rejected repeats
 :LOGBOOK:
-- State "DONE"       from "TODO"       [2026-04-05 Sun 17:51]
+- State "DONE"       from "TODO"       [2026-04-06 Mon 14:53]
 :END:
-
-** DONE =ListItem= representation omits the counter
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-04-05 Sun 17:59]
-:END:
-Ordered list representation omits the counter (and likely other fileds), it only presents the bullet (which isn't useful by itself). Please ensure that list item's =__repr__= shows all non-None fields.
-
-* Additions
-** DONE =RichText.trimmed=
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-04-05 Sun 19:08]
-:END:
-Add a new read-only attribute to the =RichText= class that returns a new =RichText= object that has any leading or trailing whitespace removed.
-
-** DONE =RichText.stripped=
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-04-05 Sun 19:21]
-:END:
-Add a new read-only attribute to the =RichText= class that returns a new =RichText= object that has inline markup stripped according to the following rules:
-- Bold, italic, underline etc markup is replaced with the raw body without the markup. Take special care for nested markup.
-- Links, cites and footnotes with a description are replaced with the description.
-- Links, cites and footnotes without a description are replaced with the link value (without the brackets).
-- All other inline objects including Timestamps are replaced with their textual representation.
-
-The goal is for the =stripped= attribute to be a visual representation of a string of =RichText= without the markup. Essentially, =stripped= rich text will consist mostly of plaintext objects.
-
-** DONE =Properties= values to accept any type
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-04-05 Sun 20:26]
-:END:
-It should be possible to set any property to any type. These values should be aucomatically stringified for dirty rendering, but otherwise accessible as-is. I.e.:
 
 #+begin_example
->>> node.properties["foo"] = 23
->>> node.properties["foo"] * 2
-46
->>> print(str(node.properties))
-:PROPERTIES:
-:foo: 23
-:END:
+,** Test
+   :LOGBOOK:
+   - State              from              [2023-07-13 czw 10:32]
+   - State ""           from ""           [2023-07-13 czw 10:32]
+   - State              from "TODO"       [2022-07-10 Sun 22:58]
+   - State ""           from "TODO"       [2021-07-13 Tue 18:53]
+   - State "DONE"       from ""           [2013-07-09 wto 22:58]
+   - State "DONE"       from "TODO"       [2012-07-10 wto 20:05]
+   :END:
 #+end_example
 
-*** DONE src/org_parser/document/_heading.py
-:PROPERTIES:
-:context: 
-:END:
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-04-05 Sun 20:26]
-:END:
+All of the above should parse as repeats - the empty values (~""~) should become =None=, same for missing values.
 
-In file src/org_parser/document/_heading.py around line 514, near the ~class Heading:~
-
-#+begin_example
-         if "CATEGORY" in self._properties:
--            return self._properties["CATEGORY"]
-+            category = self._properties["CATEGORY"]
-+            if isinstance(category, RichText):
-+                return category
-         return None
-#+end_example
-
-Instead, please coerce the value to a =RichText=.
-** DONE =Repeat.is_completed= convenience attribute
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-04-05 Sun 20:04]
-:END:
-Add a convenience field to =Repeat= that indicaties if the =after= property is in the =parent.document.done_states=. Its semantics should be the same as =Heading.is_completed=.
-
-** DONE Code review comment
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-04-05 Sun 21:50]
-:END:
-:PROPERTIES:
-:context: [[file:~/projects/software/org-mode-parser/src/org_parser/document/_heading.py::def _ensure_logbook(self) -> Logbook:
- """Return heading logbook drawer."""
- return self._logbook]]
-:END:
-
-Filename: /home/k/projects/software/org-mode-parser/src/org_parser/document/_heading.py
-
-#+begin_example
-
-    def _ensure_logbook(self) -> Logbook:
-        """Return heading logbook drawer."""
-        return self._logbook
-#+end_example
-
-Can this be removed? Makes no sense.
-* Next
-** DONE More semantically meaningful errors
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-04-06 Mon 02:44]
-:END:
-- Distinct message when reporting trailing characters in drawer markers.
-- Distinct message for ERROR and MISSING nodes.
-- Distinct message for invalid repeats.
-- Distinct message for any other cases.
-
-** DONE Drawer/block truncation errors
-:LOGBOOK:
-- State "DONE"       from "TODO"       [2026-04-06 Mon 02:55]
-:END:
-It appears that for some cases the errors are not reported on the document:
-
-#+begin_example
->>> d = org_parser.loads('''
-... * hurr
-... #+begin_example
-... durr
-... * derp
-... ''')
->>> d.errors
-[]
-#+end_example
-
-#+begin_example
->>> d = org_parser.loads('''
-... * hurr
-... :hurr:
-... durr
-... * derp
-... ''')
->>> d.errors
-[]
-#+end_example
-
+* Features
 ** TODO =to_json()= convenience method
 All objects should be convertible to "simple" JSON objects:
 - =RichText= should be represented by its string representation value,
