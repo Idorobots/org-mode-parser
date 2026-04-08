@@ -21,7 +21,10 @@
 
 All of the above should parse as repeats - the empty values (~""~) should become =None=, same for missing values.
 
-** TODO Setting repeats when only using body-repeats does not remove them from the body.
+** DONE Setting repeats when only using body-repeats does not remove them from the body.
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-08 Wed 21:38]
+:END:
 #+begin_example
 ,* DONE Test
    - State "DONE"       from "ACTIVE"     [2012-10-05 pią 19:49]

@@ -76,8 +76,8 @@ class Heading:
         title: The heading title as [org_parser.text.RichText][], or *None*.
         counter: Completion counter object (e.g. ``[1/3]``), or *None*.
         heading_tags: A list of tag strings found on this heading line in source order.
-        repeats: Repeated task entries extracted from ``LOGBOOK``.
-        clock_entries: Clock entries extracted from ``LOGBOOK``.
+        repeats: Repeated task entries extracted from ``LOGBOOK`` and heading body.
+        clock_entries: Clock entries extracted from ``LOGBOOK`` and heading body.
         body: Body elements of the heading (excludes sub-headings).
         children: Direct sub-headings of this heading.
 
@@ -144,8 +144,7 @@ class Heading:
         self._adopt_element(self._logbook)
         self._adopt_elements(self._body)
         self._adopt_elements(self._children)
-        self._sync_repeats()
-        self._sync_clock_entries()
+        self._sync_logbook_entries()
 
     # -- factory method ------------------------------------------------------
 
@@ -237,8 +236,7 @@ class Heading:
         heading._adopt_element(heading._properties)
         heading._adopt_element(heading._logbook)
         heading._body = body
-        heading._sync_repeats()
-        heading._sync_clock_entries()
+        heading._sync_logbook_entries()
 
         # Recursively build sub-headings.
         for child in node.children:
@@ -641,8 +639,7 @@ class Heading:
         def on_body_mutation(wrapped: DirtyList[Element]) -> None:
             self._body = list(wrapped)
             self._adopt_elements(self._body)
-            self._sync_repeats()
-            self._sync_clock_entries()
+            self._sync_logbook_entries()
             self.mark_dirty()
 
         return DirtyList(self._body, on_mutation=on_body_mutation)
@@ -652,8 +649,7 @@ class Heading:
         """Set body elements."""
         self._body = list(coerce_element_body(value))
         self._adopt_elements(self._body)
-        self._sync_repeats()
-        self._sync_clock_entries()
+        self._sync_logbook_entries()
         self.mark_dirty()
 
     @property
@@ -721,13 +717,12 @@ class Heading:
         """
         self._logbook = value if value is not None else Logbook(parent=self)
         self._adopt_element(self._logbook)
-        self._sync_repeats()
-        self._sync_clock_entries()
+        self._sync_logbook_entries()
         self.mark_dirty()
 
     @property
     def repeats(self) -> list[Repeat]:
-        """Repeated task entries extracted from this heading's logbook.
+        """Repeated task entries from this heading's logbook and body.
 
         Example:
         ```python
@@ -746,11 +741,11 @@ class Heading:
         """
 
         def on_repeats_mutation(wrapped: DirtyList[Repeat]) -> None:
-            self._promote_body_repeats_into_logbook()
+            self._promote_body_logbook_entries_into_logbook()
             self._repeats = list(wrapped)
             logbook = self._logbook
-            logbook.repeats = self._extract_logbook_repeats(self._repeats)
-            self._sync_repeats()
+            logbook.repeats = self._repeats
+            self._sync_logbook_entries()
             self.mark_dirty()
 
         return DirtyList(self._repeats, on_mutation=on_repeats_mutation)
@@ -758,11 +753,11 @@ class Heading:
     @repeats.setter
     def repeats(self, value: list[Repeat]) -> None:
         """Set repeats and synchronize them into the logbook drawer."""
-        self._promote_body_repeats_into_logbook()
+        self._promote_body_logbook_entries_into_logbook()
         self._repeats = list(value)
         logbook = self._logbook
-        logbook.repeats = self._extract_logbook_repeats(self._repeats)
-        self._sync_repeats()
+        logbook.repeats = self._repeats
+        self._sync_logbook_entries()
         self.mark_dirty()
 
     def add_repeat(self, repeat: Repeat) -> None:
@@ -783,16 +778,16 @@ class Heading:
         :END:
         ```
         """
-        self._promote_body_repeats_into_logbook()
+        self._promote_body_logbook_entries_into_logbook()
         self._repeats = [*self._repeats, repeat]
         logbook = self._logbook
         logbook.repeats = [*logbook.repeats, repeat]
-        self._sync_repeats()
+        self._sync_logbook_entries()
         self.mark_dirty()
 
     @property
     def clock_entries(self) -> list[Clock]:
-        """Clock entries extracted from this heading's logbook.
+        """Clock entries from this heading's logbook and body.
 
         Example:
         ```python
@@ -809,11 +804,11 @@ class Heading:
         """
 
         def on_clock_entries_mutation(wrapped: DirtyList[Clock]) -> None:
-            self._promote_body_clock_entries_into_logbook()
+            self._promote_body_logbook_entries_into_logbook()
             self._clock_entries = list(wrapped)
             logbook = self._logbook
             logbook.clock_entries = self._clock_entries
-            self._clock_entries = list(logbook.clock_entries)
+            self._sync_logbook_entries()
             self.mark_dirty()
 
         return DirtyList(self._clock_entries, on_mutation=on_clock_entries_mutation)
@@ -821,11 +816,11 @@ class Heading:
     @clock_entries.setter
     def clock_entries(self, value: list[Clock]) -> None:
         """Set clock entries and synchronize them into the logbook drawer."""
-        self._promote_body_clock_entries_into_logbook()
+        self._promote_body_logbook_entries_into_logbook()
         self._clock_entries = list(value)
         logbook = self._logbook
         logbook.clock_entries = self._clock_entries
-        self._clock_entries = list(logbook.clock_entries)
+        self._sync_logbook_entries()
         self.mark_dirty()
 
     @property
@@ -1164,86 +1159,47 @@ class Heading:
         for value in values:
             self._adopt_element(value)
 
-    def _sync_repeats(self) -> None:
-        """Synchronize repeated-task cache from logbook and heading body."""
-        body_repeats, _ = _recover_heading_body_lists_and_extract_clocks(
+    def _sync_logbook_entries(self) -> None:
+        """Synchronize repeat and clock caches from heading logbook and body."""
+        body_repeats, body_clocks = _collect_heading_body_repeats_and_clocks(
             self._body,
             document=self._document,
         )
 
-        if not body_repeats:
-            self._repeats = list(self._logbook.repeats)
-        else:
-            self._repeats = [*self._logbook.repeats, *body_repeats]
+        self._repeats = [*self._logbook.repeats, *body_repeats]
+        self._clock_entries = [*self._logbook.clock_entries, *body_clocks]
 
         # NOTE Attach the document for state comparisons of programmatically created repeats.
         for repeat in self._repeats:
             repeat.attach_document(self._document)
 
-    def _promote_body_repeats_into_logbook(self) -> None:
-        """Move recovered heading-body repeats into the heading logbook."""
-        body_repeats, _ = _recover_heading_body_lists_and_extract_clocks(
+    def _promote_body_logbook_entries_into_logbook(self) -> None:
+        """Move body-derived repeats/clocks into the canonical heading logbook."""
+        body_repeats, body_clocks = _collect_heading_body_repeats_and_clocks(
             self._body,
             document=self._document,
         )
-        if not body_repeats:
+        if not body_repeats and not body_clocks:
             return
 
-        cleaned_body, changed = _remove_repeat_items_from_elements(self._body)
+        cleaned_body, changed = _remove_promotable_logbook_entries_from_elements(self._body)
         if changed:
             self._body = cleaned_body
             self._adopt_elements(self._body)
 
-        existing_ids = {id(repeat) for repeat in self._logbook.repeats}
-        promoted = [repeat for repeat in body_repeats if id(repeat) not in existing_ids]
-        if promoted:
-            self._logbook.repeats = [*self._logbook.repeats, *promoted]
+        existing_repeat_ids = {id(repeat) for repeat in self._logbook.repeats}
+        promoted_repeats = [
+            repeat for repeat in body_repeats if id(repeat) not in existing_repeat_ids
+        ]
+        if promoted_repeats:
+            self._logbook.repeats = [*self._logbook.repeats, *promoted_repeats]
 
-        self._sync_repeats()
+        existing_clock_ids = {id(clock) for clock in self._logbook.clock_entries}
+        promoted_clocks = [clock for clock in body_clocks if id(clock) not in existing_clock_ids]
+        if promoted_clocks:
+            self._logbook.clock_entries = [*self._logbook.clock_entries, *promoted_clocks]
 
-    def _extract_logbook_repeats(self, repeats: Sequence[Repeat]) -> list[Repeat]:
-        """Return repeats that should be serialized into the heading logbook."""
-        body_repeats, _ = _recover_heading_body_lists_and_extract_clocks(
-            self._body,
-            document=self._document,
-        )
-        if not body_repeats:
-            return list(repeats)
-        body_repeat_ids = {id(repeat) for repeat in body_repeats}
-        return [repeat for repeat in repeats if id(repeat) not in body_repeat_ids]
-
-    def _sync_clock_entries(self) -> None:
-        """Synchronize clock cache from logbook and heading body."""
-        _, body_clocks = _recover_heading_body_lists_and_extract_clocks(
-            self._body,
-            document=self._document,
-        )
-
-        if not body_clocks:
-            self._clock_entries = list(self._logbook.clock_entries)
-            return
-        self._clock_entries = [*self._logbook.clock_entries, *body_clocks]
-
-    def _promote_body_clock_entries_into_logbook(self) -> None:
-        """Move recovered heading-body clocks into the heading logbook."""
-        _, body_clocks = _recover_heading_body_lists_and_extract_clocks(
-            self._body,
-            document=self._document,
-        )
-        if not body_clocks:
-            return
-
-        cleaned_body, changed = _remove_clock_entries_from_elements(self._body)
-        if changed:
-            self._body = cleaned_body
-            self._adopt_elements(self._body)
-
-        existing_ids = {id(clock) for clock in self._logbook.clock_entries}
-        promoted = [clock for clock in body_clocks if id(clock) not in existing_ids]
-        if promoted:
-            self._logbook.clock_entries = [*self._logbook.clock_entries, *promoted]
-
-        self._sync_clock_entries()
+        self._sync_logbook_entries()
 
     def _set_planning_timestamp(
         self,
@@ -1536,31 +1492,23 @@ def _find_first_subheading(node: tree_sitter.Node) -> tree_sitter.Node | None:
     return None
 
 
-def _recover_heading_body_lists_and_extract_clocks(  # noqa: C901
+def _collect_heading_body_repeats_and_clocks(  # noqa: C901
     body: list[Element],
     *,
     document: Document,
 ) -> tuple[list[Repeat], list[Clock]]:
-    """Recover repeat items in heading body lists and collect body clocks.
+    """Collect repeats and clocks from heading body and nested indent blocks.
 
-    This scans only the element classes where repeat/clock records are
-    expected in heading bodies: ``List``, ``Logbook``, and custom ``Drawer``
-    contents. Any list item that matches repeated-task syntax is converted
-    in-place to [org_parser.element.Repeat][] without marking the tree dirty, mirroring
-    parse-time semantic recovery behavior.
-
-    Args:
-        body: Heading body elements to scan.
-        document: Owning document used by repeat parsing for diagnostics.
-
-    Returns:
-        A tuple of ``(repeats, clocks)`` found in heading body content.
+    This scans heading-level body elements and nested ``Indent`` blocks,
+    including ``Logbook`` elements found in those paths. Lists are converted to
+    [org_parser.element.Repeat][] where appropriate. Custom non-logbook drawer
+    bodies and list-item nested bodies are intentionally ignored.
     """
     repeats: list[Repeat] = []
     clocks: list[Clock] = []
 
     def collect_from_list(list_element: List) -> None:
-        """Recover repeat items from one top-level plain list."""
+        """Recover repeat items from one heading-body plain list."""
         updated_items: list[ListItem] = []
         converted = False
         for item in list_element.items:
@@ -1576,57 +1524,41 @@ def _recover_heading_body_lists_and_extract_clocks(  # noqa: C901
         if converted:
             list_element.set_items(updated_items, mark_dirty=False)
 
-    def collect_from_drawer_body(elements: list[Element]) -> None:
-        """Collect repeats/clocks from explicit drawer body element classes."""
+    def collect_from_elements(elements: list[Element]) -> None:
+        """Collect repeats and clocks from one element stream."""
         for element in elements:
-            if isinstance(element, Clock):
-                clocks.append(element)
+            if isinstance(element, Logbook):
+                repeats.extend(element.repeats)
+                clocks.extend(element.clock_entries)
                 continue
 
-            if isinstance(element, Indent):
-                collect_from_drawer_body(element.body)
+            if isinstance(element, Clock):
+                clocks.append(element)
                 continue
 
             if isinstance(element, List):
                 collect_from_list(element)
                 continue
 
-            if isinstance(element, Logbook):
-                repeats.extend(element.repeats)
-                clocks.extend(element.clock_entries)
-                continue
+            if isinstance(element, Indent):
+                collect_from_elements(element.body)
 
-            if isinstance(element, Drawer):
-                collect_from_drawer_body(element.body)
-
-    for element in body:
-        if isinstance(element, Indent):
-            collect_from_drawer_body(element.body)
-            continue
-
-        if isinstance(element, List):
-            collect_from_list(element)
-            continue
-
-        if isinstance(element, Logbook):
-            repeats.extend(element.repeats)
-            clocks.extend(element.clock_entries)
-            continue
-
-        if isinstance(element, Drawer):
-            collect_from_drawer_body(element.body)
-
+    collect_from_elements(body)
     return repeats, clocks
 
 
-def _remove_repeat_items_from_elements(
+def _remove_promotable_logbook_entries_from_elements(  # noqa: C901
     elements: list[Element],
 ) -> tuple[list[Element], bool]:
-    """Return body elements with repeat list items removed."""
+    """Remove body repeats/clocks and return ``(cleaned_elements, changed)``."""
     updated_elements: list[Element] = []
     changed = False
 
     for element in elements:
+        if isinstance(element, Clock):
+            changed = True
+            continue
+
         if isinstance(element, List):
             kept_items = [item for item in element.items if not isinstance(item, Repeat)]
             if len(kept_items) != len(element.items):
@@ -1638,8 +1570,10 @@ def _remove_repeat_items_from_elements(
             updated_elements.append(element)
             continue
 
-        if isinstance(element, Indent):
-            cleaned_body, body_changed = _remove_repeat_items_from_elements(list(element.body))
+        if isinstance(element, Logbook):
+            cleaned_body, body_changed = _remove_promotable_logbook_entries_from_elements(
+                list(element.body)
+            )
             if body_changed:
                 changed = True
                 if cleaned_body:
@@ -1649,47 +1583,16 @@ def _remove_repeat_items_from_elements(
             updated_elements.append(element)
             continue
 
-        if isinstance(element, Drawer):
-            cleaned_body, body_changed = _remove_repeat_items_from_elements(list(element.body))
-            if body_changed:
-                changed = True
-                element.body = cleaned_body
-            updated_elements.append(element)
-            continue
-
-        updated_elements.append(element)
-
-    return updated_elements, changed
-
-
-def _remove_clock_entries_from_elements(
-    elements: list[Element],
-) -> tuple[list[Element], bool]:
-    """Return body elements with recovered clock entries removed."""
-    updated_elements: list[Element] = []
-    changed = False
-
-    for element in elements:
-        if isinstance(element, Clock):
-            changed = True
-            continue
-
         if isinstance(element, Indent):
-            cleaned_body, body_changed = _remove_clock_entries_from_elements(list(element.body))
+            cleaned_body, body_changed = _remove_promotable_logbook_entries_from_elements(
+                list(element.body)
+            )
             if body_changed:
                 changed = True
                 if cleaned_body:
                     element.body = cleaned_body
                     updated_elements.append(element)
                 continue
-            updated_elements.append(element)
-            continue
-
-        if isinstance(element, Drawer):
-            cleaned_body, body_changed = _remove_clock_entries_from_elements(list(element.body))
-            if body_changed:
-                changed = True
-                element.body = cleaned_body
             updated_elements.append(element)
             continue
 
