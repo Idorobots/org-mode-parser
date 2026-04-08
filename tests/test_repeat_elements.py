@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from org_parser import loads
-from org_parser.element import List, Logbook, Paragraph, Repeat
+from org_parser.element import Indent, List, Logbook, Paragraph, Repeat
 from org_parser.text import RichText
 from org_parser.time import Clock, Timestamp
 
@@ -268,8 +268,8 @@ def test_repeats_append_creates_logbook_when_missing() -> None:
     assert len(heading.logbook.repeats) == 1
 
 
-def test_add_repeat_does_not_duplicate_existing_body_repeat() -> None:
-    """Adding a logbook repeat leaves recovered heading-body repeats unique."""
+def test_add_repeat_promotes_existing_body_repeats_into_logbook() -> None:
+    """Adding a repeat moves recovered heading-body repeats into the logbook."""
     document = loads("* H\n" '- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n')
     heading = document.children[0]
     body_repeat = heading.repeats[0]
@@ -288,12 +288,13 @@ def test_add_repeat_does_not_duplicate_existing_body_repeat() -> None:
     )
 
     assert len(heading.repeats) == 2
-    assert len(heading.logbook.repeats) == 1
-    assert all(repeat is not body_repeat for repeat in heading.logbook.repeats)
+    assert len(heading.logbook.repeats) == 2
+    assert any(repeat is body_repeat for repeat in heading.logbook.repeats)
+    assert heading.body == []
 
 
-def test_repeats_append_does_not_duplicate_existing_body_repeat() -> None:
-    """Mutating heading repeats keeps body repeats out of logbook serialization."""
+def test_repeats_append_promotes_existing_body_repeats_into_logbook() -> None:
+    """Appending to heading repeats moves body repeats into the logbook."""
     document = loads("* H\n" '- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n')
     heading = document.children[0]
     body_repeat = heading.repeats[0]
@@ -312,8 +313,46 @@ def test_repeats_append_does_not_duplicate_existing_body_repeat() -> None:
     )
 
     assert len(heading.repeats) == 2
-    assert len(heading.logbook.repeats) == 1
-    assert all(repeat is not body_repeat for repeat in heading.logbook.repeats)
+    assert len(heading.logbook.repeats) == 2
+    assert any(repeat is body_repeat for repeat in heading.logbook.repeats)
+    assert heading.body == []
+
+
+def test_repeats_setter_clears_body_repeats_and_removes_body_list() -> None:
+    """Assigning heading repeats clears pre-existing recovered body repeats."""
+    document = loads(
+        "* DONE Test\n"
+        '   - State "DONE"       from "ACTIVE"     [2012-10-05 pią 19:49]\n'
+        '   - State "ACTIVE"     from "BLOCKER"    [2012-10-03 śro 09:37]\n'
+        '   - State "BLOCKER"    from "BLOCKER"    [2012-09-19 śro 17:55]\n'
+    )
+    heading = document.children[0]
+
+    heading.repeats = []
+
+    assert heading.repeats == []
+    assert heading.logbook.repeats == []
+    assert heading.body == []
+    assert str(heading) == "* DONE Test\n"
+
+
+def test_repeats_setter_clears_indented_logbook_repeats() -> None:
+    """Assigning heading repeats clears repeat lists nested in logbook indents."""
+    document = loads(
+        "* H\n"
+        ":LOGBOOK:\n"
+        '  - State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+        ":END:\n"
+    )
+    heading = document.children[0]
+
+    heading.repeats = []
+
+    assert heading.repeats == []
+    assert heading.logbook.repeats == []
+    assert heading.logbook.body == []
+    assert heading.body == []
+    assert str(heading) == "* H\n"
 
 
 def test_heading_clock_cache_extracts_logbook_clock_entries() -> None:
@@ -362,6 +401,150 @@ def test_heading_clock_setter_creates_logbook_when_missing() -> None:
     assert heading.logbook.clock_entries == [clock]
     assert heading.logbook.body == [clock]
     assert heading.logbook.body[0] is heading.clock_entries[0]
+
+
+def test_clock_entries_append_promotes_existing_body_clocks_into_logbook() -> None:
+    """Appending heading clocks moves recovered body clocks into the logbook."""
+    document = loads(
+        "* H\n" "\n" "  CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+    )
+    heading = document.children[0]
+    body_clock = heading.clock_entries[0]
+
+    heading.clock_entries.append(
+        Clock(
+            timestamp=Timestamp(
+                is_active=False,
+                start_year=2026,
+                start_month=1,
+                start_day=1,
+            ),
+            duration="0:10",
+        )
+    )
+
+    assert len(heading.clock_entries) == 2
+    assert len(heading.logbook.clock_entries) == 2
+    assert any(clock is body_clock for clock in heading.logbook.clock_entries)
+    assert all("CLOCK:" not in str(element) for element in heading.body)
+
+
+def test_clock_entries_setter_clears_body_clocks() -> None:
+    """Assigning heading clocks removes recovered body clocks from body."""
+    document = loads(
+        "* H\n" "\n" "CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+    )
+    heading = document.children[0]
+
+    heading.clock_entries = []
+
+    assert heading.clock_entries == []
+    assert heading.logbook.clock_entries == []
+    assert all("CLOCK:" not in str(element) for element in heading.body)
+    assert "CLOCK:" not in str(heading)
+
+
+def test_clock_entries_setter_clears_indented_body_clocks_and_removes_empty_indent() -> None:
+    """Clearing body clocks removes now-empty indent wrappers."""
+    document = loads(
+        "* H\n" "\n" "  CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+    )
+    heading = document.children[0]
+    assert any(isinstance(element, Indent) for element in heading.body)
+
+    heading.clock_entries = []
+
+    assert heading.clock_entries == []
+    assert heading.logbook.clock_entries == []
+    assert all("CLOCK:" not in str(element) for element in heading.body)
+    assert all(not isinstance(element, Indent) for element in heading.body)
+    assert "CLOCK:" not in str(heading)
+
+
+def test_clock_entries_setter_clears_indented_logbook_clocks_and_removes_empty_indent() -> None:
+    """Clearing indented body logbooks drops empty nested logbook/indent blocks."""
+    document = loads(
+        "* H\n"
+        "    :LOGBOOK:\n"
+        "    CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+        "    :END:\n"
+    )
+    heading = document.children[0]
+    assert any(isinstance(element, Indent) for element in heading.body)
+
+    heading.clock_entries = []
+
+    assert heading.clock_entries == []
+    assert heading.logbook.clock_entries == []
+    assert heading.body == []
+    assert str(heading) == "* H\n"
+
+
+def test_repeats_mutation_promotes_indented_body_repeats_and_clocks() -> None:
+    """Mutating heading repeats promotes indented body repeats and clocks."""
+    document = loads(
+        "* H\n"
+        '  - State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+        "  CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+    )
+    heading = document.children[0]
+    body_repeat = heading.repeats[0]
+    body_clock = heading.clock_entries[0]
+
+    heading.repeats.append(
+        Repeat(
+            after="CANCELLED",
+            before="TODO",
+            timestamp=Timestamp(
+                is_active=False,
+                start_year=2026,
+                start_month=3,
+                start_day=9,
+            ),
+        )
+    )
+
+    assert len(heading.repeats) == 2
+    assert len(heading.clock_entries) == 1
+    assert len(heading.logbook.repeats) == 2
+    assert len(heading.logbook.clock_entries) == 1
+    assert any(repeat is body_repeat for repeat in heading.logbook.repeats)
+    assert any(clock is body_clock for clock in heading.logbook.clock_entries)
+    assert heading.body == []
+
+
+def test_clock_entries_mutation_promotes_indented_logbook_repeats_and_clocks() -> None:
+    """Mutating heading clocks promotes indented LOGBOOK repeats and clocks."""
+    document = loads(
+        "* H\n"
+        "    :LOGBOOK:\n"
+        '    - State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+        "    CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+        "    :END:\n"
+    )
+    heading = document.children[0]
+    body_repeat = heading.repeats[0]
+    body_clock = heading.clock_entries[0]
+
+    heading.clock_entries.append(
+        Clock(
+            timestamp=Timestamp(
+                is_active=False,
+                start_year=2026,
+                start_month=1,
+                start_day=1,
+            ),
+            duration="0:10",
+        )
+    )
+
+    assert len(heading.repeats) == 1
+    assert len(heading.clock_entries) == 2
+    assert len(heading.logbook.repeats) == 1
+    assert len(heading.logbook.clock_entries) == 2
+    assert any(repeat is body_repeat for repeat in heading.logbook.repeats)
+    assert any(clock is body_clock for clock in heading.logbook.clock_entries)
+    assert heading.body == []
 
 
 def test_non_logbook_lists_do_not_convert_items_to_repeats() -> None:
@@ -446,31 +629,86 @@ def test_heading_body_nested_lists_are_not_recovered_for_repeats() -> None:
     assert heading.repeats == []
 
 
-def test_heading_clock_cache_ignores_non_drawer_body_clock_entries() -> None:
-    """Bare heading-body clocks are ignored by the explicit recovery scan."""
+def test_heading_clock_cache_extracts_non_indented_body_clock_entries() -> None:
+    """Bare heading-body clocks are extracted into heading clock cache."""
     document = loads(
         "* H\n" "\n" "CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 10:30] =>  1:30\n"
     )
 
     heading = document.children[0]
-    assert heading.clock_entries == []
-    assert len(heading.logbook) == 0
+    assert len(heading.clock_entries) == 1
+    assert isinstance(heading.clock_entries[0], Clock)
 
 
-def test_heading_clock_cache_extracts_nested_body_clock_entries() -> None:
-    """Heading clock cache includes clocks nested inside body containers."""
+def test_heading_clock_cache_extracts_indented_body_clock_entries() -> None:
+    """Heading clock cache includes clocks nested inside indent blocks."""
     document = loads(
-        "* H\n"
-        ":NOTE:\n"
-        ":INNER:\n"
-        "CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
-        ":END:\n"
-        ":END:\n"
+        "* H\n" "\n" "  CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
     )
 
     heading = document.children[0]
     assert len(heading.clock_entries) == 1
     assert isinstance(heading.clock_entries[0], Clock)
+
+
+def test_heading_cache_ignores_repeats_and_clocks_inside_custom_drawers() -> None:
+    """Custom drawer repeats/clocks stay in-place and are excluded from caches."""
+    document = loads(
+        "* H\n"
+        ":NOTE:\n"
+        '- State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+        "CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+        ":END:\n"
+    )
+    heading = document.children[0]
+
+    heading.repeats.append(
+        Repeat(
+            after="CANCELLED",
+            before="TODO",
+            timestamp=Timestamp(
+                is_active=False,
+                start_year=2026,
+                start_month=3,
+                start_day=9,
+            ),
+        )
+    )
+    heading.clock_entries.append(
+        Clock(
+            timestamp=Timestamp(
+                is_active=False,
+                start_year=2026,
+                start_month=1,
+                start_day=1,
+            ),
+            duration="0:10",
+        )
+    )
+
+    assert len(heading.repeats) == 1
+    assert len(heading.logbook.repeats) == 1
+    assert len(heading.clock_entries) == 1
+    assert len(heading.logbook.clock_entries) == 1
+    assert any('State "DONE"' in str(element) for element in heading.body)
+    assert any("CLOCK:" in str(element) for element in heading.body)
+
+
+def test_heading_cache_includes_indented_logbook_entries() -> None:
+    """Indented LOGBOOK drawers still contribute repeats and clock entries."""
+    document = loads(
+        "* H\n"
+        "    :LOGBOOK:\n"
+        '    - State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+        "    CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+        "    :END:\n"
+    )
+    heading = document.children[0]
+
+    assert len(heading.repeats) == 1
+    assert len(heading.clock_entries) == 1
+    assert heading.repeats[0].after == "DONE"
+    assert heading.repeats[0].before == "TODO"
 
 
 def test_heading_clock_cache_ignores_clocks_in_nested_list_bodies() -> None:

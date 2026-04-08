@@ -5,6 +5,10 @@ Document(
       Heading(
         level=1,
         title=RichText('Clocks'),
+        clock_entries=[
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=9, start_minute=0, end_year=2025, end_month=1, end_day=6, end_dayname='Mon', end_hour=11, end_minute=30), duration='2:30'),
+            Clock(timestamp=Timestamp(is_active=False, start_year=2025, start_month=1, start_day=7, start_dayname='Tue', start_hour=14, start_minute=0)),
+          ],
         body=[
             BlankLine(),
             Paragraph(body=RichText('Closed clock with duration:\n')),
