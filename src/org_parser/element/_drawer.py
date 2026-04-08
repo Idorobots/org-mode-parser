@@ -393,15 +393,29 @@ class Logbook(Drawer):
             return
 
         if not self._repeats:
-            updated_body = [element for element in self._body if element is not target_list]
-            if mark_dirty:
-                self.body = updated_body
-            else:
-                self._body = updated_body
-                self._adopt_body(self._body)
+            self._clear_repeat_target_list(target_list, mark_dirty=mark_dirty)
             return
 
         target_list.set_items(list(self._repeats), mark_dirty=mark_dirty)
+
+    def _clear_repeat_target_list(self, target_list: List, *, mark_dirty: bool) -> None:
+        """Remove repeat list from body, or clear it in-place when nested."""
+        if mark_dirty:
+            updated_body, removed = _remove_target_list_from_elements(
+                self._body,
+                target_list=target_list,
+            )
+            if removed:
+                self.body = updated_body
+                return
+        else:
+            updated_body = [element for element in self._body if element is not target_list]
+            if len(updated_body) != len(self._body):
+                self._body = updated_body
+                self._adopt_body(self._body)
+                return
+
+        target_list.set_items([], mark_dirty=mark_dirty)
 
     def append_to_body_without_dirty(self, element: Element) -> None:
         """Append one body element without changing this drawer's dirty state."""
@@ -614,3 +628,33 @@ def _iter_repeat_candidate_lists(elements: list[Element]) -> Iterator[List]:
             continue
         if isinstance(element, Indent):
             yield from _iter_repeat_candidate_lists(element.body)
+
+
+def _remove_target_list_from_elements(
+    elements: list[Element],
+    *,
+    target_list: List,
+) -> tuple[list[Element], bool]:
+    """Return ``(updated_elements, removed)`` after removing one repeat list."""
+    updated_elements: list[Element] = []
+    removed = False
+
+    for element in elements:
+        if element is target_list:
+            removed = True
+            continue
+
+        if isinstance(element, Indent):
+            updated_body, body_removed = _remove_target_list_from_elements(
+                list(element.body),
+                target_list=target_list,
+            )
+            if body_removed:
+                removed = True
+                if not updated_body:
+                    continue
+                element.body = updated_body
+
+        updated_elements.append(element)
+
+    return updated_elements, removed

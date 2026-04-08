@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from org_parser import loads
-from org_parser.element import List, Logbook, Paragraph, Repeat
+from org_parser.element import Indent, List, Logbook, Paragraph, Repeat
 from org_parser.text import RichText
 from org_parser.time import Clock, Timestamp
 
@@ -336,6 +336,25 @@ def test_repeats_setter_clears_body_repeats_and_removes_body_list() -> None:
     assert str(heading) == "* DONE Test\n"
 
 
+def test_repeats_setter_clears_indented_logbook_repeats() -> None:
+    """Assigning heading repeats clears repeat lists nested in logbook indents."""
+    document = loads(
+        "* H\n"
+        ":LOGBOOK:\n"
+        '  - State "DONE"       from "TODO"       [2026-03-08 Sun 17:59]\n'
+        ":END:\n"
+    )
+    heading = document.children[0]
+
+    heading.repeats = []
+
+    assert heading.repeats == []
+    assert heading.logbook.repeats == []
+    assert heading.logbook.body == []
+    assert heading.body == []
+    assert str(heading) == "* H\n"
+
+
 def test_heading_clock_cache_extracts_logbook_clock_entries() -> None:
     """Heading exposes cached ``CLOCK`` entries extracted from ``LOGBOOK``."""
     document = loads(
@@ -423,6 +442,42 @@ def test_clock_entries_setter_clears_body_clocks() -> None:
     assert heading.logbook.clock_entries == []
     assert all("CLOCK:" not in str(element) for element in heading.body)
     assert "CLOCK:" not in str(heading)
+
+
+def test_clock_entries_setter_clears_indented_body_clocks_and_removes_empty_indent() -> None:
+    """Clearing body clocks removes now-empty indent wrappers."""
+    document = loads(
+        "* H\n" "\n" "  CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+    )
+    heading = document.children[0]
+    assert any(isinstance(element, Indent) for element in heading.body)
+
+    heading.clock_entries = []
+
+    assert heading.clock_entries == []
+    assert heading.logbook.clock_entries == []
+    assert all("CLOCK:" not in str(element) for element in heading.body)
+    assert all(not isinstance(element, Indent) for element in heading.body)
+    assert "CLOCK:" not in str(heading)
+
+
+def test_clock_entries_setter_clears_indented_logbook_clocks_and_removes_empty_indent() -> None:
+    """Clearing indented body logbooks drops empty nested logbook/indent blocks."""
+    document = loads(
+        "* H\n"
+        "    :LOGBOOK:\n"
+        "    CLOCK: [2025-01-08 Wed 09:00]--[2025-01-08 Wed 09:30] =>  0:30\n"
+        "    :END:\n"
+    )
+    heading = document.children[0]
+    assert any(isinstance(element, Indent) for element in heading.body)
+
+    heading.clock_entries = []
+
+    assert heading.clock_entries == []
+    assert heading.logbook.clock_entries == []
+    assert heading.body == []
+    assert str(heading) == "* H\n"
 
 
 def test_repeats_mutation_promotes_indented_body_repeats_and_clocks() -> None:
