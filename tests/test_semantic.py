@@ -1039,6 +1039,79 @@ class TestHeadingCategory:
             pass
 
 
+class TestHeadingId:
+    """Tests for ``Heading.id`` and document ID lookup indexing."""
+
+    def test_heading_id_none_when_unset(self) -> None:
+        """Heading.id is None when no ID property exists."""
+        doc = Document(filename="t.org")
+        heading = Heading(level=1, document=doc, parent=doc)
+
+        assert heading.id is None
+
+    def test_heading_id_getter_reads_id_property(self, tmp_path: Path) -> None:
+        """Heading.id reads the value stored in the heading properties drawer."""
+        path = tmp_path / "id.org"
+        path.write_bytes(b"* H\n:PROPERTIES:\n:ID: abc-123\n:END:\n")
+        doc = _load_document(path)
+
+        assert doc.children[0].id == "abc-123"
+
+    def test_heading_id_setter_updates_properties_and_document_lookup(self) -> None:
+        """Setting Heading.id writes the ID drawer property and updates lookup."""
+        doc = Document(filename="t.org")
+        heading = Heading(level=1, document=doc, parent=doc)
+        doc.children = [heading]
+
+        heading.id = "task-1"
+
+        assert heading.id == "task-1"
+        assert str(heading.properties["ID"]) == "task-1"
+        assert doc.heading_by_id("task-1") is heading
+
+    def test_heading_id_none_removes_property_and_lookup_entry(self) -> None:
+        """Clearing Heading.id removes both drawer property and index entry."""
+        doc = Document(filename="t.org")
+        heading = Heading(level=1, document=doc, parent=doc)
+        doc.children = [heading]
+        heading.id = "task-1"
+
+        heading.id = None
+
+        assert heading.id is None
+        assert "ID" not in heading.properties
+        assert doc.heading_by_id("task-1") is None
+
+    def test_document_heading_by_id_last_duplicate_wins(self) -> None:
+        """Lookup returns the last heading when duplicate IDs exist."""
+        doc = loads(
+            "* First\n"
+            ":PROPERTIES:\n"
+            ":ID: duplicate\n"
+            ":END:\n"
+            "* Second\n"
+            ":PROPERTIES:\n"
+            ":ID: duplicate\n"
+            ":END:\n"
+        )
+
+        assert doc.heading_by_id("duplicate") is doc.children[1]
+
+    def test_document_id_index_syncs_when_adding_headings(self) -> None:
+        """Appending headings and subheadings keeps ID lookup index in sync."""
+        doc = Document(filename="t.org")
+        parent = Heading(level=1, document=doc, parent=doc)
+        doc.children = [parent]
+
+        child = Heading(level=2, document=doc, parent=parent)
+        child.id = "child-1"
+        assert doc.heading_by_id("child-1") is None
+
+        parent.children.append(child)
+
+        assert doc.heading_by_id("child-1") is child
+
+
 # ===================================================================
 # Convenience fields
 # ===================================================================

@@ -35,6 +35,66 @@ All of the above should parse as repeats - the empty values (~""~) should become
 Given the above task, setting the repeats does not affect the list in the body.
 
 * Features
+** DONE =Heading.id= field
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-12 Sun 17:46]
+:END:
+Add a new field called =id= to the =Heading= class. The field should be writable, and return/set the value of the =ID= property.
+
+=Document= should have an index of headings with IDs set that can be used to find a specific heading by its ID. If there are multiple headings with the same ID, it is OK to return the last one of them.
+Whenever headings are added to the document or as subheadings of another heading, the index should be synced to reflect all the headings that have na ID.
+Whenever the =id= is set on a heading, the document index should be updated (if the heading is attached to a document).
+
+*** DONE src/org_parser/document/_heading.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-12 Sun 17:46]
+:END:
+
+In file src/org_parser/document/_heading.py around line 1271, near the ~class Heading:~
+
+#+begin_example
++    def _attached_document(self) -> Document | None:
++        """Return the root document from the parent chain, if reachable."""
++        from org_parser.document._document import Document
++
++        owner: Heading | Document = self
++        seen: set[int] = set()
++        while True:
++            if isinstance(owner, Document):
++                return owner
++            owner_id = id(owner)
++            if owner_id in seen:
++                return None
++            seen.add(owner_id)
++            owner = owner.parent
+#+end_example
+
+This is really wrong. Please use the =Heading.document=.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-12 Sun 17:46]
+:END:
+
+In file src/org_parser/document/_document.py around line 666, near the ~class Document:~
+
+#+begin_example
++    def find_heading_by_id(self, heading_id: str) -> Heading | None:
++        """Return the heading with Org ``ID`` equal to *heading_id*.
++
++        When multiple headings share the same ``ID``, the last heading in
++        document order is returned.
++        """
++        self._sync_heading_id_index()
++        return self._heading_id_index.get(heading_id)
+#+end_example
+
+Rename to =heading_by_id= and please don't sync the index in this function, it should be synced on mutation/creation only.
 ** TODO =to_json()= convenience method
 All objects should be convertible to "simple" JSON objects:
 - =RichText= should be represented by its string representation value,
@@ -42,3 +102,13 @@ All objects should be convertible to "simple" JSON objects:
 
 Omit the =children=, =siblings=, =parent=, =all_heading= and any other fields that could lead to a recursive conversion.
 Prefer =body= and =title= to =body_text= and =title_text=, etc.
+** Properties
+*** Inherited properties
+https://orgmode.org/guide/Properties.html
+https://orgmode.org/manual/Property-Inheritance.html
+*** Multi-value properties
+https://orgmode.org/manual/Property-Syntax.html
+*** Special properties
+https://orgmode.org/manual/Special-Properties.html
+
+Might warrant rename of =tags= to =all_tags= and =heading_tags= to =tags=.

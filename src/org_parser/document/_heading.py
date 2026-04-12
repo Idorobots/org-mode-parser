@@ -558,6 +558,32 @@ class Heading:
         return self._parent.category
 
     @property
+    def id(self) -> str | None:
+        """The ``ID`` value from this heading's ``PROPERTIES`` drawer.
+
+        Returns ``None`` when no ``ID`` entry exists or when it renders to an
+        empty string.
+        """
+        if "ID" not in self._properties:
+            return None
+        heading_id = str(self._properties["ID"])
+        return heading_id if heading_id != "" else None
+
+    @id.setter
+    def id(self, value: RichText | str | None) -> None:
+        """Set or clear this heading's ``ID`` property value."""
+        if value is None:
+            if "ID" in self._properties:
+                del self._properties["ID"]
+                self._sync_document_heading_id_index()
+                self.mark_dirty()
+            return
+
+        self._properties["ID"] = coerce_rich_text(value)
+        self._sync_document_heading_id_index()
+        self.mark_dirty()
+
+    @property
     def scheduled(self) -> Timestamp | None:
         """The ``SCHEDULED`` planning timestamp, or *None*.
 
@@ -866,6 +892,7 @@ class Heading:
             self._adopt_elements(self._children)
             for child in self._children:
                 ensure_child_heading_level(child, parent_level=self._level)
+            self._sync_document_heading_id_index()
             self.mark_dirty()
 
         return DirtyList(self._children, on_mutation=on_children_mutation)
@@ -884,6 +911,7 @@ class Heading:
         self._adopt_elements(self._children)
         for child in self._children:
             ensure_child_heading_level(child, parent_level=self._level)
+        self._sync_document_heading_id_index()
         self.mark_dirty()
 
     @property
@@ -1225,6 +1253,10 @@ class Heading:
         if value is None:
             return
         value.parent = self
+
+    def _sync_document_heading_id_index(self) -> None:
+        """Rebuild this heading's document-level heading-ID index."""
+        self.document.sync_heading_id_index()
 
     @property
     def siblings(self) -> list[Heading]:

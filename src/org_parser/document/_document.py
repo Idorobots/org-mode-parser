@@ -174,12 +174,14 @@ class Document:
         self._source: bytes | None = None
         self._dirty = False
         self._errors: list[ParseError] = []
+        self._heading_id_index: dict[str, Heading] = {}
 
         self._adopt_keywords(self._keywords)
         self._adopt_element(self._properties)
         self._adopt_element(self._logbook)
         self._adopt_elements(self._body)
         self._adopt_elements(self._children)
+        self._sync_heading_id_index()
 
     # -- factory method ------------------------------------------------------
 
@@ -272,6 +274,7 @@ class Document:
                 elem = element_from_error_or_unknown(child, doc, parent=doc)
                 doc._body.append(elem)
 
+        doc._sync_heading_id_index()
         return doc
 
     # -- public read-only properties -----------------------------------------
@@ -606,6 +609,7 @@ class Document:
             self._adopt_elements(self._children)
             for child in self._children:
                 ensure_child_heading_level(child, parent_level=0)
+            self._sync_heading_id_index()
             self.mark_dirty()
 
         return DirtyList(self._children, on_mutation=on_children_mutation)
@@ -627,6 +631,7 @@ class Document:
         self._adopt_elements(self._children)
         for child in self._children:
             ensure_child_heading_level(child, parent_level=0)
+        self._sync_heading_id_index()
         self.mark_dirty()
 
     @property
@@ -649,6 +654,18 @@ class Document:
         ordered: list[Heading] = []
         _collect_heading_subtree(self._children, ordered)
         return ordered
+
+    def heading_by_id(self, heading_id: str) -> Heading | None:
+        """Return the heading with Org ``ID`` equal to *heading_id*.
+
+        When multiple headings share the same ``ID``, the last heading in
+        document order is returned.
+        """
+        return self._heading_id_index.get(heading_id)
+
+    def sync_heading_id_index(self) -> None:
+        """Rebuild the document heading-ID lookup index."""
+        self._sync_heading_id_index()
 
     @property
     def is_root(self) -> bool:
@@ -916,6 +933,16 @@ class Document:
         """Assign this document as parent for each provided child object."""
         for value in values:
             self._adopt_element(value)
+
+    def _sync_heading_id_index(self) -> None:
+        """Rebuild the heading-ID lookup index from current tree state."""
+        index: dict[str, Heading] = {}
+        for heading in self.all_headings:
+            heading_id = heading.id
+            if heading_id is None:
+                continue
+            index[heading_id] = heading
+        self._heading_id_index = index
 
     def render(self) -> str:
         """Return the complete Org Mode text for a document including headings.
