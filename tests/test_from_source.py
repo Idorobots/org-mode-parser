@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from org_parser.document import Document, Heading
-from org_parser.element import Element, FixedWidthBlock, List, ListItem, Paragraph
+from org_parser.element import Element, FixedWidthBlock, List, ListItem, Paragraph, Repeat
 from org_parser.text import Bold, RichText
 from org_parser.time import Timestamp
 
@@ -99,6 +99,28 @@ def test_list_item_from_source_parses_single_item() -> None:
     assert str(item.first_line) == "foo"
 
 
+def test_repeat_from_source_parses_single_repeat_item() -> None:
+    """Repeat.from_source parses one repeated-task list entry."""
+    repeat = Repeat.from_source('- State "DONE" from "TODO" [2026-03-08 Sun 17:59]\n')
+
+    assert repeat is not None
+    assert repeat.after == "DONE"
+    assert repeat.before == "TODO"
+    assert str(repeat.timestamp) == "[2026-03-08 Sun 17:59]"
+
+
+def test_repeat_from_source_returns_none_for_non_repeat_item() -> None:
+    """Repeat.from_source returns None when list item is not repeat syntax."""
+    assert Repeat.from_source("- plain item\n") is None
+
+
+def test_repeat_from_source_returns_none_for_invalid_repeat_item() -> None:
+    """Repeat.from_source returns None for malformed repeat entries."""
+    assert (
+        Repeat.from_source('- State "DONE" from "TODO" [2026-03-08 Sun 17:59] trailing\n') is None
+    )
+
+
 def test_fixed_width_block_from_source_parses_multi_line_area() -> None:
     """FixedWidthBlock.from_source accepts contiguous fixed-width areas."""
     fixed_width = FixedWidthBlock.from_source(": one\n: two\n")
@@ -110,6 +132,12 @@ def test_list_item_from_source_requires_single_list_item() -> None:
     """ListItem.from_source rejects list source with multiple items."""
     with pytest.raises(ValueError, match="Unexpected parse tree structure"):
         ListItem.from_source("- foo\n- bar\n")
+
+
+def test_repeat_from_source_requires_single_list_item() -> None:
+    """Repeat.from_source rejects list source with multiple items."""
+    with pytest.raises(ValueError, match="Unexpected parse tree structure"):
+        Repeat.from_source("- foo\n- bar\n")
 
 
 def test_list_item_from_source_requires_list_structure() -> None:
@@ -129,6 +157,21 @@ def test_document_from_source_raises_for_parse_errors() -> None:
     """Document.from_source rejects malformed source that has parse errors."""
     with pytest.raises(ValueError, match="parse errors"):
         Document.from_source("#+TITLE[")
+
+
+def test_document_from_source_raises_for_duplicate_heading_ids() -> None:
+    """Duplicate heading IDs are treated as strict parse errors."""
+    with pytest.raises(ValueError, match="parse errors"):
+        Document.from_source(
+            "* First\n"
+            ":PROPERTIES:\n"
+            ":ID: duplicate\n"
+            ":END:\n"
+            "* Second\n"
+            ":PROPERTIES:\n"
+            ":ID: duplicate\n"
+            ":END:\n"
+        )
 
 
 def test_heading_from_source_requires_only_one_heading() -> None:

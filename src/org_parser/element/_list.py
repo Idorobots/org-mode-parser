@@ -392,6 +392,31 @@ class Repeat(ListItem):
         repeat.attach_document(document)
         return repeat
 
+    @classmethod
+    def from_source(  # type: ignore[override]  # pyright: ignore[reportIncompatibleMethodOverride]
+        cls, source: str
+    ) -> Repeat | None:
+        """Parse *source* as one list item and convert to [org_parser.element.Repeat][].
+
+        This follows the same behavior as calling
+        ``Repeat.from_list_item(ListItem.from_source(source), document)``.
+
+        Args:
+            source: Org source text containing exactly one list item.
+
+        Returns:
+            Parsed [org_parser.element.Repeat][] when the item matches repeat
+            syntax, otherwise ``None``.
+
+        Raises:
+            ValueError: If parsing fails or the structure is not one list item.
+        """
+        item = ListItem.from_source(source)
+        document = item._document
+        if document is None:
+            raise ValueError("Unexpected parse tree structure")
+        return cls.from_list_item(item, document)
+
     @property
     def after(self) -> str | None:
         """Task state after the repeat transition."""

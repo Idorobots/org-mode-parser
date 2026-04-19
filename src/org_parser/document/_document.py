@@ -75,6 +75,7 @@ _MISSING_NODE_MESSAGE_PREFIX = "Encountered parser MISSING node"
 _FALLBACK_NODE_MESSAGE = "Unexpected parse node"
 _DRAWER_MARKER_TRAILING_MESSAGE = "Trailing characters in drawer marker"
 _INVALID_REPEAT_MESSAGE = "Invalid repeated-task entry"
+_DUPLICATE_HEADING_ID_MESSAGE_PREFIX = "Duplicate heading ID"
 
 
 def drawer_marker_trailing_message() -> str:
@@ -85,6 +86,16 @@ def drawer_marker_trailing_message() -> str:
 def invalid_repeat_message() -> str:
     """Return the canonical parse-error message for malformed repeat entries."""
     return _INVALID_REPEAT_MESSAGE
+
+
+def duplicate_heading_id_message(heading_id: str) -> str:
+    """Return the canonical parse-error message for duplicate heading IDs."""
+    return f"{_DUPLICATE_HEADING_ID_MESSAGE_PREFIX}: {heading_id}"
+
+
+def is_duplicate_heading_id_message(message: str) -> bool:
+    """Return whether *message* marks a duplicate heading-ID semantic error."""
+    return message.startswith(f"{_DUPLICATE_HEADING_ID_MESSAGE_PREFIX}: ")
 
 
 def _default_parse_error_message(node: tree_sitter.Node) -> str:
@@ -175,13 +186,14 @@ class Document:
         self._dirty = False
         self._errors: list[ParseError] = []
         self._heading_id_index: dict[str, Heading] = {}
+        self._heading_title_index: dict[str, Heading] = {}
 
         self._adopt_keywords(self._keywords)
         self._adopt_element(self._properties)
         self._adopt_element(self._logbook)
         self._adopt_elements(self._body)
         self._adopt_elements(self._children)
-        self._sync_heading_id_index()
+        self._sync_heading_index()
 
     # -- factory method ------------------------------------------------------
 
@@ -274,7 +286,7 @@ class Document:
                 elem = element_from_error_or_unknown(child, doc, parent=doc)
                 doc._body.append(elem)
 
-        doc._sync_heading_id_index()
+        doc._sync_heading_index()
         return doc
 
     # -- public read-only properties -----------------------------------------
@@ -609,7 +621,7 @@ class Document:
             self._adopt_elements(self._children)
             for child in self._children:
                 ensure_child_heading_level(child, parent_level=0)
-            self._sync_heading_id_index()
+            self._sync_heading_index()
             self.mark_dirty()
 
         return DirtyList(self._children, on_mutation=on_children_mutation)
@@ -631,7 +643,7 @@ class Document:
         self._adopt_elements(self._children)
         for child in self._children:
             ensure_child_heading_level(child, parent_level=0)
-        self._sync_heading_id_index()
+        self._sync_heading_index()
         self.mark_dirty()
 
     @property
@@ -660,12 +672,33 @@ class Document:
 
         When multiple headings share the same ``ID``, the last heading in
         document order is returned.
+
+        Lookup data is backed by the document heading caches and is refreshed
+        by [org_parser.document.Document.sync_heading_id_index][] and
+        [org_parser.document.Document.sync_heading_title_index][].
         """
         return self._heading_id_index.get(heading_id)
 
+    def heading_by_title(self, heading_title: str) -> Heading | None:
+        """Return the heading with title text equal to *heading_title*.
+
+        Title lookup keys are normalized using ``.strip()`` and compare only
+        the heading title text. When multiple headings share the same normalized
+        title, the last heading in document order is returned.
+
+        Lookup data is backed by the document heading caches and is refreshed
+        by [org_parser.document.Document.sync_heading_id_index][] and
+        [org_parser.document.Document.sync_heading_title_index][].
+        """
+        return self._heading_title_index.get(heading_title.strip())
+
     def sync_heading_id_index(self) -> None:
-        """Rebuild the document heading-ID lookup index."""
-        self._sync_heading_id_index()
+        """Rebuild heading lookup caches for IDs and titles."""
+        self._sync_heading_index()
+
+    def sync_heading_title_index(self) -> None:
+        """Rebuild heading lookup caches for titles and IDs."""
+        self._sync_heading_index()
 
     @property
     def is_root(self) -> bool:
@@ -920,6 +953,11 @@ class Document:
         if value is None:
             return
         value.parent = self
+        # Lazy import avoids the circular dependency with _heading.py.
+        from org_parser.document._heading import Heading
+
+        if isinstance(value, Heading) and value.document is not self:
+            value.document = self
 
     def _adopt_keywords(self, keywords: list[Keyword]) -> None:
         """Assign this document as parent for all keyword entries."""
@@ -934,15 +972,31 @@ class Document:
         for value in values:
             self._adopt_element(value)
 
-    def _sync_heading_id_index(self) -> None:
-        """Rebuild the heading-ID lookup index from current tree state."""
-        index: dict[str, Heading] = {}
+    def _sync_heading_index(self) -> None:
+        """Rebuild heading-ID and heading-title lookup indexes."""
+        self._clear_duplicate_heading_id_errors()
+        id_index: dict[str, Heading] = {}
+        title_index: dict[str, Heading] = {}
         for heading in self.all_headings:
             heading_id = heading.id
-            if heading_id is None:
-                continue
-            index[heading_id] = heading
-        self._heading_id_index = index
+            if heading_id is not None:
+                heading_node = heading._node  # pyright: ignore[reportPrivateUsage]
+                if heading_id in id_index and heading_node is not None:
+                    self.report_error(heading_node, duplicate_heading_id_message(heading_id))
+                id_index[heading_id] = heading
+
+            title_key = _heading_title_key(heading)
+            if title_key is not None:
+                title_index[title_key] = heading
+
+        self._heading_id_index = id_index
+        self._heading_title_index = title_index
+
+    def _clear_duplicate_heading_id_errors(self) -> None:
+        """Remove previously reported duplicate heading-ID errors."""
+        self._errors = [
+            error for error in self._errors if not is_duplicate_heading_id_message(error.message)
+        ]
 
     def render(self) -> str:
         """Return the complete Org Mode text for a document including headings.
@@ -1112,6 +1166,14 @@ def _collect_heading_subtree(headings: Sequence[Heading], out: list[Heading]) ->
     for heading in headings:
         out.append(heading)
         _collect_heading_subtree(heading.children, out)
+
+
+def _heading_title_key(heading: Heading) -> str | None:
+    """Return normalized heading-title key for cache lookups."""
+    title = heading.title
+    if title is None:
+        return None
+    return title.text.strip()
 
 
 def _parse_todo_states(

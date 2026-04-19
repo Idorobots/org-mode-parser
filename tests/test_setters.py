@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from org_parser import load
 from org_parser.document import Document, Heading
-from org_parser.element import Element, Keyword, Paragraph
+from org_parser.element import Element, Keyword, Logbook, Paragraph, Repeat
 from org_parser.text import CompletionCounter, RichText
 from org_parser.time import Clock, Timestamp
 
@@ -304,6 +304,51 @@ def test_heading_list_appends_mark_dirty() -> None:
     assert child.level == 2
 
 
+def test_heading_children_append_updates_child_subtree_document() -> None:
+    """Appending a child from another document retargets its subtree document."""
+    source_document = Document(filename="source.org")
+    target_document = Document(filename="target.org")
+
+    parent = Heading(level=1, document=target_document, parent=target_document)
+    target_document.children = [parent]
+
+    grandchild = Heading(level=3, document=source_document, parent=source_document)
+    child = Heading(
+        level=2,
+        document=source_document,
+        parent=source_document,
+        children=[grandchild],
+    )
+    grandchild.parent = child
+
+    parent.children.append(child)
+
+    assert child.parent is parent
+    assert child.document is target_document
+    assert grandchild.document is target_document
+
+
+def test_document_children_append_updates_heading_subtree_document() -> None:
+    """Appending top-level heading from another document retargets its subtree."""
+    source_document = Document(filename="source.org")
+    target_document = Document(filename="target.org")
+
+    grandchild = Heading(level=2, document=source_document, parent=source_document)
+    child = Heading(
+        level=1,
+        document=source_document,
+        parent=source_document,
+        children=[grandchild],
+    )
+    grandchild.parent = child
+
+    target_document.children.append(child)
+
+    assert child.parent is target_document
+    assert child.document is target_document
+    assert grandchild.document is target_document
+
+
 def test_heading_setters_mark_heading_and_document_dirty() -> None:
     """Heading setter mutations mark both heading and document dirty."""
     document = Document(filename="doc.org")
@@ -365,6 +410,152 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
     assert heading.document is new_document
     assert heading.dirty is True
     assert document.dirty is True
+    assert new_document.dirty is True
+
+
+def test_heading_level_setter_cascades_to_descendants() -> None:
+    """Changing a heading level shifts its descendants by the same delta."""
+    document = Document(filename="doc.org")
+    grandchild = Heading(level=3, document=document, parent=document)
+    child = Heading(level=2, document=document, parent=document, children=[grandchild])
+    grandchild.parent = child
+    parent = Heading(level=1, document=document, parent=document, children=[child])
+    child.parent = parent
+
+    assert parent.dirty is False
+    assert child.dirty is False
+    assert grandchild.dirty is False
+    assert document.dirty is False
+
+    parent.level = 3
+
+    assert parent.level == 3
+    assert child.level == 4
+    assert grandchild.level == 5
+    assert parent.dirty is True
+    assert child.dirty is True
+    assert grandchild.dirty is True
+    assert document.dirty is True
+
+
+def test_heading_level_setter_preserves_non_descendant_levels() -> None:
+    """Changing one subtree level does not affect sibling subtrees."""
+    document = Document(filename="doc.org")
+    grandchild = Heading(level=3, document=document, parent=document)
+    left = Heading(level=2, document=document, parent=document, children=[grandchild])
+    grandchild.parent = left
+    right = Heading(level=2, document=document, parent=document)
+    parent = Heading(level=1, document=document, parent=document, children=[left, right])
+    left.parent = parent
+    right.parent = parent
+
+    left.level = 4
+
+    assert left.level == 4
+    assert grandchild.level == 5
+    assert right.level == 2
+
+
+def test_heading_level_setter_clamps_to_parent_plus_one() -> None:
+    """Setting a child heading level below its parent clamps to parent+1."""
+    document = Document(filename="doc.org")
+    grandchild = Heading(level=6, document=document, parent=document)
+    child = Heading(level=5, document=document, parent=document, children=[grandchild])
+    grandchild.parent = child
+    parent = Heading(level=3, document=document, parent=document, children=[child])
+    child.parent = parent
+
+    child.level = 2
+
+    assert child.level == 4
+    assert grandchild.level == 5
+
+
+def test_heading_level_setter_noop_after_clamp_does_not_mark_dirty() -> None:
+    """Clamped no-op level assignment leaves heading and owners clean."""
+    document = Document(filename="doc.org")
+    parent = Heading(level=3, document=document, parent=document)
+    child = Heading(level=4, document=document, parent=parent)
+
+    assert document.dirty is False
+    assert parent.dirty is False
+    assert child.dirty is False
+
+    child.level = 2
+
+    assert child.level == 4
+    assert child.dirty is False
+    assert parent.dirty is False
+    assert document.dirty is False
+
+
+def test_heading_document_setter_cascades_to_descendants_and_logbook_entries() -> None:
+    """Reassigning heading document updates descendants and repeat context."""
+    old_document = Document(filename="old.org")
+    new_document = Document(filename="new.org", todo="TODO | DONE")
+
+    repeat = Repeat(
+        after="DONE",
+        before="TODO",
+        timestamp=Timestamp(
+            is_active=True,
+            start_year=2025,
+            start_month=3,
+            start_day=1,
+            start_dayname="Sat",
+        ),
+    )
+    clock = Clock(
+        timestamp=Timestamp(
+            is_active=False,
+            start_year=2025,
+            start_month=3,
+            start_day=1,
+            start_dayname="Sat",
+            start_hour=9,
+            start_minute=0,
+            end_hour=10,
+            end_minute=0,
+        ),
+        duration="1:00",
+    )
+
+    logbook = Logbook(clock_entries=[clock], repeats=[repeat])
+
+    grandchild = Heading(level=3, document=old_document, parent=old_document)
+    child = Heading(
+        level=2,
+        document=old_document,
+        parent=old_document,
+        logbook=logbook,
+        children=[grandchild],
+    )
+    grandchild.parent = child
+
+    parent = Heading(level=1, document=old_document, parent=old_document, children=[child])
+    child.parent = parent
+
+    assert repeat.is_completed is False
+    assert parent.dirty is False
+    assert child.dirty is False
+    assert grandchild.dirty is False
+    assert repeat.dirty is False
+    assert clock.dirty is False
+    assert old_document.dirty is False
+    assert new_document.dirty is False
+
+    parent.document = new_document
+
+    assert parent.document is new_document
+    assert child.document is new_document
+    assert grandchild.document is new_document
+    assert repeat.is_completed is True
+    assert parent.dirty is True
+    assert child.dirty is True
+    assert grandchild.dirty is True
+    assert repeat.dirty is True
+    assert clock.dirty is False
+    assert old_document.dirty is True
     assert new_document.dirty is True
 
 

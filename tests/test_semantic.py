@@ -1083,7 +1083,7 @@ class TestHeadingId:
         assert doc.heading_by_id("task-1") is None
 
     def test_document_heading_by_id_last_duplicate_wins(self) -> None:
-        """Lookup returns the last heading when duplicate IDs exist."""
+        """Lookup returns last duplicate and records one duplicate-ID error."""
         doc = loads(
             "* First\n"
             ":PROPERTIES:\n"
@@ -1096,6 +1096,45 @@ class TestHeadingId:
         )
 
         assert doc.heading_by_id("duplicate") is doc.children[1]
+        duplicate_errors = [
+            error for error in doc.errors if error.message == "Duplicate heading ID: duplicate"
+        ]
+        assert len(duplicate_errors) == 1
+        assert duplicate_errors[0].text.startswith("* Second")
+
+    def test_document_duplicate_id_error_clears_when_resolved(self) -> None:
+        """Duplicate-ID sync errors are cleared once IDs become unique."""
+        doc = loads(
+            "* First\n"
+            ":PROPERTIES:\n"
+            ":ID: duplicate\n"
+            ":END:\n"
+            "* Second\n"
+            ":PROPERTIES:\n"
+            ":ID: duplicate\n"
+            ":END:\n"
+        )
+
+        assert any(error.message == "Duplicate heading ID: duplicate" for error in doc.errors)
+
+        doc.children[1].id = "second-id"
+
+        assert doc.heading_by_id("duplicate") is doc.children[0]
+        assert doc.heading_by_id("second-id") is doc.children[1]
+        assert all(error.message != "Duplicate heading ID: duplicate" for error in doc.errors)
+
+    def test_document_duplicate_id_without_node_is_not_reported(self) -> None:
+        """Programmatic duplicate IDs without parse nodes do not report errors."""
+        doc = Document(filename="t.org")
+        first = Heading(level=1, document=doc, parent=doc)
+        second = Heading(level=1, document=doc, parent=doc)
+        doc.children = [first, second]
+
+        first.id = "duplicate"
+        second.id = "duplicate"
+
+        assert doc.heading_by_id("duplicate") is second
+        assert all(error.message != "Duplicate heading ID: duplicate" for error in doc.errors)
 
     def test_document_id_index_syncs_when_adding_headings(self) -> None:
         """Appending headings and subheadings keeps ID lookup index in sync."""
@@ -1110,6 +1149,56 @@ class TestHeadingId:
         parent.children.append(child)
 
         assert doc.heading_by_id("child-1") is child
+
+
+class TestHeadingTitle:
+    """Tests for heading title lookup indexing."""
+
+    def test_heading_by_title_returns_matching_heading(self) -> None:
+        """Title lookup returns matching heading from the title cache."""
+        doc = loads("* Alpha\n* Beta\n")
+
+        assert doc.heading_by_title("Alpha") is doc.children[0]
+        assert doc.heading_by_title("Beta") is doc.children[1]
+
+    def test_heading_by_title_uses_stripped_title_keys(self) -> None:
+        """Title lookup normalizes both cache keys and lookup input with strip."""
+        doc = loads("*   Alpha   \n")
+
+        assert doc.heading_by_title("Alpha") is doc.children[0]
+        assert doc.heading_by_title("   Alpha   ") is doc.children[0]
+
+    def test_heading_by_title_last_duplicate_wins(self) -> None:
+        """When duplicate titles exist, lookup returns the last heading."""
+        doc = loads("* Alpha\n* Alpha\n")
+
+        assert doc.heading_by_title("Alpha") is doc.children[1]
+
+    def test_heading_title_lookup_updates_when_title_changes(self) -> None:
+        """Mutating Heading.title refreshes document title cache entries."""
+        doc = Document(filename="t.org")
+        heading = Heading(level=1, document=doc, parent=doc, title=RichText("Old"))
+        doc.children = [heading]
+
+        assert doc.heading_by_title("Old") is heading
+
+        heading.title = RichText("New")
+
+        assert doc.heading_by_title("Old") is None
+        assert doc.heading_by_title("New") is heading
+
+    def test_heading_title_lookup_syncs_when_adding_child_heading(self) -> None:
+        """Appending child headings updates cached title lookup index."""
+        doc = Document(filename="t.org")
+        parent = Heading(level=1, document=doc, parent=doc, title=RichText("Parent"))
+        doc.children = [parent]
+
+        child = Heading(level=2, document=doc, parent=parent, title=RichText("Child"))
+        assert doc.heading_by_title("Child") is None
+
+        parent.children.append(child)
+
+        assert doc.heading_by_title("Child") is child
 
 
 # ===================================================================
@@ -1263,6 +1352,135 @@ class TestHeadingConvenienceFields:
         assert doc.children[0].todo == "DONE"
         assert doc.done_states == ["CANCELLED"]
         assert doc.children[0].is_completed is False
+
+    def test_dependencies_include_direct_children(self) -> None:
+        """dependencies include direct child headings."""
+        doc = Document(filename="x.org", todo=RichText("TODO | DONE"))
+        parent = Heading(level=1, document=doc, parent=doc, todo="TODO")
+        child_one = Heading(level=2, document=doc, parent=parent, todo="TODO")
+        child_two = Heading(level=2, document=doc, parent=parent, todo="DONE")
+        parent.children = [child_one, child_two]
+        doc.children = [parent]
+
+        assert parent.dependencies == [child_one, child_two]
+
+    def test_dependencies_include_preceding_siblings_when_parent_ordered(self) -> None:
+        """dependencies include preceding siblings in ordered parent scopes."""
+        document = loads(
+            """
+* Parent
+:PROPERTIES:
+:ORDERED: t
+:END:
+** DONE first
+** TODO second
+** TODO third
+"""
+        )
+        first = document.children[0].children[0]
+        second = document.children[0].children[1]
+        third = document.children[0].children[2]
+
+        assert second.dependencies == [first]
+        assert third.dependencies == [first, second]
+
+    def test_dependencies_exclude_siblings_when_parent_not_ordered(self) -> None:
+        """dependencies do not include siblings without ORDERED on parent."""
+        document = loads(
+            """
+* Parent
+** DONE first
+** TODO second
+"""
+        )
+
+        assert document.children[0].children[1].dependencies == []
+
+    def test_dependencies_use_document_properties_for_top_level_ordered(self) -> None:
+        """Top-level headings use document ORDERED for sibling dependencies."""
+        document = loads(
+            """
+:PROPERTIES:
+:ORDERED: t
+:END:
+* DONE first
+* TODO second
+* TODO third
+"""
+        )
+        first = document.children[0]
+        second = document.children[1]
+        third = document.children[2]
+
+        assert second.dependencies == [first]
+        assert third.dependencies == [first, second]
+
+    def test_dependencies_include_blocker_ids(self) -> None:
+        """dependencies include headings referenced via BLOCKER IDs."""
+        doc = Document(filename="x.org", todo=RichText("TODO | DONE"))
+        dependency_one = Heading(level=1, document=doc, parent=doc, todo="DONE")
+        dependency_two = Heading(level=1, document=doc, parent=doc, todo="DONE")
+        blocked = Heading(level=1, document=doc, parent=doc, todo="TODO")
+        dependency_one.id = "dep-1"
+        dependency_two.id = "dep-2"
+        blocked.properties["BLOCKER"] = RichText("dep-1 missing dep-2")
+        doc.children = [dependency_one, blocked, dependency_two]
+
+        assert blocked.dependencies == [dependency_one, dependency_two]
+
+    def test_noblocking_short_circuits_dependency_resolution(self) -> None:
+        """NOBLOCKING affects blocking state, not dependency listing."""
+        doc = Document(filename="x.org", todo=RichText("TODO | DONE"))
+        parent = Heading(level=1, document=doc, parent=doc, todo="TODO")
+        blocker = Heading(level=1, document=doc, parent=doc, todo="TODO")
+        first = Heading(level=2, document=doc, parent=parent, todo="TODO")
+        second = Heading(level=2, document=doc, parent=parent, todo="TODO")
+        child = Heading(level=3, document=doc, parent=second, todo="TODO")
+
+        blocker.id = "external"
+        parent.properties["ORDERED"] = RichText("t")
+        second.properties["BLOCKER"] = RichText("external")
+        second.properties["NOBLOCKING"] = RichText("t")
+        second.children = [child]
+        parent.children = [first, second]
+        doc.children = [parent, blocker]
+
+        assert second.dependencies == [child, first, blocker]
+        assert second.is_blocked is False
+
+    def test_is_blocked_reflects_incomplete_dependencies(self) -> None:
+        """is_blocked is True when any dependency is not completed."""
+        document = loads(
+            """
+#+TODO: TODO | DONE
+* Parent
+:PROPERTIES:
+:ORDERED: t
+:END:
+** DONE first
+** TODO second
+** TODO third
+"""
+        )
+        second = document.children[0].children[1]
+        third = document.children[0].children[2]
+
+        assert second.is_blocked is False
+        assert third.is_blocked is True
+
+    def test_is_blocked_false_when_all_dependencies_completed(self) -> None:
+        """is_blocked is False when all dependencies are completed."""
+        document = loads(
+            """
+#+TODO: TODO | DONE
+* Parent
+** DONE first
+** DONE second
+"""
+        )
+        parent = document.children[0]
+
+        assert parent.is_blocked is False
 
     def test_timestamp_aggregation_and_extrema(self) -> None:
         """Heading timestamp helpers include planning, repeat, and clock values."""
