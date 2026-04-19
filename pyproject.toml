@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "org-parser"
-version = "0.26.2"
+version = "0.27.0"
 description = "A parser for Org Mode documents"
 authors = ["Kajetan Rzepecki <k@spartan.works>"]
 maintainers = ["Kajetan Rzepecki <k@spartan.works>"]
