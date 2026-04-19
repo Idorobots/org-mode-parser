@@ -437,7 +437,11 @@ class Heading:
         """Set the heading title."""
         self._title = coerce_optional_rich_text(value)
         self._adopt_element(self._title)
-        self._sync_document_heading_id_index()
+        # NOTE: Title lookup cache sync currently happens only when the
+        # heading title object is replaced via this setter.
+        # In-place rich-text edits (for example, ``heading.title.text = ...``)
+        # do not resync title lookups until a manual index sync.
+        self._sync_document_heading_index()
         self.mark_dirty()
 
     @property
@@ -616,12 +620,12 @@ class Heading:
         if value is None:
             if "ID" in self._properties:
                 del self._properties["ID"]
-                self._sync_document_heading_id_index()
+                self._sync_document_heading_index()
                 self.mark_dirty()
             return
 
         self._properties["ID"] = coerce_rich_text(value)
-        self._sync_document_heading_id_index()
+        self._sync_document_heading_index()
         self.mark_dirty()
 
     @property
@@ -933,7 +937,7 @@ class Heading:
             self._adopt_elements(self._children)
             for child in self._children:
                 ensure_child_heading_level(child, parent_level=self._level)
-            self._sync_document_heading_id_index()
+            self._sync_document_heading_index()
             self.mark_dirty()
 
         return DirtyList(self._children, on_mutation=on_children_mutation)
@@ -952,7 +956,7 @@ class Heading:
         self._adopt_elements(self._children)
         for child in self._children:
             ensure_child_heading_level(child, parent_level=self._level)
-        self._sync_document_heading_id_index()
+        self._sync_document_heading_index()
         self.mark_dirty()
 
     @property
@@ -1334,8 +1338,8 @@ class Heading:
             return
         value.parent = self
 
-    def _sync_document_heading_id_index(self) -> None:
-        """Rebuild this heading's document-level heading-ID index."""
+    def _sync_document_heading_index(self) -> None:
+        """Rebuild this heading's document-level heading lookup indexes."""
         self.document.sync_heading_id_index()
 
     def _property_has_value(self, properties: Properties, key: str) -> bool:
