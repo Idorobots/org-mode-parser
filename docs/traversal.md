@@ -138,3 +138,36 @@ Use `heading.siblings` to access other headings under the same parent.
 >>> [heading.title_text for heading in document[1].siblings]
 ['Phase 2']
 ```
+
+## Task dependencies
+
+Use `heading.dependencies` and `heading.is_blocked` to inspect Org TODO dependency
+rules.
+
+- `heading.dependencies` includes:
+  - direct child headings,
+  - preceding siblings when `ORDERED` is set in `heading.parent.properties`,
+  - headings referenced by ID through the current heading's `BLOCKER` property.
+- `heading.is_blocked` is `True` when any dependency is not completed.
+- `NOBLOCKING` on the current heading forces `heading.is_blocked` to `False`
+  without changing `heading.dependencies`.
+
+```python
+>>> from org_parser import loads
+
+>>> document = loads('''
+... #+TODO: TODO | DONE
+... * Project
+... :PROPERTIES:
+... :ORDERED: t
+... :END:
+... ** DONE Setup
+... ** TODO Build
+... ''')
+
+>>> build = document[2]
+>>> [heading.title_text for heading in build.dependencies]
+['Setup']
+>>> build.is_blocked
+False
+```

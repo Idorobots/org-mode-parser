@@ -140,10 +140,13 @@ Introduce an additional heading cache in =Document= that allows quicker search o
 
 Add documentation for this cache along with the ID cache.
 
-** TODO Task dependencies
+** DONE Task dependencies
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-19 Sun 15:08]
+:END:
 Add support for =Heading.dependencies= and =Heading.is_blocked= attributes:
 - =dependencies= should return a list of headings that are dependencies of the current heading.
-- =is_blocked= should return =True= if all dependencies of a task are completed in the =is_completed= sense.
+- =is_blocked= should return =True= if any of the dependencies of the task are not completed in the =is_completed= sense.
 
 Dependencies are defined as:
 - all children of a task,
@@ -154,8 +157,7 @@ More information on the task dependencies can be found in the documentation:
 - https://orgmode.org/manual/TODO-dependencies.html
 - https://orgmode.org/worg/org-contrib/org-depend.html
 
-A task that has the =NONBLOCKING= property set, does not have any dependencies, so make sure to check for this first and only if not present consider the dependencies computation.
-
+A task that has the =NOBLOCKING= property set, does not have any dependencies, so make sure to check for this first and only if not present consider the dependencies computation.
 Add support for =ORDERED=, =NONBLOCKING= and =BLOCKER= properties handling.
 
 Ensure this is well-documented.

@@ -1012,6 +1012,43 @@ class Heading:
         return self._todo is not None and self._todo in self._document.done_states
 
     @property
+    def dependencies(self) -> list[Heading]:
+        """Task dependencies that must be completed before this heading.
+
+        Dependencies are computed from three sources in this order:
+
+        - direct child headings,
+        - preceding siblings when ``ORDERED`` has a non-empty value in
+          ``parent.properties``,
+        - headings referenced by ``ID`` via this heading's ``BLOCKER`` property
+          (space-separated IDs).
+
+        Unknown ``BLOCKER`` IDs are ignored. Duplicate dependencies are removed
+        while preserving first occurrence order.
+        """
+        dependencies: list[Heading] = [*self._children]
+        dependencies.extend(self._preceding_siblings() if self._is_ordered_scope() else [])
+        dependencies.extend(self._blocker_dependencies())
+        return _dedupe_headings(
+            [dependency for dependency in dependencies if dependency is not self]
+        )
+
+    @property
+    def is_blocked(self) -> bool:
+        """Whether this heading is blocked by incomplete dependencies.
+
+        If this heading has ``NOBLOCKING`` set to a non-empty value in its own
+        ``PROPERTIES`` drawer, this always returns ``False``.
+
+        Returns ``True`` when at least one dependency from
+        [org_parser.document.Heading.dependencies][] is not completed in the
+        [org_parser.document.Heading.is_completed][] sense.
+        """
+        if self._property_has_value(self._properties, "NOBLOCKING"):
+            return False
+        return any(not dependency.is_completed for dependency in self.dependencies)
+
+    @property
     def has_timestamp(self) -> bool:
         """Whether this heading has any planning, repeat, or clock timestamp.
 
@@ -1301,6 +1338,39 @@ class Heading:
         """Rebuild this heading's document-level heading-ID index."""
         self.document.sync_heading_id_index()
 
+    def _property_has_value(self, properties: Properties, key: str) -> bool:
+        """Return whether ``properties[key]`` exists and renders to non-empty text."""
+        if key not in properties:
+            return False
+        return str(properties[key]).strip() != ""
+
+    def _is_ordered_scope(self) -> bool:
+        """Return whether sibling dependencies are ordered in this heading scope."""
+        return self._property_has_value(self._parent.properties, "ORDERED")
+
+    def _preceding_siblings(self) -> list[Heading]:
+        """Return siblings that appear before this heading under the same parent."""
+        preceding: list[Heading] = []
+        for sibling in self._parent.children:
+            if sibling is self:
+                break
+            preceding.append(sibling)
+        return preceding
+
+    def _blocker_dependencies(self) -> list[Heading]:
+        """Resolve ``BLOCKER`` IDs on this heading to heading dependencies."""
+        if not self._property_has_value(self._properties, "BLOCKER"):
+            return []
+
+        dependencies: list[Heading] = []
+        blocker_ids = str(self._properties["BLOCKER"]).split()
+        for blocker_id in blocker_ids:
+            dependency = self._document.heading_by_id(blocker_id)
+            if dependency is None:
+                continue
+            dependencies.append(dependency)
+        return dependencies
+
     @property
     def siblings(self) -> list[Heading]:
         """Other headings at the same level under the same parent.
@@ -1405,6 +1475,19 @@ def _extract_level(node: tree_sitter.Node, document: Document) -> int:
     if stars_node is None:
         return 0  # pragma: no cover - defensive
     return len(document.source_for(stars_node))
+
+
+def _dedupe_headings(headings: list[Heading]) -> list[Heading]:
+    """Return unique headings in first-seen order by object identity."""
+    unique: list[Heading] = []
+    seen: set[int] = set()
+    for heading in headings:
+        object_id = id(heading)
+        if object_id in seen:
+            continue
+        seen.add(object_id)
+        unique.append(heading)
+    return unique
 
 
 def _extract_todo(node: tree_sitter.Node, document: Document) -> str | None:

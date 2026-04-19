@@ -1353,6 +1353,135 @@ class TestHeadingConvenienceFields:
         assert doc.done_states == ["CANCELLED"]
         assert doc.children[0].is_completed is False
 
+    def test_dependencies_include_direct_children(self) -> None:
+        """dependencies include direct child headings."""
+        doc = Document(filename="x.org", todo=RichText("TODO | DONE"))
+        parent = Heading(level=1, document=doc, parent=doc, todo="TODO")
+        child_one = Heading(level=2, document=doc, parent=parent, todo="TODO")
+        child_two = Heading(level=2, document=doc, parent=parent, todo="DONE")
+        parent.children = [child_one, child_two]
+        doc.children = [parent]
+
+        assert parent.dependencies == [child_one, child_two]
+
+    def test_dependencies_include_preceding_siblings_when_parent_ordered(self) -> None:
+        """dependencies include preceding siblings in ordered parent scopes."""
+        document = loads(
+            """
+* Parent
+:PROPERTIES:
+:ORDERED: t
+:END:
+** DONE first
+** TODO second
+** TODO third
+"""
+        )
+        first = document.children[0].children[0]
+        second = document.children[0].children[1]
+        third = document.children[0].children[2]
+
+        assert second.dependencies == [first]
+        assert third.dependencies == [first, second]
+
+    def test_dependencies_exclude_siblings_when_parent_not_ordered(self) -> None:
+        """dependencies do not include siblings without ORDERED on parent."""
+        document = loads(
+            """
+* Parent
+** DONE first
+** TODO second
+"""
+        )
+
+        assert document.children[0].children[1].dependencies == []
+
+    def test_dependencies_use_document_properties_for_top_level_ordered(self) -> None:
+        """Top-level headings use document ORDERED for sibling dependencies."""
+        document = loads(
+            """
+:PROPERTIES:
+:ORDERED: t
+:END:
+* DONE first
+* TODO second
+* TODO third
+"""
+        )
+        first = document.children[0]
+        second = document.children[1]
+        third = document.children[2]
+
+        assert second.dependencies == [first]
+        assert third.dependencies == [first, second]
+
+    def test_dependencies_include_blocker_ids(self) -> None:
+        """dependencies include headings referenced via BLOCKER IDs."""
+        doc = Document(filename="x.org", todo=RichText("TODO | DONE"))
+        dependency_one = Heading(level=1, document=doc, parent=doc, todo="DONE")
+        dependency_two = Heading(level=1, document=doc, parent=doc, todo="DONE")
+        blocked = Heading(level=1, document=doc, parent=doc, todo="TODO")
+        dependency_one.id = "dep-1"
+        dependency_two.id = "dep-2"
+        blocked.properties["BLOCKER"] = RichText("dep-1 missing dep-2")
+        doc.children = [dependency_one, blocked, dependency_two]
+
+        assert blocked.dependencies == [dependency_one, dependency_two]
+
+    def test_noblocking_short_circuits_dependency_resolution(self) -> None:
+        """NOBLOCKING affects blocking state, not dependency listing."""
+        doc = Document(filename="x.org", todo=RichText("TODO | DONE"))
+        parent = Heading(level=1, document=doc, parent=doc, todo="TODO")
+        blocker = Heading(level=1, document=doc, parent=doc, todo="TODO")
+        first = Heading(level=2, document=doc, parent=parent, todo="TODO")
+        second = Heading(level=2, document=doc, parent=parent, todo="TODO")
+        child = Heading(level=3, document=doc, parent=second, todo="TODO")
+
+        blocker.id = "external"
+        parent.properties["ORDERED"] = RichText("t")
+        second.properties["BLOCKER"] = RichText("external")
+        second.properties["NOBLOCKING"] = RichText("t")
+        second.children = [child]
+        parent.children = [first, second]
+        doc.children = [parent, blocker]
+
+        assert second.dependencies == [child, first, blocker]
+        assert second.is_blocked is False
+
+    def test_is_blocked_reflects_incomplete_dependencies(self) -> None:
+        """is_blocked is True when any dependency is not completed."""
+        document = loads(
+            """
+#+TODO: TODO | DONE
+* Parent
+:PROPERTIES:
+:ORDERED: t
+:END:
+** DONE first
+** TODO second
+** TODO third
+"""
+        )
+        second = document.children[0].children[1]
+        third = document.children[0].children[2]
+
+        assert second.is_blocked is False
+        assert third.is_blocked is True
+
+    def test_is_blocked_false_when_all_dependencies_completed(self) -> None:
+        """is_blocked is False when all dependencies are completed."""
+        document = loads(
+            """
+#+TODO: TODO | DONE
+* Parent
+** DONE first
+** DONE second
+"""
+        )
+        parent = document.children[0]
+
+        assert parent.is_blocked is False
+
     def test_timestamp_aggregation_and_extrema(self) -> None:
         """Heading timestamp helpers include planning, repeat, and clock values."""
         doc = Document(filename="x.org", todo=RichText("TODO | DONE"))
