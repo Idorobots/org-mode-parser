@@ -34,6 +34,12 @@ All of the above should parse as repeats - the empty values (~""~) should become
 
 Given the above task, setting the repeats does not affect the list in the body.
 
+** TODO Setting =Heading.level= should affect the descendants levels
+When a headings level is set, it should cause a cascading change to its descendants levels as well.
+** TODO Setting =Heading.document= should affect the descendants documents
+When a heading document is set, all children of that heading should also be updated with the new document.
+** TODO Duplicate IDs should be reported as errors.
+When syncing the ID cache in a document, when multiple headings have the same ID it should be reported as error on the document.
 * Features
 ** DONE =Heading.id= field
 :LOGBOOK:
@@ -95,6 +101,34 @@ In file src/org_parser/document/_document.py around line 666, near the ~class Do
 #+end_example
 
 Rename to =heading_by_id= and please don't sync the index in this function, it should be synced on mutation/creation only.
+** TODO =Repeat.from_source= for more convenient repeat creation
+Add a specialised version of =from_source= class method to the =Repeat= class, that builds an entire =Repeat= from source. It should behave pretty similar to =Repeat.from_list_item(ListItem.from_source(source), document)= - i.e. when passed a source it should parse the content as a repeat and extract it.
+
+** TODO =Document.heading_by_title= cache
+Introduce an additional heading cache in =Document= that allows quicker search of headings by providing a title. The cache should use a textual representation of the title alone, stripped from any trailing whitespace as the key, i.e. =heading.title.text.strip()=.
+
+Add documentation for this cache along with the ID cache.
+
+** TODO Task dependencies
+Add support for =Heading.dependencies= and =Heading.is_blocked= attributes:
+- =dependencies= should return a list of headings that are dependencies of the current heading.
+- =is_blocked= should return =True= if all dependencies of a task are completed in the =is_completed= sense.
+
+Dependencies are defined as:
+- all children of a task,
+- all preceding siblings when the =ORDERED= property is set to a value on the headings properties; when not set, none of the sibligs should be considered as dependencies,
+- all headings named by ID via the =BLOCKER= property (space-separated list).
+
+More information on the task dependencies can be found in the documentation:
+- https://orgmode.org/manual/TODO-dependencies.html
+- https://orgmode.org/worg/org-contrib/org-depend.html
+
+A task that has the =NONBLOCKING= property set, does not have any dependencies, so make sure to check for this first and only if not present consider the dependencies computation.
+
+Add support for =ORDERED=, =NONBLOCKING= and =BLOCKER= properties handling.
+
+Ensure this is well-documented.
+
 ** TODO =to_json()= convenience method
 All objects should be convertible to "simple" JSON objects:
 - =RichText= should be represented by its string representation value,
@@ -111,4 +145,9 @@ https://orgmode.org/manual/Property-Syntax.html
 *** Special properties
 https://orgmode.org/manual/Special-Properties.html
 
-Might warrant rename of =tags= to =all_tags= and =heading_tags= to =tags=.
+Might warrant a rename of =tags= to =all_tags= and =heading_tags= to =tags=.
+
+** Triggers & completion
+- https://orgmode.org/worg/org-contrib/org-depend.html
+- Suport for the =TRIGGER= property
+- Support for checkboxes and completion counter (only top-level).
