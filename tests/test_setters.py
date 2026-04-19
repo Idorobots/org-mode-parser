@@ -368,6 +368,82 @@ def test_heading_setters_mark_heading_and_document_dirty() -> None:
     assert new_document.dirty is True
 
 
+def test_heading_level_setter_cascades_to_descendants() -> None:
+    """Changing a heading level shifts its descendants by the same delta."""
+    document = Document(filename="doc.org")
+    grandchild = Heading(level=3, document=document, parent=document)
+    child = Heading(level=2, document=document, parent=document, children=[grandchild])
+    grandchild.parent = child
+    parent = Heading(level=1, document=document, parent=document, children=[child])
+    child.parent = parent
+
+    assert parent.dirty is False
+    assert child.dirty is False
+    assert grandchild.dirty is False
+    assert document.dirty is False
+
+    parent.level = 3
+
+    assert parent.level == 3
+    assert child.level == 4
+    assert grandchild.level == 5
+    assert parent.dirty is True
+    assert child.dirty is True
+    assert grandchild.dirty is True
+    assert document.dirty is True
+
+
+def test_heading_level_setter_preserves_non_descendant_levels() -> None:
+    """Changing one subtree level does not affect sibling subtrees."""
+    document = Document(filename="doc.org")
+    grandchild = Heading(level=3, document=document, parent=document)
+    left = Heading(level=2, document=document, parent=document, children=[grandchild])
+    grandchild.parent = left
+    right = Heading(level=2, document=document, parent=document)
+    parent = Heading(level=1, document=document, parent=document, children=[left, right])
+    left.parent = parent
+    right.parent = parent
+
+    left.level = 4
+
+    assert left.level == 4
+    assert grandchild.level == 5
+    assert right.level == 2
+
+
+def test_heading_level_setter_clamps_to_parent_plus_one() -> None:
+    """Setting a child heading level below its parent clamps to parent+1."""
+    document = Document(filename="doc.org")
+    grandchild = Heading(level=6, document=document, parent=document)
+    child = Heading(level=5, document=document, parent=document, children=[grandchild])
+    grandchild.parent = child
+    parent = Heading(level=3, document=document, parent=document, children=[child])
+    child.parent = parent
+
+    child.level = 2
+
+    assert child.level == 4
+    assert grandchild.level == 5
+
+
+def test_heading_level_setter_noop_after_clamp_does_not_mark_dirty() -> None:
+    """Clamped no-op level assignment leaves heading and owners clean."""
+    document = Document(filename="doc.org")
+    parent = Heading(level=3, document=document, parent=document)
+    child = Heading(level=4, document=document, parent=parent)
+
+    assert document.dirty is False
+    assert parent.dirty is False
+    assert child.dirty is False
+
+    child.level = 2
+
+    assert child.level == 4
+    assert child.dirty is False
+    assert parent.dirty is False
+    assert document.dirty is False
+
+
 def test_nested_heading_mutation_bubbles_to_root_document() -> None:
     """Child heading mutation marks parent headings and document dirty."""
     document = Document(filename="doc.org")

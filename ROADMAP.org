@@ -34,7 +34,10 @@ All of the above should parse as repeats - the empty values (~""~) should become
 
 Given the above task, setting the repeats does not affect the list in the body.
 
-** TODO Setting =Heading.level= should affect the descendants levels
+** DONE Setting =Heading.level= should affect the descendants levels
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-19 Sun 12:50]
+:END:
 When a headings level is set, it should cause a cascading change to its descendants levels as well.
 ** TODO Setting =Heading.document= should affect the descendants documents
 When a heading document is set, all children of that heading should also be updated with the new document.

@@ -299,9 +299,27 @@ class Heading:
 
     @level.setter
     def level(self, value: int) -> None:
-        """Set the heading level."""
-        self._level = value
+        """Set the heading level and shift this subtree by the same delta.
+
+        When this heading has a heading parent, the requested level is clamped
+        to ``parent.level + 1`` so a child can never become shallower than its
+        parent.
+        """
+        if isinstance(self._parent, Heading):
+            value = max(value, self._parent.level + 1)
+
+        delta = value - self._level
+        if delta == 0:
+            return
+
+        self.shift_subtree_levels(delta)
+
+    def shift_subtree_levels(self, delta: int) -> None:
+        """Shift this heading subtree levels by *delta* and mark nodes dirty."""
+        self._level = self._level + delta
         self.mark_dirty()
+        for child in self._children:
+            child.shift_subtree_levels(delta)
 
     @property
     def todo(self) -> str | None:
@@ -1664,12 +1682,9 @@ def shift_heading_subtree(heading: Heading, *, delta: int) -> None:
 
     Args:
         heading: Root of the subtree to shift.
-        delta: Positive integer amount to add to every level in the subtree.
+        delta: Integer amount to add to every level in the subtree.
     """
-    heading.level = heading.level + delta
-    heading.mark_dirty()
-    for child in heading.children:
-        shift_heading_subtree(child, delta=delta)
+    heading.shift_subtree_levels(delta)
 
 
 def _render_heading_dirty(heading: Heading) -> str:  # noqa: C901
