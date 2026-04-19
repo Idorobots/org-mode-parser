@@ -75,6 +75,7 @@ _MISSING_NODE_MESSAGE_PREFIX = "Encountered parser MISSING node"
 _FALLBACK_NODE_MESSAGE = "Unexpected parse node"
 _DRAWER_MARKER_TRAILING_MESSAGE = "Trailing characters in drawer marker"
 _INVALID_REPEAT_MESSAGE = "Invalid repeated-task entry"
+_DUPLICATE_HEADING_ID_MESSAGE_PREFIX = "Duplicate heading ID"
 
 
 def drawer_marker_trailing_message() -> str:
@@ -85,6 +86,16 @@ def drawer_marker_trailing_message() -> str:
 def invalid_repeat_message() -> str:
     """Return the canonical parse-error message for malformed repeat entries."""
     return _INVALID_REPEAT_MESSAGE
+
+
+def duplicate_heading_id_message(heading_id: str) -> str:
+    """Return the canonical parse-error message for duplicate heading IDs."""
+    return f"{_DUPLICATE_HEADING_ID_MESSAGE_PREFIX}: {heading_id}"
+
+
+def is_duplicate_heading_id_message(message: str) -> bool:
+    """Return whether *message* marks a duplicate heading-ID semantic error."""
+    return message.startswith(f"{_DUPLICATE_HEADING_ID_MESSAGE_PREFIX}: ")
 
 
 def _default_parse_error_message(node: tree_sitter.Node) -> str:
@@ -941,13 +952,23 @@ class Document:
 
     def _sync_heading_id_index(self) -> None:
         """Rebuild the heading-ID lookup index from current tree state."""
+        self._clear_duplicate_heading_id_errors()
         index: dict[str, Heading] = {}
         for heading in self.all_headings:
             heading_id = heading.id
             if heading_id is None:
                 continue
+            heading_node = heading._node  # pyright: ignore[reportPrivateUsage]
+            if heading_id in index and heading_node is not None:
+                self.report_error(heading_node, duplicate_heading_id_message(heading_id))
             index[heading_id] = heading
         self._heading_id_index = index
+
+    def _clear_duplicate_heading_id_errors(self) -> None:
+        """Remove previously reported duplicate heading-ID errors."""
+        self._errors = [
+            error for error in self._errors if not is_duplicate_heading_id_message(error.message)
+        ]
 
     def render(self) -> str:
         """Return the complete Org Mode text for a document including headings.

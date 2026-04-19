@@ -44,8 +44,27 @@ When a headings level is set, it should cause a cascading change to its descenda
 - State "DONE"       from "TODO"       [2026-04-19 Sun 13:03]
 :END:
 When a heading document is set, all children of that heading should also be updated with the new document.
-** TODO Duplicate IDs should be reported as errors.
+** DONE Duplicate IDs should be reported as errors.
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-19 Sun 14:00]
+:END:
 When syncing the ID cache in a document, when multiple headings have the same ID it should be reported as error on the document.
+*** DONE src/org_parser/document/_document.py
+:PROPERTIES:
+:context: 
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-19 Sun 14:00]
+:END:
+
+In file src/org_parser/document/_document.py around line 960, near the ~class Document:~
+
+#+begin_example
++        seen_ids: set[str] = set()
+
+#+end_example
+
+There's already the =index= variable available - use that instead of a separate set. If a heading is already in the index, use that to report the error. It's OK to use the heading parse node for the error location.
 * Features
 ** DONE =Heading.id= field
 :LOGBOOK:

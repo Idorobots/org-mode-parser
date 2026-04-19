@@ -1083,7 +1083,7 @@ class TestHeadingId:
         assert doc.heading_by_id("task-1") is None
 
     def test_document_heading_by_id_last_duplicate_wins(self) -> None:
-        """Lookup returns the last heading when duplicate IDs exist."""
+        """Lookup returns last duplicate and records one duplicate-ID error."""
         doc = loads(
             "* First\n"
             ":PROPERTIES:\n"
@@ -1096,6 +1096,45 @@ class TestHeadingId:
         )
 
         assert doc.heading_by_id("duplicate") is doc.children[1]
+        duplicate_errors = [
+            error for error in doc.errors if error.message == "Duplicate heading ID: duplicate"
+        ]
+        assert len(duplicate_errors) == 1
+        assert duplicate_errors[0].text.startswith("* Second")
+
+    def test_document_duplicate_id_error_clears_when_resolved(self) -> None:
+        """Duplicate-ID sync errors are cleared once IDs become unique."""
+        doc = loads(
+            "* First\n"
+            ":PROPERTIES:\n"
+            ":ID: duplicate\n"
+            ":END:\n"
+            "* Second\n"
+            ":PROPERTIES:\n"
+            ":ID: duplicate\n"
+            ":END:\n"
+        )
+
+        assert any(error.message == "Duplicate heading ID: duplicate" for error in doc.errors)
+
+        doc.children[1].id = "second-id"
+
+        assert doc.heading_by_id("duplicate") is doc.children[0]
+        assert doc.heading_by_id("second-id") is doc.children[1]
+        assert all(error.message != "Duplicate heading ID: duplicate" for error in doc.errors)
+
+    def test_document_duplicate_id_without_node_is_not_reported(self) -> None:
+        """Programmatic duplicate IDs without parse nodes do not report errors."""
+        doc = Document(filename="t.org")
+        first = Heading(level=1, document=doc, parent=doc)
+        second = Heading(level=1, document=doc, parent=doc)
+        doc.children = [first, second]
+
+        first.id = "duplicate"
+        second.id = "duplicate"
+
+        assert doc.heading_by_id("duplicate") is second
+        assert all(error.message != "Duplicate heading ID: duplicate" for error in doc.errors)
 
     def test_document_id_index_syncs_when_adding_headings(self) -> None:
         """Appending headings and subheadings keeps ID lookup index in sync."""

@@ -131,6 +131,21 @@ def test_document_from_source_raises_for_parse_errors() -> None:
         Document.from_source("#+TITLE[")
 
 
+def test_document_from_source_raises_for_duplicate_heading_ids() -> None:
+    """Duplicate heading IDs are treated as strict parse errors."""
+    with pytest.raises(ValueError, match="parse errors"):
+        Document.from_source(
+            "* First\n"
+            ":PROPERTIES:\n"
+            ":ID: duplicate\n"
+            ":END:\n"
+            "* Second\n"
+            ":PROPERTIES:\n"
+            ":ID: duplicate\n"
+            ":END:\n"
+        )
+
+
 def test_heading_from_source_requires_only_one_heading() -> None:
     """Heading.from_source rejects mixed zeroth-section and heading input."""
     with pytest.raises(ValueError, match="Unexpected parse tree structure"):
