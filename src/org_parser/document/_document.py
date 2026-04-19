@@ -920,6 +920,11 @@ class Document:
         if value is None:
             return
         value.parent = self
+        # Lazy import avoids the circular dependency with _heading.py.
+        from org_parser.document._heading import Heading
+
+        if isinstance(value, Heading) and value.document is not self:
+            value.document = self
 
     def _adopt_keywords(self, keywords: list[Keyword]) -> None:
         """Assign this document as parent for all keyword entries."""

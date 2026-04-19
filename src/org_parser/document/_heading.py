@@ -274,11 +274,33 @@ class Heading:
 
     @document.setter
     def document(self, value: Document) -> None:
-        """Set the owning document."""
-        self._document = value
-        self._dirty = True
+        """Set the owning document for this heading subtree."""
+        changed = self._set_document_subtree(value)
+        if not changed:
+            return
+
         self._parent.mark_dirty()
         value.mark_dirty()
+
+    def _set_document_subtree(self, value: Document) -> bool:
+        """Attach *value* document to this heading subtree and return change flag."""
+        changed = self._document is not value
+        if changed:
+            self._document = value
+            self._dirty = True
+            for repeat in self._repeats:
+                repeat.attach_document(value)
+                repeat.mark_dirty()
+
+        descendants_changed = False
+        for child in self._children:
+            if child._set_document_subtree(value):
+                descendants_changed = True
+
+        if descendants_changed:
+            self._dirty = True
+
+        return changed or descendants_changed
 
     @property
     def level(self) -> int:
@@ -1196,6 +1218,8 @@ class Heading:
         if value is None:
             return
         value.parent = self
+        if isinstance(value, Heading) and value.document is not self._document:
+            value.document = self._document
 
     def _adopt_elements(
         self,

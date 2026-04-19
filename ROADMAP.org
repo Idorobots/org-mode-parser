@@ -39,7 +39,10 @@ Given the above task, setting the repeats does not affect the list in the body.
 - State "DONE"       from "TODO"       [2026-04-19 Sun 12:50]
 :END:
 When a headings level is set, it should cause a cascading change to its descendants levels as well.
-** TODO Setting =Heading.document= should affect the descendants documents
+** DONE Setting =Heading.document= should affect the descendants documents
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-19 Sun 13:03]
+:END:
 When a heading document is set, all children of that heading should also be updated with the new document.
 ** TODO Duplicate IDs should be reported as errors.
 When syncing the ID cache in a document, when multiple headings have the same ID it should be reported as error on the document.
