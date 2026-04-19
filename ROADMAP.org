@@ -132,7 +132,10 @@ Rename to =heading_by_id= and please don't sync the index in this function, it s
 :END:
 Add a specialised version of =from_source= class method to the =Repeat= class, that builds an entire =Repeat= from source. It should behave pretty similar to =Repeat.from_list_item(ListItem.from_source(source), document)= - i.e. when passed a source it should parse the content as a repeat and extract it.
 
-** TODO =Document.heading_by_title= cache
+** DONE =Document.heading_by_title= cache
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-04-19 Sun 14:29]
+:END:
 Introduce an additional heading cache in =Document= that allows quicker search of headings by providing a title. The cache should use a textual representation of the title alone, stripped from any trailing whitespace as the key, i.e. =heading.title.text.strip()=.
 
 Add documentation for this cache along with the ID cache.

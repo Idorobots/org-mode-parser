@@ -437,6 +437,7 @@ class Heading:
         """Set the heading title."""
         self._title = coerce_optional_rich_text(value)
         self._adopt_element(self._title)
+        self._sync_document_heading_id_index()
         self.mark_dirty()
 
     @property

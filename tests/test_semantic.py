@@ -1151,6 +1151,56 @@ class TestHeadingId:
         assert doc.heading_by_id("child-1") is child
 
 
+class TestHeadingTitle:
+    """Tests for heading title lookup indexing."""
+
+    def test_heading_by_title_returns_matching_heading(self) -> None:
+        """Title lookup returns matching heading from the title cache."""
+        doc = loads("* Alpha\n* Beta\n")
+
+        assert doc.heading_by_title("Alpha") is doc.children[0]
+        assert doc.heading_by_title("Beta") is doc.children[1]
+
+    def test_heading_by_title_uses_stripped_title_keys(self) -> None:
+        """Title lookup normalizes both cache keys and lookup input with strip."""
+        doc = loads("*   Alpha   \n")
+
+        assert doc.heading_by_title("Alpha") is doc.children[0]
+        assert doc.heading_by_title("   Alpha   ") is doc.children[0]
+
+    def test_heading_by_title_last_duplicate_wins(self) -> None:
+        """When duplicate titles exist, lookup returns the last heading."""
+        doc = loads("* Alpha\n* Alpha\n")
+
+        assert doc.heading_by_title("Alpha") is doc.children[1]
+
+    def test_heading_title_lookup_updates_when_title_changes(self) -> None:
+        """Mutating Heading.title refreshes document title cache entries."""
+        doc = Document(filename="t.org")
+        heading = Heading(level=1, document=doc, parent=doc, title=RichText("Old"))
+        doc.children = [heading]
+
+        assert doc.heading_by_title("Old") is heading
+
+        heading.title = RichText("New")
+
+        assert doc.heading_by_title("Old") is None
+        assert doc.heading_by_title("New") is heading
+
+    def test_heading_title_lookup_syncs_when_adding_child_heading(self) -> None:
+        """Appending child headings updates cached title lookup index."""
+        doc = Document(filename="t.org")
+        parent = Heading(level=1, document=doc, parent=doc, title=RichText("Parent"))
+        doc.children = [parent]
+
+        child = Heading(level=2, document=doc, parent=parent, title=RichText("Child"))
+        assert doc.heading_by_title("Child") is None
+
+        parent.children.append(child)
+
+        assert doc.heading_by_title("Child") is child
+
+
 # ===================================================================
 # Convenience fields
 # ===================================================================
