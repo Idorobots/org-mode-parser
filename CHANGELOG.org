@@ -1,0 +1,11 @@
+* 0.28.0
+
+** Breaking changes
+
+- Timestamp repeater and delay API has been refactored to use public =Repeater=
+  objects exposed as =Timestamp.repeater=, =Timestamp.delay= and
+  =Timestamp.repeater_cap=.
+- Legacy scalar fields on =Timestamp= for repeater/delay components
+  (=repeater_mark=, =repeater_value=, =repeater_unit=, =repeater_cap_value=,
+  =repeater_cap_unit=, =delay_mark=, =delay_value=, =delay_unit=) have been
+  removed.

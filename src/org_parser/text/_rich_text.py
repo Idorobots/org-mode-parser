@@ -65,7 +65,7 @@ from org_parser.text._inline import (
     Underline,
     Verbatim,
 )
-from org_parser.time import Timestamp
+from org_parser.time import Repeater, Timestamp
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -480,6 +480,9 @@ def _trimmed_boundary_part(_part: InlineObject, value: str) -> InlineObject:
 
 def _clone_timestamp(timestamp: Timestamp) -> Timestamp:
     """Return a detached clone of *timestamp*."""
+    repeater = timestamp.repeater
+    repeater_cap = timestamp.repeater_cap
+    delay = timestamp.delay
     return Timestamp(
         is_active=timestamp.is_active,
         start_year=timestamp.start_year,
@@ -494,14 +497,21 @@ def _clone_timestamp(timestamp: Timestamp) -> Timestamp:
         end_dayname=timestamp.end_dayname,
         end_hour=timestamp.end_hour,
         end_minute=timestamp.end_minute,
-        repeater_mark=timestamp.repeater_mark,
-        repeater_value=timestamp.repeater_value,
-        repeater_unit=timestamp.repeater_unit,
-        repeater_cap_value=timestamp.repeater_cap_value,
-        repeater_cap_unit=timestamp.repeater_cap_unit,
-        delay_mark=timestamp.delay_mark,
-        delay_value=timestamp.delay_value,
-        delay_unit=timestamp.delay_unit,
+        repeater=(
+            Repeater(mark=repeater.mark, value=repeater.value, unit=repeater.unit)
+            if repeater is not None
+            else None
+        ),
+        repeater_cap=(
+            Repeater(mark=repeater_cap.mark, value=repeater_cap.value, unit=repeater_cap.unit)
+            if repeater_cap is not None
+            else None
+        ),
+        delay=(
+            Repeater(mark=delay.mark, value=delay.value, unit=delay.unit)
+            if delay is not None
+            else None
+        ),
     )
 
 

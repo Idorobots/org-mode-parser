@@ -113,7 +113,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Morning stand-up '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=9, start_minute=0, repeater_mark='+', repeater_value=1, repeater_unit='d'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', start_hour=9, start_minute=0, repeater=Repeater(mark='+', value=1, unit='d')),
         properties={
             'ID': RichText('d1a2b3c4-e5f6-7890-abcd-ef1234567890'),
           },
@@ -127,7 +127,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Weekly review '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=10, start_dayname='Fri', start_hour=16, start_minute=0, repeater_mark='+', repeater_value=1, repeater_unit='w'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=10, start_dayname='Fri', start_hour=16, start_minute=0, repeater=Repeater(mark='+', value=1, unit='w')),
         properties={
             'effort': RichText('1:00'),
           },
@@ -141,7 +141,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('One-on-one with manager '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=15, start_dayname='Wed', repeater_mark='+', repeater_value=1, repeater_unit='m'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=15, start_dayname='Wed', repeater=Repeater(mark='+', value=1, unit='m')),
         heading_tags=['admin'],
         body=[
             Paragraph(body=RichText('Quarterly board report:\n')),
@@ -152,7 +152,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Prepare board report '),
-        deadline=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=31, start_dayname='Mon', repeater_mark='+', repeater_value=3, repeater_unit='m'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=31, start_dayname='Mon', repeater=Repeater(mark='+', value=3, unit='m')),
         heading_tags=['reporting', 'admin'],
         body=[
             Paragraph(body=RichText('Annual performance review:\n')),
@@ -163,7 +163,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Complete self-assessment '),
-        deadline=Timestamp(is_active=True, start_year=2025, start_month=12, start_day=1, start_dayname='Mon', repeater_mark='+', repeater_value=1, repeater_unit='y'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=12, start_day=1, start_dayname='Mon', repeater=Repeater(mark='+', value=1, unit='y')),
         heading_tags=['hr'],
         body=[
             BlankLine(),
@@ -183,7 +183,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Draft newsletter '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=14, start_dayname='Tue', repeater_mark='++', repeater_value=2, repeater_unit='w'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=14, start_dayname='Tue', repeater=Repeater(mark='++', value=2, unit='w')),
         heading_tags=['comms'],
         body=[
             Paragraph(body=RichText('Every-other-day medication log:\n')),
@@ -194,7 +194,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Take vitamin D supplement '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater_mark='++', repeater_value=2, repeater_unit='d'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater=Repeater(mark='++', value=2, unit='d')),
         heading_tags=['health'],
         body=[
             BlankLine(),
@@ -214,7 +214,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Water the office plants '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater_mark='.+', repeater_value=3, repeater_unit='d'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater=Repeater(mark='.+', value=3, unit='d')),
         heading_tags=['maintenance'],
         body=[
             BlankLine(),
@@ -224,7 +224,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Back up development database '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater_mark='.+', repeater_value=1, repeater_unit='w'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater=Repeater(mark='.+', value=1, unit='w')),
         heading_tags=['sysadmin'],
         body=[
             BlankLine(),
@@ -234,7 +234,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Update project dependencies '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater_mark='.+', repeater_value=1, repeater_unit='m'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater=Repeater(mark='.+', value=1, unit='m')),
         heading_tags=['maintenance', 'dev'],
         body=[
             HorizontalRule(rule='-----'),
@@ -262,7 +262,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Submit grant application '),
-        deadline=Timestamp(is_active=True, start_year=2025, start_month=4, start_day=30, start_dayname='Wed', delay_mark='-', delay_value=1, delay_unit='w'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=4, start_day=30, start_dayname='Wed', delay=Repeater(mark='-', value=1, unit='w')),
         heading_tags=['research'],
         body=[
             Paragraph(body=RichText('Task with a two-day warning:\n')),
@@ -273,7 +273,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Pay quarterly tax '),
-        deadline=Timestamp(is_active=True, start_year=2025, start_month=4, start_day=5, start_dayname='Sat', delay_mark='-', delay_value=2, delay_unit='d'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=4, start_day=5, start_dayname='Sat', delay=Repeater(mark='-', value=2, unit='d')),
         heading_tags=['finance'],
         body=[
             BlankLine(),
@@ -293,7 +293,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Monthly server audit '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=2, start_day=1, start_dayname='Sat', repeater_mark='+', repeater_value=1, repeater_unit='m', delay_mark='--', delay_value=3, delay_unit='d'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=2, start_day=1, start_dayname='Sat', repeater=Repeater(mark='+', value=1, unit='m'), delay=Repeater(mark='--', value=3, unit='d')),
         heading_tags=['sysadmin'],
         body=[
             HorizontalRule(rule='-----'),
@@ -314,7 +314,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Team sync preparation '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=10, start_dayname='Fri', start_hour=10, start_minute=0, repeater_mark='+', repeater_value=1, repeater_unit='w', delay_mark='-', delay_value=2, delay_unit='d'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=10, start_dayname='Fri', start_hour=10, start_minute=0, repeater=Repeater(mark='+', value=1, unit='w'), delay=Repeater(mark='-', value=2, unit='d')),
         heading_tags=['team', 'planning'],
         body=[
             Paragraph(body=RichText('Monthly financial close — cumulative repeat, three-day all-type warning:\n')),
@@ -325,7 +325,7 @@ Document(
         level=1,
         todo='DOING',
         title=RichText('Monthly financial close '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=31, start_dayname='Fri', repeater_mark='+', repeater_value=1, repeater_unit='m', delay_mark='-', delay_value=3, delay_unit='d'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=31, start_dayname='Fri', repeater=Repeater(mark='+', value=1, unit='m'), delay=Repeater(mark='-', value=3, unit='d')),
         properties={
             'effort': RichText('4:00'),
             'assignee': RichText('Vorwick Thrumble'),
@@ -340,7 +340,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Draft quarterly report '),
-        deadline=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=31, start_dayname='Mon', repeater_mark='++', repeater_value=3, repeater_unit='m', delay_mark='--', delay_value=1, delay_unit='w'),
+        deadline=Timestamp(is_active=True, start_year=2025, start_month=3, start_day=31, start_dayname='Mon', repeater=Repeater(mark='++', value=3, unit='m'), delay=Repeater(mark='--', value=1, unit='w')),
         heading_tags=['reporting'],
         body=[
             HorizontalRule(rule='-----'),
@@ -361,7 +361,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Write in journal '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater_mark='+', repeater_value=1, repeater_unit='d', repeater_cap_value=1, repeater_cap_unit='w'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=6, start_dayname='Mon', repeater=Repeater(mark='+', value=1, unit='d'), repeater_cap=Repeater(mark='+', value=1, unit='w')),
         properties={
             'effort': RichText('0:15'),
           },
@@ -375,7 +375,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Audit access permissions '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=31, start_dayname='Fri', repeater_mark='+', repeater_value=1, repeater_unit='m', repeater_cap_value=3, repeater_cap_unit='m'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=1, start_day=31, start_dayname='Fri', repeater=Repeater(mark='+', value=1, unit='m'), repeater_cap=Repeater(mark='+', value=3, unit='m')),
         heading_tags=['security', 'sysadmin'],
         body=[
             Paragraph(body=RichText('Yearly archiving with a two-year limit:\n')),
@@ -386,7 +386,7 @@ Document(
         level=1,
         todo='TODO',
         title=RichText('Archive old project files '),
-        scheduled=Timestamp(is_active=True, start_year=2025, start_month=12, start_day=31, start_dayname='Wed', repeater_mark='+', repeater_value=1, repeater_unit='y', repeater_cap_value=2, repeater_cap_unit='y'),
+        scheduled=Timestamp(is_active=True, start_year=2025, start_month=12, start_day=31, start_dayname='Wed', repeater=Repeater(mark='+', value=1, unit='y'), repeater_cap=Repeater(mark='+', value=2, unit='y')),
         heading_tags=['admin'],
         body=[
             HorizontalRule(rule='-----'),

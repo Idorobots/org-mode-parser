@@ -29,6 +29,8 @@ __all__ = [
     "COMPLETION_COUNTER",
     "DEADLINE",
     "DELAY_MARK",
+    "DELAY_TIME_UNIT",
+    "DELAY_VALUE",
     "DESCRIPTION",
     "DRAWER",
     "DYNAMIC_BLOCK",
@@ -64,7 +66,11 @@ __all__ = [
     "QUOTE_BLOCK",
     "RADIO_TARGET",
     "REGULAR_LINK",
+    "REPEATER_CAP_TIME_UNIT",
+    "REPEATER_CAP_VALUE",
     "REPEATER_MARK",
+    "REPEATER_TIME_UNIT",
+    "REPEATER_VALUE",
     "RESULTS_KEYWORD",
     "SCHEDULED",
     "SPECIAL_BLOCK",
@@ -127,7 +133,13 @@ TS_MONTH = "ts_month"
 TS_TIME = "ts_time"
 TS_YEAR = "ts_year"
 DELAY_MARK = "delay_mark"
+DELAY_TIME_UNIT = "delay_time_unit"
+DELAY_VALUE = "delay_value"
 REPEATER_MARK = "repeater_mark"
+REPEATER_CAP_TIME_UNIT = "repeater_cap_time_unit"
+REPEATER_CAP_VALUE = "repeater_cap_value"
+REPEATER_TIME_UNIT = "repeater_time_unit"
+REPEATER_VALUE = "repeater_value"
 TIME_UNIT = "time_unit"
 
 # ---------------------------------------------------------------------------
