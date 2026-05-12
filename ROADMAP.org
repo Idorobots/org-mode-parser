@@ -65,6 +65,65 @@ In file src/org_parser/document/_document.py around line 960, near the ~class Do
 #+end_example
 
 There's already the =index= variable available - use that instead of a separate set. If a heading is already in the index, use that to report the error. It's OK to use the heading parse node for the error location.
+** DONE Timestamp repeater handling
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-05-12 Tue 21:47]
+:END:
+Timestamp repeates/delays are currently parsed in an ad-hoc way. A newer version of =tree-sitter-org= (0.24.0) has all the repeater/delay fields exposed. Let's refactor the timestamp extraction to make use of those fields instead of the current, ad-hoc approach.
+
+Update the =tree-sitter-org= dependency version to 0.24.0 and fix the timestamp repeater extraction.
+
+Here's the current shape of the timestamp parse node including its delay/repeater components:
+
+#+begin_example
+<2025-12-07 Sun -5d>
+
+---
+
+(timestamp
+  (ts_year)
+  (ts_month)
+  (ts_day)
+  (ts_dayname)
+  (delay_mark)
+  (delay_value)
+  (delay_time_unit))
+
+---
+
+<2025-12-11 Thu +3d>
+
+---
+
+(timestamp
+  (ts_year)
+  (ts_month)
+  (ts_day)
+  (ts_dayname)
+  (repeater_mark)
+  (repeater_value)
+  (repeater_time_unit))
+
+---
+
+<2025-12-11 Thu +1m/3m>
+
+---
+
+(timestamp
+  (ts_year)
+  (ts_month)
+  (ts_day)
+  (ts_dayname)
+  (repeater_mark)
+  (repeater_value)
+  (repeater_time_unit)
+  (repeater_cap_value)
+  (repeater_cap_time_unit))
+#+end_example
+
+Backward compatibility is not required if the =Timestamp= class field names need to change to reflect the parse tree field names. It might be a good idea to introduce a small =Repeater= dataclass that will hold the =mark=, =value= and =unit= and have three fileds: =Timestamp.delay=, =Timestamp.repeater= and =Timestamp.repeater_cap= that return those =Repeater= values. It should still be possible to mutate any part of those repeaters.
+
 * Features
 ** DONE =Heading.id= field
 :LOGBOOK:
@@ -184,3 +243,4 @@ Might warrant a rename of =tags= to =all_tags= and =heading_tags= to =tags=.
 - https://orgmode.org/worg/org-contrib/org-depend.html
 - Suport for the =TRIGGER= property
 - Support for checkboxes and completion counter (only top-level).
+** Full-text-search

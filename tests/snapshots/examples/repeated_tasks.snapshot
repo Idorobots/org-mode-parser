@@ -6,7 +6,7 @@ Document(
         level=1,
         todo='DONE',
         title=RichText('Recurring daily standup '),
-        scheduled=Timestamp(is_active=True, start_year=2024, start_month=1, start_day=1, start_dayname='Mon', start_hour=9, start_minute=0, repeater_mark='+', repeater_value=1, repeater_unit='d'),
+        scheduled=Timestamp(is_active=True, start_year=2024, start_month=1, start_day=1, start_dayname='Mon', start_hour=9, start_minute=0, repeater=Repeater(mark='+', value=1, unit='d')),
         properties={
             'LAST_REPEAT': RichText('[2024-01-05 Fri 09:15]'),
           },
